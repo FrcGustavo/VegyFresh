@@ -72,7 +72,7 @@ export class OrdersService {
     });
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     const order = await this.ordersRepository.findOne({
       where: { id },
       relations: {
@@ -89,7 +89,7 @@ export class OrdersService {
     return order;
   }
 
-  async update(id: number, updateOrderDto: UpdateOrderDto) {
+  async update(id: string, updateOrderDto: UpdateOrderDto) {
     return this.ordersRepository.manager.transaction(async (manager) => {
       const orderRepository = manager.getRepository(Order);
       const orderItemRepository = manager.getRepository(OrderItem);
@@ -144,14 +144,14 @@ export class OrdersService {
     });
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     const order = await this.findOne(id);
     await this.ordersRepository.remove(order);
 
     return { id, deleted: true };
   }
 
-  private async findClientOrFail(id: number) {
+  private async findClientOrFail(id: string) {
     const client = await this.clientsRepository.findOneBy({ id });
     if (!client) {
       throw new NotFoundException(`Client with id ${id} not found`);
@@ -160,7 +160,7 @@ export class OrdersService {
     return client;
   }
 
-  private async findUserOrFail(id: number) {
+  private async findUserOrFail(id: string) {
     const user = await this.usersRepository.findOneBy({ id });
     if (!user) {
       throw new NotFoundException(`User with id ${id} not found`);

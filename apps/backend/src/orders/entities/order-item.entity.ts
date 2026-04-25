@@ -1,27 +1,29 @@
 import {
   Column,
   Entity,
+  Generated,
   JoinColumn,
   ManyToOne,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
 } from 'typeorm';
 import { Product } from '../../catalog/products/entities/product.entity';
 import { Order } from './order.entity';
 
 @Entity('order_items')
 export class OrderItem {
-  @PrimaryGeneratedColumn()
-  id!: number;
+  @PrimaryColumn({ type: 'uuid' })
+  @Generated('uuid')
+  id!: string;
 
-  @Column({ type: 'int' })
-  order_id!: number;
+  @Column({ type: 'uuid' })
+  order_id!: string;
 
   @ManyToOne(() => Order, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'order_id' })
   order!: Order;
 
-  @Column({ type: 'int' })
-  product_id!: number;
+  @Column({ type: 'uuid' })
+  product_id!: string;
 
   @ManyToOne(() => Product, {
     onDelete: 'RESTRICT',

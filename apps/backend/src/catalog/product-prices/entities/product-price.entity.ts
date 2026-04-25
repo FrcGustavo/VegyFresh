@@ -2,9 +2,10 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Generated,
   JoinColumn,
   ManyToOne,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   Unique,
   UpdateDateColumn,
 } from 'typeorm';
@@ -14,11 +15,12 @@ import { Product } from '../../products/entities/product.entity';
 @Entity('product_prices')
 @Unique('UQ_product_price_list', ['product_id', 'price_list_id'])
 export class ProductPrice {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryColumn({ type: 'uuid' })
+  @Generated('uuid')
+  id: string;
 
-  @Column({ type: 'int' })
-  product_id: number;
+  @Column({ type: 'uuid' })
+  product_id: string;
 
   @ManyToOne(() => Product, (product) => product.productPrices, {
     onDelete: 'CASCADE',
@@ -26,8 +28,8 @@ export class ProductPrice {
   @JoinColumn({ name: 'product_id' })
   product: Product;
 
-  @Column({ type: 'int' })
-  price_list_id: number;
+  @Column({ type: 'uuid' })
+  price_list_id: string;
 
   @ManyToOne(() => PriceList, (priceList) => priceList.productPrices, {
     onDelete: 'CASCADE',

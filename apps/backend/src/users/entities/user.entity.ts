@@ -2,18 +2,20 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Generated,
   JoinColumn,
   ManyToOne,
   OneToMany,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
 } from 'typeorm';
 import { Order } from '../../orders/entities/order.entity';
 import { Role } from '../../roles/entities/role.entity';
 
 @Entity('users')
 export class User {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryColumn({ type: 'uuid' })
+  @Generated('uuid')
+  id: string;
 
   @Column({ type: 'varchar', length: 255 })
   name: string;
@@ -24,8 +26,8 @@ export class User {
   @Column({ type: 'text' })
   password_hash: string;
 
-  @Column({ type: 'int' })
-  role_id: number;
+  @Column({ type: 'uuid' })
+  role_id: string;
 
   @ManyToOne(() => Role, (role) => role.users, { onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'role_id' })

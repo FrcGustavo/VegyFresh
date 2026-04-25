@@ -33,7 +33,7 @@ export class SuppliersController {
   @ApiOperation({ summary: 'Get a supplier by ID' })
   @ApiParam({ name: 'id', description: 'Supplier ID' })
   findOne(@Param('id') id: string) {
-    return this.suppliersService.findOne(+id);
+    return this.suppliersService.findOne(id);
   }
 
   @Patch(':id')
@@ -43,13 +43,13 @@ export class SuppliersController {
     @Param('id') id: string,
     @Body() updateSupplierDto: UpdateSupplierDto,
   ) {
-    return this.suppliersService.update(+id, updateSupplierDto);
+    return this.suppliersService.update(id, updateSupplierDto);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a supplier' })
   @ApiParam({ name: 'id', description: 'Supplier ID' })
   remove(@Param('id') id: string) {
-    return this.suppliersService.remove(+id);
+    return this.suppliersService.remove(id);
   }
 }

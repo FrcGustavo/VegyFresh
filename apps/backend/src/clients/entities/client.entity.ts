@@ -1,18 +1,20 @@
 import {
   Column,
   Entity,
+  Generated,
   JoinColumn,
   ManyToOne,
   OneToMany,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
 } from 'typeorm';
 import { PriceList } from '../../catalog/price-lists/entities/price-list.entity';
 import { Order } from '../../orders/entities/order.entity';
 
 @Entity('clients')
 export class Client {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryColumn({ type: 'uuid' })
+  @Generated('uuid')
+  id: string;
 
   @Column({ type: 'varchar', length: 255 })
   name: string;
@@ -29,8 +31,8 @@ export class Client {
   @Column({ type: 'text', nullable: true })
   avatar_url: string | null;
 
-  @Column({ type: 'int', nullable: true })
-  price_list_id: number | null;
+  @Column({ type: 'uuid', nullable: true })
+  price_list_id: string | null;
 
   @ManyToOne(() => PriceList, (priceList) => priceList.clients, {
     onDelete: 'SET NULL',

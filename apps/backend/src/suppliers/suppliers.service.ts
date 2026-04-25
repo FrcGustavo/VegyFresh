@@ -29,7 +29,7 @@ export class SuppliersService {
     });
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     const supplier = await this.suppliersRepository.findOne({
       where: { id },
       relations: { products: true },
@@ -42,13 +42,13 @@ export class SuppliersService {
     return supplier;
   }
 
-  async update(id: number, updateSupplierDto: UpdateSupplierDto) {
+  async update(id: string, updateSupplierDto: UpdateSupplierDto) {
     const supplier = await this.findOne(id);
     this.suppliersRepository.merge(supplier, updateSupplierDto);
     return this.suppliersRepository.save(supplier);
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     const supplier = await this.findOne(id);
     await this.suppliersRepository.remove(supplier);
     return { id, deleted: true };

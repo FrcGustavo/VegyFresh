@@ -33,7 +33,7 @@ export class PriceListsController {
   @ApiOperation({ summary: 'Get a price list by ID' })
   @ApiParam({ name: 'id', description: 'Price list ID' })
   findOne(@Param('id') id: string) {
-    return this.priceListsService.findOne(+id);
+    return this.priceListsService.findOne(id);
   }
 
   @Patch(':id')
@@ -43,13 +43,13 @@ export class PriceListsController {
     @Param('id') id: string,
     @Body() updatePriceListDto: UpdatePriceListDto,
   ) {
-    return this.priceListsService.update(+id, updatePriceListDto);
+    return this.priceListsService.update(id, updatePriceListDto);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a price list' })
   @ApiParam({ name: 'id', description: 'Price list ID' })
   remove(@Param('id') id: string) {
-    return this.priceListsService.remove(+id);
+    return this.priceListsService.remove(id);
   }
 }

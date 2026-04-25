@@ -33,20 +33,20 @@ export class ClientsController {
   @ApiOperation({ summary: 'Get a client by ID' })
   @ApiParam({ name: 'id', description: 'Client ID' })
   findOne(@Param('id') id: string) {
-    return this.clientsService.findOne(+id);
+    return this.clientsService.findOne(id);
   }
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update a client' })
   @ApiParam({ name: 'id', description: 'Client ID' })
   update(@Param('id') id: string, @Body() updateClientDto: UpdateClientDto) {
-    return this.clientsService.update(+id, updateClientDto);
+    return this.clientsService.update(id, updateClientDto);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a client' })
   @ApiParam({ name: 'id', description: 'Client ID' })
   remove(@Param('id') id: string) {
-    return this.clientsService.remove(+id);
+    return this.clientsService.remove(id);
   }
 }

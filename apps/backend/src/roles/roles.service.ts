@@ -27,7 +27,7 @@ export class RolesService {
     });
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     const role = await this.rolesRepository.findOneBy({ id });
 
     if (!role) {
@@ -37,13 +37,13 @@ export class RolesService {
     return role;
   }
 
-  async update(id: number, updateRoleDto: UpdateRoleDto) {
+  async update(id: string, updateRoleDto: UpdateRoleDto) {
     const role = await this.findOne(id);
     this.rolesRepository.merge(role, updateRoleDto);
     return this.rolesRepository.save(role);
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     const role = await this.findOne(id);
     await this.rolesRepository.remove(role);
     return { id, deleted: true };

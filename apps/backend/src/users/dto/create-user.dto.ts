@@ -10,8 +10,8 @@ export class CreateUserDto {
   @ApiProperty({ example: 'hashed_password' })
   password_hash!: string;
 
-  @ApiProperty({ example: 1 })
-  role_id!: number;
+  @ApiProperty({ example: '550e8400-e29b-41d4-a716-446655440000' })
+  role_id!: string;
 
   @ApiPropertyOptional({ example: 'https://example.com/avatar.png', nullable: true })
   avatar_url?: string | null;

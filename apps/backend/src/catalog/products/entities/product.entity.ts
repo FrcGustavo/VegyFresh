@@ -2,10 +2,11 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Generated,
   JoinColumn,
   ManyToOne,
   OneToMany,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { OrderItem } from '../../../orders/entities/order-item.entity';
@@ -14,8 +15,9 @@ import { Supplier } from '../../../suppliers/entities/supplier.entity';
 
 @Entity('products')
 export class Product {
-  @PrimaryGeneratedColumn()
-  id!: number;
+  @PrimaryColumn({ type: 'uuid' })
+  @Generated('uuid')
+  id!: string;
 
   @Column({ type: 'varchar', length: 100, unique: true })
   sku!: string;
@@ -26,8 +28,8 @@ export class Product {
   @Column({ type: 'text', nullable: true })
   description!: string | null;
 
-  @Column({ type: 'int' })
-  supplier_id!: number;
+  @Column({ type: 'uuid' })
+  supplier_id!: string;
 
   @ManyToOne(() => Supplier, (supplier) => supplier.products, {
     onDelete: 'RESTRICT',

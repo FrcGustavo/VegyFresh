@@ -24,7 +24,7 @@ export class PriceListsService {
     });
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     const priceList = await this.priceListsRepository.findOne({
       where: { id },
       relations: {
@@ -40,13 +40,13 @@ export class PriceListsService {
     return priceList;
   }
 
-  async update(id: number, updatePriceListDto: UpdatePriceListDto) {
+  async update(id: string, updatePriceListDto: UpdatePriceListDto) {
     const priceList = await this.findOne(id);
     this.priceListsRepository.merge(priceList, updatePriceListDto);
     return this.priceListsRepository.save(priceList);
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     const priceList = await this.findOne(id);
     await this.priceListsRepository.remove(priceList);
     return { id, deleted: true };

@@ -2,10 +2,11 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Generated,
   JoinColumn,
   ManyToOne,
   OneToMany,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
 } from 'typeorm';
 import { Client } from '../../clients/entities/client.entity';
 import { User } from '../../users/entities/user.entity';
@@ -25,18 +26,19 @@ export enum OrderOrigin {
 
 @Entity('orders')
 export class Order {
-  @PrimaryGeneratedColumn()
-  id!: number;
+  @PrimaryColumn({ type: 'uuid' })
+  @Generated('uuid')
+  id!: string;
 
-  @Column({ type: 'int' })
-  client_id!: number;
+  @Column({ type: 'uuid' })
+  client_id!: string;
 
   @ManyToOne(() => Client, (client) => client.orders, { onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'client_id' })
   client!: Client;
 
-  @Column({ type: 'int' })
-  user_id!: number;
+  @Column({ type: 'uuid' })
+  user_id!: string;
 
   @ManyToOne(() => User, (user) => user.orders, { onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'user_id' })

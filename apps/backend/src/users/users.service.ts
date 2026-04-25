@@ -33,7 +33,7 @@ export class UsersService {
     });
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     const user = await this.usersRepository.findOne({
       where: { id },
       relations: { role: true },
@@ -46,7 +46,7 @@ export class UsersService {
     return user;
   }
 
-  async update(id: number, updateUserDto: UpdateUserDto) {
+  async update(id: string, updateUserDto: UpdateUserDto) {
     const user = await this.findOne(id);
     const role =
       updateUserDto.role_id !== undefined
@@ -61,14 +61,14 @@ export class UsersService {
     return this.usersRepository.save(user);
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     const user = await this.findOne(id);
     await this.usersRepository.remove(user);
 
     return { id, deleted: true };
   }
 
-  private async findRoleOrFail(id: number) {
+  private async findRoleOrFail(id: string) {
     const role = await this.rolesRepository.findOneBy({ id });
 
     if (!role) {

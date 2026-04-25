@@ -33,20 +33,20 @@ export class RolesController {
   @ApiOperation({ summary: 'Get a role by ID' })
   @ApiParam({ name: 'id', description: 'Role ID' })
   findOne(@Param('id') id: string) {
-    return this.rolesService.findOne(+id);
+    return this.rolesService.findOne(id);
   }
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update a role' })
   @ApiParam({ name: 'id', description: 'Role ID' })
   update(@Param('id') id: string, @Body() updateRoleDto: UpdateRoleDto) {
-    return this.rolesService.update(+id, updateRoleDto);
+    return this.rolesService.update(id, updateRoleDto);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a role' })
   @ApiParam({ name: 'id', description: 'Role ID' })
   remove(@Param('id') id: string) {
-    return this.rolesService.remove(+id);
+    return this.rolesService.remove(id);
   }
 }

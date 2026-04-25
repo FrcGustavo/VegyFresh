@@ -37,7 +37,7 @@ export class ProductsService {
     });
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     const product = await this.productsRepository.findOne({
       where: { id },
       relations: {
@@ -53,7 +53,7 @@ export class ProductsService {
     return product;
   }
 
-  async update(id: number, updateProductDto: UpdateProductDto) {
+  async update(id: string, updateProductDto: UpdateProductDto) {
     const product = await this.findOne(id);
     const supplier =
       updateProductDto.supplier_id !== undefined
@@ -68,13 +68,13 @@ export class ProductsService {
     return this.productsRepository.save(product);
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     const product = await this.findOne(id);
     await this.productsRepository.remove(product);
     return { id, deleted: true };
   }
 
-  private async findSupplierOrFail(id: number) {
+  private async findSupplierOrFail(id: string) {
     const supplier = await this.suppliersRepository.findOneBy({ id });
 
     if (!supplier) {

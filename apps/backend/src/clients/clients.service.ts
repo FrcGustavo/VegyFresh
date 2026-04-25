@@ -38,7 +38,7 @@ export class ClientsService {
     });
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     const client = await this.clientsRepository.findOne({
       where: { id },
       relations: { priceList: true },
@@ -51,7 +51,7 @@ export class ClientsService {
     return client;
   }
 
-  async update(id: number, updateClientDto: UpdateClientDto) {
+  async update(id: string, updateClientDto: UpdateClientDto) {
     const client = await this.findOne(id);
     const priceList =
       updateClientDto.price_list_id === undefined
@@ -70,13 +70,13 @@ export class ClientsService {
     return this.clientsRepository.save(client);
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     const client = await this.findOne(id);
     await this.clientsRepository.remove(client);
     return { id, deleted: true };
   }
 
-  private async resolvePriceList(id?: number | null) {
+  private async resolvePriceList(id?: string | null) {
     if (id === undefined || id === null) {
       return null;
     }

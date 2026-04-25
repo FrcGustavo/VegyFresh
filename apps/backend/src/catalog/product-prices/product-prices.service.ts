@@ -40,7 +40,7 @@ export class ProductPricesService {
     });
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     const productPrice = await this.productPricesRepository.findOne({
       where: { id },
       relations: { product: true, priceList: true },
@@ -53,7 +53,7 @@ export class ProductPricesService {
     return productPrice;
   }
 
-  async update(id: number, updateProductPriceDto: UpdateProductPriceDto) {
+  async update(id: string, updateProductPriceDto: UpdateProductPriceDto) {
     const productPrice = await this.findOne(id);
     const product =
       updateProductPriceDto.product_id !== undefined
@@ -73,13 +73,13 @@ export class ProductPricesService {
     return this.productPricesRepository.save(productPrice);
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     const productPrice = await this.findOne(id);
     await this.productPricesRepository.remove(productPrice);
     return { id, deleted: true };
   }
 
-  private async findProductOrFail(id: number) {
+  private async findProductOrFail(id: string) {
     const product = await this.productsRepository.findOneBy({ id });
     if (!product) {
       throw new NotFoundException(`Product with id ${id} not found`);
@@ -88,7 +88,7 @@ export class ProductPricesService {
     return product;
   }
 
-  private async findPriceListOrFail(id: number) {
+  private async findPriceListOrFail(id: string) {
     const priceList = await this.priceListsRepository.findOneBy({ id });
     if (!priceList) {
       throw new NotFoundException(`Price list with id ${id} not found`);

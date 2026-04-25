@@ -2,16 +2,18 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Generated,
   OneToMany,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { Product } from '../../catalog/products/entities/product.entity';
 
 @Entity('suppliers')
 export class Supplier {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryColumn({ type: 'uuid' })
+  @Generated('uuid')
+  id: string;
 
   @Column({ type: 'varchar', length: 255 })
   name: string;
