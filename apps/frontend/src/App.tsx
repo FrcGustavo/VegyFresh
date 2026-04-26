@@ -1,122 +1,106 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router';
+import { ThemeProvider, createTheme } from '@mui/material';
+import MainLayout from './layout/MainLayout';
+
+// Pedidos
+import OrdersList from './modules/orders/pages/OrdersList';
+import OrdersCreate from './modules/orders/pages/OrdersCreate';
+import OrdersEdit from './modules/orders/pages/OrdersEdit';
+import OrdersDetail from './modules/orders/pages/OrdersDetail';
+
+// Productos
+import ProductsList from './modules/products/pages/ProductsList';
+import ProductsCreate from './modules/products/pages/ProductsCreate';
+import ProductsEdit from './modules/products/pages/ProductsEdit';
+import ProductsDetail from './modules/products/pages/ProductsDetail';
+
+// Listas de Precios (ahora dentro de productos)
+import PriceListsList from './modules/products/price-lists/pages/PriceListsList';
+import PriceListsCreate from './modules/products/price-lists/pages/PriceListsCreate';
+import PriceListsEdit from './modules/products/price-lists/pages/PriceListsEdit';
+
+// Clientes
+import ClientsList from './modules/clients/pages/ClientsList';
+import ClientsCreate from './modules/clients/pages/ClientsCreate';
+import ClientsEdit from './modules/clients/pages/ClientsEdit';
+import ClientsDetail from './modules/clients/pages/ClientsDetail';
+
+// Proveedores
+import SuppliersList from './modules/suppliers/pages/SuppliersList';
+import SuppliersCreate from './modules/suppliers/pages/SuppliersCreate';
+import SuppliersEdit from './modules/suppliers/pages/SuppliersEdit';
+import SuppliersDetail from './modules/suppliers/pages/SuppliersDetail';
+
+// Usuarios
+import UsersList from './modules/users/pages/UsersList';
+import UsersCreate from './modules/users/pages/UsersCreate';
+import UsersEdit from './modules/users/pages/UsersEdit';
+import UsersDetail from './modules/users/pages/UsersDetail';
+
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#2e7d32', // VegyFresh Green
+    },
+    secondary: {
+      main: '#f57c00', // Orange
+    },
+    background: {
+      default: '#f5f5f5',
+    }
+  },
+  typography: {
+    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+  }
+});
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <ThemeProvider theme={theme}>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<MainLayout />}>
+            <Route index element={<Navigate to="/orders" replace />} />
+            
+            {/* Pedidos */}
+            <Route path="orders" element={<OrdersList />} />
+            <Route path="orders/create" element={<OrdersCreate />} />
+            <Route path="orders/:id" element={<OrdersDetail />} />
+            <Route path="orders/:id/edit" element={<OrdersEdit />} />
 
-      <div className="ticks"></div>
+            {/* Productos */}
+            <Route path="products" element={<ProductsList />} />
+            <Route path="products/create" element={<ProductsCreate />} />
+            <Route path="products/:id" element={<ProductsDetail />} />
+            <Route path="products/:id/edit" element={<ProductsEdit />} />
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+            {/* Listas de Precios */}
+            <Route path="price-lists" element={<PriceListsList />} />
+            <Route path="price-lists/create" element={<PriceListsCreate />} />
+            <Route path="price-lists/:id/edit" element={<PriceListsEdit />} />
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+            {/* Clientes */}
+            <Route path="clients" element={<ClientsList />} />
+            <Route path="clients/create" element={<ClientsCreate />} />
+            <Route path="clients/:id" element={<ClientsDetail />} />
+            <Route path="clients/:id/edit" element={<ClientsEdit />} />
+
+            {/* Proveedores */}
+            <Route path="suppliers" element={<SuppliersList />} />
+            <Route path="suppliers/create" element={<SuppliersCreate />} />
+            <Route path="suppliers/:id" element={<SuppliersDetail />} />
+            <Route path="suppliers/:id/edit" element={<SuppliersEdit />} />
+
+            {/* Usuarios */}
+            <Route path="users" element={<UsersList />} />
+            <Route path="users/create" element={<UsersCreate />} />
+            <Route path="users/:id" element={<UsersDetail />} />
+            <Route path="users/:id/edit" element={<UsersEdit />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </ThemeProvider>
+  );
 }
 
-export default App
+export default App;
