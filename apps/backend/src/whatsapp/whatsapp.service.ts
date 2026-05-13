@@ -5,7 +5,7 @@ import {
   BadRequestException,
   Inject,
 } from '@nestjs/common';
-import { ConfigType } from '@nestjs/config';
+import type { ConfigType } from '@nestjs/config';
 import { createHmac, timingSafeEqual } from 'crypto';
 import { AiService } from '../ai/ai.service';
 import config from '../config';
