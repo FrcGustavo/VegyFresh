@@ -9,6 +9,8 @@ import { RolesModule } from './roles/roles.module';
 import { SuppliersModule } from './suppliers/suppliers.module';
 import { OrdersModule } from './orders/orders.module';
 import { CatalogModule } from './catalog/catalog.module';
+import { AiModule } from './ai/ai.module';
+import { WhatsappModule } from './whatsapp/whatsapp.module';
 import config from './config';
 
 @Module({
@@ -37,6 +39,8 @@ import config from './config';
     SuppliersModule,
     OrdersModule,
     CatalogModule,
+    AiModule,
+    WhatsappModule,
   ],
   controllers: [AppController],
   providers: [AppService],
