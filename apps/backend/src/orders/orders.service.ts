@@ -25,40 +25,44 @@ export class OrdersService {
   ) {}
 
   async create(createOrderDto: CreateOrderDto) {
-    return this.ordersRepository.manager.transaction(async (manager) => {
-      const orderRepository = manager.getRepository(Order);
-      const orderItemRepository = manager.getRepository(OrderItem);
-      const client = await this.findClientOrFail(createOrderDto.client_id);
-      const user = await this.findUserOrFail(createOrderDto.user_id);
-      const itemsPayload = await this.buildItems(createOrderDto.items);
+    const savedOrderId = await this.ordersRepository.manager.transaction(
+      async (manager) => {
+        const orderRepository = manager.getRepository(Order);
+        const orderItemRepository = manager.getRepository(OrderItem);
+        const client = await this.findClientOrFail(createOrderDto.client_id);
+        const user = await this.findUserOrFail(createOrderDto.user_id);
+        const itemsPayload = await this.buildItems(createOrderDto.items);
 
-      const order = orderRepository.create({
-        client_id: client.id,
-        client,
-        user_id: user.id,
-        user,
-        total_amount: itemsPayload.totalAmount,
-        status: createOrderDto.status ?? OrderStatus.PENDING_REVIEW,
-        origin: createOrderDto.origin,
-      });
+        const order = orderRepository.create({
+          client_id: client.id,
+          client,
+          user_id: user.id,
+          user,
+          total_amount: itemsPayload.totalAmount,
+          status: createOrderDto.status ?? OrderStatus.PENDING_REVIEW,
+          origin: createOrderDto.origin,
+        });
 
-      const savedOrder = await orderRepository.save(order);
-      const orderItems = itemsPayload.items.map((item) =>
-        orderItemRepository.create({
-          order_id: savedOrder.id,
-          order: savedOrder,
-          product_id: item.product.id,
-          product: item.product,
-          quantity: item.quantity,
-          unit_price: item.unit_price,
-          subtotal: item.subtotal,
-        }),
-      );
+        const savedOrder = await orderRepository.save(order);
+        const orderItems = itemsPayload.items.map((item) =>
+          orderItemRepository.create({
+            order_id: savedOrder.id,
+            order: savedOrder,
+            product_id: item.product.id,
+            product: item.product,
+            quantity: item.quantity,
+            unit_price: item.unit_price,
+            subtotal: item.subtotal,
+          }),
+        );
 
-      await orderItemRepository.save(orderItems);
+        await orderItemRepository.save(orderItems);
 
-      return this.findOne(savedOrder.id);
-    });
+        return savedOrder.id;
+      },
+    );
+
+    return this.findOne(savedOrderId);
   }
 
   findAll() {
@@ -90,58 +94,62 @@ export class OrdersService {
   }
 
   async update(id: string, updateOrderDto: UpdateOrderDto) {
-    return this.ordersRepository.manager.transaction(async (manager) => {
-      const orderRepository = manager.getRepository(Order);
-      const orderItemRepository = manager.getRepository(OrderItem);
-      const existingOrder = await orderRepository.findOne({ where: { id } });
+    const updatedOrderId = await this.ordersRepository.manager.transaction(
+      async (manager) => {
+        const orderRepository = manager.getRepository(Order);
+        const orderItemRepository = manager.getRepository(OrderItem);
+        const existingOrder = await orderRepository.findOne({ where: { id } });
 
-      if (!existingOrder) {
-        throw new NotFoundException(`Order with id ${id} not found`);
-      }
+        if (!existingOrder) {
+          throw new NotFoundException(`Order with id ${id} not found`);
+        }
 
-      const client =
-        updateOrderDto.client_id !== undefined
-          ? await this.findClientOrFail(updateOrderDto.client_id)
-          : await this.findClientOrFail(existingOrder.client_id);
-      const user =
-        updateOrderDto.user_id !== undefined
-          ? await this.findUserOrFail(updateOrderDto.user_id)
-          : await this.findUserOrFail(existingOrder.user_id);
-      const itemsPayload =
-        updateOrderDto.items !== undefined
-          ? await this.buildItems(updateOrderDto.items)
-          : null;
+        const client =
+          updateOrderDto.client_id !== undefined
+            ? await this.findClientOrFail(updateOrderDto.client_id)
+            : await this.findClientOrFail(existingOrder.client_id);
+        const user =
+          updateOrderDto.user_id !== undefined
+            ? await this.findUserOrFail(updateOrderDto.user_id)
+            : await this.findUserOrFail(existingOrder.user_id);
+        const itemsPayload =
+          updateOrderDto.items !== undefined
+            ? await this.buildItems(updateOrderDto.items)
+            : null;
 
-      orderRepository.merge(existingOrder, {
-        client_id: client.id,
-        client,
-        user_id: user.id,
-        user,
-        status: updateOrderDto.status ?? existingOrder.status,
-        origin: updateOrderDto.origin ?? existingOrder.origin,
-        total_amount: itemsPayload?.totalAmount ?? existingOrder.total_amount,
-      });
+        orderRepository.merge(existingOrder, {
+          client_id: client.id,
+          client,
+          user_id: user.id,
+          user,
+          status: updateOrderDto.status ?? existingOrder.status,
+          origin: updateOrderDto.origin ?? existingOrder.origin,
+          total_amount: itemsPayload?.totalAmount ?? existingOrder.total_amount,
+        });
 
-      await orderRepository.save(existingOrder);
+        await orderRepository.save(existingOrder);
 
-      if (itemsPayload) {
-        await orderItemRepository.delete({ order_id: existingOrder.id });
-        const orderItems = itemsPayload.items.map((item) =>
-          orderItemRepository.create({
-            order_id: existingOrder.id,
-            order: existingOrder,
-            product_id: item.product.id,
-            product: item.product,
-            quantity: item.quantity,
-            unit_price: item.unit_price,
-            subtotal: item.subtotal,
-          }),
-        );
-        await orderItemRepository.save(orderItems);
-      }
+        if (itemsPayload) {
+          await orderItemRepository.delete({ order_id: existingOrder.id });
+          const orderItems = itemsPayload.items.map((item) =>
+            orderItemRepository.create({
+              order_id: existingOrder.id,
+              order: existingOrder,
+              product_id: item.product.id,
+              product: item.product,
+              quantity: item.quantity,
+              unit_price: item.unit_price,
+              subtotal: item.subtotal,
+            }),
+          );
+          await orderItemRepository.save(orderItems);
+        }
 
-      return this.findOne(existingOrder.id);
-    });
+        return existingOrder.id;
+      },
+    );
+
+    return this.findOne(updatedOrderId);
   }
 
   async remove(id: string) {
