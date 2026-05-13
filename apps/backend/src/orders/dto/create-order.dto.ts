@@ -19,7 +19,10 @@ export class CreateOrderDto {
   @ApiProperty({ example: '550e8400-e29b-41d4-a716-446655440000' })
   user_id!: string;
 
-  @ApiPropertyOptional({ enum: OrderStatus, example: OrderStatus.PENDING_REVIEW })
+  @ApiPropertyOptional({
+    enum: OrderStatus,
+    example: OrderStatus.PENDING_REVIEW,
+  })
   status?: OrderStatus;
 
   @ApiProperty({ enum: OrderOrigin, example: OrderOrigin.WHATSAPP })
