@@ -3,10 +3,12 @@ import {
   Logger,
   UnauthorizedException,
   BadRequestException,
+  Inject,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { ConfigType } from '@nestjs/config';
 import { createHmac, timingSafeEqual } from 'crypto';
 import { AiService } from '../ai/ai.service';
+import config from '../config';
 
 type MetaMessage = {
   from: string;
@@ -26,7 +28,7 @@ export class WhatsappService {
   private readonly logger = new Logger(WhatsappService.name);
 
   constructor(
-    private readonly configService: ConfigService,
+    @Inject(config.KEY) private readonly appConfig: ConfigType<typeof config>,
     private readonly aiService: AiService,
   ) {}
 
@@ -35,9 +37,7 @@ export class WhatsappService {
     verifyToken?: string,
     challenge?: string,
   ): string | null {
-    const expectedToken = this.configService.get<string>(
-      'WHATSAPP_VERIFY_TOKEN',
-    );
+    const expectedToken = this.appConfig.whatsapp.verifyToken;
 
     if (
       mode === 'subscribe' &&
@@ -85,27 +85,23 @@ export class WhatsappService {
       throw new BadRequestException('Both to and text are required');
     }
 
-    const token = this.configService.get<string>('WHATSAPP_ACCESS_TOKEN');
-    const phoneNumberId = this.configService.get<string>(
-      'WHATSAPP_PHONE_NUMBER_ID',
-    );
-    const apiVersion =
-      this.configService.get<string>('META_API_VERSION') ?? 'v20.0';
+    const { accessToken, phoneNumberId, apiVersion } = this.appConfig.whatsapp;
+    const version = apiVersion ?? 'v20.0';
 
-    if (!token || !phoneNumberId) {
+    if (!accessToken || !phoneNumberId) {
       this.logger.warn(
         'WHATSAPP_ACCESS_TOKEN or WHATSAPP_PHONE_NUMBER_ID not configured. Message not sent.',
       );
       return { sent: false, skipped: 'missing_credentials' };
     }
 
-    const url = `https://graph.facebook.com/${apiVersion}/${phoneNumberId}/messages`;
+    const url = `https://graph.facebook.com/${version}/${phoneNumberId}/messages`;
 
     const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${accessToken}`,
       },
       body: JSON.stringify({
         messaging_product: 'whatsapp',
@@ -134,10 +130,13 @@ export class WhatsappService {
   }
 
   private isValidSignature(signature?: string, rawBody?: string): boolean {
-    const appSecret = this.configService.get<string>('META_APP_SECRET');
+    const appSecret = this.appConfig.whatsapp.appSecret;
 
     if (!appSecret) {
-      return true;
+      this.logger.error(
+        'META_APP_SECRET is not configured. Webhook requests cannot be validated.',
+      );
+      return false;
     }
 
     if (!signature || !rawBody) {
