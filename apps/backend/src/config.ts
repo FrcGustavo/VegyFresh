@@ -11,6 +11,24 @@ export default registerAs('config', () => {
     },
     apiKey: process.env.API_KEY,
     jwtSecret: process.env.JWT_SECRET,
+    whatsapp: {
+      verifyToken: process.env.WHATSAPP_VERIFY_TOKEN,
+      accessToken: process.env.WHATSAPP_ACCESS_TOKEN,
+      phoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID,
+      appSecret: process.env.META_APP_SECRET,
+      apiVersion: process.env.META_API_VERSION,
+    },
+    ai: {
+      provider: process.env.AI_PROVIDER,
+      model: process.env.AI_MODEL,
+      openAiApiKey: process.env.OPENAI_API_KEY,
+      openAiBaseUrl:
+        process.env.OPENAI_BASE_URL ?? 'https://api.openai.com/v1',
+      geminiApiKey: process.env.GEMINI_API_KEY,
+      geminiBaseUrl:
+        process.env.GEMINI_BASE_URL ??
+        'https://generativelanguage.googleapis.com/v1beta',
+    },
     s3: {
       region: process.env.AWS_S3_REGION,
       endpoint: process.env.AWS_S3_ENDPOINT,
