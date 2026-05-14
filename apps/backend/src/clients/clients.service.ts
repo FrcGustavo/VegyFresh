@@ -38,6 +38,20 @@ export class ClientsService {
     });
   }
 
+  findByPhone(phoneNumber: string) {
+    // Normalize: strip non-digits and leading zeros for comparison
+    const normalized = phoneNumber.replace(/\D/g, '');
+    return this.clientsRepository
+      .createQueryBuilder('client')
+      .where(
+        "REGEXP_REPLACE(client.phone_number, '[^0-9]', '', 'g') LIKE :phone",
+        {
+          phone: `%${normalized}`,
+        },
+      )
+      .getOne();
+  }
+
   async findOne(id: string) {
     const client = await this.clientsRepository.findOne({
       where: { id },

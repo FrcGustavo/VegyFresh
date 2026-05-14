@@ -9,5 +9,6 @@ import { PriceList } from '../catalog/price-lists/entities/price-list.entity';
   imports: [TypeOrmModule.forFeature([Client, PriceList])],
   controllers: [ClientsController],
   providers: [ClientsService],
+  exports: [ClientsService],
 })
 export class ClientsModule {}
