@@ -22,7 +22,7 @@ export class AiService {
     const provider =
       this.configService.get<string>('AI_PROVIDER')?.toLowerCase() ??
       'heuristic';
-
+    // console.log({ provider })
     try {
       if (provider === 'openai') {
         return await this.callOpenAi(message, context);
@@ -54,8 +54,16 @@ export class AiService {
       return this.buildHeuristicInterpretation(message, context, 'openai');
     }
 
-    const prompt =
-      'You are an assistant for a produce ordering business. Respond with JSON only with keys: intent, confidence, extractedData, replyText.';
+    const prompt = `You are an order assistant for a produce business. The user message may be in Spanish.
+The available products catalog is provided in the context as a JSON array with fields: id, name, sku.
+Your job is to match what the user is requesting to products in the catalog by name or sku (fuzzy match is ok).
+
+Respond with ONLY a JSON object with these keys:
+- intent: "CREATE_ORDER" if the user wants to order products, otherwise "GENERAL_QUERY"
+- confidence: number between 0 and 1
+- extractedData: object with key "items" as array of { product_id, quantity } matched from catalog. Empty array if no match.
+- replyText: a brief reply in Spanish confirming the order items found, or asking for clarification if nothing matched.`;
+
     const response = await fetch(`${baseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
@@ -79,7 +87,10 @@ export class AiService {
       choices?: Array<{ message?: { content?: string } }>;
     };
 
+    // console.log({ data });
+
     const content = data.choices?.[0]?.message?.content;
+    // console.log({ content, message, context });
     return this.parseModelResponse(content, message, context, 'openai');
   }
 
@@ -98,29 +109,33 @@ export class AiService {
       return this.buildHeuristicInterpretation(message, context, 'gemini');
     }
 
-    const prompt =
-      'Respond with JSON only with keys: intent, confidence, extractedData, replyText. Context follows.';
-    const response = await fetch(
-      `${baseUrl}/models/${model}:generateContent`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-goog-api-key': apiKey,
-        },
-        body: JSON.stringify({
-          contents: [
-            {
-              parts: [
-                {
-                  text: `${prompt}\nmessage=${message}\ncontext=${JSON.stringify(context)}`,
-                },
-              ],
-            },
-          ],
-        }),
+    const prompt = `You are an order assistant for a produce business. The user message may be in Spanish.
+The available products catalog is provided in the context as a JSON array with fields: id, name, sku.
+Match what the user requests to products by name or sku (fuzzy match is ok).
+
+Respond with ONLY a raw JSON object (no markdown, no code fences) with these keys:
+- intent: "CREATE_ORDER" if the user wants to order products, otherwise "GENERAL_QUERY"
+- confidence: number between 0 and 1
+- extractedData: object with key "items" as array of { product_id, quantity } matched from catalog. Empty array if no match.
+- replyText: a brief reply in Spanish confirming the order items found, or asking for clarification if nothing matched.`;
+    const response = await fetch(`${baseUrl}/models/${model}:generateContent`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': apiKey,
       },
-    );
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              {
+                text: `${prompt}\nmessage=${message}\ncontext=${JSON.stringify(context)}`,
+              },
+            ],
+          },
+        ],
+      }),
+    });
 
     const data = (await response.json()) as {
       candidates?: Array<{
@@ -132,7 +147,6 @@ export class AiService {
       ?.map((part) => part.text ?? '')
       .join('')
       .trim();
-
     return this.parseModelResponse(content, message, context, 'gemini');
   }
 
@@ -146,8 +160,14 @@ export class AiService {
       return this.buildHeuristicInterpretation(message, context, provider);
     }
 
+    // Strip markdown code fences if the model wrapped its response in ```json ... ```
+    const stripped = content
+      .replace(/^```(?:json)?\s*/i, '')
+      .replace(/\s*```$/, '')
+      .trim();
+
     try {
-      const parsed = JSON.parse(content) as Partial<AiInterpretation>;
+      const parsed = JSON.parse(stripped) as Partial<AiInterpretation>;
       return {
         intent: parsed.intent ?? 'GENERAL_QUERY',
         confidence:
