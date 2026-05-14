@@ -1,14 +1,22 @@
 import { Visibility as ViewIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
-import { Button, Table, TableBody, TableCell, TableHead, TableRow, Typography, Paper, TableContainer, CircularProgress, Box, IconButton, Tooltip } from '@mui/material';
+import { Button, Table, TableBody, TableCell, TableHead, TableRow, Typography, Paper, TableContainer, CircularProgress, Box, IconButton, Tooltip, Autocomplete, TextField } from '@mui/material';
+import { useState } from 'react';
 import { Link } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchApi } from '../../../api';
 
 export default function OrdersList() {
   const queryClient = useQueryClient();
+  const [selectedClient, setSelectedClient] = useState<{ id: string; name: string } | null>(null);
+
   const { data, isLoading, error } = useQuery({
     queryKey: ['orders'],
     queryFn: () => fetchApi('/orders')
+  });
+
+  const { data: clientsData } = useQuery({
+    queryKey: ['clients'],
+    queryFn: () => fetchApi('/clients')
   });
 
   const deleteMutation = useMutation({
@@ -22,13 +30,36 @@ export default function OrdersList() {
   if (error) return <Typography color="error">Error al cargar: {(error as Error).message}</Typography>;
 
   const list = Array.isArray(data) ? data : (data?.data || []);
+  const clients = Array.isArray(clientsData) ? clientsData : (clientsData?.data || []);
+
+  const filteredList = selectedClient
+    ? list.filter((item: any) => item.client?.id === selectedClient.id)
+    : list;
 
   return (
     <div>
       <Typography variant="h4" gutterBottom>Lista de Orders</Typography>
-      <Button component={Link} to="/orders/create" variant="contained" color="primary" sx={{ mb: 3 }}>
-        Crear Nuevo
-      </Button>
+      <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 3 }}>
+        <Button component={Link} to="/orders/create" variant="contained" color="primary">
+          Crear Nuevo
+        </Button>
+        <Autocomplete
+          options={clients}
+          getOptionLabel={(option: any) => option.name ?? ''}
+          value={selectedClient}
+          onChange={(_e, value) => setSelectedClient(value)}
+          isOptionEqualToValue={(option: any, value: any) => option.id === value.id}
+          renderInput={(params) => (
+            <TextField {...params} label="Filtrar por cliente" size="small" />
+          )}
+          sx={{ minWidth: 280 }}
+        />
+        {selectedClient && (
+          <Button variant="text" size="small" onClick={() => setSelectedClient(null)}>
+            Limpiar filtro
+          </Button>
+        )}
+      </Box>
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
@@ -40,9 +71,9 @@ export default function OrdersList() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {list.length === 0 ? (
+            {filteredList.length === 0 ? (
                <TableRow><TableCell colSpan={4} align="center">No hay registros</TableCell></TableRow>
-            ) : list.map((item: any) => (
+            ) : filteredList.map((item: any) => (
               <TableRow key={item.id}>
                 <TableCell>{item.id?.substring(0, 8) || item.id}</TableCell>
                 <TableCell>{item.client?.name || "N/A"}</TableCell>
