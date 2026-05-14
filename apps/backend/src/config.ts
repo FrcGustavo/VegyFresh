@@ -17,6 +17,7 @@ export default registerAs('config', () => {
       phoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID,
       appSecret: process.env.META_APP_SECRET,
       apiVersion: process.env.META_API_VERSION,
+      botUserId: process.env.WHATSAPP_BOT_USER_ID,
     },
     ai: {
       provider: process.env.AI_PROVIDER,
