@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router';
 import { fetchApi } from '../../../api';
 
-export function useProductForm(id?: string) {
+export function useProductForm(id?: string, onSuccess?: () => void) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [formData, setFormData] = useState<any>({
@@ -86,7 +86,11 @@ export function useProductForm(id?: string) {
       // Wait, let's check ProductsCreate.tsx logic I saw earlier.
       
       queryClient.invalidateQueries({ queryKey: ['products'] });
-      navigate('/products');
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        navigate('/products');
+      }
     }
   });
 

@@ -3,10 +3,12 @@ import { Button, Table, TableBody, TableCell, TableHead, TableRow, Typography, P
 import SearchIcon from '@mui/icons-material/Search';
 import { Link } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
 import { fetchApi } from '../../../api';
 import { usePagination } from '../../../hooks/usePagination';
 import { useSearch } from '../../../hooks/useSearch';
 import TablePaginationFooter from '../../../components/TablePaginationFooter';
+import ProductFormModal from '../components/ProductFormModal';
 
 export default function ProductsList() {
   const queryClient = useQueryClient();
@@ -31,14 +33,16 @@ export default function ProductsList() {
 }
 
 function ProductsTable({ list, onDelete }: { list: any[]; onDelete: (id: string) => void }) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const { query, setQuery, filtered } = useSearch(list, ['sku', 'name', 'supplier.name']);
   const { page, rowsPerPage, paginated, handleChangePage, handleChangeRowsPerPage } = usePagination(filtered);
 
   return (
     <div>
+      <ProductFormModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
       <Typography variant="h4" gutterBottom>Lista de Products</Typography>
       <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 3 }}>
-        <Button component={Link} to="/products/create" variant="contained" color="primary">
+        <Button onClick={() => setIsModalOpen(true)} variant="contained" color="primary">
           Crear Nuevo
         </Button>
         <TextField

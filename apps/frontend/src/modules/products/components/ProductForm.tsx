@@ -14,6 +14,7 @@ interface ProductFormProps {
   updatePriceField: (index: number, field: string, value: any) => void;
   handleSubmit: (e: React.FormEvent) => void;
   title: string;
+  onCancel?: () => void;
 }
 
 export default function ProductForm({
@@ -27,9 +28,18 @@ export default function ProductForm({
   removePriceField,
   updatePriceField,
   handleSubmit,
-  title
+  title,
+  onCancel
 }: ProductFormProps) {
   const navigate = useNavigate();
+
+  const handleCancel = () => {
+    if (onCancel) {
+      onCancel();
+    } else {
+      navigate('/products');
+    }
+  };
 
   return (
     <Box>
@@ -76,7 +86,7 @@ export default function ProductForm({
             <Button type="submit" variant="contained" color="primary" disabled={isSaving}>
               {isSaving ? <CircularProgress size={24} /> : 'Guardar Producto'}
             </Button>
-            <Button variant="outlined" onClick={() => navigate('/products')} sx={{ ml: 2 }}>Cancelar</Button>
+            <Button variant="outlined" onClick={handleCancel} sx={{ ml: 2 }}>Cancelar</Button>
           </Box>
         </form>
       </Paper>
