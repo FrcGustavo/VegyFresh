@@ -1,90 +1,114 @@
-import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
-import SearchIcon from '@mui/icons-material/Search';
-import { Button, Table, TableBody, TableCell, TableHead, TableRow, Typography, Paper, TableContainer, CircularProgress, Box, IconButton, Tooltip, TextField, InputAdornment } from '@mui/material';
-import { Link } from 'react-router';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Button, Table, TableBody, TableCell, TableHead, TableRow, Typography, Paper, TableContainer, CircularProgress, Box, Container } from '@mui/material';
+import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
 import { fetchApi } from '../../../../api';
-import { usePagination } from '../../../../hooks/usePagination';
 import { useSearch } from '../../../../hooks/useSearch';
-import TablePaginationFooter from '../../../../components/TablePaginationFooter';
+import PriceListFormModal from '../components/PriceListFormModal';
+import ListPageToolbar from '../../../../components/ListPageToolbar';
+import ListSearchField from '../../../../components/ListSearchField';
 
 export default function PriceListsList() {
-  const queryClient = useQueryClient();
   const { data, isLoading, error } = useQuery({ queryKey: ['price-lists'], queryFn: () => fetchApi('/price-lists') });
 
   const list = Array.isArray(data) ? data : (data?.data || []);
 
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => {
-      if (list.length <= 1) {
-        alert("No puedes eliminar la última lista de precios existente.");
-        return Promise.reject(new Error("No puedes eliminar la última lista de precios existente."));
-      }
-      return fetchApi(`/price-lists/${id}`, { method: 'DELETE' });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['price-lists'] });
-    }
-  });
-
   if (isLoading) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}><CircularProgress /></Box>;
   if (error) return <Typography color="error">Error al cargar: {(error as Error).message}</Typography>;
 
-  return <PriceListsTable list={list} onDelete={(id) => deleteMutation.mutate(id)} />;
+  return <PriceListsTable list={list} />;
 }
 
-function PriceListsTable({ list, onDelete }: { list: any[]; onDelete: (id: string) => void }) {
+function PriceListsTable({ list }: { list: any[] }) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalPriceListId, setModalPriceListId] = useState<string | undefined>(undefined);
+  const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const { query, setQuery, filtered } = useSearch(list, ['name']);
-  const { page, rowsPerPage, paginated, handleChangePage, handleChangeRowsPerPage } = usePagination(filtered);
+
+  const currentIndex = filtered.findIndex(item => String(item.id ?? '') === selectedRowId);
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setModalPriceListId(undefined);
+  };
+
+  const handleNavigateItem = (newIndex: number) => {
+    if (newIndex >= 0 && newIndex < filtered.length) {
+      const newItem = filtered[newIndex];
+      setModalPriceListId(newItem.id);
+      setSelectedRowId(String(newItem.id ?? ''));
+    }
+  };
 
   return (
     <div>
-      <Typography variant="h4" gutterBottom>Listas de Precios</Typography>
-      <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 3 }}>
-        <Button component={Link} to="/price-lists/create" variant="contained" color="primary">
-          Crear Nueva
-        </Button>
-        <TextField
-          size="small"
-          placeholder="Buscar por nombre..."
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment> }}
-          sx={{ minWidth: 280 }}
-        />
-      </Box>
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>ID</TableCell>
-              <TableCell>Nombre</TableCell>
-              <TableCell>Acciones</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {paginated.length === 0 ? (
-               <TableRow><TableCell colSpan={3} align="center">No hay registros</TableCell></TableRow>
-            ) : paginated.map((item: any) => (
-              <TableRow key={item.id}>
-                <TableCell>{item.id?.substring(0, 8) || item.id}</TableCell>
-                <TableCell>{item.name}</TableCell>
-                <TableCell>
-                  <Tooltip title="Editar"><IconButton component={Link} to={`/price-lists/${item.id}/edit`} color="secondary"><EditIcon /></IconButton></Tooltip>
-                  <Tooltip title="Eliminar"><IconButton color="error" onClick={() => onDelete(item.id)}><DeleteIcon /></IconButton></Tooltip>
-                </TableCell>
+      <PriceListFormModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        priceListId={modalPriceListId}
+        title={modalPriceListId ? 'Editar Lista de Precios' : 'Crear Lista de Precios'}
+        list={filtered}
+        currentIndex={currentIndex}
+        onNavigate={handleNavigateItem}
+      />
+      <ListPageToolbar>
+        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+          <Button
+            onClick={() => {
+              setModalPriceListId(undefined);
+              setIsModalOpen(true);
+            }}
+            variant="contained"
+            color="primary"
+          >
+            Crear Nueva
+          </Button>
+          <ListSearchField
+            placeholder="Buscar por nombre..."
+            value={query}
+            onChange={setQuery}
+          />
+        </Box>
+      </ListPageToolbar>
+      <Container>
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>ID</TableCell>
+                <TableCell>Nombre</TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-        <TablePaginationFooter
-          count={filtered.length}
-          page={page}
-          rowsPerPage={rowsPerPage}
-          onPageChange={handleChangePage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-        />
-      </TableContainer>
+            </TableHead>
+            <TableBody>
+              {filtered.length === 0 ? (
+                <TableRow><TableCell colSpan={2} align="center">No hay registros</TableCell></TableRow>
+              ) : filtered.map((item: any) => {
+                const rowId = String(item.id ?? '');
+                return (
+                  <TableRow
+                    key={item.id}
+                    hover
+                    selected={selectedRowId === rowId}
+                    onClick={() => setSelectedRowId(rowId)}
+                    onDoubleClick={() => {
+                      setModalPriceListId(item.id);
+                      setIsModalOpen(true);
+                      setSelectedRowId(rowId);
+                    }}
+                    sx={{
+                      cursor: 'pointer',
+                      '&.Mui-selected': { backgroundColor: 'action.selected' },
+                      '&.Mui-selected:hover': { backgroundColor: 'action.selected' },
+                    }}
+                  >
+                    <TableCell>{item.id?.substring(0, 8) || item.id}</TableCell>
+                    <TableCell>{item.name}</TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Container>
     </div>
   );
 }
