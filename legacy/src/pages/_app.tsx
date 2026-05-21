@@ -11,7 +11,7 @@ const GlobalStyles = createGlobalStyle`
   margin: 0;
   box-sizing: border-box;
   font-family: 'Open Sans', sans-serif;
-  font-size: 14px;
+  font-size: 12px;
 }
 
 body, #__next {
