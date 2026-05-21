@@ -3,18 +3,20 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router';
 import { fetchApi } from '../../../api';
 
-export function useOrderForm(id?: string) {
+type SaveAction = 'save' | 'save-and-close' | 'save-and-new';
+
+export function useOrderForm(id?: string, onSuccess?: (action: SaveAction) => void) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [formData, setFormData] = useState<any>({
     client_id: '',
-    user_id: '', // Se podría sacar del contexto de auth después
+    user_id: '',
     status: 'PENDING_REVIEW',
     origin: 'WHATSAPP'
   });
   const [items, setItems] = useState<any[]>([]);
+  const [isDisabled, setIsDisabled] = useState(!!id);
 
-  // Fetch initial data if editing
   const { data: existingOrder, isLoading: isLoadingOrder } = useQuery({
     queryKey: ['orders', id],
     queryFn: () => fetchApi(`/orders/${id}`),
@@ -34,13 +36,12 @@ export function useOrderForm(id?: string) {
           product_id: item.product_id,
           quantity: item.quantity,
           unit_price: item.unit_price,
-          product: item.product // Necesario para el Autocomplete
+          product: item.product
         })));
       }
     }
   }, [existingOrder]);
 
-  // Fetch dependencies
   const { data: clientsData } = useQuery({ queryKey: ['clients'], queryFn: () => fetchApi('/clients') });
   const { data: usersData } = useQuery({ queryKey: ['users'], queryFn: () => fetchApi('/users') });
   const { data: productsData } = useQuery({ queryKey: ['products'], queryFn: () => fetchApi('/products') });
@@ -74,7 +75,6 @@ export function useOrderForm(id?: string) {
 
     if (field === 'product' && value) {
       newItems[index].product_id = value.id;
-      // Buscar precio en la lista del cliente
       if (selectedClient?.priceList?.productPrices) {
         const priceObj = selectedClient.priceList.productPrices.find((p: any) => p.product_id === value.id);
         if (priceObj) {
@@ -96,12 +96,10 @@ export function useOrderForm(id?: string) {
     }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
-      navigate('/orders');
     }
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = (action: SaveAction = 'save') => {
     if (items.length === 0) {
       alert("Debe agregar al menos un producto al pedido.");
       return;
@@ -110,7 +108,15 @@ export function useOrderForm(id?: string) {
       ...formData, 
       items: items.map(i => ({ product_id: i.product_id, quantity: Number(i.quantity), unit_price: Number(i.unit_price) })) 
     };
-    mutation.mutate(payload);
+    mutation.mutate(payload, {
+      onSuccess: () => {
+        if (onSuccess) {
+          onSuccess(action);
+        } else {
+          navigate('/orders');
+        }
+      }
+    });
   };
 
   return {
@@ -126,6 +132,8 @@ export function useOrderForm(id?: string) {
     addItemField,
     removeItemField,
     updateItemField,
-    handleSubmit
+    handleSubmit,
+    isDisabled,
+    setIsDisabled
   };
 }

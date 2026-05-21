@@ -1,4 +1,5 @@
-import { useState, useRef, ReactNode } from 'react';
+import type { ReactNode } from 'react';
+import { useState, useRef } from 'react';
 import { Paper, Box, IconButton, Tooltip } from '@mui/material';
 import { Close as CloseIcon, Minimize as MinimizeIcon, Maximize as MaximizeIcon } from '@mui/icons-material';
 
@@ -6,7 +7,9 @@ interface FloatingModalProps {
   isOpen: boolean;
   onClose: () => void;
   title: string;
-  children: ReactNode;
+  children?: ReactNode;
+  renderContent?: () => ReactNode;
+  toolbar?: ReactNode;
   initialWidth?: number;
   initialHeight?: number;
   initialX?: number;
@@ -18,13 +21,14 @@ export default function FloatingModal({
   onClose,
   title,
   children,
+  renderContent,
+  toolbar,
   initialWidth = 600,
   initialHeight = 500,
   initialX = 100,
   initialY = 100,
 }: FloatingModalProps) {
   const [position, setPosition] = useState({ x: initialX, y: initialY });
-  const [size, setSize] = useState({ width: initialWidth, height: initialHeight });
   const [isMinimized, setIsMinimized] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -67,8 +71,8 @@ export default function FloatingModal({
         position: 'fixed',
         left: `${position.x}px`,
         top: `${position.y}px`,
-        width: isMinimized ? 300 : `${size.width}px`,
-        height: isMinimized ? 'auto' : `${size.height}px`,
+        width: isMinimized ? 300 : `${initialWidth}px`,
+        height: isMinimized ? 'auto' : `${initialHeight}px`,
         zIndex: 1300,
         display: 'flex',
         flexDirection: 'column',
@@ -114,6 +118,9 @@ export default function FloatingModal({
         </Box>
       </Box>
 
+      {/* Toolbar - Optional */}
+      {toolbar && !isMinimized && toolbar}
+
       {/* Content */}
       {!isMinimized && (
         <Box
@@ -124,7 +131,7 @@ export default function FloatingModal({
             backgroundColor: 'background.paper',
           }}
         >
-          {children}
+          {renderContent ? renderContent() : children}
         </Box>
       )}
     </Paper>

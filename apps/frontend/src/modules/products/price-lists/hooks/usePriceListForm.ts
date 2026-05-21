@@ -3,11 +3,14 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router';
 import { fetchApi } from '../../../../api';
 
-export function usePriceListForm(id?: string) {
+type SaveAction = 'save' | 'save-and-close' | 'save-and-new';
+
+export function usePriceListForm(id?: string, onSuccess?: (action: SaveAction) => void) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [name, setName] = useState('');
   const [productsList, setProductsList] = useState<any[]>([]);
+  const [isDisabled, setIsDisabled] = useState(!!id);
 
   const { data: productsData } = useQuery({ queryKey: ['products'], queryFn: () => fetchApi('/products') });
   const products = Array.isArray(productsData) ? productsData : (productsData?.data || []);
@@ -21,12 +24,11 @@ export function usePriceListForm(id?: string) {
   useEffect(() => {
     if (existingPriceList) {
       setName(existingPriceList.name);
-      // Extraer precios actuales de la lista
       if (existingPriceList.productPrices) {
         setProductsList(existingPriceList.productPrices.map((pp: any) => ({
           product_id: pp.product_id,
           price: pp.price,
-          id: pp.id // Importante para actualizaciones si fuera necesario
+          id: pp.id
         })));
       }
     }
@@ -39,12 +41,6 @@ export function usePriceListForm(id?: string) {
         : await fetchApi('/price-lists', { method: 'POST', body: JSON.stringify({ name }) });
       
       const listId = id || priceList.id;
-
-      // Simplificación: eliminar y recrear precios o actualizarlos
-      // Por ahora recreamos para mantener consistencia con el diseño actual
-      if (id) {
-        // En una implementación real, esto debería ser un bulk update en el backend
-      }
 
       for (const p of productsList) {
         if (p.product_id && p.price > 0) {
@@ -63,7 +59,6 @@ export function usePriceListForm(id?: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['price-lists'] });
       queryClient.invalidateQueries({ queryKey: ['product-prices'] });
-      navigate('/price-lists');
     }
   });
 
@@ -79,6 +74,18 @@ export function usePriceListForm(id?: string) {
     setProductsList(productsList.filter((_, i) => i !== index));
   };
 
+  const handleSubmit = (action: SaveAction = 'save') => {
+    mutation.mutate(undefined, {
+      onSuccess: () => {
+        if (onSuccess) {
+          onSuccess(action);
+        } else {
+          navigate('/price-lists');
+        }
+      }
+    });
+  };
+
   return {
     name,
     setName,
@@ -89,6 +96,8 @@ export function usePriceListForm(id?: string) {
     addProductField,
     updateProductField,
     removeProductField,
-    handleSubmit: (e: React.FormEvent) => { e.preventDefault(); mutation.mutate(); }
+    handleSubmit,
+    isDisabled,
+    setIsDisabled
   };
 }

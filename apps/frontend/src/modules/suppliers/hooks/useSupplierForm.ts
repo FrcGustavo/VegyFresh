@@ -3,7 +3,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router';
 import { fetchApi } from '../../../api';
 
-export function useSupplierForm(id?: string) {
+type SaveAction = 'save' | 'save-and-close' | 'save-and-new';
+
+export function useSupplierForm(id?: string, onSuccess?: (action: SaveAction) => void) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [formData, setFormData] = useState<any>({
@@ -11,6 +13,7 @@ export function useSupplierForm(id?: string) {
     contact_info: '',
     logo_url: ''
   });
+  const [isDisabled, setIsDisabled] = useState(!!id);
 
   const { data: existingSupplier, isLoading } = useQuery({
     queryKey: ['suppliers', id],
@@ -40,13 +43,19 @@ export function useSupplierForm(id?: string) {
     }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['suppliers'] });
-      navigate('/suppliers');
     }
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    mutation.mutate(formData);
+  const handleSubmit = (action: SaveAction = 'save') => {
+    mutation.mutate(formData, {
+      onSuccess: () => {
+        if (onSuccess) {
+          onSuccess(action);
+        } else {
+          navigate('/suppliers');
+        }
+      }
+    });
   };
 
   return {
@@ -54,6 +63,8 @@ export function useSupplierForm(id?: string) {
     isLoading,
     isSaving: mutation.isPending,
     handleChange,
-    handleSubmit
+    handleSubmit,
+    isDisabled,
+    setIsDisabled
   };
 }

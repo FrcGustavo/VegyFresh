@@ -3,7 +3,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router';
 import { fetchApi } from '../../../api';
 
-export function useClientForm(id?: string) {
+type SaveAction = 'save' | 'save-and-close' | 'save-and-new';
+
+export function useClientForm(id?: string, onSuccess?: (action: SaveAction) => void) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [formData, setFormData] = useState<any>({
@@ -13,6 +15,7 @@ export function useClientForm(id?: string) {
     address: '',
     price_list_id: ''
   });
+  const [isDisabled, setIsDisabled] = useState(!!id);
 
   const { data: existingClient, isLoading } = useQuery({
     queryKey: ['clients', id],
@@ -47,13 +50,19 @@ export function useClientForm(id?: string) {
     }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['clients'] });
-      navigate('/clients');
     }
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    mutation.mutate(formData);
+  const handleSubmit = (action: SaveAction = 'save') => {
+    mutation.mutate(formData, {
+      onSuccess: () => {
+        if (onSuccess) {
+          onSuccess(action);
+        } else {
+          navigate('/clients');
+        }
+      }
+    });
   };
 
   return {
@@ -62,6 +71,8 @@ export function useClientForm(id?: string) {
     isLoading,
     isSaving: mutation.isPending,
     handleChange,
-    handleSubmit
+    handleSubmit,
+    isDisabled,
+    setIsDisabled
   };
 }

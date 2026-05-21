@@ -1,20 +1,18 @@
-import { Box, TextField, MenuItem, Button, Typography, IconButton, CircularProgress, Paper } from '@mui/material';
+import { Box, TextField, MenuItem, Typography, IconButton, Paper, Button } from '@mui/material';
 import { Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
-import { useNavigate } from 'react-router';
 
 interface ProductFormProps {
   formData: any;
   prices: any[];
   suppliers: any[];
   priceLists: any[];
-  isSaving: boolean;
   handleChange: (e: any) => void;
   addPriceField: () => void;
   removePriceField: (index: number) => void;
   updatePriceField: (index: number, field: string, value: any) => void;
-  handleSubmit: (e: React.FormEvent) => void;
+  handleSubmit: (action: 'save' | 'save-and-close' | 'save-and-new') => void;
   title: string;
-  onCancel?: () => void;
+  isDisabled?: boolean;
 }
 
 export default function ProductForm({
@@ -22,35 +20,25 @@ export default function ProductForm({
   prices,
   suppliers,
   priceLists,
-  isSaving,
   handleChange,
   addPriceField,
   removePriceField,
   updatePriceField,
   handleSubmit,
   title,
-  onCancel
+  isDisabled = false
 }: ProductFormProps) {
-  const navigate = useNavigate();
-
-  const handleCancel = () => {
-    if (onCancel) {
-      onCancel();
-    } else {
-      navigate('/products');
-    }
-  };
 
   return (
     <Box>
       <Typography variant="h4" gutterBottom>{title}</Typography>
       <Paper sx={{ p: 3, maxWidth: 600 }}>
-        <form onSubmit={handleSubmit}>
-          <TextField fullWidth label="SKU" name="sku" margin="normal" value={formData.sku || ''} onChange={handleChange} required />
-          <TextField fullWidth label="Nombre" name="name" margin="normal" value={formData.name || ''} onChange={handleChange} required />
-          <TextField fullWidth label="Descripción" name="description" margin="normal" value={formData.description || ''} onChange={handleChange} />
-          <TextField fullWidth label="Stock" name="stock" type="number" margin="normal" value={formData.stock || ''} onChange={handleChange} />
-          <TextField select fullWidth label="Proveedor" name="supplier_id" margin="normal" value={formData.supplier_id || ''} onChange={handleChange} required>
+        <form onSubmit={(e) => { e.preventDefault(); handleSubmit('save'); }}>
+          <TextField fullWidth label="SKU" name="sku" margin="normal" value={formData.sku || ''} onChange={handleChange} required disabled={isDisabled} />
+          <TextField fullWidth label="Nombre" name="name" margin="normal" value={formData.name || ''} onChange={handleChange} required disabled={isDisabled} />
+          <TextField fullWidth label="Descripción" name="description" margin="normal" value={formData.description || ''} onChange={handleChange} disabled={isDisabled} />
+          <TextField fullWidth label="Stock" name="stock" type="number" margin="normal" value={formData.stock || ''} onChange={handleChange} disabled={isDisabled} />
+          <TextField select fullWidth label="Proveedor" name="supplier_id" margin="normal" value={formData.supplier_id || ''} onChange={handleChange} required disabled={isDisabled}>
             {suppliers.map((s: any) => <MenuItem key={s.id} value={s.id}>{s.name}</MenuItem>)}
           </TextField>
 
@@ -64,6 +52,7 @@ export default function ProductForm({
                 onChange={(e) => updatePriceField(index, 'price_list_id', e.target.value)}
                 sx={{ flex: 1 }}
                 required
+                disabled={isDisabled}
               >
                 {priceLists.map((list: any) => (
                   <MenuItem key={list.id} value={list.id}>{list.name}</MenuItem>
@@ -76,18 +65,12 @@ export default function ProductForm({
                 onChange={(e) => updatePriceField(index, 'price', e.target.value)}
                 sx={{ width: 150 }}
                 required
+                disabled={isDisabled}
               />
-              <IconButton color="error" onClick={() => removePriceField(index)}><DeleteIcon /></IconButton>
+              {!isDisabled && <IconButton color="error" onClick={() => removePriceField(index)}><DeleteIcon /></IconButton>}
             </Box>
           ))}
-          <Button startIcon={<AddIcon />} onClick={addPriceField}>Agregar precio en otra lista</Button>
-          
-          <Box sx={{ mt: 4 }}>
-            <Button type="submit" variant="contained" color="primary" disabled={isSaving}>
-              {isSaving ? <CircularProgress size={24} /> : 'Guardar Producto'}
-            </Button>
-            <Button variant="outlined" onClick={handleCancel} sx={{ ml: 2 }}>Cancelar</Button>
-          </Box>
+          {!isDisabled && <Button startIcon={<AddIcon />} onClick={addPriceField}>Agregar precio en otra lista</Button>}
         </form>
       </Paper>
     </Box>

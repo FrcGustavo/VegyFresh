@@ -1,6 +1,5 @@
-import { Button, TextField, Typography, Box, Paper, CircularProgress, MenuItem, IconButton, Autocomplete } from '@mui/material';
+import { Button, TextField, Typography, Box, Paper, IconButton, Autocomplete } from '@mui/material';
 import { Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
-import { useNavigate } from 'react-router';
 
 interface PriceListFormProps {
   name: string;
@@ -11,8 +10,9 @@ interface PriceListFormProps {
   addProductField: () => void;
   updateProductField: (index: number, field: string, value: any) => void;
   removeProductField: (index: number) => void;
-  handleSubmit: (e: React.FormEvent) => void;
+  handleSubmit: (action: 'save' | 'save-and-close' | 'save-and-new') => void;
   title: string;
+  isDisabled?: boolean;
 }
 
 export default function PriceListForm({
@@ -25,16 +25,16 @@ export default function PriceListForm({
   updateProductField,
   removeProductField,
   handleSubmit,
-  title
+  title,
+  isDisabled = false
 }: PriceListFormProps) {
-  const navigate = useNavigate();
 
   return (
     <Box>
       <Typography variant="h4" gutterBottom>{title}</Typography>
       <Paper sx={{ p: 3, maxWidth: 800 }}>
-        <form onSubmit={handleSubmit}>
-          <TextField fullWidth label="Nombre de la Lista" margin="normal" value={name} onChange={(e) => setName(e.target.value)} required />
+        <form onSubmit={(e) => { e.preventDefault(); handleSubmit('save'); }}>
+          <TextField fullWidth label="Nombre de la Lista" margin="normal" value={name} onChange={(e) => setName(e.target.value)} required disabled={isDisabled} />
           
           <Typography variant="h6" sx={{ mt: 4, mb: 2 }}>Productos en esta lista</Typography>
           {productsList.map((p, index) => (
@@ -43,7 +43,8 @@ export default function PriceListForm({
                 options={products}
                 getOptionLabel={(option) => option.name + ' (' + option.sku + ')'}
                 value={products.find(prod => prod.id === p.product_id) || null}
-                onChange={(e, newValue) => updateProductField(index, 'product_id', newValue ? newValue.id : '')}
+                onChange={(_, newValue) => updateProductField(index, 'product_id', newValue ? newValue.id : '')}
+                disabled={isDisabled}
                 sx={{ flex: 1 }}
                 renderInput={(params) => <TextField {...params} label="Seleccionar Producto" required />}
               />
@@ -54,18 +55,13 @@ export default function PriceListForm({
                 onChange={(e) => updateProductField(index, 'price', e.target.value)}
                 sx={{ width: 200 }}
                 required
+                disabled={isDisabled}
               />
-              <IconButton color="error" onClick={() => removeProductField(index)}><DeleteIcon /></IconButton>
+              {!isDisabled && <IconButton color="error" onClick={() => removeProductField(index)}><DeleteIcon /></IconButton>}
             </Box>
           ))}
-          <Button startIcon={<AddIcon />} onClick={addProductField} sx={{ mb: 2 }}>Agregar Producto a la Lista</Button>
+          {!isDisabled && <Button startIcon={<AddIcon />} onClick={addProductField} sx={{ mb: 2 }}>Agregar Producto a la Lista</Button>}
 
-          <Box sx={{ mt: 3, borderTop: 1, borderColor: 'divider', pt: 3 }}>
-            <Button type="submit" variant="contained" color="primary" disabled={isSaving || !name}>
-              {isSaving ? <CircularProgress size={24} /> : 'Guardar Lista Completa'}
-            </Button>
-            <Button variant="outlined" onClick={() => navigate('/price-lists')} sx={{ ml: 2 }}>Cancelar</Button>
-          </Box>
         </form>
       </Paper>
     </Box>
