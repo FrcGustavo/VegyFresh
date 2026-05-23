@@ -1,8 +1,6 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddFolioToCoreResources1779541000000
-  implements MigrationInterface
-{
+export class AddFolioToCoreResources1779541000000 implements MigrationInterface {
   name = 'AddFolioToCoreResources1779541000000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
@@ -79,7 +77,9 @@ export class AddFolioToCoreResources1779541000000
     await queryRunner.query(
       `ALTER TABLE "suppliers" ALTER COLUMN "folio" SET NOT NULL`,
     );
-    await queryRunner.query(`ALTER TABLE "users" ALTER COLUMN "folio" SET NOT NULL`);
+    await queryRunner.query(
+      `ALTER TABLE "users" ALTER COLUMN "folio" SET NOT NULL`,
+    );
     await queryRunner.query(
       `ALTER TABLE "price_lists" ALTER COLUMN "folio" SET NOT NULL`,
     );

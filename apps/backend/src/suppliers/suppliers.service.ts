@@ -5,12 +5,7 @@ import { UpdateSupplierDto } from './dto/update-supplier.dto';
 import { Supplier } from './entities/supplier.entity';
 import { ILike, Repository } from 'typeorm';
 
-type SupplierOrderField =
-  | 'id'
-  | 'folio'
-  | 'name'
-  | 'createdAt'
-  | 'updatedAt';
+type SupplierOrderField = 'id' | 'folio' | 'name' | 'createdAt' | 'updatedAt';
 
 type FindAllSuppliersFilters = {
   search?: string;

@@ -284,8 +284,9 @@ export class OrdersService {
     createdTo?: string,
   ) {
     if (createdFilter === 'today') {
-      qb.andWhere(`order.created_at >= CURRENT_DATE`)
-        .andWhere(`order.created_at < CURRENT_DATE + INTERVAL '1 day'`);
+      qb.andWhere(`order.created_at >= CURRENT_DATE`).andWhere(
+        `order.created_at < CURRENT_DATE + INTERVAL '1 day'`,
+      );
       return;
     }
 

@@ -5,12 +5,7 @@ import { UpdatePriceListDto } from './dto/update-price-list.dto';
 import { PriceList } from './entities/price-list.entity';
 import { ILike, Repository } from 'typeorm';
 
-type PriceListOrderField =
-  | 'id'
-  | 'folio'
-  | 'name'
-  | 'createdAt'
-  | 'updatedAt';
+type PriceListOrderField = 'id' | 'folio' | 'name' | 'createdAt' | 'updatedAt';
 
 type FindAllPriceListsFilters = {
   search?: string;

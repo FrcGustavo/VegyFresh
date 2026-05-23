@@ -27,11 +27,27 @@ export class ProductsController {
 
   @Get()
   @ApiOperation({ summary: 'Get all products' })
-  @ApiQuery({ name: 'search', required: false, description: 'Search by product name' })
-  @ApiQuery({ name: 'order_by', required: false, description: 'Field to sort by' })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    description: 'Search by product name',
+  })
+  @ApiQuery({
+    name: 'order_by',
+    required: false,
+    description: 'Field to sort by',
+  })
   @ApiQuery({ name: 'order', required: false, enum: ['asc', 'desc'] })
-  @ApiQuery({ name: 'limit', required: false, description: 'Items per page (default: 25)' })
-  @ApiQuery({ name: 'offset', required: false, description: 'Pagination offset' })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    description: 'Items per page (default: 25)',
+  })
+  @ApiQuery({
+    name: 'offset',
+    required: false,
+    description: 'Pagination offset',
+  })
   findAll(
     @Query('search') search?: string,
     @Query('serach') misspelledSearch?: string,
@@ -46,7 +62,11 @@ export class ProductsController {
     const parsedOffset = this.parseNumberQuery(offset, 'offset', 0);
     const normalizedOrder = order?.toUpperCase();
 
-    if (normalizedOrder && normalizedOrder !== 'ASC' && normalizedOrder !== 'DESC') {
+    if (
+      normalizedOrder &&
+      normalizedOrder !== 'ASC' &&
+      normalizedOrder !== 'DESC'
+    ) {
       throw new BadRequestException('order must be "asc" or "desc"');
     }
 
@@ -80,14 +100,20 @@ export class ProductsController {
     return this.productsService.remove(id);
   }
 
-  private parseNumberQuery(value: string | undefined, paramName: string, defaultValue: number) {
+  private parseNumberQuery(
+    value: string | undefined,
+    paramName: string,
+    defaultValue: number,
+  ) {
     if (value === undefined) {
       return defaultValue;
     }
 
     const parsed = Number(value);
     if (!Number.isInteger(parsed) || parsed < 0) {
-      throw new BadRequestException(`${paramName} must be a non-negative integer`);
+      throw new BadRequestException(
+        `${paramName} must be a non-negative integer`,
+      );
     }
 
     return parsed;

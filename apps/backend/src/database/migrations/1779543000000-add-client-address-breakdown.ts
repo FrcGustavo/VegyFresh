@@ -1,8 +1,6 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddClientAddressBreakdown1779543000000
-  implements MigrationInterface
-{
+export class AddClientAddressBreakdown1779543000000 implements MigrationInterface {
   name = 'AddClientAddressBreakdown1779543000000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
@@ -27,8 +25,12 @@ export class AddClientAddressBreakdown1779543000000
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`ALTER TABLE "clients" DROP COLUMN "internal_number"`);
-    await queryRunner.query(`ALTER TABLE "clients" DROP COLUMN "external_number"`);
+    await queryRunner.query(
+      `ALTER TABLE "clients" DROP COLUMN "internal_number"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "clients" DROP COLUMN "external_number"`,
+    );
     await queryRunner.query(`ALTER TABLE "clients" DROP COLUMN "postal_code"`);
     await queryRunner.query(`ALTER TABLE "clients" DROP COLUMN "city"`);
     await queryRunner.query(`ALTER TABLE "clients" DROP COLUMN "state"`);

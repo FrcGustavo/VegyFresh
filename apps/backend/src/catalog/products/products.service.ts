@@ -37,7 +37,9 @@ export class ProductsService {
     const supplier = await this.findSupplierOrFail(
       createProductDto.supplier_id,
     );
-    const productFolio = await this.buildProductFolio(this.productsRepository.manager);
+    const productFolio = await this.buildProductFolio(
+      this.productsRepository.manager,
+    );
     const product = this.productsRepository.create({
       ...createProductDto,
       folio: productFolio,

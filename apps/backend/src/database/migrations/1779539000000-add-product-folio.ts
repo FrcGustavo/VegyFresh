@@ -35,11 +35,7 @@ export class AddProductFolio1779539000000 implements MigrationInterface {
     await queryRunner.query(
       `ALTER TABLE "products" DROP CONSTRAINT "UQ_products_folio"`,
     );
-    await queryRunner.query(
-      `ALTER TABLE "products" DROP COLUMN "folio"`,
-    );
-    await queryRunner.query(
-      `DROP SEQUENCE IF EXISTS "products_folio_seq"`,
-    );
+    await queryRunner.query(`ALTER TABLE "products" DROP COLUMN "folio"`);
+    await queryRunner.query(`DROP SEQUENCE IF EXISTS "products_folio_seq"`);
   }
 }
