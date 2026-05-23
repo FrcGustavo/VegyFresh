@@ -20,6 +20,7 @@ import SuppliersList from './modules/suppliers/pages/SuppliersList';
 
 // Usuarios
 import UsersList from './modules/users/pages/UsersList';
+import SettingsPage from './modules/settings/pages/SettingsPage';
 
 type ThemePreference = 'light' | 'dark' | 'system';
 
@@ -301,12 +302,7 @@ function App() {
         <Routes>
           <Route
             path="/"
-            element={(
-              <MainLayout
-                themePreference={themePreference}
-                onThemePreferenceChange={setThemePreference}
-              />
-            )}
+            element={<MainLayout />}
           >
             <Route index element={<Navigate to="/orders" replace />} />
             
@@ -327,6 +323,17 @@ function App() {
 
             {/* Usuarios */}
             <Route path="users" element={<UsersList />} />
+
+            {/* Configuración */}
+            <Route
+              path="settings"
+              element={(
+                <SettingsPage
+                  themePreference={themePreference}
+                  onThemePreferenceChange={setThemePreference}
+                />
+              )}
+            />
           </Route>
         </Routes>
       </BrowserRouter>
