@@ -39,7 +39,7 @@ export default function ModalToolbar({
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        padding: '1rem 2rem',
+        padding: 1,
         backgroundColor: 'background.paper',
         borderBottom: '1px solid',
         borderColor: 'divider',

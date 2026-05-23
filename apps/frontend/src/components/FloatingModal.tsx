@@ -85,7 +85,7 @@ export default function FloatingModal({
       <Box
         onMouseDown={handleMouseDown}
         sx={{
-          padding: 2,
+          padding: '0.5rem 1rem',
           backgroundColor: 'primary.main',
           color: 'white',
           display: 'flex',

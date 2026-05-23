@@ -16,7 +16,6 @@ export default function ListPageToolbar({ children }: ListPageToolbarProps) {
         gap: 2,
         flexWrap: 'wrap',
         p: 1,
-        mb: 3,
         borderBottom: '1px solid',
         borderColor: 'divider',
         backgroundColor: 'background.default',
