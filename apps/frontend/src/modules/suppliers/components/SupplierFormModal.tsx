@@ -4,6 +4,10 @@ import ModalToolbar from '../../../components/ModalToolbar';
 import { useSupplierForm } from '../hooks/useSupplierForm';
 import SupplierForm from './SupplierForm';
 
+interface SupplierListItemRef {
+  id: string | number;
+}
+
 interface SupplierFormModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -11,7 +15,7 @@ interface SupplierFormModalProps {
   title?: string;
   initialWidth?: number;
   initialHeight?: number;
-  list?: any[];
+  list?: SupplierListItemRef[];
   currentIndex?: number;
   onNavigate?: (newIndex: number) => void;
 }

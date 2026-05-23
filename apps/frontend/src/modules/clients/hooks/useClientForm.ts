@@ -12,25 +12,46 @@ import {
 } from '../constants/locationCatalog';
 
 type SaveAction = 'save' | 'save-and-close' | 'save-and-new';
+type ClientChangeEvent = { target: { name: string; value: string } };
+interface ClientFormData {
+  name: string;
+  phone_number: string;
+  email: string;
+  country: string;
+  state: string;
+  city: string;
+  postal_code: string;
+  address: string;
+  suburb: string;
+  external_number: string;
+  internal_number: string;
+  avatar_url: string;
+  price_list_id: string;
+}
+interface PriceListOption {
+  id: string;
+  name: string;
+}
+const EMPTY_CLIENT_FORM: ClientFormData = {
+  name: '',
+  phone_number: '',
+  email: '',
+  country: '',
+  state: '',
+  city: '',
+  postal_code: '',
+  address: '',
+  suburb: '',
+  external_number: '',
+  internal_number: '',
+  avatar_url: '',
+  price_list_id: '',
+};
 
 export function useClientForm(id?: string, onSuccess?: (action: SaveAction) => void) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const [formData, setFormData] = useState<any>({
-    name: '',
-    phone_number: '',
-    email: '',
-    country: '',
-    state: '',
-    city: '',
-    postal_code: '',
-    address: '',
-    suburb: '',
-    external_number: '',
-    internal_number: '',
-    avatar_url: '',
-    price_list_id: ''
-  });
+  const [formData, setFormData] = useState<ClientFormData>(EMPTY_CLIENT_FORM);
   const [isDisabled, setIsDisabled] = useState(!!id);
 
   const { data: existingClient, isLoading } = useQuery({
@@ -41,46 +62,36 @@ export function useClientForm(id?: string, onSuccess?: (action: SaveAction) => v
 
   useEffect(() => {
     if (existingClient) {
-      setFormData({
-        name: existingClient.name,
-        phone_number: existingClient.phone_number,
-        email: existingClient.email || '',
-        country: existingClient.country || '',
-        state: existingClient.state || '',
-        city: existingClient.city || '',
-        postal_code: existingClient.postal_code || '',
-        address: existingClient.address || '',
-        suburb: existingClient.suburb || '',
-        external_number: existingClient.external_number || '',
-        internal_number: existingClient.internal_number || '',
-        avatar_url: existingClient.avatar_url || '',
-        price_list_id: existingClient.price_list_id || ''
+      queueMicrotask(() => {
+        setFormData({
+          name: existingClient.name,
+          phone_number: existingClient.phone_number,
+          email: existingClient.email || '',
+          country: existingClient.country || '',
+          state: existingClient.state || '',
+          city: existingClient.city || '',
+          postal_code: existingClient.postal_code || '',
+          address: existingClient.address || '',
+          suburb: existingClient.suburb || '',
+          external_number: existingClient.external_number || '',
+          internal_number: existingClient.internal_number || '',
+          avatar_url: existingClient.avatar_url || '',
+          price_list_id: existingClient.price_list_id || '',
+        });
       });
     } else if (!id) {
-      setFormData({
-        name: '',
-        phone_number: '',
-        email: '',
-        country: '',
-        state: '',
-        city: '',
-        postal_code: '',
-        address: '',
-        suburb: '',
-        external_number: '',
-        internal_number: '',
-        avatar_url: '',
-        price_list_id: ''
+      queueMicrotask(() => {
+        setFormData(EMPTY_CLIENT_FORM);
       });
     }
   }, [id, existingClient]);
 
   const { data: priceListsData } = useQuery({ queryKey: ['price-lists'], queryFn: () => fetchApi('/price-lists') });
-  const priceLists = Array.isArray(priceListsData) ? priceListsData : (priceListsData?.data || []);
+  const priceLists = (Array.isArray(priceListsData) ? priceListsData : (priceListsData?.data || [])) as PriceListOption[];
 
-  const handleChange = (e: any) => {
+  const handleChange = (e: ClientChangeEvent) => {
     const { name, value } = e.target;
-    setFormData((prev: any) => {
+    setFormData((prev) => {
       const next = { ...prev, [name]: value };
 
       if (name === 'country') {
@@ -116,14 +127,14 @@ export function useClientForm(id?: string, onSuccess?: (action: SaveAction) => v
     const reader = new FileReader();
     reader.onload = () => {
       if (typeof reader.result === 'string') {
-        setFormData((prev: any) => ({ ...prev, avatar_url: reader.result }));
+        setFormData((prev) => ({ ...prev, avatar_url: reader.result }));
       }
     };
     reader.readAsDataURL(file);
   };
 
   const mutation = useMutation({
-    mutationFn: (data: any) => fetchApi(id ? `/clients/${id}` : '/clients', {
+    mutationFn: (data: ClientFormData) => fetchApi(id ? `/clients/${id}` : '/clients', {
       method: id ? 'PATCH' : 'POST',
       body: JSON.stringify(data)
     }),

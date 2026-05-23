@@ -4,6 +4,10 @@ import ModalToolbar from '../../../components/ModalToolbar';
 import { useUserForm } from '../hooks/useUserForm';
 import UserForm from './UserForm';
 
+interface UserListItemRef {
+  id: string | number;
+}
+
 interface UserFormModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -11,7 +15,7 @@ interface UserFormModalProps {
   title?: string;
   initialWidth?: number;
   initialHeight?: number;
-  list?: any[];
+  list?: UserListItemRef[];
   currentIndex?: number;
   onNavigate?: (newIndex: number) => void;
 }

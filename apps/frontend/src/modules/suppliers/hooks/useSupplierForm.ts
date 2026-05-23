@@ -4,16 +4,24 @@ import { useNavigate } from 'react-router';
 import { fetchApi } from '../../../api';
 
 type SaveAction = 'save' | 'save-and-close' | 'save-and-new';
+type SupplierChangeEvent = { target: { name: string; value: string } };
+interface SupplierFormData {
+  name: string;
+  email: string;
+  phone_number: string;
+  logo_url: string;
+}
+const EMPTY_SUPPLIER_FORM: SupplierFormData = {
+  name: '',
+  email: '',
+  phone_number: '',
+  logo_url: '',
+};
 
 export function useSupplierForm(id?: string, onSuccess?: (action: SaveAction) => void) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const [formData, setFormData] = useState<any>({
-    name: '',
-    email: '',
-    phone_number: '',
-    logo_url: ''
-  });
+  const [formData, setFormData] = useState<SupplierFormData>(EMPTY_SUPPLIER_FORM);
   const [isDisabled, setIsDisabled] = useState(!!id);
 
   const { data: existingSupplier, isLoading } = useQuery({
@@ -24,39 +32,38 @@ export function useSupplierForm(id?: string, onSuccess?: (action: SaveAction) =>
 
   useEffect(() => {
     if (existingSupplier) {
-      setFormData({
-        name: existingSupplier.name,
-        email: existingSupplier.email || '',
-        phone_number: existingSupplier.phone_number || '',
-        logo_url: existingSupplier.logo_url || ''
+      queueMicrotask(() => {
+        setFormData({
+          name: existingSupplier.name,
+          email: existingSupplier.email || '',
+          phone_number: existingSupplier.phone_number || '',
+          logo_url: existingSupplier.logo_url || '',
+        });
       });
     } else if (!id) {
-      setFormData({
-        name: '',
-        email: '',
-        phone_number: '',
-        logo_url: ''
+      queueMicrotask(() => {
+        setFormData(EMPTY_SUPPLIER_FORM);
       });
     }
   }, [id, existingSupplier]);
 
-  const handleChange = (e: any) => {
+  const handleChange = (e: SupplierChangeEvent) => {
     const { name, value } = e.target;
-    setFormData((prev: any) => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleLogoFileChange = (file: File) => {
     const reader = new FileReader();
     reader.onload = () => {
       if (typeof reader.result === 'string') {
-        setFormData((prev: any) => ({ ...prev, logo_url: reader.result }));
+        setFormData((prev) => ({ ...prev, logo_url: reader.result }));
       }
     };
     reader.readAsDataURL(file);
   };
 
   const mutation = useMutation({
-    mutationFn: (data: any) => fetchApi(id ? `/suppliers/${id}` : '/suppliers', {
+    mutationFn: (data: SupplierFormData) => fetchApi(id ? `/suppliers/${id}` : '/suppliers', {
       method: id ? 'PATCH' : 'POST',
       body: JSON.stringify(data)
     }),

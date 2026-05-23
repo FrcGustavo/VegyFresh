@@ -4,6 +4,10 @@ import ModalToolbar from '../../../components/ModalToolbar';
 import { useOrderForm } from '../hooks/useOrderForm';
 import OrderForm from './OrderForm';
 
+interface OrderListItemRef {
+  id: string | number;
+}
+
 interface OrderFormModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -11,7 +15,7 @@ interface OrderFormModalProps {
   title?: string;
   initialWidth?: number;
   initialHeight?: number;
-  list?: any[];
+  list?: OrderListItemRef[];
   currentIndex?: number;
   onNavigate?: (newIndex: number) => void;
 }
@@ -20,7 +24,6 @@ export default function OrderFormModal({
   isOpen,
   onClose,
   orderId,
-  title: _title,
   initialWidth = 700,
   initialHeight = 750,
   list = [],

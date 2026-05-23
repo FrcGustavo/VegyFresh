@@ -1,10 +1,22 @@
 import { Box, TextField, MenuItem, Alert, Button, Avatar } from '@mui/material';
 
+type UserChangeEvent = { target: { name: string; value: string } };
+interface UserFormData {
+  name: string;
+  email: string;
+  role_id: string;
+  avatar_url: string;
+}
+interface RoleOption {
+  id: string;
+  name: string;
+}
+
 interface UserFormProps {
-  formData: any;
-  roles: any[];
+  formData: UserFormData;
+  roles: RoleOption[];
   isCreatingRole: boolean;
-  handleChange: (e: any) => void;
+  handleChange: (e: UserChangeEvent) => void;
   handleAvatarFileChange: (file: File) => void;
   handleSubmit: (action: 'save' | 'save-and-close' | 'save-and-new') => void;
   createAdminRole: () => void;
@@ -68,7 +80,7 @@ export default function UserForm({
               <TextField fullWidth label="Email" name="email" margin="normal" value={formData.email || ''} onChange={handleChange} required disabled={isDisabled} />
 
               <TextField select fullWidth label="Rol" name="role_id" margin="normal" value={formData.role_id || ''} onChange={handleChange} required disabled={isDisabled}>
-                {roles.map((r: any) => <MenuItem key={r.id} value={r.id}>{r.name}</MenuItem>)}
+                {roles.map((r) => <MenuItem key={r.id} value={r.id}>{r.name}</MenuItem>)}
               </TextField>
 
               {roles.length === 0 && (

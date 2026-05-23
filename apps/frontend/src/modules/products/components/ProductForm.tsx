@@ -1,15 +1,36 @@
 import { Box, TextField, MenuItem, Typography, IconButton, Paper, Button } from '@mui/material';
 import { Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
 
+type ProductChangeEvent = { target: { name: string; value: string } };
+interface ProductFormData {
+  sku: string;
+  name: string;
+  description: string;
+  stock: number | string;
+  supplier_id: string;
+}
+interface ProductPrice {
+  price_list_id: string;
+  price: number | string;
+}
+interface SupplierOption {
+  id: string;
+  name: string;
+}
+interface PriceListOption {
+  id: string;
+  name: string;
+}
+
 interface ProductFormProps {
-  formData: any;
-  prices: any[];
-  suppliers: any[];
-  priceLists: any[];
-  handleChange: (e: any) => void;
+  formData: ProductFormData;
+  prices: ProductPrice[];
+  suppliers: SupplierOption[];
+  priceLists: PriceListOption[];
+  handleChange: (e: ProductChangeEvent) => void;
   addPriceField: () => void;
   removePriceField: (index: number) => void;
-  updatePriceField: (index: number, field: string, value: any) => void;
+  updatePriceField: (index: number, field: string, value: string | number) => void;
   handleSubmit: (action: 'save' | 'save-and-close' | 'save-and-new') => void;
   title: string;
   isDisabled?: boolean;
@@ -39,7 +60,7 @@ export default function ProductForm({
           <TextField fullWidth label="Descripción" name="description" margin="normal" value={formData.description || ''} onChange={handleChange} disabled={isDisabled} />
           <TextField fullWidth label="Stock" name="stock" type="number" margin="normal" value={formData.stock || ''} onChange={handleChange} disabled={isDisabled} />
           <TextField select fullWidth label="Proveedor" name="supplier_id" margin="normal" value={formData.supplier_id || ''} onChange={handleChange} required disabled={isDisabled}>
-            {suppliers.map((s: any) => <MenuItem key={s.id} value={s.id}>{s.name}</MenuItem>)}
+            {suppliers.map((s) => <MenuItem key={s.id} value={s.id}>{s.name}</MenuItem>)}
           </TextField>
 
           <Typography variant="h6" sx={{ mt: 3, mb: 1 }}>Precios</Typography>
@@ -54,7 +75,7 @@ export default function ProductForm({
                 required
                 disabled={isDisabled}
               >
-                {priceLists.map((list: any) => (
+                {priceLists.map((list) => (
                   <MenuItem key={list.id} value={list.id}>{list.name}</MenuItem>
                 ))}
               </TextField>

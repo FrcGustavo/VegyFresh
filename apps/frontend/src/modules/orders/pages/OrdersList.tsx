@@ -18,7 +18,6 @@ import OrderFormModal from '../components/OrderFormModal';
 import ResizableHeaderCell from '../../../components/ResizableHeaderCell';
 import ResourcePageTitle from '../../../components/ResourcePageTitle';
 import ListPageToolbar from '../../../components/ListPageToolbar';
-import { useListPageToolbar } from '../../../layout/useListPageToolbar';
 
 const orderColumns = [
   { key: 'created_at', label: 'Fecha', minWidth: 180, defaultWidth: 220 },
@@ -39,6 +38,15 @@ type OrderSortField =
   | 'total_amount';
 type SortOrder = 'asc' | 'desc';
 type CreatedFilter = 'all' | 'today' | 'range';
+interface OrderListItem {
+  id: string | number;
+  created_at?: string | null;
+  delivery_date?: string | null;
+  folio?: string | null;
+  client?: { name?: string | null } | null;
+  description?: string | null;
+  total_amount?: number | string | null;
+}
 
 export default function OrdersList() {
   const [sortBy, setSortBy] = useState<OrderSortField>('created_at');
@@ -119,7 +127,7 @@ function OrdersTable({
   hasNextPage,
   isFetchingNextPage,
 }: {
-  list: any[];
+  list: OrderListItem[];
   sortBy: OrderSortField;
   sortOrder: SortOrder;
   setSortBy: (value: OrderSortField) => void;
@@ -291,7 +299,7 @@ function OrdersTable({
           <TableBody>
             {list.length === 0 ? (
               <TableRow><TableCell colSpan={6} align="center">No hay registros</TableCell></TableRow>
-            ) : list.map((item: any) => {
+            ) : list.map((item) => {
               const rowId = String(item.id ?? '');
               return (
                 <TableRow

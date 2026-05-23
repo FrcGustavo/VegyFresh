@@ -19,7 +19,6 @@ import UserFormModal from '../components/UserFormModal';
 import ResizableHeaderCell from '../../../components/ResizableHeaderCell';
 import ResourcePageTitle from '../../../components/ResourcePageTitle';
 import ListPageToolbar from '../../../components/ListPageToolbar';
-import { useListPageToolbar } from '../../../layout/useListPageToolbar';
 
 const userColumns = [
   { key: 'folio', label: 'Folio', minWidth: 140, defaultWidth: 180 },
@@ -30,6 +29,12 @@ const userColumns = [
 const PAGE_SIZE = 25;
 type SortByField = 'folio' | 'name';
 type SortOrder = 'asc' | 'desc';
+interface UserListItem {
+  id: string | number;
+  folio?: string | null;
+  name?: string | null;
+  email?: string | null;
+}
 
 export default function UsersList() {
   const [query, setQuery] = useState('');
@@ -106,7 +111,7 @@ function UsersTable({
   hasNextPage,
   isFetchingNextPage,
 }: {
-  list: any[];
+  list: UserListItem[];
   query: string;
   setQuery: (value: string) => void;
   sortBy: SortByField;
@@ -241,7 +246,7 @@ function UsersTable({
           <TableBody>
             {list.length === 0 ? (
               <TableRow><TableCell colSpan={3} align="center">No hay registros</TableCell></TableRow>
-            ) : list.map((item: any) => {
+            ) : list.map((item) => {
               const rowId = String(item.id ?? '');
               return (
                 <TableRow

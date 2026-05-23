@@ -4,6 +4,10 @@ import ModalToolbar from '../../../../components/ModalToolbar';
 import { usePriceListForm } from '../hooks/usePriceListForm';
 import PriceListForm from './PriceListForm';
 
+interface PriceListItemRef {
+  id: string | number;
+}
+
 interface PriceListFormModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -11,7 +15,7 @@ interface PriceListFormModalProps {
   title?: string;
   initialWidth?: number;
   initialHeight?: number;
-  list?: any[];
+  list?: PriceListItemRef[];
   currentIndex?: number;
   onNavigate?: (newIndex: number) => void;
 }
@@ -20,7 +24,6 @@ export default function PriceListFormModal({
   isOpen,
   onClose,
   priceListId,
-  title,
   initialWidth = 900,
   initialHeight = 740,
   list = [],

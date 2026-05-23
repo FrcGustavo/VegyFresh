@@ -5,11 +5,14 @@ import { Delete as DeleteIcon } from '@mui/icons-material';
 interface PriceListFormProps {
   name: string;
   setName: (name: string) => void;
-  productsList: any[];
-  products: any[];
-  isSaving: boolean;
+  productsList: Array<{
+    product_id: string;
+    name?: string;
+    price: number | string;
+    id?: string;
+  }>;
   addProductField: () => void;
-  updateProductField: (index: number, field: string, value: any) => void;
+  updateProductField: (index: number, field: string, value: string | number) => void;
   removeProductField: (index: number) => void;
   handleSubmit: (action: 'save' | 'save-and-close' | 'save-and-new') => void;
   isDisabled?: boolean;
@@ -19,8 +22,6 @@ export default function PriceListForm({
   name,
   setName,
   productsList,
-  products,
-  isSaving,
   addProductField,
   updateProductField,
   removeProductField,
@@ -73,10 +74,6 @@ export default function PriceListForm({
       focusCell(row, col + 1);
     }
   };
-
-
-  console.log({ productsList });
-
   return (
     <Box sx={{ p: 3, height: '100%' }}>
       <form

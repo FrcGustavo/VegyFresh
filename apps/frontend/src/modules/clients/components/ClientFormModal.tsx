@@ -7,6 +7,10 @@ import ModalToolbar from '../../../components/ModalToolbar';
 import { useClientForm } from '../hooks/useClientForm';
 import ClientForm from './ClientForm';
 
+interface ClientListItemRef {
+  id: string | number;
+}
+
 interface ClientFormModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -14,7 +18,7 @@ interface ClientFormModalProps {
   title?: string;
   initialWidth?: number;
   initialHeight?: number;
-  list?: any[];
+  list?: ClientListItemRef[];
   currentIndex?: number;
   onNavigate?: (newIndex: number) => void;
 }

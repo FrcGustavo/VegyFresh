@@ -4,18 +4,27 @@ import { useNavigate } from 'react-router';
 import { fetchApi } from '../../../../api';
 
 type SaveAction = 'save' | 'save-and-close' | 'save-and-new';
+interface PriceListProductRow {
+  product_id: string;
+  name?: string;
+  price: number | string;
+  id?: string;
+}
+interface ProductOption {
+  id: string;
+  name: string;
+}
+const EMPTY_PRODUCT_ROW: PriceListProductRow = { product_id: '', price: 0 };
 
 export function usePriceListForm(id?: string, onSuccess?: (action: SaveAction) => void) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [name, setName] = useState('');
-  const [productsList, setProductsList] = useState<any[]>(id ? [] : [{ product_id: '', price: 0 }]);
+  const [productsList, setProductsList] = useState<PriceListProductRow[]>(id ? [] : [{ ...EMPTY_PRODUCT_ROW }]);
   const [isDisabled, setIsDisabled] = useState(!!id);
 
   const { data: productsData } = useQuery({ queryKey: ['products'], queryFn: () => fetchApi('/products') });
-  const products = Array.isArray(productsData) ? productsData : (productsData?.data || []);
-
-  // console.log({ productsData })
+  const products = (Array.isArray(productsData) ? productsData : (productsData?.data || [])) as ProductOption[];
 
   const { data: existingPriceList, isLoading } = useQuery({
     queryKey: ['price-lists', id],
@@ -25,18 +34,24 @@ export function usePriceListForm(id?: string, onSuccess?: (action: SaveAction) =
 
   useEffect(() => {
     if (existingPriceList) {
-      setName(existingPriceList.name);
+      queueMicrotask(() => {
+        setName(existingPriceList.name);
+      });
       if (existingPriceList.productPrices) {
-        setProductsList(existingPriceList.productPrices.map((pp: any) => ({
-          product_id: pp.product_id,
-          name: pp.product?.name || '',
-          price: pp.price,
-          id: pp.id
-        })));
+        queueMicrotask(() => {
+          setProductsList(existingPriceList.productPrices.map((pp: { product_id: string; product?: { name?: string }; price: number; id: string }) => ({
+            product_id: pp.product_id,
+            name: pp.product?.name || '',
+            price: pp.price,
+            id: pp.id,
+          })));
+        });
       }
     } else if (!id) {
-      setName('');
-      setProductsList([{ product_id: '', price: 0 }]);
+      queueMicrotask(() => {
+        setName('');
+        setProductsList([{ ...EMPTY_PRODUCT_ROW }]);
+      });
     }
   }, [id, existingPriceList]);
 
@@ -68,11 +83,17 @@ export function usePriceListForm(id?: string, onSuccess?: (action: SaveAction) =
     }
   });
 
-  const addProductField = () => setProductsList([...productsList, { product_id: '', price: 0 }]);
+  const addProductField = () => setProductsList([...productsList, { ...EMPTY_PRODUCT_ROW }]);
   
-  const updateProductField = (index: number, field: string, value: any) => {
+  const updateProductField = (index: number, field: string, value: string | number) => {
     const newList = [...productsList];
-    newList[index][field] = value;
+    if (field === 'product_id') {
+      newList[index].product_id = String(value);
+    } else if (field === 'name') {
+      newList[index].name = String(value);
+    } else if (field === 'price') {
+      newList[index].price = value;
+    }
     setProductsList(newList);
   };
 

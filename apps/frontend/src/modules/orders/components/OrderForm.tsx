@@ -1,14 +1,38 @@
 import type { KeyboardEvent } from 'react';
 import { Box, TextField, Typography, Table, TableBody, TableCell, TableHead, TableRow, TableContainer } from '@mui/material';
 
+type OrderChangeEvent = { target: { name: string; value: string } };
+interface OrderFormData {
+  client_id: string;
+  user_id: string;
+  status: string;
+  origin: string;
+  delivery_date: string;
+  order_folio: string;
+  created_at: string;
+}
+interface OrderFormItem {
+  product_id: string;
+  quantity: number | string;
+  unit_price: number | string;
+  folio: string;
+  name: string;
+  unit: string;
+}
+interface ClientOption {
+  id: string;
+  folio?: string | null;
+  name?: string | null;
+}
+
 interface OrderFormProps {
-  formData: any;
-  items: any[];
-  clients: any[];
+  formData: OrderFormData;
+  items: OrderFormItem[];
+  clients: ClientOption[];
   totalGeneral: number;
-  handleChange: (e: any) => void;
+  handleChange: (e: OrderChangeEvent) => void;
   addItemField: () => void;
-  updateItemField: (index: number, field: string, value: any) => void;
+  updateItemField: (index: number, field: string, value: string | number | null) => void;
   handleSubmit: (action: 'save' | 'save-and-close' | 'save-and-new') => void;
   isDisabled?: boolean;
 }
@@ -38,7 +62,7 @@ export default function OrderForm({
   };
 
   const totalProducts = items.length;
-  const selectedClient = clients.find((client: any) => client.id === formData.client_id);
+  const selectedClient = clients.find((client) => client.id === formData.client_id);
   const cellSx = { '&.MuiTableCell-root': { padding: '0 !important', border: '1px solid', borderColor: 'divider' } };
   const cellInputSx = {
     margin: 0,

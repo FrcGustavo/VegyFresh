@@ -10,16 +10,38 @@ import {
 } from '@mui/material';
 
 type ClientFormSection = 'general' | 'address' | 'price-list';
+type ClientChangeEvent = { target: { name: string; value: string } };
+
+interface ClientFormData {
+  name: string;
+  phone_number: string;
+  email: string;
+  country: string;
+  state: string;
+  city: string;
+  postal_code: string;
+  address: string;
+  suburb: string;
+  external_number: string;
+  internal_number: string;
+  avatar_url: string;
+  price_list_id: string;
+}
+
+interface PriceListOption {
+  id: string;
+  name: string;
+}
 
 interface ClientFormProps {
-  formData: any;
-  priceLists: any[];
+  formData: ClientFormData;
+  priceLists: PriceListOption[];
   countries: string[];
   states: string[];
   cities: string[];
   postalCodeOptions: string[];
   coloniaOptions: string[];
-  handleChange: (e: any) => void;
+  handleChange: (e: ClientChangeEvent) => void;
   handleAvatarFileChange: (file: File) => void;
   handleSubmit: (action: 'save' | 'save-and-close' | 'save-and-new') => void;
   section: ClientFormSection;
@@ -103,7 +125,7 @@ export default function ClientForm({
               onInputChange={(_event, value) =>
                 handleChange({
                   target: { name: 'postal_code', value },
-                } as any)
+                })
               }
               disabled={isDisabled}
               renderInput={(params) => (
@@ -174,7 +196,7 @@ export default function ClientForm({
                 onInputChange={(_event, value) =>
                   handleChange({
                     target: { name: 'suburb', value },
-                  } as any)
+                  })
                 }
                 disabled={isDisabled}
                 renderInput={(params) => (
@@ -196,7 +218,7 @@ export default function ClientForm({
         {section === 'price-list' && (
           <TextField select fullWidth label="Lista de Precios" name="price_list_id" margin="normal" value={formData.price_list_id || ''} onChange={handleChange} disabled={isDisabled}>
             <MenuItem value=""><em>Ninguna</em></MenuItem>
-            {priceLists.map((list: any) => (
+            {priceLists.map((list) => (
               <MenuItem key={list.id} value={list.id}>{list.name}</MenuItem>
             ))}
           </TextField>

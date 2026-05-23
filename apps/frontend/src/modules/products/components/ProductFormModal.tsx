@@ -8,6 +8,10 @@ import ModalTabsNavigation from '../../../components/ModalTabsNavigation';
 import ModalToolbar from '../../../components/ModalToolbar';
 import { useProductForm } from '../hooks/useProductForm';
 
+interface ProductListItemRef {
+  id: string | number;
+}
+
 interface ProductFormModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -15,7 +19,7 @@ interface ProductFormModalProps {
   title?: string;
   initialWidth?: number;
   initialHeight?: number;
-  list?: any[];
+  list?: ProductListItemRef[];
   currentIndex?: number;
   onNavigate?: (newIndex: number) => void;
 }
@@ -156,7 +160,7 @@ export default function ProductFormModal({
                     required
                     disabled={formProps.isDisabled}
                   >
-                    {formProps.suppliers.map((s: any) => (
+                    {formProps.suppliers.map((s) => (
                       <MenuItem key={s.id} value={s.id}>{s.name}</MenuItem>
                     ))}
                   </TextField>
@@ -203,7 +207,7 @@ export default function ProductFormModal({
                                 required
                                 disabled={formProps.isDisabled}
                               >
-                                {formProps.priceLists.map((list: any) => (
+                                {formProps.priceLists.map((list) => (
                                   <MenuItem key={list.id} value={list.id}>{list.name}</MenuItem>
                                 ))}
                               </TextField>

@@ -19,7 +19,6 @@ import ProductFormModal from '../components/ProductFormModal';
 import ResizableHeaderCell from '../../../components/ResizableHeaderCell';
 import ResourcePageTitle from '../../../components/ResourcePageTitle';
 import ListPageToolbar from '../../../components/ListPageToolbar';
-import { useListPageToolbar } from '../../../layout/useListPageToolbar';
 
 const productColumns = [
   { key: 'folio', label: 'Clave', minWidth: 140, defaultWidth: 180 },
@@ -30,6 +29,12 @@ const productColumns = [
 const PAGE_SIZE = 25;
 type SortByField = 'folio' | 'name' | 'unit';
 type SortOrder = 'asc' | 'desc';
+interface ProductListItem {
+  id: string | number;
+  folio?: string | null;
+  name?: string | null;
+  unit?: string | null;
+}
 
 export default function ProductsList() {
   const [query, setQuery] = useState('');
@@ -106,7 +111,7 @@ function ProductsTable({
   hasNextPage,
   isFetchingNextPage,
 }: {
-  list: any[];
+  list: ProductListItem[];
   query: string;
   setQuery: (value: string) => void;
   sortBy: SortByField;
@@ -246,7 +251,7 @@ function ProductsTable({
           <TableBody>
             {list.length === 0 ? (
               <TableRow><TableCell colSpan={3} align="center">No hay registros</TableCell></TableRow>
-            ) : list.map((item: any) => {
+            ) : list.map((item) => {
               const rowId = String(item.id ?? '');
               return (
                 <TableRow

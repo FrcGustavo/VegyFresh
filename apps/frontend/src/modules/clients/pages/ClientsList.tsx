@@ -19,7 +19,6 @@ import ClientFormModal from '../components/ClientFormModal';
 import ResizableHeaderCell from '../../../components/ResizableHeaderCell';
 import ResourcePageTitle from '../../../components/ResourcePageTitle';
 import ListPageToolbar from '../../../components/ListPageToolbar';
-import { useListPageToolbar } from '../../../layout/useListPageToolbar';
 
 const clientColumns = [
   { key: 'folio', label: 'Folio', minWidth: 140, defaultWidth: 180 },
@@ -30,6 +29,12 @@ const clientColumns = [
 const PAGE_SIZE = 25;
 type SortByField = 'folio' | 'name';
 type SortOrder = 'asc' | 'desc';
+interface ClientListItem {
+  id: string | number;
+  folio?: string | null;
+  name?: string | null;
+  phone_number?: string | null;
+}
 
 export default function ClientsList() {
   const [query, setQuery] = useState('');
@@ -106,7 +111,7 @@ function ClientsTable({
   hasNextPage,
   isFetchingNextPage,
 }: {
-  list: any[];
+  list: ClientListItem[];
   query: string;
   setQuery: (value: string) => void;
   sortBy: SortByField;
@@ -242,7 +247,7 @@ function ClientsTable({
           <TableBody>
             {list.length === 0 ? (
               <TableRow><TableCell colSpan={3} align="center">No hay registros</TableCell></TableRow>
-            ) : list.map((item: any) => {
+            ) : list.map((item) => {
               const rowId = String(item.id ?? '');
               return (
                 <TableRow

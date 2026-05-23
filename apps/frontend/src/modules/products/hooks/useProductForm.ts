@@ -4,18 +4,39 @@ import { useNavigate } from 'react-router';
 import { fetchApi } from '../../../api';
 
 type SaveAction = 'save' | 'save-and-close' | 'save-and-new';
+type ProductChangeEvent = { target: { name: string; value: string } };
+interface ProductFormData {
+  sku: string;
+  name: string;
+  description: string;
+  stock: number;
+  supplier_id: string;
+}
+interface ProductPrice {
+  price_list_id: string;
+  price: number | string;
+}
+interface SupplierOption {
+  id: string;
+  name: string;
+}
+interface PriceListOption {
+  id: string;
+  name: string;
+}
+const EMPTY_PRODUCT_FORM: ProductFormData = {
+  sku: '',
+  name: '',
+  description: '',
+  stock: 0,
+  supplier_id: '',
+};
 
 export function useProductForm(id?: string, onSuccess?: (action: SaveAction) => void) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const [formData, setFormData] = useState<any>({
-    sku: '',
-    name: '',
-    description: '',
-    stock: 0,
-    supplier_id: '',
-  });
-  const [prices, setPrices] = useState<any[]>([]);
+  const [formData, setFormData] = useState<ProductFormData>(EMPTY_PRODUCT_FORM);
+  const [prices, setPrices] = useState<ProductPrice[]>([]);
   const [isDisabled, setIsDisabled] = useState(!!id);
 
   const { data: existingProduct, isLoading: isLoadingProduct } = useQuery({
@@ -26,40 +47,40 @@ export function useProductForm(id?: string, onSuccess?: (action: SaveAction) => 
 
   useEffect(() => {
     if (existingProduct) {
-      setFormData({
-        sku: existingProduct.sku,
-        name: existingProduct.name,
-        description: existingProduct.description,
-        stock: existingProduct.stock,
-        supplier_id: existingProduct.supplier_id,
+      queueMicrotask(() => {
+        setFormData({
+          sku: existingProduct.sku,
+          name: existingProduct.name,
+          description: existingProduct.description,
+          stock: existingProduct.stock,
+          supplier_id: existingProduct.supplier_id,
+        });
       });
       if (existingProduct.productPrices) {
-        setPrices(existingProduct.productPrices.map((p: any) => ({
-          price_list_id: p.price_list_id,
-          price: p.price
-        })));
+        queueMicrotask(() => {
+          setPrices(existingProduct.productPrices.map((p: { price_list_id: string; price: number }) => ({
+            price_list_id: p.price_list_id,
+            price: p.price,
+          })));
+        });
       }
     } else if (!id) {
-      setFormData({
-        sku: '',
-        name: '',
-        description: '',
-        stock: 0,
-        supplier_id: '',
+      queueMicrotask(() => {
+        setFormData(EMPTY_PRODUCT_FORM);
+        setPrices([]);
       });
-      setPrices([]);
     }
   }, [id, existingProduct]);
 
   const { data: suppliersData } = useQuery({ queryKey: ['suppliers'], queryFn: () => fetchApi('/suppliers') });
   const { data: priceListsData } = useQuery({ queryKey: ['price-lists'], queryFn: () => fetchApi('/price-lists') });
 
-  const suppliers = Array.isArray(suppliersData) ? suppliersData : (suppliersData?.data || []);
-  const priceLists = Array.isArray(priceListsData) ? priceListsData : (priceListsData?.data || []);
+  const suppliers = (Array.isArray(suppliersData) ? suppliersData : (suppliersData?.data || [])) as SupplierOption[];
+  const priceLists = (Array.isArray(priceListsData) ? priceListsData : (priceListsData?.data || [])) as PriceListOption[];
 
-  const handleChange = (e: any) => {
+  const handleChange = (e: ProductChangeEvent) => {
     const { name, value } = e.target;
-    setFormData((prev: any) => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: name === 'stock' ? Number(value) : value }));
   };
 
   const addPriceField = () => {
@@ -70,14 +91,18 @@ export function useProductForm(id?: string, onSuccess?: (action: SaveAction) => 
     setPrices(prices.filter((_, i) => i !== index));
   };
 
-  const updatePriceField = (index: number, field: string, value: any) => {
+  const updatePriceField = (index: number, field: string, value: string | number) => {
     const newPrices = [...prices];
-    newPrices[index][field] = value;
+    if (field === 'price_list_id') {
+      newPrices[index].price_list_id = String(value);
+    } else if (field === 'price') {
+      newPrices[index].price = value;
+    }
     setPrices(newPrices);
   };
 
   const mutation = useMutation({
-    mutationFn: (data: any) => fetchApi(id ? `/products/${id}` : '/products', {
+    mutationFn: (data: ProductFormData & { prices: ProductPrice[] }) => fetchApi(id ? `/products/${id}` : '/products', {
       method: id ? 'PATCH' : 'POST',
       body: JSON.stringify(data)
     }),

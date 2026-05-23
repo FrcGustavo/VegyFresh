@@ -4,6 +4,51 @@ import { useNavigate } from 'react-router';
 import { fetchApi } from '../../../api';
 
 type SaveAction = 'save' | 'save-and-close' | 'save-and-new';
+type OrderChangeEvent = { target: { name: string; value: string } };
+interface ProductPriceRef {
+  product_id: string;
+  price: number;
+}
+interface ClientRef {
+  id: string;
+  priceList?: { productPrices?: ProductPriceRef[] } | null;
+}
+interface ProductRef {
+  id: string;
+  folio?: string | null;
+  name?: string | null;
+  unit?: string | null;
+}
+interface OrderFormItem {
+  product_id: string;
+  quantity: number | string;
+  unit_price: number | string;
+  folio: string;
+  name: string;
+  unit: string;
+  product: ProductRef | null;
+}
+interface OrderFormData {
+  client_id: string;
+  user_id: string;
+  status: string;
+  origin: string;
+  delivery_date: string;
+  order_folio: string;
+  created_at: string;
+}
+interface UserRef {
+  id: string;
+}
+const EMPTY_FORM_DATA: OrderFormData = {
+  client_id: '',
+  user_id: '',
+  status: 'PENDING_REVIEW',
+  origin: 'WHATSAPP',
+  delivery_date: '',
+  order_folio: '',
+  created_at: '',
+};
 const EMPTY_ITEM = {
   product_id: '',
   quantity: 1,
@@ -11,22 +56,14 @@ const EMPTY_ITEM = {
   folio: '',
   name: '',
   unit: '',
-  product: null,
+  product: null as ProductRef | null,
 };
 
 export function useOrderForm(id?: string, onSuccess?: (action: SaveAction) => void) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const [formData, setFormData] = useState<any>({
-    client_id: '',
-    user_id: '',
-    status: 'PENDING_REVIEW',
-    origin: 'WHATSAPP',
-    delivery_date: '',
-    order_folio: '',
-    created_at: '',
-  });
-  const [items, setItems] = useState<any[]>([{ ...EMPTY_ITEM }]);
+  const [formData, setFormData] = useState<OrderFormData>(EMPTY_FORM_DATA);
+  const [items, setItems] = useState<OrderFormItem[]>([{ ...EMPTY_ITEM }]);
   const [isDisabled, setIsDisabled] = useState(!!id);
   const lookupTimersRef = useRef<Record<number, ReturnType<typeof setTimeout>>>({});
   const lookupVersionRef = useRef<Record<number, number>>({});
@@ -39,59 +76,67 @@ export function useOrderForm(id?: string, onSuccess?: (action: SaveAction) => vo
 
   useEffect(() => {
     if (existingOrder) {
-      setFormData({
-        client_id: existingOrder.client_id,
-        user_id: existingOrder.user_id,
-        status: existingOrder.status,
-        origin: existingOrder.origin,
-        delivery_date: existingOrder.delivery_date
-          ? String(existingOrder.delivery_date).slice(0, 10)
-          : '',
-        order_folio: existingOrder.folio || '',
-        created_at: existingOrder.created_at
-          ? String(existingOrder.created_at).slice(0, 10)
-          : '',
+      queueMicrotask(() => {
+        setFormData({
+          client_id: existingOrder.client_id,
+          user_id: existingOrder.user_id,
+          status: existingOrder.status,
+          origin: existingOrder.origin,
+          delivery_date: existingOrder.delivery_date
+            ? String(existingOrder.delivery_date).slice(0, 10)
+            : '',
+          order_folio: existingOrder.folio || '',
+          created_at: existingOrder.created_at
+            ? String(existingOrder.created_at).slice(0, 10)
+            : '',
+        });
       });
       if (existingOrder.items?.length) {
-        setItems(existingOrder.items.map((item: any) => ({
-          product_id: item.product_id,
-          quantity: item.quantity,
-          unit_price: item.unit_price,
-          folio: item.product?.folio || '',
-          name: item.product?.name || '',
-          unit: item.product?.unit || '',
-          product: item.product
-        })));
+        queueMicrotask(() => {
+          setItems(existingOrder.items.map((item: { product_id: string; quantity: number; unit_price: number; product?: ProductRef | null }) => ({
+            product_id: item.product_id,
+            quantity: item.quantity,
+            unit_price: item.unit_price,
+            folio: item.product?.folio || '',
+            name: item.product?.name || '',
+            unit: item.product?.unit || '',
+            product: item.product ?? null,
+          })));
+        });
       } else {
-        setItems([{ ...EMPTY_ITEM }]);
+        queueMicrotask(() => {
+          setItems([{ ...EMPTY_ITEM }]);
+        });
       }
     } else if (!id) {
-      setFormData({
-        client_id: '',
-        user_id: '',
-        status: 'PENDING_REVIEW',
-        origin: 'WHATSAPP',
-        delivery_date: '',
-        order_folio: '',
-        created_at: '',
+      queueMicrotask(() => {
+        setFormData(EMPTY_FORM_DATA);
+        setItems([{ ...EMPTY_ITEM }]);
       });
-      setItems([{ ...EMPTY_ITEM }]);
     }
   }, [id, existingOrder]);
 
   const { data: clientsData } = useQuery({ queryKey: ['clients'], queryFn: () => fetchApi('/clients') });
   const { data: usersData } = useQuery({ queryKey: ['users'], queryFn: () => fetchApi('/users') });
 
-  const clients = Array.isArray(clientsData) ? clientsData : (clientsData?.data || []);
-  const users = Array.isArray(usersData) ? usersData : (usersData?.data || []);
+  const clients = useMemo(
+    () => (Array.isArray(clientsData) ? clientsData : (clientsData?.data || [])) as ClientRef[],
+    [clientsData],
+  );
+  const users = useMemo(
+    () => (Array.isArray(usersData) ? usersData : (usersData?.data || [])) as UserRef[],
+    [usersData],
+  );
 
   useEffect(() => {
     if (!formData.user_id && users.length > 0) {
-      setFormData((prev: any) => ({ ...prev, user_id: users[0].id }));
+      queueMicrotask(() => {
+        setFormData((prev) => ({ ...prev, user_id: users[0].id }));
+      });
     }
   }, [users, formData.user_id]);
 
-  const selectedClient = useMemo(() => clients.find((c: any) => c.id === formData.client_id), [clients, formData.client_id]);
+  const selectedClient = useMemo(() => clients.find((c) => c.id === formData.client_id), [clients, formData.client_id]);
 
   useEffect(() => () => {
     Object.values(lookupTimersRef.current).forEach((timer) => clearTimeout(timer));
@@ -101,9 +146,9 @@ export function useOrderForm(id?: string, onSuccess?: (action: SaveAction) => vo
     return items.reduce((sum, item) => sum + (Number(item.quantity || 0) * Number(item.unit_price || 0)), 0);
   }, [items]);
 
-  const handleChange = (e: any) => {
+  const handleChange = (e: OrderChangeEvent) => {
     const { name, value } = e.target;
-    setFormData((prev: any) => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const addItemField = () => {
@@ -117,17 +162,33 @@ export function useOrderForm(id?: string, onSuccess?: (action: SaveAction) => vo
     setItems(items.filter((_, i) => i !== index));
   };
 
-  const updateItemField = (index: number, field: string, value: any) => {
+  const updateItemField = (index: number, field: string, value: string | number | ProductRef | null) => {
     const newItems = [...items];
-    newItems[index][field] = value;
+    if (!newItems[index]) return;
+    if (field === 'product') {
+      newItems[index].product = (value as ProductRef | null) ?? null;
+    } else if (field === 'product_id') {
+      newItems[index].product_id = String(value ?? '');
+    } else if (field === 'quantity') {
+      newItems[index].quantity = value as string | number;
+    } else if (field === 'unit_price') {
+      newItems[index].unit_price = value as string | number;
+    } else if (field === 'folio') {
+      newItems[index].folio = String(value ?? '');
+    } else if (field === 'name') {
+      newItems[index].name = String(value ?? '');
+    } else if (field === 'unit') {
+      newItems[index].unit = String(value ?? '');
+    }
 
     if (field === 'product' && value) {
-      newItems[index].product_id = value.id;
-      newItems[index].folio = value.folio || '';
-      newItems[index].name = value.name || '';
-      newItems[index].unit = value.unit || '';
+      const selectedProduct = value as ProductRef;
+      newItems[index].product_id = selectedProduct.id;
+      newItems[index].folio = selectedProduct.folio || '';
+      newItems[index].name = selectedProduct.name || '';
+      newItems[index].unit = selectedProduct.unit || '';
       if (selectedClient?.priceList?.productPrices) {
-        const priceObj = selectedClient.priceList.productPrices.find((p: any) => p.product_id === value.id);
+        const priceObj = selectedClient.priceList.productPrices.find((p) => p.product_id === selectedProduct.id);
         if (priceObj) {
           newItems[index].unit_price = priceObj.price;
         } else {
@@ -167,9 +228,9 @@ export function useOrderForm(id?: string, onSuccess?: (action: SaveAction) => vo
 
     lookupTimersRef.current[index] = setTimeout(async () => {
       const response = await fetchApi(`/products?search=${encodeURIComponent(searchText)}&limit=25&order_by=name&order=asc`);
-      const productsFromApi = Array.isArray(response) ? response : (response?.data || []);
+      const productsFromApi = (Array.isArray(response) ? response : (response?.data || [])) as ProductRef[];
       const normalizedSearch = searchText.toLowerCase();
-      const productMatch = productsFromApi.find((product: any) => {
+      const productMatch = productsFromApi.find((product) => {
         if (field === 'folio') {
           return String(product.folio ?? '').trim().toLowerCase() === normalizedSearch;
         }
@@ -206,7 +267,7 @@ export function useOrderForm(id?: string, onSuccess?: (action: SaveAction) => vo
 
         if (selectedClient?.priceList?.productPrices) {
           const priceObj = selectedClient.priceList.productPrices.find(
-            (p: any) => p.product_id === productMatch.id,
+            (p) => p.product_id === productMatch.id,
           );
           nextItems[index].unit_price = priceObj ? priceObj.price : 0;
         } else {
@@ -219,7 +280,14 @@ export function useOrderForm(id?: string, onSuccess?: (action: SaveAction) => vo
   };
 
   const mutation = useMutation({
-    mutationFn: (data: any) => fetchApi(id ? `/orders/${id}` : '/orders', {
+    mutationFn: (data: {
+      client_id: string;
+      user_id: string;
+      status: string;
+      origin: string;
+      delivery_date?: string;
+      items: Array<{ product_id: string; quantity: number; unit_price: number }>;
+    }) => fetchApi(id ? `/orders/${id}` : '/orders', {
       method: id ? 'PATCH' : 'POST',
       body: JSON.stringify(data)
     }),

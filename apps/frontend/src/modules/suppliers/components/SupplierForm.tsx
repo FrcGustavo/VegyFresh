@@ -1,8 +1,16 @@
 import { Box, TextField, Button, Avatar } from '@mui/material';
 
+type SupplierChangeEvent = { target: { name: string; value: string } };
+interface SupplierFormData {
+  name: string;
+  email: string;
+  phone_number: string;
+  logo_url: string;
+}
+
 interface SupplierFormProps {
-  formData: any;
-  handleChange: (e: any) => void;
+  formData: SupplierFormData;
+  handleChange: (e: SupplierChangeEvent) => void;
   handleLogoFileChange: (file: File) => void;
   handleSubmit: (action: 'save' | 'save-and-close' | 'save-and-new') => void;
   isDisabled?: boolean;
