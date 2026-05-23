@@ -1,11 +1,18 @@
-import { Button, Table, TableBody, TableCell, TableHead, TableRow, Typography, Paper, TableContainer, CircularProgress, Box, Container } from '@mui/material';
+import { Button, Table, TableBody, TableCell, TableHead, TableRow, Typography, TableContainer, CircularProgress, Box } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { fetchApi } from '../../../../api';
 import { useSearch } from '../../../../hooks/useSearch';
+import { useResizableColumns } from '../../../../hooks/useResizableColumns';
 import PriceListFormModal from '../components/PriceListFormModal';
 import ListPageToolbar from '../../../../components/ListPageToolbar';
 import ListSearchField from '../../../../components/ListSearchField';
+import ResizableHeaderCell from '../../../../components/ResizableHeaderCell';
+
+const priceListColumns = [
+  { key: 'id', label: 'ID', minWidth: 120, defaultWidth: 140 },
+  { key: 'name', label: 'Nombre', minWidth: 180, defaultWidth: 280 },
+] as const;
 
 export default function PriceListsList() {
   const { data, isLoading, error } = useQuery({ queryKey: ['price-lists'], queryFn: () => fetchApi('/price-lists') });
@@ -23,6 +30,10 @@ function PriceListsTable({ list }: { list: any[] }) {
   const [modalPriceListId, setModalPriceListId] = useState<string | undefined>(undefined);
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const { query, setQuery, filtered } = useSearch(list, ['name']);
+  const { getColumnCellSx, startResizing, resetColumnWidth } = useResizableColumns(
+    'price-lists-list',
+    priceListColumns,
+  );
 
   const currentIndex = filtered.findIndex(item => String(item.id ?? '') === selectedRowId);
 
@@ -40,7 +51,7 @@ function PriceListsTable({ list }: { list: any[] }) {
   };
 
   return (
-    <div>
+    <Box sx={{ backgroundColor: 'background.paper' }}>
       <PriceListFormModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
@@ -59,6 +70,7 @@ function PriceListsTable({ list }: { list: any[] }) {
             }}
             variant="contained"
             color="primary"
+            disableElevation
           >
             Crear Nueva
           </Button>
@@ -69,46 +81,61 @@ function PriceListsTable({ list }: { list: any[] }) {
           />
         </Box>
       </ListPageToolbar>
-      <Container>
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>ID</TableCell>
-                <TableCell>Nombre</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {filtered.length === 0 ? (
-                <TableRow><TableCell colSpan={2} align="center">No hay registros</TableCell></TableRow>
-              ) : filtered.map((item: any) => {
-                const rowId = String(item.id ?? '');
-                return (
-                  <TableRow
-                    key={item.id}
-                    hover
-                    selected={selectedRowId === rowId}
-                    onClick={() => setSelectedRowId(rowId)}
-                    onDoubleClick={() => {
-                      setModalPriceListId(item.id);
-                      setIsModalOpen(true);
-                      setSelectedRowId(rowId);
-                    }}
-                    sx={{
-                      cursor: 'pointer',
-                      '&.Mui-selected': { backgroundColor: 'action.selected' },
-                      '&.Mui-selected:hover': { backgroundColor: 'action.selected' },
-                    }}
-                  >
-                    <TableCell>{item.id?.substring(0, 8) || item.id}</TableCell>
-                    <TableCell>{item.name}</TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Container>
-    </div>
+      <TableContainer>
+        <Table
+          sx={{
+            border: '1px solid',
+            borderColor: 'divider',
+            borderLeft: 0,
+            borderTop: 0,
+            width: 'max-content',
+            tableLayout: 'fixed',
+          }}
+        >
+          <TableHead>
+            <TableRow>
+              {priceListColumns.map((column) => (
+                <ResizableHeaderCell
+                  key={column.key}
+                  label={column.label}
+                  columnKey={column.key}
+                  cellSx={getColumnCellSx(column.key)}
+                  onResizeStart={startResizing}
+                  onResetWidth={resetColumnWidth}
+                />
+              ))}
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {filtered.length === 0 ? (
+              <TableRow><TableCell colSpan={2} align="center">No hay registros</TableCell></TableRow>
+            ) : filtered.map((item: any) => {
+              const rowId = String(item.id ?? '');
+              return (
+                <TableRow
+                  key={item.id}
+                  hover
+                  selected={selectedRowId === rowId}
+                  onClick={() => setSelectedRowId(rowId)}
+                  onDoubleClick={() => {
+                    setModalPriceListId(item.id);
+                    setIsModalOpen(true);
+                    setSelectedRowId(rowId);
+                  }}
+                  sx={{
+                    cursor: 'pointer',
+                    '&.Mui-selected': { backgroundColor: 'action.selected' },
+                    '&.Mui-selected:hover': { backgroundColor: 'action.selected' },
+                  }}
+                >
+                  <TableCell sx={getColumnCellSx('id')}>{item.id?.substring(0, 8) || item.id}</TableCell>
+                  <TableCell sx={getColumnCellSx('name')}>{item.name}</TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Box>
   );
 }

@@ -1,11 +1,21 @@
-import { Button, Table, TableBody, TableCell, TableHead, TableRow, Typography, Paper, TableContainer, CircularProgress, Box, Autocomplete, TextField, Container } from '@mui/material';
+import { Button, Table, TableBody, TableCell, TableHead, TableRow, Typography, TableContainer, CircularProgress, Box, Autocomplete, TextField } from '@mui/material';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { fetchApi } from '../../../api';
 import { useSearch } from '../../../hooks/useSearch';
+import { useResizableColumns } from '../../../hooks/useResizableColumns';
 import OrderFormModal from '../components/OrderFormModal';
 import ListPageToolbar from '../../../components/ListPageToolbar';
 import ListSearchField from '../../../components/ListSearchField';
+import ResizableHeaderCell from '../../../components/ResizableHeaderCell';
+
+const orderColumns = [
+  { key: 'id', label: 'ID', minWidth: 120, defaultWidth: 140 },
+  { key: 'client', label: 'Cliente', minWidth: 180, defaultWidth: 260 },
+  { key: 'user', label: 'Usuario', minWidth: 180, defaultWidth: 220 },
+  { key: 'created_at', label: 'Fecha creación', minWidth: 180, defaultWidth: 220 },
+  { key: 'total_amount', label: 'Total', minWidth: 140, defaultWidth: 160 },
+] as const;
 
 export default function OrdersList() {
   const [selectedClient, setSelectedClient] = useState<{ id: string; name: string } | null>(null);
@@ -55,6 +65,10 @@ function OrdersTable({
   const [modalOrderId, setModalOrderId] = useState<string | undefined>(undefined);
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const { query, setQuery, filtered } = useSearch(list, ['client.name', 'user.name']);
+  const { getColumnCellSx, startResizing, resetColumnWidth } = useResizableColumns(
+    'orders-list',
+    orderColumns,
+  );
 
   const currentIndex = filtered.findIndex(item => String(item.id ?? '') === selectedRowId);
 
@@ -71,8 +85,24 @@ function OrdersTable({
     }
   };
 
+  const formatDateTime = (value: string | null | undefined) => {
+    if (!value) return 'N/A';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return 'N/A';
+    return date.toLocaleString('es-MX');
+  };
+
+  const formatCurrency = (value: number | string | null | undefined) => {
+    const amount = Number(value);
+    if (!Number.isFinite(amount)) return 'N/A';
+    return amount.toLocaleString('es-MX', {
+      style: 'currency',
+      currency: 'MXN',
+    });
+  };
+
   return (
-    <div>
+    <Box sx={{ backgroundColor: 'background.paper' }}>
       <OrderFormModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
@@ -91,6 +121,7 @@ function OrdersTable({
             }}
             variant="contained"
             color="primary"
+            disableElevation
           >
             Crear Nuevo
           </Button>
@@ -117,48 +148,64 @@ function OrdersTable({
           )}
         </Box>
       </ListPageToolbar>
-      <Container>
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>ID</TableCell>
-                <TableCell>Cliente</TableCell>
-                <TableCell>Usuario</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {filtered.length === 0 ? (
-                <TableRow><TableCell colSpan={3} align="center">No hay registros</TableCell></TableRow>
-              ) : filtered.map((item: any) => {
-                const rowId = String(item.id ?? '');
-                return (
-                  <TableRow
-                    key={item.id}
-                    hover
-                    selected={selectedRowId === rowId}
-                    onClick={() => setSelectedRowId(rowId)}
-                    onDoubleClick={() => {
-                      setModalOrderId(item.id);
-                      setIsModalOpen(true);
-                      setSelectedRowId(rowId);
-                    }}
-                    sx={{
-                      cursor: 'pointer',
-                      '&.Mui-selected': { backgroundColor: 'action.selected' },
-                      '&.Mui-selected:hover': { backgroundColor: 'action.selected' },
-                    }}
-                  >
-                    <TableCell>{item.id?.substring(0, 8) || item.id}</TableCell>
-                    <TableCell>{item.client?.name || "N/A"}</TableCell>
-                    <TableCell>{item.user?.name || "N/A"}</TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Container>
-    </div>
+      <TableContainer>
+        <Table
+          sx={{
+            border: '1px solid',
+            borderColor: 'divider',
+            borderLeft: 0,
+            borderTop: 0,
+            width: 'max-content',
+            tableLayout: 'fixed',
+          }}
+        >
+          <TableHead>
+            <TableRow>
+              {orderColumns.map((column) => (
+                <ResizableHeaderCell
+                  key={column.key}
+                  label={column.label}
+                  columnKey={column.key}
+                  cellSx={getColumnCellSx(column.key)}
+                  onResizeStart={startResizing}
+                  onResetWidth={resetColumnWidth}
+                />
+              ))}
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {filtered.length === 0 ? (
+              <TableRow><TableCell colSpan={5} align="center">No hay registros</TableCell></TableRow>
+            ) : filtered.map((item: any) => {
+              const rowId = String(item.id ?? '');
+              return (
+                <TableRow
+                  key={item.id}
+                  hover
+                  selected={selectedRowId === rowId}
+                  onClick={() => setSelectedRowId(rowId)}
+                  onDoubleClick={() => {
+                    setModalOrderId(item.id);
+                    setIsModalOpen(true);
+                    setSelectedRowId(rowId);
+                  }}
+                  sx={{
+                    cursor: 'pointer',
+                    '&.Mui-selected': { backgroundColor: 'action.selected' },
+                    '&.Mui-selected:hover': { backgroundColor: 'action.selected' },
+                  }}
+                >
+                  <TableCell sx={getColumnCellSx('id')}>{item.id?.substring(0, 8) || item.id}</TableCell>
+                  <TableCell sx={getColumnCellSx('client')}>{item.client?.name || "N/A"}</TableCell>
+                  <TableCell sx={getColumnCellSx('user')}>{item.user?.name || "N/A"}</TableCell>
+                  <TableCell sx={getColumnCellSx('created_at')}>{formatDateTime(item.created_at)}</TableCell>
+                  <TableCell sx={getColumnCellSx('total_amount')}>{formatCurrency(item.total_amount)}</TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Box>
   );
 }
