@@ -9,6 +9,8 @@ interface OrderFormModalProps {
   onClose: () => void;
   orderId?: string;
   title?: string;
+  initialWidth?: number;
+  initialHeight?: number;
   list?: any[];
   currentIndex?: number;
   onNavigate?: (newIndex: number) => void;
@@ -18,7 +20,9 @@ export default function OrderFormModal({
   isOpen,
   onClose,
   orderId,
-  title,
+  title: _title,
+  initialWidth = 700,
+  initialHeight = 750,
   list = [],
   currentIndex = 0,
   onNavigate,
@@ -68,10 +72,10 @@ export default function OrderFormModal({
     <FloatingModal
       isOpen={isOpen}
       onClose={onClose}
-      title={title ?? (orderId ? 'Editar Pedido' : 'Crear Pedido')}
-      initialWidth={1000}
-      initialHeight={760}
-      toolbar={isEditing ? toolbar : undefined}
+      title={'Pedido'}
+      initialWidth={initialWidth}
+      initialHeight={initialHeight}
+      toolbar={toolbar}
       renderContent={() =>
         formProps.isLoading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
@@ -80,7 +84,6 @@ export default function OrderFormModal({
         ) : (
           <OrderForm
             {...formProps}
-            title={orderId ? 'Editar Pedido' : 'Crear Pedido'}
             isDisabled={formProps.isDisabled}
           />
         )

@@ -213,7 +213,7 @@ const createAppTheme = (mode: 'light' | 'dark') => createTheme({
     MuiTableCell: {
       styleOverrides: {
         root: {
-          padding: '1rem 0.5rem',
+          // padding: '1rem 0.5rem',
           height: 'auto',
           boxSizing: 'border-box',
           lineHeight: 1,
@@ -221,22 +221,22 @@ const createAppTheme = (mode: 'light' | 'dark') => createTheme({
           verticalAlign: 'middle',
         },
         head: {
-          padding: '1rem 0.5rem',
+          // padding: '1rem 0.5rem',
           lineHeight: 1,
         },
         body: {
-          padding: '1rem 0.5rem',
+          // padding: '1rem 0.5rem',
           lineHeight: 1,
         },
         footer: {
-          padding: '1rem 0.5rem',
+          // padding: '1rem 0.5rem',
           lineHeight: 1,
         },
         sizeSmall: {
-          padding: '1rem 0.5rem',
+          // padding: '1rem 0.5rem',
         },
         sizeMedium: {
-          padding: '1rem 0.5rem',
+          // padding: '1rem 0.5rem',
         },
       },
     },

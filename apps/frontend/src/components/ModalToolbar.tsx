@@ -1,6 +1,5 @@
 import { Box, Button, IconButton, Tooltip } from '@mui/material';
 import {
-  Save as SaveIcon,
   Edit as EditIcon,
   ArrowUpward as ArrowUpIcon,
   ArrowDownward as ArrowDownIcon,
@@ -56,7 +55,7 @@ export default function ModalToolbar({
               color="primary"
               onClick={onSave}
               disabled={isDisabled || isSaving}
-              startIcon={<SaveIcon />}
+              disableElevation
             >
               Guardar
             </Button>

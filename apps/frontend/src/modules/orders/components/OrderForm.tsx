@@ -1,18 +1,15 @@
-import { Box, TextField, MenuItem, Typography, Paper, Table, TableBody, TableCell, TableHead, TableRow, TableContainer, Autocomplete, Button } from '@mui/material';
-import { Add as AddIcon } from '@mui/icons-material';
+import type { KeyboardEvent } from 'react';
+import { Box, TextField, Typography, Table, TableBody, TableCell, TableHead, TableRow, TableContainer } from '@mui/material';
 
 interface OrderFormProps {
   formData: any;
   items: any[];
   clients: any[];
-  users: any[];
-  products: any[];
   totalGeneral: number;
   handleChange: (e: any) => void;
   addItemField: () => void;
   updateItemField: (index: number, field: string, value: any) => void;
   handleSubmit: (action: 'save' | 'save-and-close' | 'save-and-new') => void;
-  title: string;
   isDisabled?: boolean;
 }
 
@@ -20,89 +17,324 @@ export default function OrderForm({
   formData,
   items,
   clients,
-  users,
-  products,
   totalGeneral,
   handleChange,
   addItemField,
   updateItemField,
   handleSubmit,
-  title,
   isDisabled = false
 }: OrderFormProps) {
+  const EDITABLE_COLUMNS = 5;
+
+  const formatCurrency = (value: number | string) => {
+    const amount = Number(value);
+    if (!Number.isFinite(amount)) {
+      return '$0.00';
+    }
+    return amount.toLocaleString('es-MX', {
+      style: 'currency',
+      currency: 'MXN',
+    });
+  };
+
+  const totalProducts = items.length;
+  const selectedClient = clients.find((client: any) => client.id === formData.client_id);
+  const cellSx = { '&.MuiTableCell-root': { padding: '0 !important', border: '1px solid', borderColor: 'divider' } };
+  const cellInputSx = {
+    margin: 0,
+    '& .MuiInputBase-input': { p: 0 },
+    '& .MuiInput-underline:before': { borderBottom: 'none' },
+    '& .MuiInput-underline:after': { borderBottom: 'none' },
+    '& .MuiInput-underline:hover:not(.Mui-disabled):before': {
+      borderBottom: 'none',
+    },
+  };
+
+  const focusCell = (row: number, col: number) => {
+    const target = document.querySelector<HTMLInputElement>(
+      `input[data-row="${row}"][data-col="${col}"]`,
+    );
+    target?.focus();
+    target?.select?.();
+  };
+
+  const handleArrowNavigation = (e: KeyboardEvent<HTMLElement>, row: number, col: number) => {
+    if (e.key === 'ArrowUp' && row > 0) {
+      e.preventDefault();
+      focusCell(row - 1, col);
+      return;
+    }
+
+    if (e.key === 'ArrowDown' && row < items.length - 1) {
+      e.preventDefault();
+      focusCell(row + 1, col);
+      return;
+    }
+
+    if (e.key === 'ArrowLeft' && col > 0) {
+      e.preventDefault();
+      focusCell(row, col - 1);
+      return;
+    }
+
+    if (e.key === 'ArrowRight' && col < EDITABLE_COLUMNS - 1) {
+      e.preventDefault();
+      focusCell(row, col + 1);
+    }
+  };
+
+  const isAlphaNumericInput = (value: string) => /^[a-zA-Z0-9\s]*$/.test(value);
+  const isIntegerInput = (value: string) => /^\d*$/.test(value);
+  const isDecimalInput = (value: string) => /^\d*([.]\d{0,2})?$/.test(value);
 
   return (
-    <Box>
-      <Typography variant="h4" gutterBottom>{title}</Typography>
-      <Paper sx={{ p: 3, mb: 4 }}>
-        <form onSubmit={(e) => { e.preventDefault(); handleSubmit('save'); }}>
-          <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mb: 3 }}>
-            <TextField select sx={{ flex: 1, minWidth: 300 }} label="Cliente" name="client_id" value={formData.client_id || ''} onChange={handleChange} required disabled={isDisabled}>
-              {clients.map((c: any) => <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>)}
-            </TextField>
-            <TextField select sx={{ flex: 1, minWidth: 200 }} label="Vendedor" name="user_id" value={formData.user_id || ''} onChange={handleChange} required disabled={isDisabled}>
-              {users.map((u: any) => <MenuItem key={u.id} value={u.id}>{u.name}</MenuItem>)}
-            </TextField>
+    <Box sx={{ p: 3, height: '100%' }}>
+        <form
+          onSubmit={(e) => { e.preventDefault(); handleSubmit('save'); }}
+          style={{ height: '100%', display: 'flex', flexDirection: 'column' }}
+        >
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
+              columnGap: 2,
+              mb: 3,
+            }}
+          >
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <TextField
+                fullWidth
+                label="Client folio"
+                value={selectedClient?.folio || ''}
+                // slotProps={{ input: { readOnly: true } }}
+              />
+              <TextField
+                fullWidth
+                label="Client name"
+                value={selectedClient?.name || ''}
+                required
+                slotProps={{ input: { readOnly: true } }}
+              />
+            </Box>
+
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
+                  gap: 2,
+                }}
+              >
+                <TextField
+                  fullWidth
+                  label="Created date"
+                  type="date"
+                  value={formData.created_at || ''}
+                  slotProps={{
+                    inputLabel: { shrink: true },
+                    input: { readOnly: true },
+                  }}
+                />
+                <TextField
+                  fullWidth
+                  label="Folio"
+                  value={formData.order_folio || ''}
+                  slotProps={{ input: { readOnly: true } }}
+                />
+              </Box>
+              <TextField
+                fullWidth
+                label="Delivery date"
+                type="date"
+                name="delivery_date"
+                value={formData.delivery_date || ''}
+                onChange={handleChange}
+                disabled={isDisabled}
+                slotProps={{ inputLabel: { shrink: true } }}
+              />
+            </Box>
           </Box>
 
-          <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-            <TextField select sx={{ flex: 1, minWidth: 200 }} label="Origen" name="origin" margin="normal" value={formData.origin || ''} onChange={handleChange} required disabled={isDisabled}>
-              <MenuItem value="WHATSAPP">WhatsApp</MenuItem>
-              <MenuItem value="MANUAL">Manual</MenuItem>
-            </TextField>
-            <TextField select sx={{ flex: 1, minWidth: 200 }} label="Estado" name="status" margin="normal" value={formData.status || ''} onChange={handleChange} required disabled={isDisabled}>
-              <MenuItem value="PENDING_REVIEW">Pendiente de revisión</MenuItem>
-              <MenuItem value="APPROVED">Aprobado</MenuItem>
-              <MenuItem value="REJECTED">Rechazado</MenuItem>
-              <MenuItem value="DELIVERED">Entregado</MenuItem>
-            </TextField>
-          </Box>
-
-          <Typography variant="h6" sx={{ mt: 4, mb: 2 }}>Productos del Pedido</Typography>
-          <TableContainer component={Paper} variant="outlined" sx={{ mb: 2 }}>
-            <Table>
-              <TableHead sx={{ bgcolor: 'action.hover' }}>
-                <TableRow>
-                  <TableCell sx={{ width: '40%' }}>Producto</TableCell>
-                  <TableCell sx={{ width: '15%' }}>Cantidad</TableCell>
-                  <TableCell sx={{ width: '20%' }}>Precio Unit.</TableCell>
-                  <TableCell sx={{ width: '25%' }}>Subtotal</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {items.map((item, index) => (
-                  <TableRow key={index}>
-                    <TableCell>
-                      <Autocomplete
-                        options={products}
-                        getOptionLabel={(option: any) => option.name || ''}
-                        value={item.product || null}
-                        onChange={(_, newValue) => updateItemField(index, 'product', newValue)}
-                        disabled={isDisabled}
-                        renderInput={(params) => <TextField {...params} variant="standard" placeholder="Buscar producto..." required />}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <TextField type="number" variant="standard" value={item.quantity} onChange={(e) => updateItemField(index, 'quantity', e.target.value)} slotProps={{ htmlInput: { min: 1 } }} required disabled={isDisabled} />
-                    </TableCell>
-                    <TableCell>
-                      <TextField type="number" variant="standard" value={item.unit_price} onChange={(e) => updateItemField(index, 'unit_price', e.target.value)} required disabled={isDisabled} />
-                    </TableCell>
-                    <TableCell>
-                      ${(Number(item.quantity) * Number(item.unit_price)).toFixed(2)}
-                    </TableCell>
+          <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: 0, flex: 1 }}>
+            <TableContainer sx={{ mb: 2, minHeight: 0, flex: 1, overflow: 'auto' }}>
+              <Table
+                stickyHeader
+                sx={{
+                  border: '1px solid',
+                  borderColor: 'divider',
+                }}
+              >
+                <TableHead
+                  sx={{
+                    bgcolor: 'primary.dark',
+                    '& .MuiTableCell-root': {
+                      color: 'primary.contrastText',
+                      fontWeight: 600,
+                      bgcolor: 'primary.dark',
+                    },
+                  }}
+                >
+                  <TableRow>
+                    <TableCell sx={{ ...cellSx, width: '10%' }}>Articulo</TableCell>
+                    <TableCell sx={{ ...cellSx, width: '47.5%' }}>Nombre</TableCell>
+                    <TableCell sx={{ ...cellSx, width: '7.5%' }}>U.M.</TableCell>
+                    <TableCell sx={{ ...cellSx, width: '10%' }}>Unidades</TableCell>
+                    <TableCell sx={{ ...cellSx, width: '12.5%' }}>Precio</TableCell>
+                    <TableCell sx={{ ...cellSx, width: '12.5%' }}>Importe</TableCell>
                   </TableRow>
-                ))}
-                <TableRow>
-                  <TableCell colSpan={3} align="right"><Typography variant="subtitle1"><b>Total General:</b></Typography></TableCell>
-                  <TableCell><Typography variant="subtitle1" color="primary"><b>${totalGeneral.toFixed(2)}</b></Typography></TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          </TableContainer>
-          {!isDisabled && <Button startIcon={<AddIcon />} onClick={addItemField} variant="outlined" sx={{ mb: 4 }}>Agregar Producto</Button>}
+                </TableHead>
+                <TableBody>
+                  {items.map((item, index) => (
+                    <TableRow key={index}>
+                      <TableCell sx={cellSx}>
+                        <TextField
+                          fullWidth
+                          type="text"
+                          variant="standard"
+                          value={item.folio || ''}
+                          onChange={(e) => {
+                            if (!isAlphaNumericInput(e.target.value)) return;
+                            updateItemField(index, 'folio', e.target.value);
+                          }}
+                          onKeyDown={(e) => handleArrowNavigation(e, index, 0)}
+                          required
+                          disabled={isDisabled}
+                          sx={cellInputSx}
+                          slotProps={{
+                            htmlInput: { 'data-row': index, 'data-col': 0 },
+                            input: { disableUnderline: true },
+                          }}
+                        />
+                      </TableCell>
+                      <TableCell sx={cellSx}>
+                        <TextField
+                          fullWidth
+                          type="text"
+                          variant="standard"
+                          value={item.name || ''}
+                          onChange={(e) => {
+                            if (!isAlphaNumericInput(e.target.value)) return;
+                            updateItemField(index, 'name', e.target.value);
+                          }}
+                          onKeyDown={(e) => handleArrowNavigation(e, index, 1)}
+                          required
+                          disabled={isDisabled}
+                          sx={cellInputSx}
+                          slotProps={{
+                            htmlInput: { 'data-row': index, 'data-col': 1 },
+                            input: { disableUnderline: true },
+                          }}
+                        />
+                      </TableCell>
+                      <TableCell sx={cellSx}>
+                        <TextField
+                          fullWidth
+                          type="text"
+                          variant="standard"
+                          value={item.unit.toUpperCase() || ''}
+                          onChange={(e) => {
+                            if (!isAlphaNumericInput(e.target.value)) return;
+                            updateItemField(index, 'unit', e.target.value);
+                          }}
+                          onKeyDown={(e) => handleArrowNavigation(e, index, 2)}
+                          required
+                          disabled={isDisabled}
+                          sx={cellInputSx}
+                          slotProps={{
+                            htmlInput: { 'data-row': index, 'data-col': 2 },
+                            input: { disableUnderline: true },
+                          }}
+                        />
+                      </TableCell>
+                      <TableCell sx={cellSx}>
+                        <TextField
+                          fullWidth
+                          type="number"
+                          variant="standard"
+                          value={item.quantity}
+                          onChange={(e) => {
+                            if (!isIntegerInput(e.target.value)) return;
+                            updateItemField(index, 'quantity', e.target.value);
+                          }}
+                          onKeyDown={(e) => handleArrowNavigation(e, index, 3)}
+                          slotProps={{
+                            htmlInput: { min: 1, 'data-row': index, 'data-col': 3 },
+                            input: { disableUnderline: true },
+                          }}
+                          required
+                          disabled={isDisabled}
+                          sx={cellInputSx}
+                        />
+                      </TableCell>
+                      <TableCell sx={cellSx}>
+                        <TextField
+                          fullWidth
+                          type="number"
+                          variant="standard"
+                          value={item.unit_price}
+                          onChange={(e) => {
+                            if (!isDecimalInput(e.target.value)) return;
+                            updateItemField(index, 'unit_price', e.target.value);
+                          }}
+                          onKeyDown={(e) => {
+                            handleArrowNavigation(e, index, 4);
+                            const isLastRow = index === items.length - 1;
+                            const hasProduct = Boolean(item.product_id);
+                            if (e.key === 'Tab' && !e.shiftKey && isLastRow && hasProduct) {
+                              addItemField();
+                            }
+                          }}
+                          required
+                          disabled={isDisabled}
+                          sx={cellInputSx}
+                          slotProps={{
+                            htmlInput: { 'data-row': index, 'data-col': 4 },
+                            input: { disableUnderline: true },
+                          }}
+                        />
+                      </TableCell>
+                      <TableCell sx={cellSx}>
+                        <TextField
+                          fullWidth
+                          variant="standard"
+                          value={formatCurrency(Number(item.quantity) * Number(item.unit_price))}
+                          disabled
+                          sx={cellInputSx}
+                          slotProps={{
+                            input: { disableUnderline: true, readOnly: true },
+                          }}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Box>
+
+          <Box
+            sx={{
+              mt: 'auto',
+              pt: 2,
+              borderTop: '1px solid',
+              borderColor: 'divider',
+              position: 'sticky',
+              bottom: 0,
+              bgcolor: 'background.paper',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 2,
+            }}
+          >
+            <Typography variant="subtitle1">
+              {totalProducts} Articulos
+            </Typography>
+            <Typography variant="subtitle1" color="primary">
+              {formatCurrency(totalGeneral)}
+            </Typography>
+          </Box>
         </form>
-      </Paper>
     </Box>
   );
 }

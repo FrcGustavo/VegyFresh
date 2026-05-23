@@ -59,7 +59,9 @@ export class ProductsService {
     const search = filters.search?.trim();
 
     return this.productsRepository.find({
-      where: search ? { name: ILike(`%${search}%`) } : undefined,
+      where: search
+        ? [{ name: ILike(`%${search}%`) }, { folio: ILike(`%${search}%`) }]
+        : undefined,
       relations: { supplier: true, productPrices: true },
       order: { [orderBy]: order },
       take: limit,
