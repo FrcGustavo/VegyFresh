@@ -10,8 +10,29 @@ export class CreateClientDto {
   @ApiPropertyOptional({ example: 'cliente@example.com', nullable: true })
   email?: string | null;
 
+  @ApiPropertyOptional({ example: 'México', nullable: true })
+  country?: string | null;
+
+  @ApiPropertyOptional({ example: 'Jalisco', nullable: true })
+  state?: string | null;
+
+  @ApiPropertyOptional({ example: 'Guadalajara', nullable: true })
+  city?: string | null;
+
+  @ApiPropertyOptional({ example: '44100', nullable: true })
+  postal_code?: string | null;
+
   @ApiPropertyOptional({ example: 'Av. Siempreviva 742', nullable: true })
   address?: string | null;
+
+  @ApiPropertyOptional({ example: 'Centro', nullable: true })
+  suburb?: string | null;
+
+  @ApiPropertyOptional({ example: '123', nullable: true })
+  external_number?: string | null;
+
+  @ApiPropertyOptional({ example: '4B', nullable: true })
+  internal_number?: string | null;
 
   @ApiPropertyOptional({
     example: 'https://example.com/logo.png',

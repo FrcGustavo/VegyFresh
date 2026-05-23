@@ -28,8 +28,29 @@ export class Client {
   @Column({ type: 'varchar', length: 255, nullable: true })
   email: string | null;
 
+  @Column({ type: 'varchar', length: 120, nullable: true })
+  country: string | null;
+
+  @Column({ type: 'varchar', length: 120, nullable: true })
+  state: string | null;
+
+  @Column({ type: 'varchar', length: 120, nullable: true })
+  city: string | null;
+
+  @Column({ type: 'varchar', length: 20, nullable: true })
+  postal_code: string | null;
+
   @Column({ type: 'text', nullable: true })
   address: string | null;
+
+  @Column({ name: 'colonia', type: 'varchar', length: 120, nullable: true })
+  suburb: string | null;
+
+  @Column({ type: 'varchar', length: 30, nullable: true })
+  external_number: string | null;
+
+  @Column({ type: 'varchar', length: 30, nullable: true })
+  internal_number: string | null;
 
   @Column({ type: 'text', nullable: true })
   avatar_url: string | null;
