@@ -18,6 +18,7 @@ import { useResizableColumns } from '../../../hooks/useResizableColumns';
 import ClientFormModal from '../components/ClientFormModal';
 import ResizableHeaderCell from '../../../components/ResizableHeaderCell';
 import ResourcePageTitle from '../../../components/ResourcePageTitle';
+import ListPageToolbar from '../../../components/ListPageToolbar';
 import { useListPageToolbar } from '../../../layout/useListPageToolbar';
 
 const clientColumns = [
@@ -134,7 +135,6 @@ function ClientsTable({
       setIsModalOpen(true);
     },
   }), [query, setQuery]);
-  useListPageToolbar(toolbarConfig);
 
   const currentIndex = list.findIndex(item => String(item.id ?? '') === selectedRowId);
 
@@ -183,9 +183,10 @@ function ClientsTable({
   }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   return (
-    <Box sx={{ backgroundColor: 'background.paper' }}>
-      <ResourcePageTitle title="Clientes" icon={<People />} />
-      <ClientFormModal
+   <Box sx={{ backgroundColor: 'background.paper' }}>
+    <ListPageToolbar config={toolbarConfig} />
+    <ResourcePageTitle title="Clientes" icon={<People />} />
+    <ClientFormModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         clientId={modalClientId}
@@ -194,7 +195,7 @@ function ClientsTable({
         currentIndex={currentIndex}
         onNavigate={handleNavigateItem}
       />
-      <TableContainer>
+      <TableContainer sx={{ maxHeight: 'calc(100vh - 116px)', overflow: 'auto' }}>
         <Table
           sx={{
             border: '1px solid',
@@ -205,14 +206,29 @@ function ClientsTable({
             tableLayout: 'fixed',
           }}
         >
-          <TableHead>
+          <TableHead
+            sx={{
+              position: 'sticky',
+              top: 0,
+              zIndex: 10,
+              bgcolor: 'primary.dark',
+              '& .MuiTableCell-root': {
+                padding: '0 !important',
+                border: '1px solid',
+                borderColor: 'divider',
+                color: 'primary.contrastText',
+                fontWeight: 600,
+                bgcolor: 'primary.dark',
+              },
+            }}
+          >
             <TableRow>
               {clientColumns.map((column) => (
                 <ResizableHeaderCell
                   key={column.key}
                   label={column.label}
                   columnKey={column.key}
-                  cellSx={getColumnCellSx(column.key)}
+                  cellSx={{ ...getColumnCellSx(column.key), '&.MuiTableCell-root': { padding: '0 !important', border: '1px solid', borderColor: 'divider' } }}
                   onResizeStart={startResizing}
                   onResetWidth={resetColumnWidth}
                   sortable={column.key === 'folio' || column.key === 'name'}
@@ -245,9 +261,9 @@ function ClientsTable({
                     '&.Mui-selected:hover': { backgroundColor: 'action.selected' },
                   }}
                 >
-                  <TableCell sx={getColumnCellSx('folio')}>{item.folio ?? 'N/A'}</TableCell>
-                  <TableCell sx={getColumnCellSx('name')}>{item.name}</TableCell>
-                  <TableCell sx={getColumnCellSx('phone_number')}>{item.phone_number}</TableCell>
+                  <TableCell sx={{ ...getColumnCellSx('folio'), padding: '0 !important', border: '1px solid', borderColor: 'divider' }}>{item.folio ?? 'N/A'}</TableCell>
+                  <TableCell sx={{ ...getColumnCellSx('name'), padding: '0 !important', border: '1px solid', borderColor: 'divider' }}>{item.name}</TableCell>
+                  <TableCell sx={{ ...getColumnCellSx('phone_number'), padding: '0 !important', border: '1px solid', borderColor: 'divider' }}>{item.phone_number}</TableCell>
                 </TableRow>
               );
             })}

@@ -18,6 +18,7 @@ import { useResizableColumns } from '../../../../hooks/useResizableColumns';
 import PriceListFormModal from '../components/PriceListFormModal';
 import ResizableHeaderCell from '../../../../components/ResizableHeaderCell';
 import ResourcePageTitle from '../../../../components/ResourcePageTitle';
+import ListPageToolbar from '../../../../components/ListPageToolbar';
 import { useListPageToolbar } from '../../../../layout/useListPageToolbar';
 
 const priceListColumns = [
@@ -133,7 +134,6 @@ function PriceListsTable({
       setIsModalOpen(true);
     },
   }), [query, setQuery]);
-  useListPageToolbar(toolbarConfig);
 
   const currentIndex = list.findIndex(item => String(item.id ?? '') === selectedRowId);
 
@@ -183,8 +183,9 @@ function PriceListsTable({
 
   return (
     <Box sx={{ backgroundColor: 'background.paper' }}>
-      <ResourcePageTitle title="Listas de precio" icon={<LocalOffer />} />
-      <PriceListFormModal
+    <ListPageToolbar config={toolbarConfig} />
+    <ResourcePageTitle title="Listas de precio" icon={<LocalOffer />} />
+    <PriceListFormModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         priceListId={modalPriceListId}
@@ -193,7 +194,7 @@ function PriceListsTable({
         currentIndex={currentIndex}
         onNavigate={handleNavigateItem}
       />
-      <TableContainer>
+      <TableContainer sx={{ maxHeight: 'calc(100vh - 116px)', overflow: 'auto' }}>
         <Table
           sx={{
             border: '1px solid',
@@ -204,7 +205,22 @@ function PriceListsTable({
             tableLayout: 'fixed',
           }}
         >
-          <TableHead>
+          <TableHead
+            sx={{
+              position: 'sticky',
+              top: 0,
+              zIndex: 10,
+              bgcolor: 'primary.dark',
+              '& .MuiTableCell-root': {
+                padding: '0 !important',
+                border: '1px solid',
+                borderColor: 'divider',
+                color: 'primary.contrastText',
+                fontWeight: 600,
+                bgcolor: 'primary.dark',
+              },
+            }}
+          >
             <TableRow>
               {priceListColumns.map((column) => (
                 <ResizableHeaderCell
@@ -244,8 +260,8 @@ function PriceListsTable({
                     '&.Mui-selected:hover': { backgroundColor: 'action.selected' },
                   }}
                 >
-                  <TableCell sx={getColumnCellSx('folio')}>{item.folio ?? 'N/A'}</TableCell>
-                  <TableCell sx={getColumnCellSx('name')}>{item.name}</TableCell>
+                  <TableCell sx={{ ...getColumnCellSx('folio'), padding: '0 !important', border: '1px solid', borderColor: 'divider' }}>{item.folio ?? 'N/A'}</TableCell>
+                  <TableCell sx={{ ...getColumnCellSx('name'), padding: '0 !important', border: '1px solid', borderColor: 'divider' }}>{item.name}</TableCell>
                 </TableRow>
               );
             })}

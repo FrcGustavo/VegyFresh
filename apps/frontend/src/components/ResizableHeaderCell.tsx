@@ -38,7 +38,19 @@ export default function ResizableHeaderCell({
           active={sortActive}
           direction={sortDirection}
           onClick={() => onSort?.(columnKey)}
-          sx={{ pr: 1.5 }}
+          sx={{
+            pr: 1.5,
+            color: 'inherit',
+            '&.MuiTableSortLabel-root': {
+              color: 'inherit',
+            },
+            '&.MuiTableSortLabel-root:hover': {
+              color: 'inherit',
+            },
+            '& .MuiTableSortLabel-icon': {
+              color: 'inherit !important',
+            },
+          }}
         >
           {label}
         </TableSortLabel>

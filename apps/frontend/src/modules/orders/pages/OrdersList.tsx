@@ -17,6 +17,7 @@ import { useResizableColumns } from '../../../hooks/useResizableColumns';
 import OrderFormModal from '../components/OrderFormModal';
 import ResizableHeaderCell from '../../../components/ResizableHeaderCell';
 import ResourcePageTitle from '../../../components/ResourcePageTitle';
+import ListPageToolbar from '../../../components/ListPageToolbar';
 import { useListPageToolbar } from '../../../layout/useListPageToolbar';
 
 const orderColumns = [
@@ -161,7 +162,6 @@ function OrdersTable({
     setCreatedFrom,
     setCreatedTo,
   ]);
-  useListPageToolbar(toolbarConfig);
 
   const currentIndex = list.findIndex(item => String(item.id ?? '') === selectedRowId);
   const handleCloseModal = () => {
@@ -233,8 +233,9 @@ function OrdersTable({
 
   return (
     <Box sx={{ backgroundColor: 'background.paper' }}>
-      <ResourcePageTitle title="Pedidos" icon={<ShoppingCart />} />
-      <OrderFormModal
+    <ListPageToolbar config={toolbarConfig} />
+    <ResourcePageTitle title="Pedidos" icon={<ShoppingCart />} />
+    <OrderFormModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         orderId={modalOrderId}
@@ -243,7 +244,7 @@ function OrdersTable({
         currentIndex={currentIndex}
         onNavigate={handleNavigateItem}
       />
-      <TableContainer>
+      <TableContainer sx={{ maxHeight: 'calc(100vh - 116px)', overflow: 'auto' }}>
         <Table
           sx={{
             border: '1px solid',
@@ -254,7 +255,22 @@ function OrdersTable({
             tableLayout: 'fixed',
           }}
         >
-          <TableHead>
+          <TableHead
+            sx={{
+              position: 'sticky',
+              top: 0,
+              zIndex: 10,
+              bgcolor: 'primary.dark',
+              '& .MuiTableCell-root': {
+                padding: '0 !important',
+                border: '1px solid',
+                borderColor: 'divider',
+                color: 'primary.contrastText',
+                fontWeight: 600,
+                bgcolor: 'primary.dark',
+              },
+            }}
+          >
             <TableRow>
               {orderColumns.map((column) => (
                 <ResizableHeaderCell
@@ -294,12 +310,12 @@ function OrdersTable({
                     '&.Mui-selected:hover': { backgroundColor: 'action.selected' },
                   }}
                 > 
-                  <TableCell sx={getColumnCellSx('created_at')}>{formatDate(item.created_at)}</TableCell>
-                  <TableCell sx={getColumnCellSx('delivery_date')}>{formatDate(item.delivery_date)}</TableCell>
-                  <TableCell sx={getColumnCellSx('folio')}>{item.folio || "N/A"}</TableCell>
-                  <TableCell sx={getColumnCellSx('client')}>{item.client?.name || "N/A"}</TableCell>
-                  <TableCell sx={getColumnCellSx('description')}>{item.description || "N/A"}</TableCell>
-                  <TableCell sx={getColumnCellSx('total_amount')}>{formatCurrency(item.total_amount)}</TableCell>
+                  <TableCell sx={{ ...getColumnCellSx('created_at'), padding: '0 !important', border: '1px solid', borderColor: 'divider' }}>{formatDate(item.created_at)}</TableCell>
+                  <TableCell sx={{ ...getColumnCellSx('delivery_date'), padding: '0 !important', border: '1px solid', borderColor: 'divider' }}>{formatDate(item.delivery_date)}</TableCell>
+                  <TableCell sx={{ ...getColumnCellSx('folio'), padding: '0 !important', border: '1px solid', borderColor: 'divider' }}>{item.folio || "N/A"}</TableCell>
+                  <TableCell sx={{ ...getColumnCellSx('client'), padding: '0 !important', border: '1px solid', borderColor: 'divider' }}>{item.client?.name || "N/A"}</TableCell>
+                  <TableCell sx={{ ...getColumnCellSx('description'), padding: '0 !important', border: '1px solid', borderColor: 'divider' }}>{item.description || "N/A"}</TableCell>
+                  <TableCell sx={{ ...getColumnCellSx('total_amount'), padding: '0 !important', border: '1px solid', borderColor: 'divider' }}>{formatCurrency(item.total_amount)}</TableCell>
                 </TableRow>
               );
             })}

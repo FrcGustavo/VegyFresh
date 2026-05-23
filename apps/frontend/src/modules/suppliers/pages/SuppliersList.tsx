@@ -18,6 +18,7 @@ import { useResizableColumns } from '../../../hooks/useResizableColumns';
 import SupplierFormModal from '../components/SupplierFormModal';
 import ResizableHeaderCell from '../../../components/ResizableHeaderCell';
 import ResourcePageTitle from '../../../components/ResourcePageTitle';
+import ListPageToolbar from '../../../components/ListPageToolbar';
 import { useListPageToolbar } from '../../../layout/useListPageToolbar';
 
 const supplierColumns = [
@@ -135,7 +136,6 @@ function SuppliersTable({
       setIsModalOpen(true);
     },
   }), [query, setQuery]);
-  useListPageToolbar(toolbarConfig);
 
   const currentIndex = list.findIndex(item => String(item.id ?? '') === selectedRowId);
 
@@ -184,9 +184,10 @@ function SuppliersTable({
   }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   return (
-    <Box sx={{ backgroundColor: 'background.paper' }}>
-      <ResourcePageTitle title="Provedores" icon={<LocalShipping />} />
-      <SupplierFormModal
+   <Box sx={{ backgroundColor: 'background.paper' }}>
+    <ListPageToolbar config={toolbarConfig} />
+    <ResourcePageTitle title="Provedores" icon={<LocalShipping />} />
+    <SupplierFormModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         supplierId={modalSupplierId}
@@ -195,7 +196,7 @@ function SuppliersTable({
         currentIndex={currentIndex}
         onNavigate={handleNavigateItem}
       />
-      <TableContainer>
+      <TableContainer sx={{ maxHeight: 'calc(100vh - 116px)', overflow: 'auto' }}>
         <Table
           sx={{
             border: '1px solid',
@@ -206,7 +207,22 @@ function SuppliersTable({
             tableLayout: 'fixed',
           }}
         >
-          <TableHead>
+          <TableHead
+            sx={{
+              position: 'sticky',
+              top: 0,
+              zIndex: 10,
+              bgcolor: 'primary.dark',
+              '& .MuiTableCell-root': {
+                padding: '0 !important',
+                border: '1px solid',
+                borderColor: 'divider',
+                color: 'primary.contrastText',
+                fontWeight: 600,
+                bgcolor: 'primary.dark',
+              },
+            }}
+          >
             <TableRow>
               {supplierColumns.map((column) => (
                 <ResizableHeaderCell
@@ -246,10 +262,10 @@ function SuppliersTable({
                     '&.Mui-selected:hover': { backgroundColor: 'action.selected' },
                   }}
                 >
-                  <TableCell sx={getColumnCellSx('folio')}>{item.folio ?? 'N/A'}</TableCell>
-                  <TableCell sx={getColumnCellSx('name')}>{item.name}</TableCell>
-                  <TableCell sx={getColumnCellSx('email')}>{item.email || 'N/A'}</TableCell>
-                  <TableCell sx={getColumnCellSx('phone_number')}>{item.phone_number || 'N/A'}</TableCell>
+                  <TableCell sx={{ ...getColumnCellSx('folio'), padding: '0 !important', border: '1px solid', borderColor: 'divider' }}>{item.folio ?? 'N/A'}</TableCell>
+                  <TableCell sx={{ ...getColumnCellSx('name'), padding: '0 !important', border: '1px solid', borderColor: 'divider' }}>{item.name}</TableCell>
+                  <TableCell sx={{ ...getColumnCellSx('email'), padding: '0 !important', border: '1px solid', borderColor: 'divider' }}>{item.email || 'N/A'}</TableCell>
+                  <TableCell sx={{ ...getColumnCellSx('phone_number'), padding: '0 !important', border: '1px solid', borderColor: 'divider' }}>{item.phone_number || 'N/A'}</TableCell>
                 </TableRow>
               );
             })}

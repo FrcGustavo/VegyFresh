@@ -18,6 +18,7 @@ import { useResizableColumns } from '../../../hooks/useResizableColumns';
 import UserFormModal from '../components/UserFormModal';
 import ResizableHeaderCell from '../../../components/ResizableHeaderCell';
 import ResourcePageTitle from '../../../components/ResourcePageTitle';
+import ListPageToolbar from '../../../components/ListPageToolbar';
 import { useListPageToolbar } from '../../../layout/useListPageToolbar';
 
 const userColumns = [
@@ -134,7 +135,6 @@ function UsersTable({
       setIsModalOpen(true);
     },
   }), [query, setQuery]);
-  useListPageToolbar(toolbarConfig);
 
   const currentIndex = list.findIndex(item => String(item.id ?? '') === selectedRowId);
 
@@ -183,9 +183,10 @@ function UsersTable({
   }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   return (
-    <Box sx={{ backgroundColor: 'background.paper' }}>
-      <ResourcePageTitle title="Usuarios y roles" icon={<AdminPanelSettings />} />
-      <UserFormModal
+   <Box sx={{ backgroundColor: 'background.paper' }}>
+    <ListPageToolbar config={toolbarConfig} />
+    <ResourcePageTitle title="Usuarios y roles" icon={<AdminPanelSettings />} />
+    <UserFormModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         userId={modalUserId}
@@ -193,7 +194,7 @@ function UsersTable({
         currentIndex={currentIndex}
         onNavigate={handleNavigateItem}
       />
-      <TableContainer>
+      <TableContainer sx={{ maxHeight: 'calc(100vh - 116px)', overflow: 'auto' }}>
         <Table
           sx={{
             border: '1px solid',
@@ -204,7 +205,22 @@ function UsersTable({
             tableLayout: 'fixed',
           }}
         >
-          <TableHead>
+          <TableHead
+            sx={{
+              position: 'sticky',
+              top: 0,
+              zIndex: 10,
+              bgcolor: 'primary.dark',
+              '& .MuiTableCell-root': {
+                padding: '0 !important',
+                border: '1px solid',
+                borderColor: 'divider',
+                color: 'primary.contrastText',
+                fontWeight: 600,
+                bgcolor: 'primary.dark',
+              },
+            }}
+          >
             <TableRow>
               {userColumns.map((column) => (
                 <ResizableHeaderCell
@@ -244,9 +260,9 @@ function UsersTable({
                     '&.Mui-selected:hover': { backgroundColor: 'action.selected' },
                   }}
                 >
-                  <TableCell sx={getColumnCellSx('folio')}>{item.folio ?? 'N/A'}</TableCell>
-                  <TableCell sx={getColumnCellSx('name')}>{item.name}</TableCell>
-                  <TableCell sx={getColumnCellSx('email')}>{item.email}</TableCell>
+                  <TableCell sx={{ ...getColumnCellSx('folio'), padding: '0 !important', border: '1px solid', borderColor: 'divider' }}>{item.folio ?? 'N/A'}</TableCell>
+                  <TableCell sx={{ ...getColumnCellSx('name'), padding: '0 !important', border: '1px solid', borderColor: 'divider' }}>{item.name}</TableCell>
+                  <TableCell sx={{ ...getColumnCellSx('email'), padding: '0 !important', border: '1px solid', borderColor: 'divider' }}>{item.email}</TableCell>
                 </TableRow>
               );
             })}
