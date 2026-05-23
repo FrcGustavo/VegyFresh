@@ -189,7 +189,6 @@ function UsersTable({
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         userId={modalUserId}
-        title={modalUserId ? 'Editar Usuario' : 'Crear Usuario'}
         list={list}
         currentIndex={currentIndex}
         onNavigate={handleNavigateItem}

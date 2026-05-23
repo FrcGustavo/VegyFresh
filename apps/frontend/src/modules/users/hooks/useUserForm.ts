@@ -11,7 +11,8 @@ export function useUserForm(id?: string, onSuccess?: (action: SaveAction) => voi
   const [formData, setFormData] = useState<any>({
     name: '',
     email: '',
-    role_id: ''
+    role_id: '',
+    avatar_url: '',
   });
   const [isDisabled, setIsDisabled] = useState(!!id);
 
@@ -26,7 +27,8 @@ export function useUserForm(id?: string, onSuccess?: (action: SaveAction) => voi
       setFormData({
         name: existingUser.name,
         email: existingUser.email,
-        role_id: existingUser.role_id || ''
+        role_id: existingUser.role_id || '',
+        avatar_url: existingUser.avatar_url || '',
       });
     }
   }, [existingUser]);
@@ -37,6 +39,16 @@ export function useUserForm(id?: string, onSuccess?: (action: SaveAction) => voi
   const handleChange = (e: any) => {
     const { name, value } = e.target;
     setFormData((prev: any) => ({ ...prev, [name]: value }));
+  };
+
+  const handleAvatarFileChange = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        setFormData((prev: any) => ({ ...prev, avatar_url: reader.result }));
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
   const createAdminRoleMutation = useMutation({
@@ -78,6 +90,7 @@ export function useUserForm(id?: string, onSuccess?: (action: SaveAction) => voi
     isSaving: mutation.isPending,
     isCreatingRole: createAdminRoleMutation.isPending,
     handleChange,
+    handleAvatarFileChange,
     handleSubmit,
     createAdminRole: () => createAdminRoleMutation.mutate(),
     isDisabled,
