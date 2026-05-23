@@ -1,4 +1,4 @@
-import { Box, TableCell } from '@mui/material';
+import { Box, TableCell, TableSortLabel } from '@mui/material';
 import type { MouseEvent as ReactMouseEvent } from 'react';
 
 interface ResizableHeaderCellProps {
@@ -7,6 +7,10 @@ interface ResizableHeaderCellProps {
   cellSx: object;
   onResizeStart: (columnKey: string, event: ReactMouseEvent) => void;
   onResetWidth: (columnKey: string) => void;
+  sortable?: boolean;
+  sortActive?: boolean;
+  sortDirection?: 'asc' | 'desc';
+  onSort?: (columnKey: string) => void;
 }
 
 export default function ResizableHeaderCell({
@@ -15,6 +19,10 @@ export default function ResizableHeaderCell({
   cellSx,
   onResizeStart,
   onResetWidth,
+  sortable = false,
+  sortActive = false,
+  sortDirection = 'asc',
+  onSort,
 }: ResizableHeaderCellProps) {
   return (
     <TableCell
@@ -25,7 +33,18 @@ export default function ResizableHeaderCell({
         whiteSpace: 'nowrap',
       }}
     >
-      {label}
+      {sortable ? (
+        <TableSortLabel
+          active={sortActive}
+          direction={sortDirection}
+          onClick={() => onSort?.(columnKey)}
+          sx={{ pr: 1.5 }}
+        >
+          {label}
+        </TableSortLabel>
+      ) : (
+        label
+      )}
       <Box
         role="separator"
         aria-orientation="vertical"
