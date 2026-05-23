@@ -47,6 +47,12 @@ export class Order {
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   total_amount!: number;
 
+  @Column({ type: 'varchar', length: 40, unique: true })
+  folio!: string;
+
+  @Column({ type: 'text', nullable: true })
+  description!: string | null;
+
   @Column({
     type: 'enum',
     enum: OrderStatus,
@@ -62,6 +68,9 @@ export class Order {
 
   @OneToMany(() => OrderItem, (orderItem) => orderItem.order)
   items!: OrderItem[];
+
+  @Column({ name: 'delivery_date', type: 'timestamp', nullable: true })
+  delivery_date!: Date | null;
 
   @CreateDateColumn({ name: 'created_at' })
   created_at!: Date;

@@ -6,11 +6,13 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiParam } from '@nestjs/swagger';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
+import { FindOrdersQueryDto } from './dto/find-orders-query.dto';
 
 @ApiTags('orders')
 @Controller('orders')
@@ -25,8 +27,16 @@ export class OrdersController {
 
   @Get()
   @ApiOperation({ summary: 'Get all orders' })
-  findAll() {
-    return this.ordersService.findAll();
+  findAll(@Query() query: FindOrdersQueryDto) {
+    return this.ordersService.findAll({
+      created_filter: query.created_filter ?? 'all',
+      created_from: query.created_from,
+      created_to: query.created_to,
+      order_by: query.order_by ?? 'created_at',
+      order: query.order ?? 'desc',
+      limit: query.limit ?? 25,
+      offset: query.offset ?? 0,
+    });
   }
 
   @Get(':id')

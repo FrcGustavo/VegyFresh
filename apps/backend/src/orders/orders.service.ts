@@ -8,6 +8,7 @@ import { OrderItem } from './entities/order-item.entity';
 import { Client } from '../clients/entities/client.entity';
 import { User } from '../users/entities/user.entity';
 import { Product } from '../catalog/products/entities/product.entity';
+import { FindOrdersQueryDto } from './dto/find-orders-query.dto';
 
 @Injectable()
 export class OrdersService {
@@ -32,6 +33,7 @@ export class OrdersService {
         const client = await this.findClientOrFail(createOrderDto.client_id);
         const user = await this.findUserOrFail(createOrderDto.user_id);
         const itemsPayload = await this.buildItems(createOrderDto.items);
+        const orderFolio = await this.buildOrderFolio(manager);
 
         const order = orderRepository.create({
           client_id: client.id,
@@ -39,8 +41,12 @@ export class OrdersService {
           user_id: user.id,
           user,
           total_amount: itemsPayload.totalAmount,
+          folio: orderFolio,
           status: createOrderDto.status ?? OrderStatus.PENDING_REVIEW,
           origin: createOrderDto.origin,
+          delivery_date: createOrderDto.delivery_date
+            ? new Date(createOrderDto.delivery_date)
+            : null,
         });
 
         const savedOrder = await orderRepository.save(order);
@@ -65,15 +71,32 @@ export class OrdersService {
     return this.findOne(savedOrderId);
   }
 
-  findAll() {
-    return this.ordersRepository.find({
-      relations: {
-        client: true,
-        user: true,
-        items: { product: true },
-      },
-      order: { id: 'ASC' },
-    });
+  findAll(query: FindOrdersQueryDto = {}) {
+    const orderBy = this.getOrderByColumn(query.order_by);
+    const direction = query.order === 'asc' ? 'ASC' : 'DESC';
+    const limit = this.parseInteger(query.limit, 25, 1);
+    const offset = this.parseInteger(query.offset, 0, 0);
+
+    const qb = this.ordersRepository
+      .createQueryBuilder('order')
+      .leftJoinAndSelect('order.client', 'client')
+      .leftJoinAndSelect('order.user', 'user')
+      .leftJoinAndSelect('order.items', 'items')
+      .leftJoinAndSelect('items.product', 'product')
+      .orderBy(orderBy, direction)
+      .addOrderBy('order.id', 'ASC');
+
+    this.applyCreatedAtFilter(
+      qb,
+      query.created_filter,
+      query.created_from,
+      query.created_to,
+    );
+
+    qb.take(limit);
+    qb.skip(offset);
+
+    return qb.getMany();
   }
 
   async findOne(id: string) {
@@ -122,6 +145,10 @@ export class OrdersService {
           client,
           user_id: user.id,
           user,
+          delivery_date:
+            updateOrderDto.delivery_date !== undefined
+              ? new Date(updateOrderDto.delivery_date)
+              : existingOrder.delivery_date,
           status: updateOrderDto.status ?? existingOrder.status,
           origin: updateOrderDto.origin ?? existingOrder.origin,
           total_amount: itemsPayload?.totalAmount ?? existingOrder.total_amount,
@@ -208,5 +235,76 @@ export class OrdersService {
         0,
       ),
     };
+  }
+
+  private async buildOrderFolio(manager: {
+    query: (query: string) => Promise<Array<{ folio: string | number }>>;
+  }) {
+    const [result] = await manager.query(
+      `SELECT nextval('orders_folio_seq') AS folio`,
+    );
+    const folioNumber = Number(result?.folio ?? 0);
+    return `P${String(folioNumber).padStart(5, '0')}`;
+  }
+
+  private getOrderByColumn(orderBy?: string) {
+    const allowedColumns: Record<string, string> = {
+      id: 'order.id',
+      folio: 'order.folio',
+      description: 'order.description',
+      status: 'order.status',
+      origin: 'order.origin',
+      total_amount: 'order.total_amount',
+      created_at: 'order.created_at',
+      delivery_date: 'order.delivery_date',
+      client: 'client.name',
+      client_name: 'client.name',
+    };
+
+    if (orderBy && allowedColumns[orderBy]) {
+      return allowedColumns[orderBy];
+    }
+
+    return 'order.created_at';
+  }
+
+  private parseInteger(value: unknown, fallback: number, minimum: number) {
+    const parsedValue = typeof value === 'number' ? value : Number(value);
+    if (!Number.isInteger(parsedValue) || parsedValue < minimum) {
+      return fallback;
+    }
+
+    return parsedValue;
+  }
+
+  private applyCreatedAtFilter(
+    qb: ReturnType<Repository<Order>['createQueryBuilder']>,
+    createdFilter?: 'all' | 'today' | 'range',
+    createdFrom?: string,
+    createdTo?: string,
+  ) {
+    if (createdFilter === 'today') {
+      qb.andWhere(`order.created_at >= CURRENT_DATE`)
+        .andWhere(`order.created_at < CURRENT_DATE + INTERVAL '1 day'`);
+      return;
+    }
+
+    if (createdFilter !== 'range') {
+      return;
+    }
+
+    if (createdFrom) {
+      qb.andWhere('order.created_at >= :createdFrom', {
+        createdFrom: `${createdFrom}T00:00:00.000Z`,
+      });
+    }
+
+    if (createdTo) {
+      const endDate = new Date(`${createdTo}T00:00:00.000Z`);
+      endDate.setUTCDate(endDate.getUTCDate() + 1);
+      qb.andWhere('order.created_at < :createdTo', {
+        createdTo: endDate.toISOString(),
+      });
+    }
   }
 }

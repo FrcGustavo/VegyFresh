@@ -28,6 +28,13 @@ export class CreateOrderDto {
   @ApiProperty({ enum: OrderOrigin, example: OrderOrigin.WHATSAPP })
   origin!: OrderOrigin;
 
+  @ApiPropertyOptional({
+    type: String,
+    format: 'date-time',
+    example: '2026-05-23T12:00:00.000Z',
+  })
+  delivery_date?: string;
+
   @ApiProperty({ type: [CreateOrderItemDto] })
   items!: CreateOrderItemDto[];
 }
