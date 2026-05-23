@@ -30,8 +30,15 @@ export function useSupplierForm(id?: string, onSuccess?: (action: SaveAction) =>
         phone_number: existingSupplier.phone_number || '',
         logo_url: existingSupplier.logo_url || ''
       });
+    } else if (!id) {
+      setFormData({
+        name: '',
+        email: '',
+        phone_number: '',
+        logo_url: ''
+      });
     }
-  }, [existingSupplier]);
+  }, [id, existingSupplier]);
 
   const handleChange = (e: any) => {
     const { name, value } = e.target;

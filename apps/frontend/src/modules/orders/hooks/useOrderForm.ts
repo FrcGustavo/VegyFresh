@@ -65,8 +65,19 @@ export function useOrderForm(id?: string, onSuccess?: (action: SaveAction) => vo
       } else {
         setItems([{ ...EMPTY_ITEM }]);
       }
+    } else if (!id) {
+      setFormData({
+        client_id: '',
+        user_id: '',
+        status: 'PENDING_REVIEW',
+        origin: 'WHATSAPP',
+        delivery_date: '',
+        order_folio: '',
+        created_at: '',
+      });
+      setItems([{ ...EMPTY_ITEM }]);
     }
-  }, [existingOrder]);
+  }, [id, existingOrder]);
 
   const { data: clientsData } = useQuery({ queryKey: ['clients'], queryFn: () => fetchApi('/clients') });
   const { data: usersData } = useQuery({ queryKey: ['users'], queryFn: () => fetchApi('/users') });

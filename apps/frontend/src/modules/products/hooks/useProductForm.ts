@@ -39,8 +39,17 @@ export function useProductForm(id?: string, onSuccess?: (action: SaveAction) => 
           price: p.price
         })));
       }
+    } else if (!id) {
+      setFormData({
+        sku: '',
+        name: '',
+        description: '',
+        stock: 0,
+        supplier_id: '',
+      });
+      setPrices([]);
     }
-  }, [existingProduct]);
+  }, [id, existingProduct]);
 
   const { data: suppliersData } = useQuery({ queryKey: ['suppliers'], queryFn: () => fetchApi('/suppliers') });
   const { data: priceListsData } = useQuery({ queryKey: ['price-lists'], queryFn: () => fetchApi('/price-lists') });

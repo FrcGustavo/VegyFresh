@@ -30,8 +30,15 @@ export function useUserForm(id?: string, onSuccess?: (action: SaveAction) => voi
         role_id: existingUser.role_id || '',
         avatar_url: existingUser.avatar_url || '',
       });
+    } else if (!id) {
+      setFormData({
+        name: '',
+        email: '',
+        role_id: '',
+        avatar_url: '',
+      });
     }
-  }, [existingUser]);
+  }, [id, existingUser]);
 
   const { data: rolesData } = useQuery({ queryKey: ['roles'], queryFn: () => fetchApi('/roles') });
   const roles = Array.isArray(rolesData) ? rolesData : (rolesData?.data || []);

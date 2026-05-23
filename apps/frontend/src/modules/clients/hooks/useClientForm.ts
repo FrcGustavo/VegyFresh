@@ -56,8 +56,24 @@ export function useClientForm(id?: string, onSuccess?: (action: SaveAction) => v
         avatar_url: existingClient.avatar_url || '',
         price_list_id: existingClient.price_list_id || ''
       });
+    } else if (!id) {
+      setFormData({
+        name: '',
+        phone_number: '',
+        email: '',
+        country: '',
+        state: '',
+        city: '',
+        postal_code: '',
+        address: '',
+        suburb: '',
+        external_number: '',
+        internal_number: '',
+        avatar_url: '',
+        price_list_id: ''
+      });
     }
-  }, [existingClient]);
+  }, [id, existingClient]);
 
   const { data: priceListsData } = useQuery({ queryKey: ['price-lists'], queryFn: () => fetchApi('/price-lists') });
   const priceLists = Array.isArray(priceListsData) ? priceListsData : (priceListsData?.data || []);
