@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ProductUnit } from '../entities/product.entity';
 
 export class CreateProductDto {
   @ApiProperty({ example: 'TOM-001' })
@@ -18,6 +19,13 @@ export class CreateProductDto {
 
   @ApiPropertyOptional({ example: 100 })
   stock?: number;
+
+  @ApiPropertyOptional({
+    enum: ProductUnit,
+    example: ProductUnit.KG,
+    default: ProductUnit.PZ,
+  })
+  unit?: ProductUnit;
 
   @ApiPropertyOptional({
     example: ['https://example.com/img1.jpg'],

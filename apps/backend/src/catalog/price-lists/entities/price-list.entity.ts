@@ -19,6 +19,9 @@ export class PriceList {
   @Column({ type: 'varchar', length: 100, unique: true })
   name!: string;
 
+  @Column({ type: 'varchar', length: 40, unique: true })
+  folio!: string;
+
   @OneToMany(() => Client, (client) => client.priceList)
   clients!: Client[];
 

@@ -3,8 +3,24 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateClientDto } from './dto/update-client.dto';
 import { Client } from './entities/client.entity';
-import { Repository } from 'typeorm';
+import { ILike, Repository } from 'typeorm';
 import { PriceList } from '../catalog/price-lists/entities/price-list.entity';
+
+type ClientOrderField =
+  | 'id'
+  | 'folio'
+  | 'name'
+  | 'phone_number'
+  | 'email'
+  | 'price_list_id';
+
+type FindAllClientsFilters = {
+  search?: string;
+  orderBy?: string;
+  order?: 'ASC' | 'DESC';
+  limit?: number;
+  offset?: number;
+};
 
 @Injectable()
 export class ClientsService {
@@ -19,8 +35,12 @@ export class ClientsService {
     const priceList = await this.resolvePriceList(
       createClientDto.price_list_id,
     );
+    const clientFolio = await this.buildClientFolio(
+      this.clientsRepository.manager,
+    );
     const client = this.clientsRepository.create({
       ...createClientDto,
+      folio: clientFolio,
       email: createClientDto.email ?? null,
       address: createClientDto.address ?? null,
       avatar_url: createClientDto.avatar_url ?? null,
@@ -31,10 +51,19 @@ export class ClientsService {
     return this.clientsRepository.save(client);
   }
 
-  findAll() {
+  findAll(filters: FindAllClientsFilters = {}) {
+    const orderBy = this.normalizeOrderBy(filters.orderBy);
+    const order = filters.order ?? 'ASC';
+    const limit = filters.limit ?? 25;
+    const offset = filters.offset ?? 0;
+    const search = filters.search?.trim();
+
     return this.clientsRepository.find({
+      where: search ? { name: ILike(`%${search}%`) } : undefined,
       relations: { priceList: true },
-      order: { id: 'ASC' },
+      order: { [orderBy]: order },
+      take: limit,
+      skip: offset,
     });
   }
 
@@ -101,5 +130,34 @@ export class ClientsService {
     }
 
     return priceList;
+  }
+
+  private normalizeOrderBy(orderBy?: string): ClientOrderField {
+    if (!orderBy) {
+      return 'id';
+    }
+
+    const allowedFields = new Set<ClientOrderField>([
+      'id',
+      'folio',
+      'name',
+      'phone_number',
+      'email',
+      'price_list_id',
+    ]);
+
+    return allowedFields.has(orderBy as ClientOrderField)
+      ? (orderBy as ClientOrderField)
+      : 'id';
+  }
+
+  private async buildClientFolio(manager: {
+    query: (query: string) => Promise<Array<{ folio: string | number }>>;
+  }) {
+    const [result] = await manager.query(
+      `SELECT nextval('clients_folio_seq') AS folio`,
+    );
+    const folioNumber = Number(result?.folio ?? 0);
+    return `C${String(folioNumber).padStart(5, '0')}`;
   }
 }

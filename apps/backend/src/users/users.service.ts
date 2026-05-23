@@ -3,8 +3,18 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
-import { Repository } from 'typeorm';
+import { ILike, Repository } from 'typeorm';
 import { Role } from '../roles/entities/role.entity';
+
+type UserOrderField = 'id' | 'folio' | 'name' | 'email' | 'created_at';
+
+type FindAllUsersFilters = {
+  search?: string;
+  orderBy?: string;
+  order?: 'ASC' | 'DESC';
+  limit?: number;
+  offset?: number;
+};
 
 @Injectable()
 export class UsersService {
@@ -17,8 +27,10 @@ export class UsersService {
 
   async create(createUserDto: CreateUserDto) {
     const role = await this.findRoleOrFail(createUserDto.role_id);
+    const userFolio = await this.buildUserFolio(this.usersRepository.manager);
     const user = this.usersRepository.create({
       ...createUserDto,
+      folio: userFolio,
       avatar_url: createUserDto.avatar_url ?? null,
       role,
     });
@@ -26,10 +38,19 @@ export class UsersService {
     return this.usersRepository.save(user);
   }
 
-  findAll() {
+  findAll(filters: FindAllUsersFilters = {}) {
+    const orderBy = this.normalizeOrderBy(filters.orderBy);
+    const order = filters.order ?? 'ASC';
+    const limit = filters.limit ?? 25;
+    const offset = filters.offset ?? 0;
+    const search = filters.search?.trim();
+
     return this.usersRepository.find({
+      where: search ? { name: ILike(`%${search}%`) } : undefined,
       relations: { role: true },
-      order: { id: 'ASC' },
+      order: { [orderBy]: order },
+      take: limit,
+      skip: offset,
     });
   }
 
@@ -76,5 +97,33 @@ export class UsersService {
     }
 
     return role;
+  }
+
+  private normalizeOrderBy(orderBy?: string): UserOrderField {
+    if (!orderBy) {
+      return 'id';
+    }
+
+    const allowedFields = new Set<UserOrderField>([
+      'id',
+      'folio',
+      'name',
+      'email',
+      'created_at',
+    ]);
+
+    return allowedFields.has(orderBy as UserOrderField)
+      ? (orderBy as UserOrderField)
+      : 'id';
+  }
+
+  private async buildUserFolio(manager: {
+    query: (query: string) => Promise<Array<{ folio: string | number }>>;
+  }) {
+    const [result] = await manager.query(
+      `SELECT nextval('users_folio_seq') AS folio`,
+    );
+    const folioNumber = Number(result?.folio ?? 0);
+    return `U${String(folioNumber).padStart(5, '0')}`;
   }
 }

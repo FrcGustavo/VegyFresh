@@ -3,7 +3,22 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { CreateSupplierDto } from './dto/create-supplier.dto';
 import { UpdateSupplierDto } from './dto/update-supplier.dto';
 import { Supplier } from './entities/supplier.entity';
-import { Repository } from 'typeorm';
+import { ILike, Repository } from 'typeorm';
+
+type SupplierOrderField =
+  | 'id'
+  | 'folio'
+  | 'name'
+  | 'createdAt'
+  | 'updatedAt';
+
+type FindAllSuppliersFilters = {
+  search?: string;
+  orderBy?: string;
+  order?: 'ASC' | 'DESC';
+  limit?: number;
+  offset?: number;
+};
 
 @Injectable()
 export class SuppliersService {
@@ -12,9 +27,13 @@ export class SuppliersService {
     private readonly suppliersRepository: Repository<Supplier>,
   ) {}
 
-  create(createSupplierDto: CreateSupplierDto) {
+  async create(createSupplierDto: CreateSupplierDto) {
+    const supplierFolio = await this.buildSupplierFolio(
+      this.suppliersRepository.manager,
+    );
     const supplier = this.suppliersRepository.create({
       ...createSupplierDto,
+      folio: supplierFolio,
       contact_info: createSupplierDto.contact_info ?? null,
       logo_url: createSupplierDto.logo_url ?? null,
     });
@@ -22,10 +41,19 @@ export class SuppliersService {
     return this.suppliersRepository.save(supplier);
   }
 
-  findAll() {
+  findAll(filters: FindAllSuppliersFilters = {}) {
+    const orderBy = this.normalizeOrderBy(filters.orderBy);
+    const order = filters.order ?? 'ASC';
+    const limit = filters.limit ?? 25;
+    const offset = filters.offset ?? 0;
+    const search = filters.search?.trim();
+
     return this.suppliersRepository.find({
+      where: search ? { name: ILike(`%${search}%`) } : undefined,
       relations: { products: true },
-      order: { id: 'ASC' },
+      order: { [orderBy]: order },
+      take: limit,
+      skip: offset,
     });
   }
 
@@ -52,5 +80,33 @@ export class SuppliersService {
     const supplier = await this.findOne(id);
     await this.suppliersRepository.remove(supplier);
     return { id, deleted: true };
+  }
+
+  private normalizeOrderBy(orderBy?: string): SupplierOrderField {
+    if (!orderBy) {
+      return 'id';
+    }
+
+    const allowedFields = new Set<SupplierOrderField>([
+      'id',
+      'folio',
+      'name',
+      'createdAt',
+      'updatedAt',
+    ]);
+
+    return allowedFields.has(orderBy as SupplierOrderField)
+      ? (orderBy as SupplierOrderField)
+      : 'id';
+  }
+
+  private async buildSupplierFolio(manager: {
+    query: (query: string) => Promise<Array<{ folio: string | number }>>;
+  }) {
+    const [result] = await manager.query(
+      `SELECT nextval('suppliers_folio_seq') AS folio`,
+    );
+    const folioNumber = Number(result?.folio ?? 0);
+    return `S${String(folioNumber).padStart(5, '0')}`;
   }
 }

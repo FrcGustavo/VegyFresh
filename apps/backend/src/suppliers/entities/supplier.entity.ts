@@ -18,6 +18,9 @@ export class Supplier {
   @Column({ type: 'varchar', length: 255 })
   name: string;
 
+  @Column({ type: 'varchar', length: 40, unique: true })
+  folio: string;
+
   @Column({ type: 'text', nullable: true })
   contact_info: string | null;
 

@@ -13,6 +13,11 @@ import { OrderItem } from '../../../orders/entities/order-item.entity';
 import { ProductPrice } from '../../product-prices/entities/product-price.entity';
 import { Supplier } from '../../../suppliers/entities/supplier.entity';
 
+export enum ProductUnit {
+  KG = 'kg',
+  PZ = 'pz',
+}
+
 @Entity('products')
 export class Product {
   @PrimaryColumn({ type: 'uuid' })
@@ -21,6 +26,9 @@ export class Product {
 
   @Column({ type: 'varchar', length: 100, unique: true })
   sku!: string;
+
+  @Column({ type: 'varchar', length: 40, unique: true })
+  folio!: string;
 
   @Column({ type: 'varchar', length: 255 })
   name!: string;
@@ -39,6 +47,13 @@ export class Product {
 
   @Column({ type: 'int', default: 0 })
   stock!: number;
+
+  @Column({
+    type: 'enum',
+    enum: ProductUnit,
+    default: ProductUnit.PZ,
+  })
+  unit!: ProductUnit;
 
   @Column({ type: 'jsonb', default: () => "'[]'::jsonb" })
   images!: string[];

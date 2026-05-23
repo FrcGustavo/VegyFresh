@@ -19,6 +19,9 @@ export class Client {
   @Column({ type: 'varchar', length: 255 })
   name: string;
 
+  @Column({ type: 'varchar', length: 40, unique: true })
+  folio: string;
+
   @Column({ type: 'varchar', length: 30 })
   phone_number: string;
 

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Controller,
   Get,
   Post,
@@ -6,8 +7,9 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiParam } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -25,8 +27,33 @@ export class UsersController {
 
   @Get()
   @ApiOperation({ summary: 'Get all users' })
-  findAll() {
-    return this.usersService.findAll();
+  @ApiQuery({ name: 'search', required: false, description: 'Search by user name' })
+  @ApiQuery({ name: 'order_by', required: false, description: 'Field to sort by' })
+  @ApiQuery({ name: 'order', required: false, enum: ['asc', 'desc'] })
+  @ApiQuery({ name: 'limit', required: false, description: 'Items per page (default: 25)' })
+  @ApiQuery({ name: 'offset', required: false, description: 'Pagination offset' })
+  findAll(
+    @Query('search') search?: string,
+    @Query('order_by') orderBy?: string,
+    @Query('order') order?: string,
+    @Query('limit') limit?: string,
+    @Query('offset') offset?: string,
+  ) {
+    const parsedLimit = this.parseNumberQuery(limit, 'limit', 25);
+    const parsedOffset = this.parseNumberQuery(offset, 'offset', 0);
+    const normalizedOrder = order?.toUpperCase();
+
+    if (normalizedOrder && normalizedOrder !== 'ASC' && normalizedOrder !== 'DESC') {
+      throw new BadRequestException('order must be "asc" or "desc"');
+    }
+
+    return this.usersService.findAll({
+      search,
+      orderBy,
+      order: normalizedOrder as 'ASC' | 'DESC' | undefined,
+      limit: parsedLimit,
+      offset: parsedOffset,
+    });
   }
 
   @Get(':id')
@@ -48,5 +75,18 @@ export class UsersController {
   @ApiParam({ name: 'id', description: 'User ID' })
   remove(@Param('id') id: string) {
     return this.usersService.remove(id);
+  }
+
+  private parseNumberQuery(value: string | undefined, paramName: string, defaultValue: number) {
+    if (value === undefined) {
+      return defaultValue;
+    }
+
+    const parsed = Number(value);
+    if (!Number.isInteger(parsed) || parsed < 0) {
+      throw new BadRequestException(`${paramName} must be a non-negative integer`);
+    }
+
+    return parsed;
   }
 }
