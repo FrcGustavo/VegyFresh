@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Box, TextField, MenuItem, Button, Typography, IconButton, Paper, Tabs, Tab } from '@mui/material';
+import { Box, TextField, MenuItem, Button, Typography, IconButton, Paper } from '@mui/material';
 import { Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
 import FloatingModal from '../../../components/FloatingModal';
+import ModalTabPanel from '../../../components/ModalTabPanel';
+import ModalTabsNavigation from '../../../components/ModalTabsNavigation';
 import ModalToolbar from '../../../components/ModalToolbar';
 import { useProductForm } from '../hooks/useProductForm';
 
@@ -11,17 +13,11 @@ interface ProductFormModalProps {
   onClose: () => void;
   productId?: string;
   title?: string;
+  initialWidth?: number;
+  initialHeight?: number;
   list?: any[];
   currentIndex?: number;
   onNavigate?: (newIndex: number) => void;
-}
-
-function TabPanel({ children, value, index }: { children: React.ReactNode; value: number; index: number }) {
-  return (
-    <div hidden={value !== index} style={{ width: '100%', height: '100%' }}>
-      {value === index && <Box sx={{ p: 2 }}>{children}</Box>}
-    </div>
-  );
 }
 
 export default function ProductFormModal({
@@ -29,6 +25,8 @@ export default function ProductFormModal({
   onClose,
   productId,
   title,
+  initialWidth = 800,
+  initialHeight = 750,
   list = [],
   currentIndex = 0,
   onNavigate,
@@ -77,28 +75,32 @@ export default function ProductFormModal({
     />
   );
 
+  const tabOptions = [
+    { value: 0, label: 'General' },
+    { value: 1, label: 'Prices List' },
+  ];
+
   return (
     <FloatingModal
       isOpen={isOpen}
       onClose={onClose}
       title={title ?? (productId ? 'Editar Producto' : 'Crear Nuevo Producto')}
-      initialWidth={800}
-      initialHeight={750}
+      initialWidth={initialWidth}
+      initialHeight={initialHeight}
       toolbar={isEditing ? toolbar : undefined}
       renderContent={() => (
         <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
           {/* Tabs Menu */}
-          <Box sx={{ borderBottom: 1, borderColor: 'divider', flex: '0 0 auto' }}>
-            <Tabs value={activeTab} onChange={(_event, newValue) => setActiveTab(newValue)}>
-              <Tab label="General" />
-              <Tab label="Prices List" />
-            </Tabs>
-          </Box>
+          <ModalTabsNavigation
+            value={activeTab}
+            options={tabOptions}
+            onChange={setActiveTab}
+          />
 
           {/* Tab Content */}
           <Box sx={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
             {/* General Tab */}
-            <TabPanel value={activeTab} index={0}>
+            <ModalTabPanel value={activeTab} index={0}>
               <Paper sx={{ p: 3 }}>
                 <form onSubmit={(e) => {
                   e.preventDefault();
@@ -161,10 +163,10 @@ export default function ProductFormModal({
 
                 </form>
               </Paper>
-            </TabPanel>
+            </ModalTabPanel>
 
             {/* Prices List Tab */}
-            <TabPanel value={activeTab} index={1}>
+            <ModalTabPanel value={activeTab} index={1}>
               <Paper sx={{ p: 3 }}>
                 <Box>
                   <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -235,7 +237,7 @@ export default function ProductFormModal({
 
                 </Box>
               </Paper>
-            </TabPanel>
+            </ModalTabPanel>
           </Box>
         </Box>
       )}

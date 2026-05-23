@@ -9,6 +9,8 @@ interface UserFormModalProps {
   onClose: () => void;
   userId?: string;
   title?: string;
+  initialWidth?: number;
+  initialHeight?: number;
   list?: any[];
   currentIndex?: number;
   onNavigate?: (newIndex: number) => void;
@@ -19,6 +21,8 @@ export default function UserFormModal({
   onClose,
   userId,
   title,
+  initialWidth = 560,
+  initialHeight = 380,
   list = [],
   currentIndex = 0,
   onNavigate,
@@ -68,10 +72,10 @@ export default function UserFormModal({
     <FloatingModal
       isOpen={isOpen}
       onClose={onClose}
-      title={title ?? (userId ? 'Editar Usuario' : 'Crear Usuario')}
-      initialWidth={760}
-      initialHeight={680}
-      toolbar={isEditing ? toolbar : undefined}
+      title={title ?? 'Usuario'}
+      initialWidth={initialWidth}
+      initialHeight={initialHeight}
+      toolbar={toolbar}
       renderContent={() =>
         formProps.isLoading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
@@ -80,7 +84,6 @@ export default function UserFormModal({
         ) : (
           <UserForm
             {...formProps}
-            title={userId ? 'Editar Usuario' : 'Crear Usuario'}
             isDisabled={formProps.isDisabled}
           />
         )

@@ -9,6 +9,8 @@ interface PriceListFormModalProps {
   onClose: () => void;
   priceListId?: string;
   title?: string;
+  initialWidth?: number;
+  initialHeight?: number;
   list?: any[];
   currentIndex?: number;
   onNavigate?: (newIndex: number) => void;
@@ -19,6 +21,8 @@ export default function PriceListFormModal({
   onClose,
   priceListId,
   title,
+  initialWidth = 900,
+  initialHeight = 740,
   list = [],
   currentIndex = 0,
   onNavigate,
@@ -69,8 +73,8 @@ export default function PriceListFormModal({
       isOpen={isOpen}
       onClose={onClose}
       title={title ?? (priceListId ? 'Editar Lista de Precios' : 'Crear Lista de Precios')}
-      initialWidth={900}
-      initialHeight={740}
+      initialWidth={initialWidth}
+      initialHeight={initialHeight}
       toolbar={isEditing ? toolbar : undefined}
       renderContent={() =>
         formProps.isLoading ? (

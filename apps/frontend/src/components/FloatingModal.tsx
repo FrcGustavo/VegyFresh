@@ -76,6 +76,8 @@ export default function FloatingModal({
         zIndex: 1300,
         display: 'flex',
         flexDirection: 'column',
+        minHeight: 0,
+        overflow: 'hidden',
         boxShadow: 6,
         userSelect: isDragging ? 'none' : 'auto',
         transition: isDragging ? 'none' : 'all 0.2s',
@@ -123,14 +125,7 @@ export default function FloatingModal({
 
       {/* Content */}
       {!isMinimized && (
-        <Box
-          sx={{
-            flex: 1,
-            overflow: 'auto',
-            padding: 2,
-            backgroundColor: 'background.paper',
-          }}
-        >
+        <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
           {renderContent ? renderContent() : children}
         </Box>
       )}

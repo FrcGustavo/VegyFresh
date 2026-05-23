@@ -9,6 +9,8 @@ interface SupplierFormModalProps {
   onClose: () => void;
   supplierId?: string;
   title?: string;
+  initialWidth?: number;
+  initialHeight?: number;
   list?: any[];
   currentIndex?: number;
   onNavigate?: (newIndex: number) => void;
@@ -18,7 +20,8 @@ export default function SupplierFormModal({
   isOpen,
   onClose,
   supplierId,
-  title,
+  initialWidth = 760,
+  initialHeight = 640,
   list = [],
   currentIndex = 0,
   onNavigate,
@@ -68,10 +71,10 @@ export default function SupplierFormModal({
     <FloatingModal
       isOpen={isOpen}
       onClose={onClose}
-      title={title ?? (supplierId ? 'Editar Proveedor' : 'Crear Proveedor')}
-      initialWidth={760}
-      initialHeight={640}
-      toolbar={isEditing ? toolbar : undefined}
+      title={'Proveedor'}
+      initialWidth={initialWidth}
+      initialHeight={initialHeight}
+      toolbar={toolbar}
       renderContent={() =>
         formProps.isLoading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
@@ -80,7 +83,6 @@ export default function SupplierFormModal({
         ) : (
           <SupplierForm
             {...formProps}
-            title={supplierId ? 'Editar Proveedor' : 'Crear Proveedor'}
             isDisabled={formProps.isDisabled}
           />
         )
