@@ -9,11 +9,13 @@ export function usePriceListForm(id?: string, onSuccess?: (action: SaveAction) =
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [name, setName] = useState('');
-  const [productsList, setProductsList] = useState<any[]>([]);
+  const [productsList, setProductsList] = useState<any[]>(id ? [] : [{ product_id: '', price: 0 }]);
   const [isDisabled, setIsDisabled] = useState(!!id);
 
   const { data: productsData } = useQuery({ queryKey: ['products'], queryFn: () => fetchApi('/products') });
   const products = Array.isArray(productsData) ? productsData : (productsData?.data || []);
+
+  // console.log({ productsData })
 
   const { data: existingPriceList, isLoading } = useQuery({
     queryKey: ['price-lists', id],
@@ -27,12 +29,16 @@ export function usePriceListForm(id?: string, onSuccess?: (action: SaveAction) =
       if (existingPriceList.productPrices) {
         setProductsList(existingPriceList.productPrices.map((pp: any) => ({
           product_id: pp.product_id,
+          name: pp.product?.name || '',
           price: pp.price,
           id: pp.id
         })));
       }
+    } else if (!id) {
+      setName('');
+      setProductsList([{ product_id: '', price: 0 }]);
     }
-  }, [existingPriceList]);
+  }, [id, existingPriceList]);
 
   const mutation = useMutation({
     mutationFn: async () => {

@@ -72,10 +72,10 @@ export default function PriceListFormModal({
     <FloatingModal
       isOpen={isOpen}
       onClose={onClose}
-      title={title ?? (priceListId ? 'Editar Lista de Precios' : 'Crear Lista de Precios')}
+      title="Lista de Precios"
       initialWidth={initialWidth}
       initialHeight={initialHeight}
-      toolbar={isEditing ? toolbar : undefined}
+      toolbar={toolbar}
       renderContent={() =>
         formProps.isLoading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
@@ -84,7 +84,6 @@ export default function PriceListFormModal({
         ) : (
           <PriceListForm
             {...formProps}
-            title={priceListId ? 'Editar Lista de Precios' : 'Crear Lista de Precios'}
             isDisabled={formProps.isDisabled}
           />
         )

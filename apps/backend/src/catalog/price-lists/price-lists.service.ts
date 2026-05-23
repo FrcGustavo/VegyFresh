@@ -47,7 +47,7 @@ export class PriceListsService {
 
     return this.priceListsRepository.find({
       where: search ? { name: ILike(`%${search}%`) } : undefined,
-      relations: { clients: true, productPrices: true },
+      relations: { clients: true, productPrices: { product: true } },
       order: { [orderBy]: order },
       take: limit,
       skip: offset,
