@@ -23,7 +23,8 @@ import { useListPageToolbar } from '../../../layout/useListPageToolbar';
 const supplierColumns = [
   { key: 'folio', label: 'Folio', minWidth: 140, defaultWidth: 180 },
   { key: 'name', label: 'Nombre', minWidth: 180, defaultWidth: 260 },
-  { key: 'contact_info', label: 'Contacto', minWidth: 180, defaultWidth: 260 },
+  { key: 'email', label: 'Email', minWidth: 200, defaultWidth: 260 },
+  { key: 'phone_number', label: 'Teléfono', minWidth: 160, defaultWidth: 220 },
 ] as const;
 
 const PAGE_SIZE = 25;
@@ -225,7 +226,7 @@ function SuppliersTable({
           </TableHead>
           <TableBody>
             {list.length === 0 ? (
-              <TableRow><TableCell colSpan={3} align="center">No hay registros</TableCell></TableRow>
+              <TableRow><TableCell colSpan={4} align="center">No hay registros</TableCell></TableRow>
             ) : list.map((item: any) => {
               const rowId = String(item.id ?? '');
               return (
@@ -247,7 +248,8 @@ function SuppliersTable({
                 >
                   <TableCell sx={getColumnCellSx('folio')}>{item.folio ?? 'N/A'}</TableCell>
                   <TableCell sx={getColumnCellSx('name')}>{item.name}</TableCell>
-                  <TableCell sx={getColumnCellSx('contact_info')}>{item.contact_info}</TableCell>
+                  <TableCell sx={getColumnCellSx('email')}>{item.email || 'N/A'}</TableCell>
+                  <TableCell sx={getColumnCellSx('phone_number')}>{item.phone_number || 'N/A'}</TableCell>
                 </TableRow>
               );
             })}

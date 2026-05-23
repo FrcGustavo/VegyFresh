@@ -10,7 +10,8 @@ export function useSupplierForm(id?: string, onSuccess?: (action: SaveAction) =>
   const navigate = useNavigate();
   const [formData, setFormData] = useState<any>({
     name: '',
-    contact_info: '',
+    email: '',
+    phone_number: '',
     logo_url: ''
   });
   const [isDisabled, setIsDisabled] = useState(!!id);
@@ -25,7 +26,8 @@ export function useSupplierForm(id?: string, onSuccess?: (action: SaveAction) =>
     if (existingSupplier) {
       setFormData({
         name: existingSupplier.name,
-        contact_info: existingSupplier.contact_info || '',
+        email: existingSupplier.email || '',
+        phone_number: existingSupplier.phone_number || '',
         logo_url: existingSupplier.logo_url || ''
       });
     }
@@ -34,6 +36,16 @@ export function useSupplierForm(id?: string, onSuccess?: (action: SaveAction) =>
   const handleChange = (e: any) => {
     const { name, value } = e.target;
     setFormData((prev: any) => ({ ...prev, [name]: value }));
+  };
+
+  const handleLogoFileChange = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        setFormData((prev: any) => ({ ...prev, logo_url: reader.result }));
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
   const mutation = useMutation({
@@ -63,6 +75,7 @@ export function useSupplierForm(id?: string, onSuccess?: (action: SaveAction) =>
     isLoading,
     isSaving: mutation.isPending,
     handleChange,
+    handleLogoFileChange,
     handleSubmit,
     isDisabled,
     setIsDisabled

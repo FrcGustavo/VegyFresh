@@ -5,7 +5,10 @@ export class CreateSupplierDto {
   name!: string;
 
   @ApiPropertyOptional({ example: 'contacto@proveedor.com', nullable: true })
-  contact_info?: string | null;
+  email?: string | null;
+
+  @ApiPropertyOptional({ example: '+525512345678', nullable: true })
+  phone_number?: string | null;
 
   @ApiPropertyOptional({
     example: 'https://example.com/logo.png',

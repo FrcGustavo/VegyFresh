@@ -34,7 +34,8 @@ export class SuppliersService {
     const supplier = this.suppliersRepository.create({
       ...createSupplierDto,
       folio: supplierFolio,
-      contact_info: createSupplierDto.contact_info ?? null,
+      email: createSupplierDto.email ?? null,
+      phone_number: createSupplierDto.phone_number ?? null,
       logo_url: createSupplierDto.logo_url ?? null,
     });
 

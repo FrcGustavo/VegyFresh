@@ -21,8 +21,11 @@ export class Supplier {
   @Column({ type: 'varchar', length: 40, unique: true })
   folio: string;
 
-  @Column({ type: 'text', nullable: true })
-  contact_info: string | null;
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  email: string | null;
+
+  @Column({ type: 'varchar', length: 30, nullable: true })
+  phone_number: string | null;
 
   @Column({ type: 'text', nullable: true })
   logo_url: string | null;

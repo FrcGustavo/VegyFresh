@@ -1,31 +1,69 @@
-import { Box, TextField, Typography, Paper } from '@mui/material';
+import { Box, TextField, Button, Avatar } from '@mui/material';
 
 interface SupplierFormProps {
   formData: any;
   handleChange: (e: any) => void;
+  handleLogoFileChange: (file: File) => void;
   handleSubmit: (action: 'save' | 'save-and-close' | 'save-and-new') => void;
-  title: string;
   isDisabled?: boolean;
 }
 
 export default function SupplierForm({
   formData,
   handleChange,
+  handleLogoFileChange,
   handleSubmit,
-  title,
   isDisabled = false
 }: SupplierFormProps) {
 
   return (
-    <Box>
-      <Typography variant="h4" gutterBottom>{title}</Typography>
-      <Paper sx={{ p: 3, maxWidth: 600 }}>
+    <Box sx={{ p: 3, maxWidth: 900 }}>
         <form onSubmit={(e) => { e.preventDefault(); handleSubmit('save'); }}>
-          <TextField fullWidth label="Nombre" name="name" margin="normal" value={formData.name || ''} onChange={handleChange} required disabled={isDisabled} />
-          <TextField fullWidth label="Información de Contacto" name="contact_info" margin="normal" value={formData.contact_info || ''} onChange={handleChange} multiline rows={3} disabled={isDisabled} />
-          <TextField fullWidth label="Logo URL" name="logo_url" margin="normal" value={formData.logo_url || ''} onChange={handleChange} disabled={isDisabled} />
+          <Box sx={{ display: 'flex', gap: 3, alignItems: 'flex-start', flexWrap: { xs: 'wrap', md: 'nowrap' } }}>
+            <Box
+              sx={{
+                width: { xs: '100%', md: 220 },
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 2,
+              }}
+            >
+              <Avatar
+                src={formData.logo_url || undefined}
+                alt={formData.name || 'Proveedor'}
+                sx={{ width: 150, height: 150 }}
+              >
+                {(formData.name || 'P').charAt(0).toUpperCase()}
+              </Avatar>
+              <Button
+                variant="outlined"
+                component="label"
+                disabled={isDisabled}
+                sx={{ width: '100%' }}
+              >
+                Seleccionar logo
+                <input
+                  hidden
+                  type="file"
+                  accept="image/*"
+                  onChange={(event) => {
+                    const file = event.target.files?.[0];
+                    if (file) {
+                      handleLogoFileChange(file);
+                    }
+                  }}
+                />
+              </Button>
+            </Box>
+
+            <Box sx={{ flex: 1, minWidth: 320 }}>
+              <TextField fullWidth label="Nombre" name="name" margin="normal" value={formData.name || ''} onChange={handleChange} required disabled={isDisabled} />
+              <TextField fullWidth label="Email" name="email" margin="normal" value={formData.email || ''} onChange={handleChange} disabled={isDisabled} />
+              <TextField fullWidth label="Teléfono" name="phone_number" margin="normal" value={formData.phone_number || ''} onChange={handleChange} disabled={isDisabled} />
+            </Box>
+          </Box>
         </form>
-      </Paper>
     </Box>
   );
 }
