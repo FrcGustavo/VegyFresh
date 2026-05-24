@@ -149,7 +149,7 @@ function PriceListsTable({
   const handleNavigateItem = (newIndex: number) => {
     if (newIndex >= 0 && newIndex < list.length) {
       const newItem = list[newIndex];
-      setModalPriceListId(newItem.id);
+      setModalPriceListId(String(newItem.id));
       setSelectedRowId(String(newItem.id ?? ''));
     }
   };
@@ -254,7 +254,7 @@ function PriceListsTable({
                   selected={selectedRowId === rowId}
                   onClick={() => setSelectedRowId(rowId)}
                   onDoubleClick={() => {
-                    setModalPriceListId(item.id);
+                    setModalPriceListId(String(item.id));
                     setIsModalOpen(true);
                     setSelectedRowId(rowId);
                   }}

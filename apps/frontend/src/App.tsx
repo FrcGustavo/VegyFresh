@@ -1,26 +1,15 @@
-import { useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router';
-import { CssBaseline, ThemeProvider, createTheme, useMediaQuery } from '@mui/material';
+import { Box, CircularProgress, CssBaseline, ThemeProvider, createTheme, useMediaQuery } from '@mui/material';
 import MainLayout from './layout/MainLayout';
 
-// Pedidos
-import OrdersList from './modules/orders/pages/OrdersList';
-
-// Productos
-import ProductsList from './modules/products/pages/ProductsList';
-
-// Listas de Precios (ahora dentro de productos)
-import PriceListsList from './modules/products/price-lists/pages/PriceListsList';
-
-// Clientes
-import ClientsList from './modules/clients/pages/ClientsList';
-
-// Proveedores
-import SuppliersList from './modules/suppliers/pages/SuppliersList';
-
-// Usuarios
-import UsersList from './modules/users/pages/UsersList';
-import SettingsPage from './modules/settings/pages/SettingsPage';
+const OrdersList = lazy(() => import('./modules/orders/pages/OrdersList'));
+const ProductsList = lazy(() => import('./modules/products/pages/ProductsList'));
+const PriceListsList = lazy(() => import('./modules/products/price-lists/pages/PriceListsList'));
+const ClientsList = lazy(() => import('./modules/clients/pages/ClientsList'));
+const SuppliersList = lazy(() => import('./modules/suppliers/pages/SuppliersList'));
+const UsersList = lazy(() => import('./modules/users/pages/UsersList'));
+const SettingsPage = lazy(() => import('./modules/settings/pages/SettingsPage'));
 
 type ThemePreference = 'light' | 'dark' | 'system';
 
@@ -278,6 +267,14 @@ const createAppTheme = (mode: 'light' | 'dark') => createTheme({
   },
 });
 
+function RouteFallback() {
+  return (
+    <Box role="status" sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+      <CircularProgress />
+    </Box>
+  );
+}
+
 function App() {
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
   const [themePreference, setThemePreference] = useState<ThemePreference>(getStoredThemePreference);
@@ -299,43 +296,31 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline enableColorScheme />
       <BrowserRouter>
-        <Routes>
-          <Route
-            path="/"
-            element={<MainLayout />}
-          >
-            <Route index element={<Navigate to="/orders" replace />} />
-            
-            {/* Pedidos */}
-            <Route path="orders" element={<OrdersList />} />
-
-            {/* Productos */}
-            <Route path="products" element={<ProductsList />} />
-
-            {/* Listas de Precios */}
-            <Route path="price-lists" element={<PriceListsList />} />
-
-            {/* Clientes */}
-            <Route path="clients" element={<ClientsList />} />
-
-            {/* Proveedores */}
-            <Route path="suppliers" element={<SuppliersList />} />
-
-            {/* Usuarios */}
-            <Route path="users" element={<UsersList />} />
-
-            {/* Configuración */}
+        <Suspense fallback={<RouteFallback />}>
+          <Routes>
             <Route
-              path="settings"
-              element={(
-                <SettingsPage
-                  themePreference={themePreference}
-                  onThemePreferenceChange={setThemePreference}
-                />
-              )}
-            />
-          </Route>
-        </Routes>
+              path="/"
+              element={<MainLayout />}
+            >
+              <Route index element={<Navigate to="/orders" replace />} />
+              <Route path="orders" element={<OrdersList />} />
+              <Route path="products" element={<ProductsList />} />
+              <Route path="price-lists" element={<PriceListsList />} />
+              <Route path="clients" element={<ClientsList />} />
+              <Route path="suppliers" element={<SuppliersList />} />
+              <Route path="users" element={<UsersList />} />
+              <Route
+                path="settings"
+                element={(
+                  <SettingsPage
+                    themePreference={themePreference}
+                    onThemePreferenceChange={setThemePreference}
+                  />
+                )}
+              />
+            </Route>
+          </Routes>
+        </Suspense>
       </BrowserRouter>
     </ThemeProvider>
   );

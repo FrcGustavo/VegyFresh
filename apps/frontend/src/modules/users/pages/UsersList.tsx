@@ -151,7 +151,7 @@ function UsersTable({
   const handleNavigateItem = (newIndex: number) => {
     if (newIndex >= 0 && newIndex < list.length) {
       const newItem = list[newIndex];
-      setModalUserId(newItem.id);
+      setModalUserId(String(newItem.id));
       setSelectedRowId(String(newItem.id ?? ''));
     }
   };
@@ -255,7 +255,7 @@ function UsersTable({
                   selected={selectedRowId === rowId}
                   onClick={() => setSelectedRowId(rowId)}
                   onDoubleClick={() => {
-                    setModalUserId(item.id);
+                    setModalUserId(String(item.id));
                     setIsModalOpen(true);
                     setSelectedRowId(rowId);
                   }}

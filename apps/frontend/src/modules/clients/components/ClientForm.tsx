@@ -36,6 +36,7 @@ interface PriceListOption {
 interface ClientFormProps {
   formData: ClientFormData;
   priceLists: PriceListOption[];
+  avatarFileError?: string;
   countries: string[];
   states: string[];
   cities: string[];
@@ -51,6 +52,7 @@ interface ClientFormProps {
 export default function ClientForm({
   formData,
   priceLists,
+  avatarFileError,
   countries,
   states,
   cities,
@@ -102,6 +104,11 @@ export default function ClientForm({
                   }}
                 />
               </Button>
+              {avatarFileError && (
+                <Typography color="error" variant="body2">
+                  {avatarFileError}
+                </Typography>
+              )}
             </Box>
 
             <Box sx={{ flex: 1 }}>

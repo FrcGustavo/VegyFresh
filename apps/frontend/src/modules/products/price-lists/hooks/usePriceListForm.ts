@@ -5,6 +5,7 @@ import { fetchApi } from '../../../../api';
 
 type SaveAction = 'save' | 'save-and-close' | 'save-and-new';
 interface PriceListProductRow {
+  clientRowId: string;
   product_id: string;
   name?: string;
   price: number | string;
@@ -14,13 +15,22 @@ interface ProductOption {
   id: string;
   name: string;
 }
-const EMPTY_PRODUCT_ROW: PriceListProductRow = { product_id: '', price: 0 };
+const createClientRowId = () =>
+  typeof crypto !== 'undefined' && 'randomUUID' in crypto
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+const createEmptyProductRow = (): PriceListProductRow => ({
+  clientRowId: createClientRowId(),
+  product_id: '',
+  price: 0,
+});
 
 export function usePriceListForm(id?: string, onSuccess?: (action: SaveAction) => void) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [name, setName] = useState('');
-  const [productsList, setProductsList] = useState<PriceListProductRow[]>(id ? [] : [{ ...EMPTY_PRODUCT_ROW }]);
+  const [productsList, setProductsList] = useState<PriceListProductRow[]>(id ? [] : [createEmptyProductRow()]);
   const [isDisabled, setIsDisabled] = useState(!!id);
 
   const { data: productsData } = useQuery({ queryKey: ['products'], queryFn: () => fetchApi('/products') });
@@ -40,6 +50,7 @@ export function usePriceListForm(id?: string, onSuccess?: (action: SaveAction) =
       if (existingPriceList.productPrices) {
         queueMicrotask(() => {
           setProductsList(existingPriceList.productPrices.map((pp: { product_id: string; product?: { name?: string }; price: number; id: string }) => ({
+            clientRowId: createClientRowId(),
             product_id: pp.product_id,
             name: pp.product?.name || '',
             price: pp.price,
@@ -50,7 +61,7 @@ export function usePriceListForm(id?: string, onSuccess?: (action: SaveAction) =
     } else if (!id) {
       queueMicrotask(() => {
         setName('');
-        setProductsList([{ ...EMPTY_PRODUCT_ROW }]);
+        setProductsList([createEmptyProductRow()]);
       });
     }
   }, [id, existingPriceList]);
@@ -64,13 +75,14 @@ export function usePriceListForm(id?: string, onSuccess?: (action: SaveAction) =
       const listId = id || priceList.id;
 
       for (const p of productsList) {
-        if (p.product_id && p.price > 0) {
+        const price = Number(p.price);
+        if (p.product_id && price > 0) {
           await fetchApi('/product-prices', {
             method: 'POST',
             body: JSON.stringify({
               price_list_id: listId,
               product_id: p.product_id,
-              price: Number(p.price)
+              price,
             })
           });
         }
@@ -83,7 +95,7 @@ export function usePriceListForm(id?: string, onSuccess?: (action: SaveAction) =
     }
   });
 
-  const addProductField = () => setProductsList([...productsList, { ...EMPTY_PRODUCT_ROW }]);
+  const addProductField = () => setProductsList([...productsList, createEmptyProductRow()]);
   
   const updateProductField = (index: number, field: string, value: string | number) => {
     const newList = [...productsList];

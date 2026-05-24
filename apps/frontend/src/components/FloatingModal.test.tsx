@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import FloatingModal from './FloatingModal';
 
@@ -53,10 +53,7 @@ describe('FloatingModal', () => {
       </FloatingModal>
     );
 
-    const closeButtons = screen.getAllByRole('button');
-    const closeButton = closeButtons.find((btn) => btn.getAttribute('title') === 'Cerrar');
-    
-    fireEvent.click(closeButton!);
+    fireEvent.click(screen.getByRole('button', { name: 'Cerrar' }));
     expect(mockOnClose).toHaveBeenCalled();
   });
 
@@ -67,17 +64,12 @@ describe('FloatingModal', () => {
       </FloatingModal>
     );
 
-    const minimizeButtons = screen.getAllByRole('button');
-    const minimizeButton = minimizeButtons.find((btn) => 
-      btn.getAttribute('title') === 'Minimizar' || btn.getAttribute('title') === 'Maximizar'
-    );
-
     expect(screen.getByText('Content')).toBeInTheDocument();
 
-    fireEvent.click(minimizeButton!);
+    fireEvent.click(screen.getByRole('button', { name: 'Minimizar' }));
     expect(screen.queryByText('Content')).not.toBeInTheDocument();
 
-    fireEvent.click(minimizeButton!);
+    fireEvent.click(screen.getByRole('button', { name: 'Maximizar' }));
     expect(screen.getByText('Content')).toBeInTheDocument();
   });
 
@@ -88,12 +80,12 @@ describe('FloatingModal', () => {
       </FloatingModal>
     );
 
-    const header = container.querySelector('div[style*="primary"]');
+    const header = container.querySelector('[data-testid="floating-modal-header"]');
     expect(header).toHaveStyle('cursor: grab');
   });
 
   it('should accept custom initial width and height', () => {
-    const { container } = render(
+    render(
       <FloatingModal
         isOpen={true}
         onClose={mockOnClose}
@@ -105,13 +97,12 @@ describe('FloatingModal', () => {
       </FloatingModal>
     );
 
-    const modal = container.firstChild as HTMLElement;
-    expect(modal.style.width).toContain('800px');
-    expect(modal.style.height).toContain('400px');
+    const modal = screen.getByRole('dialog');
+    expect(modal).toHaveStyle({ width: '800px', height: '400px' });
   });
 
   it('should accept custom initial position', () => {
-    const { container } = render(
+    render(
       <FloatingModal
         isOpen={true}
         onClose={mockOnClose}
@@ -123,30 +114,27 @@ describe('FloatingModal', () => {
       </FloatingModal>
     );
 
-    const modal = container.firstChild as HTMLElement;
-    expect(modal.style.left).toContain('200px');
-    expect(modal.style.top).toContain('300px');
+    const modal = screen.getByRole('dialog');
+    expect(modal).toHaveStyle({ left: '200px', top: '300px' });
   });
 
   it('should have fixed positioning', () => {
-    const { container } = render(
+    render(
       <FloatingModal isOpen={true} onClose={mockOnClose} title="Test Modal">
         <div>Content</div>
       </FloatingModal>
     );
 
-    const modal = container.firstChild as HTMLElement;
-    expect(modal.style.position).toBe('fixed');
+    expect(screen.getByRole('dialog')).toHaveStyle({ position: 'fixed' });
   });
 
   it('should have high z-index', () => {
-    const { container } = render(
+    render(
       <FloatingModal isOpen={true} onClose={mockOnClose} title="Test Modal">
         <div>Content</div>
       </FloatingModal>
     );
 
-    const modal = container.firstChild as HTMLElement;
-    expect(modal.style.zIndex).toBe('1300');
+    expect(screen.getByRole('dialog')).toHaveStyle({ zIndex: '1300' });
   });
 });

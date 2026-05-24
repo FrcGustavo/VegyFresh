@@ -13,6 +13,7 @@ interface ProductFormData {
   supplier_id: string;
 }
 interface ProductPrice {
+  clientRowId: string;
   price_list_id: string;
   price: number | string;
 }
@@ -31,6 +32,17 @@ const EMPTY_PRODUCT_FORM: ProductFormData = {
   stock: 0,
   supplier_id: '',
 };
+
+const createClientRowId = () =>
+  typeof crypto !== 'undefined' && 'randomUUID' in crypto
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+const createEmptyPrice = (): ProductPrice => ({
+  clientRowId: createClientRowId(),
+  price_list_id: '',
+  price: '',
+});
 
 export function useProductForm(id?: string, onSuccess?: (action: SaveAction) => void) {
   const queryClient = useQueryClient();
@@ -59,6 +71,7 @@ export function useProductForm(id?: string, onSuccess?: (action: SaveAction) => 
       if (existingProduct.productPrices) {
         queueMicrotask(() => {
           setPrices(existingProduct.productPrices.map((p: { price_list_id: string; price: number }) => ({
+            clientRowId: createClientRowId(),
             price_list_id: p.price_list_id,
             price: p.price,
           })));
@@ -84,7 +97,7 @@ export function useProductForm(id?: string, onSuccess?: (action: SaveAction) => 
   };
 
   const addPriceField = () => {
-    setPrices([...prices, { price_list_id: '', price: '' }]);
+    setPrices([...prices, createEmptyPrice()]);
   };
 
   const removePriceField = (index: number) => {

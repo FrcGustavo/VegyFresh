@@ -194,7 +194,7 @@ export default function ProductFormModal({
                   ) : (
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                       {formProps.prices.map((p, index) => (
-                        <Paper key={index} variant="outlined" sx={{ p: 2 }}>
+                        <Paper key={p.clientRowId} variant="outlined" sx={{ p: 2 }}>
                           <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
                             <Box sx={{ flex: 1 }}>
                               <TextField 

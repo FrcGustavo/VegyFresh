@@ -1,75 +1,60 @@
-# React + TypeScript + Vite
+# VegyFresh Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React, TypeScript, Vite, Material UI, and TanStack Query app for the VegyFresh monorepo.
 
-Currently, two official plugins are available:
+## Scripts
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Run commands from the monorepo root:
 
-## React Compiler
-
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
-
-Note: This will impact Vite dev & build performances.
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+pnpm --filter frontend dev
+pnpm --filter frontend check-types
+pnpm --filter frontend lint
+pnpm --filter frontend test
+pnpm --filter frontend build
+pnpm --filter frontend preview
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+If pnpm needs to fetch packages in a restricted environment, the local binaries under `apps/frontend/node_modules/.bin` can still be used for quick verification.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Environment
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+Create a local env file when the API is not running on the default local URL:
+
+```bash
+VITE_API_URL=http://localhost:3000
 ```
+
+`VITE_API_URL` controls the base URL used by `src/api.ts`. When omitted, local development falls back to `http://localhost:3000`.
+
+## Project Notes
+
+- Feature code lives in `src/modules`.
+- Shared UI primitives live in `src/components`.
+- Shared hooks live in `src/hooks`.
+- API calls should go through `src/api.ts`; new feature APIs should opt into typed `fetchApi<T>()` responses.
+- Server state is managed with TanStack Query.
+- Material UI theme setup lives in `src/App.tsx`.
+
+## Validation
+
+Before opening a PR, run:
+
+```bash
+pnpm --filter frontend check-types
+pnpm --filter frontend lint
+pnpm --filter frontend test
+pnpm --filter frontend build
+```
+
+The production build is route-split with `React.lazy`. Keep route-level chunks intact when adding new top-level pages.
+
+## Dependency Audit
+
+Run dependency audits from the workspace and confirm whether findings affect frontend runtime dependencies:
+
+```bash
+pnpm audit --prod
+```
+
+Previous review found a moderate `qs` advisory through the backend dependency path, not through frontend runtime code.

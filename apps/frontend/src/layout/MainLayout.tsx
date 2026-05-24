@@ -1,6 +1,5 @@
 import {
   Box,
-  CssBaseline,
   AppBar,
   Toolbar,
 } from '@mui/material';
@@ -10,7 +9,6 @@ import Sidebar from './Sidebar';
 export default function MainLayout() {
   return (
     <Box sx={{ display: 'flex' }}>
-      <CssBaseline />
       <AppBar
         position="fixed"
         sx={{

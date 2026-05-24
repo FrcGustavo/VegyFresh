@@ -20,6 +20,7 @@ interface ProductRef {
   unit?: string | null;
 }
 interface OrderFormItem {
+  clientRowId: string;
   product_id: string;
   quantity: number | string;
   unit_price: number | string;
@@ -49,7 +50,13 @@ const EMPTY_FORM_DATA: OrderFormData = {
   order_folio: '',
   created_at: '',
 };
-const EMPTY_ITEM = {
+const createClientRowId = () =>
+  typeof crypto !== 'undefined' && 'randomUUID' in crypto
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+const createEmptyItem = (): OrderFormItem => ({
+  clientRowId: createClientRowId(),
   product_id: '',
   quantity: 1,
   unit_price: 0,
@@ -57,13 +64,13 @@ const EMPTY_ITEM = {
   name: '',
   unit: '',
   product: null as ProductRef | null,
-};
+});
 
 export function useOrderForm(id?: string, onSuccess?: (action: SaveAction) => void) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [formData, setFormData] = useState<OrderFormData>(EMPTY_FORM_DATA);
-  const [items, setItems] = useState<OrderFormItem[]>([{ ...EMPTY_ITEM }]);
+  const [items, setItems] = useState<OrderFormItem[]>([createEmptyItem()]);
   const [isDisabled, setIsDisabled] = useState(!!id);
   const lookupTimersRef = useRef<Record<number, ReturnType<typeof setTimeout>>>({});
   const lookupVersionRef = useRef<Record<number, number>>({});
@@ -94,6 +101,7 @@ export function useOrderForm(id?: string, onSuccess?: (action: SaveAction) => vo
       if (existingOrder.items?.length) {
         queueMicrotask(() => {
           setItems(existingOrder.items.map((item: { product_id: string; quantity: number; unit_price: number; product?: ProductRef | null }) => ({
+            clientRowId: createClientRowId(),
             product_id: item.product_id,
             quantity: item.quantity,
             unit_price: item.unit_price,
@@ -105,13 +113,13 @@ export function useOrderForm(id?: string, onSuccess?: (action: SaveAction) => vo
         });
       } else {
         queueMicrotask(() => {
-          setItems([{ ...EMPTY_ITEM }]);
+          setItems([createEmptyItem()]);
         });
       }
     } else if (!id) {
       queueMicrotask(() => {
         setFormData(EMPTY_FORM_DATA);
-        setItems([{ ...EMPTY_ITEM }]);
+        setItems([createEmptyItem()]);
       });
     }
   }, [id, existingOrder]);
@@ -154,7 +162,7 @@ export function useOrderForm(id?: string, onSuccess?: (action: SaveAction) => vo
   const addItemField = () => {
     setItems([
       ...items,
-      { ...EMPTY_ITEM },
+      createEmptyItem(),
     ]);
   };
 
@@ -306,7 +314,7 @@ export function useOrderForm(id?: string, onSuccess?: (action: SaveAction) => vo
 
     setItems((prevItems) => {
       const nextItems = prevItems.filter((item) => String(item.product_id || '').trim() !== '');
-      return nextItems.length > 0 ? nextItems : [{ ...EMPTY_ITEM }];
+      return nextItems.length > 0 ? nextItems : [createEmptyItem()];
     });
 
     const payload = {

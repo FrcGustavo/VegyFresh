@@ -1,4 +1,4 @@
-import { Box, TextField, Button, Avatar } from '@mui/material';
+import { Avatar, Box, Button, TextField, Typography } from '@mui/material';
 
 type SupplierChangeEvent = { target: { name: string; value: string } };
 interface SupplierFormData {
@@ -10,6 +10,7 @@ interface SupplierFormData {
 
 interface SupplierFormProps {
   formData: SupplierFormData;
+  logoFileError?: string;
   handleChange: (e: SupplierChangeEvent) => void;
   handleLogoFileChange: (file: File) => void;
   handleSubmit: (action: 'save' | 'save-and-close' | 'save-and-new') => void;
@@ -18,6 +19,7 @@ interface SupplierFormProps {
 
 export default function SupplierForm({
   formData,
+  logoFileError,
   handleChange,
   handleLogoFileChange,
   handleSubmit,
@@ -63,6 +65,11 @@ export default function SupplierForm({
                   }}
                 />
               </Button>
+              {logoFileError && (
+                <Typography color="error" variant="body2">
+                  {logoFileError}
+                </Typography>
+              )}
             </Box>
 
             <Box sx={{ flex: 1, minWidth: 320 }}>

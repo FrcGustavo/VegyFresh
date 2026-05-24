@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router';
 import { fetchApi } from '../../../api';
+import { validateImageFile } from '../../../utils/imageValidation';
 
 type SaveAction = 'save' | 'save-and-close' | 'save-and-new';
 type SupplierChangeEvent = { target: { name: string; value: string } };
@@ -22,6 +23,7 @@ export function useSupplierForm(id?: string, onSuccess?: (action: SaveAction) =>
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [formData, setFormData] = useState<SupplierFormData>(EMPTY_SUPPLIER_FORM);
+  const [logoFileError, setLogoFileError] = useState('');
   const [isDisabled, setIsDisabled] = useState(!!id);
 
   const { data: existingSupplier, isLoading } = useQuery({
@@ -53,10 +55,18 @@ export function useSupplierForm(id?: string, onSuccess?: (action: SaveAction) =>
   };
 
   const handleLogoFileChange = (file: File) => {
+    const validationError = validateImageFile(file);
+    if (validationError) {
+      setLogoFileError(validationError);
+      return;
+    }
+
+    setLogoFileError('');
     const reader = new FileReader();
     reader.onload = () => {
-      if (typeof reader.result === 'string') {
-        setFormData((prev) => ({ ...prev, logo_url: reader.result }));
+      const result = reader.result;
+      if (typeof result === 'string') {
+        setFormData((prev) => ({ ...prev, logo_url: result }));
       }
     };
     reader.readAsDataURL(file);
@@ -86,6 +96,7 @@ export function useSupplierForm(id?: string, onSuccess?: (action: SaveAction) =>
 
   return {
     formData,
+    logoFileError,
     isLoading,
     isSaving: mutation.isPending,
     handleChange,

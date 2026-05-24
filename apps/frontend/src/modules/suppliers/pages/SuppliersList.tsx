@@ -153,7 +153,7 @@ function SuppliersTable({
   const handleNavigateItem = (newIndex: number) => {
     if (newIndex >= 0 && newIndex < list.length) {
       const newItem = list[newIndex];
-      setModalSupplierId(newItem.id);
+      setModalSupplierId(String(newItem.id));
       setSelectedRowId(String(newItem.id ?? ''));
     }
   };
@@ -258,7 +258,7 @@ function SuppliersTable({
                   selected={selectedRowId === rowId}
                   onClick={() => setSelectedRowId(rowId)}
                   onDoubleClick={() => {
-                    setModalSupplierId(item.id);
+                    setModalSupplierId(String(item.id));
                     setIsModalOpen(true);
                     setSelectedRowId(rowId);
                   }}
