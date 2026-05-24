@@ -3,12 +3,13 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { CreateOrderDto, CreateOrderItemDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { Order, OrderStatus } from './entities/order.entity';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { OrderItem } from './entities/order-item.entity';
 import { Client } from '../clients/entities/client.entity';
 import { User } from '../users/entities/user.entity';
 import { Product } from '../catalog/products/entities/product.entity';
 import { FindOrdersQueryDto } from './dto/find-orders-query.dto';
+import { OrganizationUser } from '../organizations/entities/organization-user.entity';
 
 @Injectable()
 export class OrdersService {
@@ -23,16 +24,27 @@ export class OrdersService {
     private readonly usersRepository: Repository<User>,
     @InjectRepository(Product)
     private readonly productsRepository: Repository<Product>,
+    @InjectRepository(OrganizationUser)
+    private readonly organizationUsersRepository: Repository<OrganizationUser>,
   ) {}
 
-  async create(createOrderDto: CreateOrderDto) {
+  async create(createOrderDto: CreateOrderDto, organizationId: string) {
     const savedOrderId = await this.ordersRepository.manager.transaction(
       async (manager) => {
         const orderRepository = manager.getRepository(Order);
         const orderItemRepository = manager.getRepository(OrderItem);
-        const client = await this.findClientOrFail(createOrderDto.client_id);
-        const user = await this.findUserOrFail(createOrderDto.user_id);
-        const itemsPayload = await this.buildItems(createOrderDto.items);
+        const client = await this.findClientOrFail(
+          createOrderDto.client_id,
+          organizationId,
+        );
+        const user = await this.findUserOrFail(
+          createOrderDto.user_id,
+          organizationId,
+        );
+        const itemsPayload = await this.buildItems(
+          createOrderDto.items,
+          organizationId,
+        );
         const orderFolio = await this.buildOrderFolio(manager);
 
         const order = orderRepository.create({
@@ -40,6 +52,7 @@ export class OrdersService {
           client,
           user_id: user.id,
           user,
+          organization_id: organizationId,
           total_amount: itemsPayload.totalAmount,
           folio: orderFolio,
           status: createOrderDto.status ?? OrderStatus.PENDING_REVIEW,
@@ -68,10 +81,10 @@ export class OrdersService {
       },
     );
 
-    return this.findOne(savedOrderId);
+    return this.findOne(savedOrderId, organizationId);
   }
 
-  findAll(query: FindOrdersQueryDto = {}) {
+  findAll(query: FindOrdersQueryDto = {}, organizationId: string) {
     const orderBy = this.getOrderByColumn(query.order_by);
     const direction = query.order === 'asc' ? 'ASC' : 'DESC';
     const limit = this.parseInteger(query.limit, 25, 1);
@@ -86,6 +99,10 @@ export class OrdersService {
       .orderBy(orderBy, direction)
       .addOrderBy('order.id', 'ASC');
 
+    qb.andWhere('order.organization_id = :organizationId', {
+      organizationId,
+    });
+
     this.applyCreatedAtFilter(
       qb,
       query.created_filter,
@@ -99,9 +116,9 @@ export class OrdersService {
     return qb.getMany();
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, organizationId: string) {
     const order = await this.ordersRepository.findOne({
-      where: { id },
+      where: { id, organization_id: organizationId },
       relations: {
         client: true,
         user: true,
@@ -116,12 +133,18 @@ export class OrdersService {
     return order;
   }
 
-  async update(id: string, updateOrderDto: UpdateOrderDto) {
+  async update(
+    id: string,
+    updateOrderDto: UpdateOrderDto,
+    organizationId: string,
+  ) {
     const updatedOrderId = await this.ordersRepository.manager.transaction(
       async (manager) => {
         const orderRepository = manager.getRepository(Order);
         const orderItemRepository = manager.getRepository(OrderItem);
-        const existingOrder = await orderRepository.findOne({ where: { id } });
+        const existingOrder = await orderRepository.findOne({
+          where: { id, organization_id: organizationId },
+        });
 
         if (!existingOrder) {
           throw new NotFoundException(`Order with id ${id} not found`);
@@ -129,15 +152,21 @@ export class OrdersService {
 
         const client =
           updateOrderDto.client_id !== undefined
-            ? await this.findClientOrFail(updateOrderDto.client_id)
-            : await this.findClientOrFail(existingOrder.client_id);
+            ? await this.findClientOrFail(
+                updateOrderDto.client_id,
+                organizationId,
+              )
+            : await this.findClientOrFail(
+                existingOrder.client_id,
+                organizationId,
+              );
         const user =
           updateOrderDto.user_id !== undefined
-            ? await this.findUserOrFail(updateOrderDto.user_id)
-            : await this.findUserOrFail(existingOrder.user_id);
+            ? await this.findUserOrFail(updateOrderDto.user_id, organizationId)
+            : await this.findUserOrFail(existingOrder.user_id, organizationId);
         const itemsPayload =
           updateOrderDto.items !== undefined
-            ? await this.buildItems(updateOrderDto.items)
+            ? await this.buildItems(updateOrderDto.items, organizationId)
             : null;
 
         orderRepository.merge(existingOrder, {
@@ -145,6 +174,7 @@ export class OrdersService {
           client,
           user_id: user.id,
           user,
+          organization_id: organizationId,
           delivery_date:
             updateOrderDto.delivery_date !== undefined
               ? new Date(updateOrderDto.delivery_date)
@@ -176,18 +206,21 @@ export class OrdersService {
       },
     );
 
-    return this.findOne(updatedOrderId);
+    return this.findOne(updatedOrderId, organizationId);
   }
 
-  async remove(id: string) {
-    const order = await this.findOne(id);
+  async remove(id: string, organizationId: string) {
+    const order = await this.findOne(id, organizationId);
     await this.ordersRepository.remove(order);
 
     return { id, deleted: true };
   }
 
-  private async findClientOrFail(id: string) {
-    const client = await this.clientsRepository.findOneBy({ id });
+  private async findClientOrFail(id: string, organizationId: string) {
+    const client = await this.clientsRepository.findOneBy({
+      id,
+      organization_id: organizationId,
+    });
     if (!client) {
       throw new NotFoundException(`Client with id ${id} not found`);
     }
@@ -195,18 +228,35 @@ export class OrdersService {
     return client;
   }
 
-  private async findUserOrFail(id: string) {
+  private async findUserOrFail(id: string, organizationId: string) {
     const user = await this.usersRepository.findOneBy({ id });
     if (!user) {
       throw new NotFoundException(`User with id ${id} not found`);
     }
 
+    const membership = await this.organizationUsersRepository.findOneBy({
+      user_id: id,
+      organization_id: organizationId,
+      is_active: true,
+    });
+    if (!membership) {
+      throw new NotFoundException(
+        `User with id ${id} is not active in organization ${organizationId}`,
+      );
+    }
+
     return user;
   }
 
-  private async buildItems(items: CreateOrderItemDto[]) {
+  private async buildItems(
+    items: CreateOrderItemDto[],
+    organizationId: string,
+  ) {
     const productIds = [...new Set(items.map((item) => item.product_id))];
-    const products = await this.productsRepository.findByIds(productIds);
+    const products = await this.productsRepository.findBy({
+      id: In(productIds),
+      organization_id: organizationId,
+    });
     const productMap = new Map(
       products.map((product) => [product.id, product]),
     );

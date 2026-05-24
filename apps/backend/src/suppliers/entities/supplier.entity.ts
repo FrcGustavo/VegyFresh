@@ -3,13 +3,18 @@ import {
   CreateDateColumn,
   Entity,
   Generated,
+  JoinColumn,
+  ManyToOne,
   OneToMany,
   PrimaryColumn,
+  Unique,
   UpdateDateColumn,
 } from 'typeorm';
 import { Product } from '../../catalog/products/entities/product.entity';
+import { Organization } from '../../organizations/entities/organization.entity';
 
 @Entity('suppliers')
+@Unique('UQ_suppliers_org_folio', ['organization_id', 'folio'])
 export class Supplier {
   @PrimaryColumn({ type: 'uuid' })
   @Generated('uuid')
@@ -18,7 +23,7 @@ export class Supplier {
   @Column({ type: 'varchar', length: 255 })
   name: string;
 
-  @Column({ type: 'varchar', length: 40, unique: true })
+  @Column({ type: 'varchar', length: 40 })
   folio: string;
 
   @Column({ type: 'varchar', length: 255, nullable: true })
@@ -29,6 +34,15 @@ export class Supplier {
 
   @Column({ type: 'text', nullable: true })
   logo_url: string | null;
+
+  @Column({ type: 'uuid' })
+  organization_id: string;
+
+  @ManyToOne(() => Organization, (organization) => organization.suppliers, {
+    onDelete: 'RESTRICT',
+  })
+  @JoinColumn({ name: 'organization_id' })
+  organization: Organization;
 
   @OneToMany(() => Product, (product) => product.supplier)
   products: Product[];

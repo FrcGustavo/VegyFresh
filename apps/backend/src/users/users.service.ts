@@ -3,8 +3,13 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
-import { ILike, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Role } from '../roles/entities/role.entity';
+import * as bcrypt from 'bcrypt';
+import {
+  OrganizationUser,
+  OrganizationUserRole,
+} from '../organizations/entities/organization-user.entity';
 
 type UserOrderField = 'id' | 'folio' | 'name' | 'email' | 'created_at';
 
@@ -23,38 +28,70 @@ export class UsersService {
     private readonly usersRepository: Repository<User>,
     @InjectRepository(Role)
     private readonly rolesRepository: Repository<Role>,
+    @InjectRepository(OrganizationUser)
+    private readonly organizationUsersRepository: Repository<OrganizationUser>,
   ) {}
 
-  async create(createUserDto: CreateUserDto) {
+  async create(createUserDto: CreateUserDto, organizationId: string) {
     const role = await this.findRoleOrFail(createUserDto.role_id);
     const userFolio = await this.buildUserFolio(this.usersRepository.manager);
+    const passwordHash = await bcrypt.hash(createUserDto.password, 10);
     const user = this.usersRepository.create({
       ...createUserDto,
+      password_hash: passwordHash,
       folio: userFolio,
       avatar_url: createUserDto.avatar_url ?? null,
       role,
     });
 
-    return this.usersRepository.save(user);
+    const savedUser = await this.usersRepository.save(user);
+
+    const existingMembership = await this.organizationUsersRepository.findOne({
+      where: { user_id: savedUser.id, organization_id: organizationId },
+    });
+    if (!existingMembership) {
+      const membership = this.organizationUsersRepository.create({
+        user_id: savedUser.id,
+        organization_id: organizationId,
+        role: OrganizationUserRole.MEMBER,
+        is_active: true,
+      });
+      await this.organizationUsersRepository.save(membership);
+    }
+
+    return savedUser;
   }
 
-  findAll(filters: FindAllUsersFilters = {}) {
+  async findAll(filters: FindAllUsersFilters = {}, organizationId: string) {
     const orderBy = this.normalizeOrderBy(filters.orderBy);
     const order = filters.order ?? 'ASC';
     const limit = filters.limit ?? 25;
     const offset = filters.offset ?? 0;
     const search = filters.search?.trim();
+    const qb = this.usersRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.role', 'role')
+      .orderBy(`user.${orderBy}`, order)
+      .take(limit)
+      .skip(offset);
 
-    return this.usersRepository.find({
-      where: search ? { name: ILike(`%${search}%`) } : undefined,
-      relations: { role: true },
-      order: { [orderBy]: order },
-      take: limit,
-      skip: offset,
-    });
+    qb.innerJoin(
+      OrganizationUser,
+      'organizationUser',
+      'organizationUser.user_id = user.id AND organizationUser.organization_id = :organizationId AND organizationUser.is_active = true',
+      { organizationId },
+    );
+
+    if (search) {
+      qb.andWhere('user.name ILIKE :search', { search: `%${search}%` });
+    }
+
+    return qb.getMany();
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, organizationId: string) {
+    await this.findMembershipOrFail(id, organizationId);
+
     const user = await this.usersRepository.findOne({
       where: { id },
       relations: { role: true },
@@ -67,8 +104,12 @@ export class UsersService {
     return user;
   }
 
-  async update(id: string, updateUserDto: UpdateUserDto) {
-    const user = await this.findOne(id);
+  async update(
+    id: string,
+    updateUserDto: UpdateUserDto,
+    organizationId: string,
+  ) {
+    const user = await this.findOne(id, organizationId);
     const role =
       updateUserDto.role_id !== undefined
         ? await this.findRoleOrFail(updateUserDto.role_id)
@@ -76,14 +117,17 @@ export class UsersService {
 
     this.usersRepository.merge(user, {
       ...updateUserDto,
+      ...(updateUserDto.password
+        ? { password_hash: await bcrypt.hash(updateUserDto.password, 10) }
+        : undefined),
       role,
     });
 
     return this.usersRepository.save(user);
   }
 
-  async remove(id: string) {
-    const user = await this.findOne(id);
+  async remove(id: string, organizationId: string) {
+    const user = await this.findOne(id, organizationId);
     await this.usersRepository.remove(user);
 
     return { id, deleted: true };
@@ -125,5 +169,21 @@ export class UsersService {
     );
     const folioNumber = Number(result?.folio ?? 0);
     return `U${String(folioNumber).padStart(5, '0')}`;
+  }
+
+  private async findMembershipOrFail(userId: string, organizationId: string) {
+    const membership = await this.organizationUsersRepository.findOne({
+      where: {
+        user_id: userId,
+        organization_id: organizationId,
+        is_active: true,
+      },
+    });
+
+    if (!membership) {
+      throw new NotFoundException(
+        `User with id ${userId} was not found in organization ${organizationId}`,
+      );
+    }
   }
 }

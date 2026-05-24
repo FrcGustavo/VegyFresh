@@ -33,9 +33,10 @@ export class ProductsService {
     private readonly suppliersRepository: Repository<Supplier>,
   ) {}
 
-  async create(createProductDto: CreateProductDto) {
+  async create(createProductDto: CreateProductDto, organizationId: string) {
     const supplier = await this.findSupplierOrFail(
       createProductDto.supplier_id,
+      organizationId,
     );
     const productFolio = await this.buildProductFolio(
       this.productsRepository.manager,
@@ -48,12 +49,13 @@ export class ProductsService {
       unit: createProductDto.unit ?? ProductUnit.PZ,
       images: createProductDto.images ?? [],
       supplier,
+      organization_id: organizationId,
     });
 
     return this.productsRepository.save(product);
   }
 
-  findAll(filters: FindAllProductsFilters = {}) {
+  findAll(filters: FindAllProductsFilters = {}, organizationId: string) {
     const orderBy = this.normalizeOrderBy(filters.orderBy);
     const order = filters.order ?? 'ASC';
     const limit = filters.limit ?? 25;
@@ -62,8 +64,17 @@ export class ProductsService {
 
     return this.productsRepository.find({
       where: search
-        ? [{ name: ILike(`%${search}%`) }, { folio: ILike(`%${search}%`) }]
-        : undefined,
+        ? [
+            {
+              name: ILike(`%${search}%`),
+              organization_id: organizationId,
+            },
+            {
+              folio: ILike(`%${search}%`),
+              organization_id: organizationId,
+            },
+          ]
+        : { organization_id: organizationId },
       relations: { supplier: true, productPrices: true },
       order: { [orderBy]: order },
       take: limit,
@@ -71,9 +82,9 @@ export class ProductsService {
     });
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, organizationId: string) {
     const product = await this.productsRepository.findOne({
-      where: { id },
+      where: { id, organization_id: organizationId },
       relations: {
         supplier: true,
         productPrices: { priceList: true },
@@ -87,11 +98,18 @@ export class ProductsService {
     return product;
   }
 
-  async update(id: string, updateProductDto: UpdateProductDto) {
-    const product = await this.findOne(id);
+  async update(
+    id: string,
+    updateProductDto: UpdateProductDto,
+    organizationId: string,
+  ) {
+    const product = await this.findOne(id, organizationId);
     const supplier =
       updateProductDto.supplier_id !== undefined
-        ? await this.findSupplierOrFail(updateProductDto.supplier_id)
+        ? await this.findSupplierOrFail(
+            updateProductDto.supplier_id,
+            organizationId,
+          )
         : product.supplier;
 
     this.productsRepository.merge(product, {
@@ -102,14 +120,17 @@ export class ProductsService {
     return this.productsRepository.save(product);
   }
 
-  async remove(id: string) {
-    const product = await this.findOne(id);
+  async remove(id: string, organizationId: string) {
+    const product = await this.findOne(id, organizationId);
     await this.productsRepository.remove(product);
     return { id, deleted: true };
   }
 
-  private async findSupplierOrFail(id: string) {
-    const supplier = await this.suppliersRepository.findOneBy({ id });
+  private async findSupplierOrFail(id: string, organizationId: string) {
+    const supplier = await this.suppliersRepository.findOneBy({
+      id,
+      organization_id: organizationId,
+    });
 
     if (!supplier) {
       throw new NotFoundException(`Supplier with id ${id} not found`);

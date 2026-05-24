@@ -11,6 +11,11 @@ export default registerAs('config', () => {
     },
     apiKey: process.env.API_KEY,
     jwtSecret: process.env.JWT_SECRET,
+    jwtAccessSecret: process.env.JWT_ACCESS_SECRET,
+    jwtAccessTtl: process.env.JWT_ACCESS_TTL ?? '15m',
+    jwtRefreshSecret: process.env.JWT_REFRESH_SECRET,
+    jwtRefreshTtl: process.env.JWT_REFRESH_TTL ?? '7d',
+    bcryptSaltRounds: parseInt(process.env.BCRYPT_SALT_ROUNDS ?? '12', 10),
     whatsapp: {
       verifyToken: process.env.WHATSAPP_VERIFY_TOKEN,
       accessToken: process.env.WHATSAPP_ACCESS_TOKEN,
@@ -18,6 +23,7 @@ export default registerAs('config', () => {
       appSecret: process.env.META_APP_SECRET,
       apiVersion: process.env.META_API_VERSION,
       botUserId: process.env.WHATSAPP_BOT_USER_ID,
+      organizationId: process.env.WHATSAPP_ORGANIZATION_ID,
     },
     ai: {
       provider: process.env.AI_PROVIDER,

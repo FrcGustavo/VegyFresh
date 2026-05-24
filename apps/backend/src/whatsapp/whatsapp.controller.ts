@@ -14,6 +14,7 @@ import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
 import { WhatsappService } from './whatsapp.service';
 import { CreateWhatsappDto } from './dto/create-whatsapp.dto';
+import { Public } from '../auth/decorators/public.decorator';
 
 type RawBodyRequest = Request & { rawBody?: string };
 
@@ -23,6 +24,7 @@ export class WhatsappController {
   constructor(private readonly whatsappService: WhatsappService) {}
 
   @Get('webhook')
+  @Public()
   @ApiOperation({ summary: 'Verify Meta WhatsApp webhook endpoint' })
   @ApiQuery({ name: 'hub.mode', required: false })
   @ApiQuery({ name: 'hub.verify_token', required: false })
@@ -47,6 +49,7 @@ export class WhatsappController {
   }
 
   @Post('webhook')
+  @Public()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Receive incoming webhook events from Meta' })
   async handleWebhook(

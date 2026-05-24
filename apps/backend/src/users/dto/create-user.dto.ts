@@ -7,8 +7,8 @@ export class CreateUserDto {
   @ApiProperty({ example: 'john@example.com' })
   email!: string;
 
-  @ApiProperty({ example: 'hashed_password' })
-  password_hash!: string;
+  @ApiProperty({ example: 'super-secure-password' })
+  password!: string;
 
   @ApiProperty({ example: '550e8400-e29b-41d4-a716-446655440000' })
   role_id!: string;

@@ -7,10 +7,12 @@ import {
   ManyToOne,
   OneToMany,
   PrimaryColumn,
+  Unique,
 } from 'typeorm';
 import { Client } from '../../clients/entities/client.entity';
 import { User } from '../../users/entities/user.entity';
 import { OrderItem } from './order-item.entity';
+import { Organization } from '../../organizations/entities/organization.entity';
 
 export enum OrderStatus {
   PENDING_REVIEW = 'PENDING_REVIEW',
@@ -25,6 +27,7 @@ export enum OrderOrigin {
 }
 
 @Entity('orders')
+@Unique('UQ_orders_org_folio', ['organization_id', 'folio'])
 export class Order {
   @PrimaryColumn({ type: 'uuid' })
   @Generated('uuid')
@@ -44,10 +47,19 @@ export class Order {
   @JoinColumn({ name: 'user_id' })
   user!: User;
 
+  @Column({ type: 'uuid' })
+  organization_id!: string;
+
+  @ManyToOne(() => Organization, (organization) => organization.orders, {
+    onDelete: 'RESTRICT',
+  })
+  @JoinColumn({ name: 'organization_id' })
+  organization!: Organization;
+
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   total_amount!: number;
 
-  @Column({ type: 'varchar', length: 40, unique: true })
+  @Column({ type: 'varchar', length: 40 })
   folio!: string;
 
   @Column({ type: 'text', nullable: true })

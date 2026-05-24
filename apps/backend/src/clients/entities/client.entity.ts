@@ -6,11 +6,14 @@ import {
   ManyToOne,
   OneToMany,
   PrimaryColumn,
+  Unique,
 } from 'typeorm';
 import { PriceList } from '../../catalog/price-lists/entities/price-list.entity';
 import { Order } from '../../orders/entities/order.entity';
+import { Organization } from '../../organizations/entities/organization.entity';
 
 @Entity('clients')
+@Unique('UQ_clients_org_folio', ['organization_id', 'folio'])
 export class Client {
   @PrimaryColumn({ type: 'uuid' })
   @Generated('uuid')
@@ -19,7 +22,7 @@ export class Client {
   @Column({ type: 'varchar', length: 255 })
   name: string;
 
-  @Column({ type: 'varchar', length: 40, unique: true })
+  @Column({ type: 'varchar', length: 40 })
   folio: string;
 
   @Column({ type: 'varchar', length: 30 })
@@ -57,6 +60,15 @@ export class Client {
 
   @Column({ type: 'uuid', nullable: true })
   price_list_id: string | null;
+
+  @Column({ type: 'uuid' })
+  organization_id: string;
+
+  @ManyToOne(() => Organization, (organization) => organization.clients, {
+    onDelete: 'RESTRICT',
+  })
+  @JoinColumn({ name: 'organization_id' })
+  organization: Organization;
 
   @ManyToOne(() => PriceList, (priceList) => priceList.clients, {
     onDelete: 'SET NULL',

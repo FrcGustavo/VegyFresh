@@ -31,8 +31,9 @@ export class ClientsService {
     private readonly priceListsRepository: Repository<PriceList>,
   ) {}
 
-  async create(createClientDto: CreateClientDto) {
+  async create(createClientDto: CreateClientDto, organizationId: string) {
     const priceList = await this.resolvePriceList(
+      organizationId,
       createClientDto.price_list_id,
     );
     const clientFolio = await this.buildClientFolio(
@@ -53,12 +54,13 @@ export class ClientsService {
       avatar_url: createClientDto.avatar_url ?? null,
       price_list_id: priceList?.id ?? null,
       priceList,
+      organization_id: organizationId,
     });
 
     return this.clientsRepository.save(client);
   }
 
-  findAll(filters: FindAllClientsFilters = {}) {
+  findAll(filters: FindAllClientsFilters = {}, organizationId: string) {
     const orderBy = this.normalizeOrderBy(filters.orderBy);
     const order = filters.order ?? 'ASC';
     const limit = filters.limit ?? 25;
@@ -66,7 +68,12 @@ export class ClientsService {
     const search = filters.search?.trim();
 
     return this.clientsRepository.find({
-      where: search ? { name: ILike(`%${search}%`) } : undefined,
+      where: search
+        ? {
+            name: ILike(`%${search}%`),
+            organization_id: organizationId,
+          }
+        : { organization_id: organizationId },
       relations: { priceList: true },
       order: { [orderBy]: order },
       take: limit,
@@ -74,23 +81,28 @@ export class ClientsService {
     });
   }
 
-  findByPhone(phoneNumber: string) {
+  findByPhone(phoneNumber: string, organizationId: string) {
     // Normalize: strip non-digits and leading zeros for comparison
     const normalized = phoneNumber.replace(/\D/g, '');
-    return this.clientsRepository
+    const query = this.clientsRepository
       .createQueryBuilder('client')
       .where(
         "REGEXP_REPLACE(client.phone_number, '[^0-9]', '', 'g') LIKE :phone",
         {
           phone: `%${normalized}`,
         },
-      )
-      .getOne();
+      );
+
+    query.andWhere('client.organization_id = :organizationId', {
+      organizationId,
+    });
+
+    return query.getOne();
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, organizationId: string) {
     const client = await this.clientsRepository.findOne({
-      where: { id },
+      where: { id, organization_id: organizationId },
       relations: { priceList: true },
     });
 
@@ -101,12 +113,19 @@ export class ClientsService {
     return client;
   }
 
-  async update(id: string, updateClientDto: UpdateClientDto) {
-    const client = await this.findOne(id);
+  async update(
+    id: string,
+    updateClientDto: UpdateClientDto,
+    organizationId: string,
+  ) {
+    const client = await this.findOne(id, organizationId);
     const priceList =
       updateClientDto.price_list_id === undefined
         ? client.priceList
-        : await this.resolvePriceList(updateClientDto.price_list_id);
+        : await this.resolvePriceList(
+            organizationId,
+            updateClientDto.price_list_id,
+          );
 
     this.clientsRepository.merge(client, {
       ...updateClientDto,
@@ -120,18 +139,21 @@ export class ClientsService {
     return this.clientsRepository.save(client);
   }
 
-  async remove(id: string) {
-    const client = await this.findOne(id);
+  async remove(id: string, organizationId: string) {
+    const client = await this.findOne(id, organizationId);
     await this.clientsRepository.remove(client);
     return { id, deleted: true };
   }
 
-  private async resolvePriceList(id?: string | null) {
+  private async resolvePriceList(organizationId: string, id?: string | null) {
     if (id === undefined || id === null) {
       return null;
     }
 
-    const priceList = await this.priceListsRepository.findOneBy({ id });
+    const priceList = await this.priceListsRepository.findOneBy({
+      id,
+      organization_id: organizationId,
+    });
     if (!priceList) {
       throw new NotFoundException(`Price list with id ${id} not found`);
     }

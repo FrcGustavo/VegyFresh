@@ -10,6 +10,8 @@ import {
 } from 'typeorm';
 import { Order } from '../../orders/entities/order.entity';
 import { Role } from '../../roles/entities/role.entity';
+import { OrganizationUser } from '../../organizations/entities/organization-user.entity';
+import { AuthSession } from '../../auth/entities/auth-session.entity';
 
 @Entity('users')
 export class User {
@@ -41,6 +43,15 @@ export class User {
 
   @OneToMany(() => Order, (order) => order.user)
   orders: Order[];
+
+  @OneToMany(
+    () => OrganizationUser,
+    (organizationUser) => organizationUser.user,
+  )
+  organizationUsers: OrganizationUser[];
+
+  @OneToMany(() => AuthSession, (authSession) => authSession.user)
+  authSessions: AuthSession[];
 
   @CreateDateColumn({ name: 'created_at' })
   created_at: Date;
