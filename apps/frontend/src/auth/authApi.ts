@@ -1,19 +1,39 @@
 import { API_URL } from '../api';
 
 export interface AuthUser {
-  sub: string;
+  id: string;
+  name: string;
   email: string;
-  org_id: string;
-  membership_id: string;
-  role: string;
-  sid: string;
-  permissions: string[];
 }
 
-export interface AuthTokensResponse {
+export interface AuthOrganization {
+  id: string;
+  name: string;
+  folio: string;
+}
+
+export interface AuthMembership {
+  id: string;
+  role: string;
+}
+
+export interface AuthSessionResponse {
+  user: AuthUser;
+  organization: AuthOrganization;
+  membership: AuthMembership;
   access_token: string;
   refresh_token: string;
+}
+
+export interface AuthRefreshResponse {
+  access_token: string;
+  refresh_token: string;
+}
+
+export interface AuthContextResponse {
   user: AuthUser;
+  organization: AuthOrganization;
+  membership: AuthMembership;
 }
 
 export interface LoginPayload {
@@ -46,18 +66,18 @@ async function postPublic<T>(path: string, body: unknown): Promise<T> {
 
 export const authApi = {
   login: (payload: LoginPayload) =>
-    postPublic<AuthTokensResponse>('/auth/login', payload),
+    postPublic<AuthSessionResponse>('/auth/login', payload),
 
   signup: (payload: SignupPayload) =>
-    postPublic<AuthTokensResponse>('/auth/signup', payload),
+    postPublic<AuthSessionResponse>('/auth/signup', payload),
 
   refresh: (refreshToken: string) =>
-    postPublic<AuthTokensResponse>('/auth/refresh', { refresh_token: refreshToken }),
+    postPublic<AuthRefreshResponse>('/auth/refresh', { refresh_token: refreshToken }),
 
-  me: (accessToken: string): Promise<AuthUser> =>
+  me: (accessToken: string): Promise<AuthContextResponse> =>
     fetch(`${API_URL}/auth/me`, {
       headers: { Authorization: `Bearer ${accessToken}` },
-    }).then((r) => r.json() as Promise<AuthUser>),
+    }).then((r) => r.json() as Promise<AuthContextResponse>),
 
   logout: (accessToken: string): Promise<void> =>
     fetch(`${API_URL}/auth/logout`, {
