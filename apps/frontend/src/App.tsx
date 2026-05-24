@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router';
 import { Box, CircularProgress, CssBaseline, ThemeProvider, createTheme, useMediaQuery } from '@mui/material';
 import MainLayout from './layout/MainLayout';
@@ -279,7 +279,7 @@ function RouteFallback() {
 }
 
 /** Redirects unauthenticated users to /login. Shows a spinner while auth initialises. */
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
+function ProtectedRoute({ children }: { children: ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {

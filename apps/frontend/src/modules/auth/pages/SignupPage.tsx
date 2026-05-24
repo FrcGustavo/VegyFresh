@@ -87,7 +87,7 @@ export default function SignupPage() {
               fullWidth
               required
               autoComplete="new-password"
-              slotProps={{ htmlInput: { minLength: 8 } }}
+              slotProps={{ htmlInput: { minLength: 12 } }}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
