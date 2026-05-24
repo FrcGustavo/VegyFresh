@@ -6,6 +6,7 @@ interface PriceListFormProps {
   name: string;
   setName: (name: string) => void;
   productsList: Array<{
+    clientRowId: string;
     product_id: string;
     name?: string;
     price: number | string;
@@ -118,7 +119,7 @@ export default function PriceListForm({
               </TableHead>
               <TableBody>
                 {productsList.map((item, index) => (
-                  <TableRow key={index}>
+                  <TableRow key={item.id ?? item.clientRowId}>
                     <TableCell sx={cellSx}>
                       <TextField
                         fullWidth

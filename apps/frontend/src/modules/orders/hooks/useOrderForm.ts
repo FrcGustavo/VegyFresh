@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router';
 import { fetchApi } from '../../../api';
+import { createClientRowId } from '../../../utils/clientRowId';
 
 type SaveAction = 'save' | 'save-and-close' | 'save-and-new';
 type OrderChangeEvent = { target: { name: string; value: string } };
@@ -20,6 +21,8 @@ interface ProductRef {
   unit?: string | null;
 }
 interface OrderFormItem {
+  id?: string | number;
+  clientRowId: string;
   product_id: string;
   quantity: number | string;
   unit_price: number | string;
@@ -40,6 +43,13 @@ interface OrderFormData {
 interface UserRef {
   id: string;
 }
+interface ExistingOrderItemRef {
+  id?: string | number;
+  product_id: string;
+  quantity: number;
+  unit_price: number;
+  product?: ProductRef | null;
+}
 const EMPTY_FORM_DATA: OrderFormData = {
   client_id: '',
   user_id: '',
@@ -49,7 +59,8 @@ const EMPTY_FORM_DATA: OrderFormData = {
   order_folio: '',
   created_at: '',
 };
-const EMPTY_ITEM = {
+const createEmptyItem = (): OrderFormItem => ({
+  clientRowId: createClientRowId(),
   product_id: '',
   quantity: 1,
   unit_price: 0,
@@ -57,16 +68,16 @@ const EMPTY_ITEM = {
   name: '',
   unit: '',
   product: null as ProductRef | null,
-};
+});
 
 export function useOrderForm(id?: string, onSuccess?: (action: SaveAction) => void) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [formData, setFormData] = useState<OrderFormData>(EMPTY_FORM_DATA);
-  const [items, setItems] = useState<OrderFormItem[]>([{ ...EMPTY_ITEM }]);
+  const [items, setItems] = useState<OrderFormItem[]>([createEmptyItem()]);
   const [isDisabled, setIsDisabled] = useState(!!id);
-  const lookupTimersRef = useRef<Record<number, ReturnType<typeof setTimeout>>>({});
-  const lookupVersionRef = useRef<Record<number, number>>({});
+  const lookupTimersRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const lookupVersionRef = useRef<Record<string, number>>({});
 
   const { data: existingOrder, isLoading: isLoadingOrder } = useQuery({
     queryKey: ['orders', id],
@@ -93,7 +104,9 @@ export function useOrderForm(id?: string, onSuccess?: (action: SaveAction) => vo
       });
       if (existingOrder.items?.length) {
         queueMicrotask(() => {
-          setItems(existingOrder.items.map((item: { product_id: string; quantity: number; unit_price: number; product?: ProductRef | null }) => ({
+          setItems(existingOrder.items.map((item: ExistingOrderItemRef) => ({
+            id: item.id,
+            clientRowId: String(item.id ?? createClientRowId()),
             product_id: item.product_id,
             quantity: item.quantity,
             unit_price: item.unit_price,
@@ -105,13 +118,13 @@ export function useOrderForm(id?: string, onSuccess?: (action: SaveAction) => vo
         });
       } else {
         queueMicrotask(() => {
-          setItems([{ ...EMPTY_ITEM }]);
+          setItems([createEmptyItem()]);
         });
       }
     } else if (!id) {
       queueMicrotask(() => {
         setFormData(EMPTY_FORM_DATA);
-        setItems([{ ...EMPTY_ITEM }]);
+        setItems([createEmptyItem()]);
       });
     }
   }, [id, existingOrder]);
@@ -152,81 +165,93 @@ export function useOrderForm(id?: string, onSuccess?: (action: SaveAction) => vo
   };
 
   const addItemField = () => {
-    setItems([
-      ...items,
-      { ...EMPTY_ITEM },
-    ]);
+    setItems((prevItems) => [...prevItems, createEmptyItem()]);
   };
 
   const removeItemField = (index: number) => {
-    setItems(items.filter((_, i) => i !== index));
+    const rowKey = items[index]?.clientRowId;
+    if (rowKey) {
+      clearTimeout(lookupTimersRef.current[rowKey]);
+      delete lookupTimersRef.current[rowKey];
+      delete lookupVersionRef.current[rowKey];
+    }
+    setItems((prevItems) => prevItems.filter((_, i) => i !== index));
   };
 
   const updateItemField = (index: number, field: string, value: string | number | ProductRef | null) => {
-    const newItems = [...items];
-    if (!newItems[index]) return;
-    if (field === 'product') {
-      newItems[index].product = (value as ProductRef | null) ?? null;
-    } else if (field === 'product_id') {
-      newItems[index].product_id = String(value ?? '');
-    } else if (field === 'quantity') {
-      newItems[index].quantity = value as string | number;
-    } else if (field === 'unit_price') {
-      newItems[index].unit_price = value as string | number;
-    } else if (field === 'folio') {
-      newItems[index].folio = String(value ?? '');
-    } else if (field === 'name') {
-      newItems[index].name = String(value ?? '');
-    } else if (field === 'unit') {
-      newItems[index].unit = String(value ?? '');
-    }
+    const rowKey = items[index]?.clientRowId;
 
-    if (field === 'product' && value) {
-      const selectedProduct = value as ProductRef;
-      newItems[index].product_id = selectedProduct.id;
-      newItems[index].folio = selectedProduct.folio || '';
-      newItems[index].name = selectedProduct.name || '';
-      newItems[index].unit = selectedProduct.unit || '';
-      if (selectedClient?.priceList?.productPrices) {
-        const priceObj = selectedClient.priceList.productPrices.find((p) => p.product_id === selectedProduct.id);
-        if (priceObj) {
-          newItems[index].unit_price = priceObj.price;
+    setItems((prevItems) => {
+      const newItems = [...prevItems];
+      if (!newItems[index]) return prevItems;
+      
+      if (field === 'product') {
+        newItems[index].product = (value as ProductRef | null) ?? null;
+      } else if (field === 'product_id') {
+        newItems[index].product_id = String(value ?? '');
+      } else if (field === 'quantity') {
+        newItems[index].quantity = value as string | number;
+      } else if (field === 'unit_price') {
+        newItems[index].unit_price = value as string | number;
+      } else if (field === 'folio') {
+        newItems[index].folio = String(value ?? '');
+      } else if (field === 'name') {
+        newItems[index].name = String(value ?? '');
+      } else if (field === 'unit') {
+        newItems[index].unit = String(value ?? '');
+      }
+
+      if (field === 'product' && value) {
+        const selectedProduct = value as ProductRef;
+        newItems[index].product_id = selectedProduct.id;
+        newItems[index].folio = selectedProduct.folio || '';
+        newItems[index].name = selectedProduct.name || '';
+        newItems[index].unit = selectedProduct.unit || '';
+        const currentClient = clients.find((c) => c.id === formData.client_id);
+        if (currentClient?.priceList?.productPrices) {
+          const priceObj = currentClient.priceList.productPrices.find((p) => p.product_id === selectedProduct.id);
+          if (priceObj) {
+            newItems[index].unit_price = priceObj.price;
+          } else {
+            newItems[index].unit_price = 0;
+          }
         } else {
           newItems[index].unit_price = 0;
         }
-      } else {
-        newItems[index].unit_price = 0;
       }
-    }
 
-    if (field === 'folio') {
-      newItems[index].product_id = '';
-      newItems[index].product = null;
-    }
+      if (field === 'folio') {
+        newItems[index].product_id = '';
+        newItems[index].product = null;
+      }
 
-    if (field === 'name') {
-      newItems[index].product_id = '';
-      newItems[index].product = null;
-    }
-    setItems(newItems);
+      if (field === 'name') {
+        newItems[index].product_id = '';
+        newItems[index].product = null;
+      }
+
+      return newItems;
+    });
 
     if (field !== 'folio' && field !== 'name') {
       return;
     }
 
+    if (!rowKey) return;
+
     const searchText = String(value ?? '').trim();
-    if (lookupTimersRef.current[index]) {
-      clearTimeout(lookupTimersRef.current[index]);
+    if (lookupTimersRef.current[rowKey]) {
+      clearTimeout(lookupTimersRef.current[rowKey]);
     }
 
     if (!searchText) {
       return;
     }
 
-    const requestVersion = (lookupVersionRef.current[index] ?? 0) + 1;
-    lookupVersionRef.current[index] = requestVersion;
+    const requestVersion = (lookupVersionRef.current[rowKey] ?? 0) + 1;
+    lookupVersionRef.current[rowKey] = requestVersion;
 
-    lookupTimersRef.current[index] = setTimeout(async () => {
+    lookupTimersRef.current[rowKey] = setTimeout(async () => {
       const response = await fetchApi(`/products?search=${encodeURIComponent(searchText)}&limit=25&order_by=name&order=asc`);
       const productsFromApi = (Array.isArray(response) ? response : (response?.data || [])) as ProductRef[];
       const normalizedSearch = searchText.toLowerCase();
@@ -238,11 +263,12 @@ export function useOrderForm(id?: string, onSuccess?: (action: SaveAction) => vo
       });
 
       setItems((prevItems) => {
-        if (lookupVersionRef.current[index] !== requestVersion) {
+        if (lookupVersionRef.current[rowKey] !== requestVersion) {
           return prevItems;
         }
 
-        const currentItem = prevItems[index];
+        const currentIndex = prevItems.findIndex((item) => item.clientRowId === rowKey);
+        const currentItem = prevItems[currentIndex];
         if (!currentItem) {
           return prevItems;
         }
@@ -254,24 +280,24 @@ export function useOrderForm(id?: string, onSuccess?: (action: SaveAction) => vo
 
         const nextItems = [...prevItems];
         if (!productMatch) {
-          nextItems[index].product_id = '';
-          nextItems[index].product = null;
+          nextItems[currentIndex].product_id = '';
+          nextItems[currentIndex].product = null;
           return nextItems;
         }
 
-        nextItems[index].product_id = productMatch.id;
-        nextItems[index].product = productMatch;
-        nextItems[index].folio = productMatch.folio || '';
-        nextItems[index].name = productMatch.name || '';
-        nextItems[index].unit = productMatch.unit || '';
+        nextItems[currentIndex].product_id = productMatch.id;
+        nextItems[currentIndex].product = productMatch;
+        nextItems[currentIndex].folio = productMatch.folio || '';
+        nextItems[currentIndex].name = productMatch.name || '';
+        nextItems[currentIndex].unit = productMatch.unit || '';
 
         if (selectedClient?.priceList?.productPrices) {
           const priceObj = selectedClient.priceList.productPrices.find(
             (p) => p.product_id === productMatch.id,
           );
-          nextItems[index].unit_price = priceObj ? priceObj.price : 0;
+          nextItems[currentIndex].unit_price = priceObj ? priceObj.price : 0;
         } else {
-          nextItems[index].unit_price = 0;
+          nextItems[currentIndex].unit_price = 0;
         }
 
         return nextItems;
@@ -306,7 +332,7 @@ export function useOrderForm(id?: string, onSuccess?: (action: SaveAction) => vo
 
     setItems((prevItems) => {
       const nextItems = prevItems.filter((item) => String(item.product_id || '').trim() !== '');
-      return nextItems.length > 0 ? nextItems : [{ ...EMPTY_ITEM }];
+      return nextItems.length > 0 ? nextItems : [createEmptyItem()];
     });
 
     const payload = {

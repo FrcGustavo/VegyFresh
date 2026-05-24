@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router';
 import { fetchApi } from '../../../api';
+import { validateImageFile } from '../../../utils/imageValidation';
 import {
   findLocationByPostalCode,
   getCitiesByCountryAndState,
@@ -52,6 +53,7 @@ export function useClientForm(id?: string, onSuccess?: (action: SaveAction) => v
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [formData, setFormData] = useState<ClientFormData>(EMPTY_CLIENT_FORM);
+  const [avatarFileError, setAvatarFileError] = useState('');
   const [isDisabled, setIsDisabled] = useState(!!id);
 
   const { data: existingClient, isLoading } = useQuery({
@@ -78,10 +80,12 @@ export function useClientForm(id?: string, onSuccess?: (action: SaveAction) => v
           avatar_url: existingClient.avatar_url || '',
           price_list_id: existingClient.price_list_id || '',
         });
+        setAvatarFileError('');
       });
     } else if (!id) {
       queueMicrotask(() => {
         setFormData(EMPTY_CLIENT_FORM);
+        setAvatarFileError('');
       });
     }
   }, [id, existingClient]);
@@ -124,10 +128,18 @@ export function useClientForm(id?: string, onSuccess?: (action: SaveAction) => v
   };
 
   const handleAvatarFileChange = (file: File) => {
+    const validationError = validateImageFile(file);
+    if (validationError) {
+      setAvatarFileError(validationError);
+      return;
+    }
+
+    setAvatarFileError('');
     const reader = new FileReader();
     reader.onload = () => {
-      if (typeof reader.result === 'string') {
-        setFormData((prev) => ({ ...prev, avatar_url: reader.result }));
+      const result = reader.result;
+      if (typeof result === 'string') {
+        setFormData((prev) => ({ ...prev, avatar_url: result }));
       }
     };
     reader.readAsDataURL(file);
@@ -176,6 +188,7 @@ export function useClientForm(id?: string, onSuccess?: (action: SaveAction) => v
   return {
     formData,
     priceLists,
+    avatarFileError,
     countries,
     states,
     cities,

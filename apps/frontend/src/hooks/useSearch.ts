@@ -1,5 +1,8 @@
 import { useState, useMemo } from 'react';
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null;
+
 export function useSearch<T extends Record<string, unknown>>(items: T[], fields: (keyof T | string)[]) {
   const [query, setQuery] = useState('');
 
@@ -10,7 +13,13 @@ export function useSearch<T extends Record<string, unknown>>(items: T[], fields:
       fields.some((field) => {
         const parts = (field as string).split('.');
         let value: unknown = item;
-        for (const part of parts) value = value?.[part];
+        for (const part of parts) {
+          if (!isRecord(value)) {
+            value = undefined;
+            break;
+          }
+          value = value[part];
+        }
         return String(value ?? '').toLowerCase().includes(q);
       })
     );

@@ -12,6 +12,8 @@ interface OrderFormData {
   created_at: string;
 }
 interface OrderFormItem {
+  id?: string | number;
+  clientRowId: string;
   product_id: string;
   quantity: number | string;
   unit_price: number | string;
@@ -209,7 +211,7 @@ export default function OrderForm({
                 </TableHead>
                 <TableBody>
                   {items.map((item, index) => (
-                    <TableRow key={index}>
+                    <TableRow key={item.id ?? item.clientRowId}>
                       <TableCell sx={cellSx}>
                         <TextField
                           fullWidth

@@ -151,7 +151,7 @@ function ProductsTable({
   const handleNavigateItem = (newIndex: number) => {
     if (newIndex >= 0 && newIndex < list.length) {
       const newItem = list[newIndex];
-      setModalProductId(newItem.id);
+      setModalProductId(String(newItem.id));
       setSelectedRowId(String(newItem.id ?? ''));
     }
   };
@@ -260,7 +260,7 @@ function ProductsTable({
                   selected={selectedRowId === rowId}
                   onClick={() => setSelectedRowId(rowId)}
                   onDoubleClick={() => {
-                    setModalProductId(item.id);
+                    setModalProductId(String(item.id));
                     setIsModalOpen(true);
                     setSelectedRowId(rowId);
                   }}

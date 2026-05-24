@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { useState, useRef } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { Paper, Box, IconButton, Tooltip } from '@mui/material';
 import { Close as CloseIcon, Minimize as MinimizeIcon, Maximize as MaximizeIcon } from '@mui/icons-material';
 
@@ -33,8 +33,20 @@ export default function FloatingModal({
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const modalRef = useRef<HTMLDivElement>(null);
+  const titleId = useId();
+
+  useEffect(() => {
+    if (!isOpen) return;
+    modalRef.current?.focus();
+  }, [isOpen]);
 
   if (!isOpen) return null;
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Escape') {
+      onClose();
+    }
+  };
 
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     if ((e.target as HTMLElement).closest('button') || (e.target as HTMLElement).closest('input')) {
@@ -64,9 +76,15 @@ export default function FloatingModal({
   return (
     <Paper
       ref={modalRef}
+      role="dialog"
+      aria-modal="false"
+      aria-labelledby={titleId}
+      tabIndex={-1}
+      data-testid="floating-modal"
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
+      onKeyDown={handleKeyDown}
       sx={{
         position: 'fixed',
         left: `${position.x}px`,
@@ -85,6 +103,7 @@ export default function FloatingModal({
     >
       {/* Header - Draggable */}
       <Box
+        data-testid="floating-modal-header"
         onMouseDown={handleMouseDown}
         sx={{
           padding: '0.5rem 1rem',
@@ -97,10 +116,13 @@ export default function FloatingModal({
           userSelect: 'none',
         }}
       >
-        <span>{title}</span>
+        <Box component="h2" id={titleId} sx={{ m: 0, fontSize: '1rem', fontWeight: 600 }}>
+          {title}
+        </Box>
         <Box>
           <Tooltip title={isMinimized ? 'Maximizar' : 'Minimizar'}>
             <IconButton
+              aria-label={isMinimized ? 'Maximizar' : 'Minimizar'}
               size="small"
               onClick={() => setIsMinimized(!isMinimized)}
               sx={{ color: 'white' }}
@@ -110,6 +132,7 @@ export default function FloatingModal({
           </Tooltip>
           <Tooltip title="Cerrar">
             <IconButton
+              aria-label="Cerrar"
               size="small"
               onClick={onClose}
               sx={{ color: 'white' }}

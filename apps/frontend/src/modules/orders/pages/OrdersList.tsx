@@ -180,7 +180,7 @@ function OrdersTable({
   const handleNavigateItem = (newIndex: number) => {
     if (newIndex >= 0 && newIndex < list.length) {
       const newItem = list[newIndex];
-      setModalOrderId(newItem.id);
+      setModalOrderId(String(newItem.id));
       setSelectedRowId(String(newItem.id ?? ''));
     }
   };
@@ -308,7 +308,7 @@ function OrdersTable({
                   selected={selectedRowId === rowId}
                   onClick={() => setSelectedRowId(rowId)}
                   onDoubleClick={() => {
-                    setModalOrderId(item.id);
+                    setModalOrderId(String(item.id));
                     setIsModalOpen(true);
                     setSelectedRowId(rowId);
                   }}

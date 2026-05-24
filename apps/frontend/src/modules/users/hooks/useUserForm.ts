@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router';
 import { fetchApi } from '../../../api';
+import { validateImageFile } from '../../../utils/imageValidation';
 
 type SaveAction = 'save' | 'save-and-close' | 'save-and-new';
 type UserChangeEvent = { target: { name: string; value: string } };
@@ -26,6 +27,7 @@ export function useUserForm(id?: string, onSuccess?: (action: SaveAction) => voi
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [formData, setFormData] = useState<UserFormData>(EMPTY_USER_FORM);
+  const [avatarFileError, setAvatarFileError] = useState('');
   const [isDisabled, setIsDisabled] = useState(!!id);
 
   const { data: existingUser, isLoading } = useQuery({
@@ -43,10 +45,12 @@ export function useUserForm(id?: string, onSuccess?: (action: SaveAction) => voi
           role_id: existingUser.role_id || '',
           avatar_url: existingUser.avatar_url || '',
         });
+        setAvatarFileError('');
       });
     } else if (!id) {
       queueMicrotask(() => {
         setFormData(EMPTY_USER_FORM);
+        setAvatarFileError('');
       });
     }
   }, [id, existingUser]);
@@ -60,10 +64,18 @@ export function useUserForm(id?: string, onSuccess?: (action: SaveAction) => voi
   };
 
   const handleAvatarFileChange = (file: File) => {
+    const validationError = validateImageFile(file);
+    if (validationError) {
+      setAvatarFileError(validationError);
+      return;
+    }
+
+    setAvatarFileError('');
     const reader = new FileReader();
     reader.onload = () => {
-      if (typeof reader.result === 'string') {
-        setFormData((prev) => ({ ...prev, avatar_url: reader.result }));
+      const result = reader.result;
+      if (typeof result === 'string') {
+        setFormData((prev) => ({ ...prev, avatar_url: result }));
       }
     };
     reader.readAsDataURL(file);
@@ -103,6 +115,7 @@ export function useUserForm(id?: string, onSuccess?: (action: SaveAction) => voi
 
   return {
     formData,
+    avatarFileError,
     roles,
     isLoading,
     isSaving: mutation.isPending,

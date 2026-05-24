@@ -151,7 +151,7 @@ function ClientsTable({
   const handleNavigateItem = (newIndex: number) => {
     if (newIndex >= 0 && newIndex < list.length) {
       const newItem = list[newIndex];
-      setModalClientId(newItem.id);
+      setModalClientId(String(newItem.id));
       setSelectedRowId(String(newItem.id ?? ''));
     }
   };
@@ -256,7 +256,7 @@ function ClientsTable({
                   selected={selectedRowId === rowId}
                   onClick={() => setSelectedRowId(rowId)}
                   onDoubleClick={() => {
-                    setModalClientId(item.id);
+                    setModalClientId(String(item.id));
                     setIsModalOpen(true);
                     setSelectedRowId(rowId);
                   }}

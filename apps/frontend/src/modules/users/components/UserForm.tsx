@@ -14,6 +14,7 @@ interface RoleOption {
 
 interface UserFormProps {
   formData: UserFormData;
+  avatarFileError?: string;
   roles: RoleOption[];
   isCreatingRole: boolean;
   handleChange: (e: UserChangeEvent) => void;
@@ -25,6 +26,7 @@ interface UserFormProps {
 
 export default function UserForm({
   formData,
+  avatarFileError,
   roles,
   isCreatingRole,
   handleChange,
@@ -73,6 +75,11 @@ export default function UserForm({
                   }}
                 />
               </Button>
+              {avatarFileError && (
+                <Alert severity="error" sx={{ width: '100%' }}>
+                  {avatarFileError}
+                </Alert>
+              )}
             </Box>
 
             <Box sx={{ flex: 1, minWidth: 320 }}>
