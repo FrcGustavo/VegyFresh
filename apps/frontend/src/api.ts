@@ -36,6 +36,7 @@ async function attemptTokenRefresh(): Promise<string | null> {
 
   const refreshToken = authStorage.getRefreshToken();
   if (!refreshToken) {
+    authStorage.clearTokens();
     window.dispatchEvent(new CustomEvent('auth:logout'));
     return null;
   }

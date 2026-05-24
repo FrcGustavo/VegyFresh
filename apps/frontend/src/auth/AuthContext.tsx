@@ -39,8 +39,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     authApi
       .me(accessToken)
-      .then((user) => {
-        setState({ user, isAuthenticated: true, isLoading: false });
+      .then((response) => {
+        setState({ user: response.user, isAuthenticated: true, isLoading: false });
       })
       .catch(() => {
         authStorage.clearTokens();
@@ -51,6 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Listen for forced logout (e.g. refresh failed in api.ts)
   useEffect(() => {
     const handleForceLogout = () => {
+      authStorage.clearTokens();
       setState({ user: null, isAuthenticated: false, isLoading: false });
     };
 
@@ -59,15 +60,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (payload: LoginPayload): Promise<void> => {
-    const tokens = await authApi.login(payload);
-    authStorage.setTokens(tokens.access_token, tokens.refresh_token);
-    setState({ user: tokens.user, isAuthenticated: true, isLoading: false });
+    const response = await authApi.login(payload);
+    authStorage.setTokens(response.access_token, response.refresh_token);
+    setState({ user: response.user, isAuthenticated: true, isLoading: false });
   };
 
   const signup = async (payload: SignupPayload): Promise<void> => {
-    const tokens = await authApi.signup(payload);
-    authStorage.setTokens(tokens.access_token, tokens.refresh_token);
-    setState({ user: tokens.user, isAuthenticated: true, isLoading: false });
+    const response = await authApi.signup(payload);
+    authStorage.setTokens(response.access_token, response.refresh_token);
+    setState({ user: response.user, isAuthenticated: true, isLoading: false });
   };
 
   const logout = async (): Promise<void> => {
