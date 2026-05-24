@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router';
 import { fetchApi } from '../../../api';
+import { createClientRowId } from '../../../utils/clientRowId';
 
 type SaveAction = 'save' | 'save-and-close' | 'save-and-new';
 type ProductChangeEvent = { target: { name: string; value: string } };
@@ -13,9 +14,15 @@ interface ProductFormData {
   supplier_id: string;
 }
 interface ProductPrice {
+  id?: string | number;
   clientRowId: string;
   price_list_id: string;
   price: number | string;
+}
+interface ExistingProductPrice {
+  id?: string | number;
+  price_list_id: string;
+  price: number;
 }
 interface SupplierOption {
   id: string;
@@ -32,11 +39,6 @@ const EMPTY_PRODUCT_FORM: ProductFormData = {
   stock: 0,
   supplier_id: '',
 };
-
-const createClientRowId = () =>
-  typeof crypto !== 'undefined' && 'randomUUID' in crypto
-    ? crypto.randomUUID()
-    : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
 const createEmptyPrice = (): ProductPrice => ({
   clientRowId: createClientRowId(),
@@ -70,8 +72,9 @@ export function useProductForm(id?: string, onSuccess?: (action: SaveAction) => 
       });
       if (existingProduct.productPrices) {
         queueMicrotask(() => {
-          setPrices(existingProduct.productPrices.map((p: { price_list_id: string; price: number }) => ({
-            clientRowId: createClientRowId(),
+          setPrices(existingProduct.productPrices.map((p: ExistingProductPrice) => ({
+            id: p.id,
+            clientRowId: String(p.id ?? createClientRowId()),
             price_list_id: p.price_list_id,
             price: p.price,
           })));
@@ -97,11 +100,11 @@ export function useProductForm(id?: string, onSuccess?: (action: SaveAction) => 
   };
 
   const addPriceField = () => {
-    setPrices([...prices, createEmptyPrice()]);
+    setPrices((prevPrices) => [...prevPrices, createEmptyPrice()]);
   };
 
   const removePriceField = (index: number) => {
-    setPrices(prices.filter((_, i) => i !== index));
+    setPrices((prevPrices) => prevPrices.filter((_, i) => i !== index));
   };
 
   const updatePriceField = (index: number, field: string, value: string | number) => {

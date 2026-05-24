@@ -119,7 +119,7 @@ export default function PriceListForm({
               </TableHead>
               <TableBody>
                 {productsList.map((item, index) => (
-                  <TableRow key={item.clientRowId}>
+                  <TableRow key={item.id ?? item.clientRowId}>
                     <TableCell sx={cellSx}>
                       <TextField
                         fullWidth

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router';
 import { fetchApi } from '../../../../api';
+import { createClientRowId } from '../../../../utils/clientRowId';
 
 type SaveAction = 'save' | 'save-and-close' | 'save-and-new';
 interface PriceListProductRow {
@@ -15,10 +16,12 @@ interface ProductOption {
   id: string;
   name: string;
 }
-const createClientRowId = () =>
-  typeof crypto !== 'undefined' && 'randomUUID' in crypto
-    ? crypto.randomUUID()
-    : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+interface ExistingProductPrice {
+  product_id: string;
+  product?: { name?: string };
+  price: number;
+  id?: string;
+}
 
 const createEmptyProductRow = (): PriceListProductRow => ({
   clientRowId: createClientRowId(),
@@ -49,8 +52,8 @@ export function usePriceListForm(id?: string, onSuccess?: (action: SaveAction) =
       });
       if (existingPriceList.productPrices) {
         queueMicrotask(() => {
-          setProductsList(existingPriceList.productPrices.map((pp: { product_id: string; product?: { name?: string }; price: number; id: string }) => ({
-            clientRowId: createClientRowId(),
+          setProductsList(existingPriceList.productPrices.map((pp: ExistingProductPrice) => ({
+            clientRowId: String(pp.id ?? createClientRowId()),
             product_id: pp.product_id,
             name: pp.product?.name || '',
             price: pp.price,
@@ -95,7 +98,7 @@ export function usePriceListForm(id?: string, onSuccess?: (action: SaveAction) =
     }
   });
 
-  const addProductField = () => setProductsList([...productsList, createEmptyProductRow()]);
+  const addProductField = () => setProductsList((prevProducts) => [...prevProducts, createEmptyProductRow()]);
   
   const updateProductField = (index: number, field: string, value: string | number) => {
     const newList = [...productsList];
@@ -110,7 +113,7 @@ export function usePriceListForm(id?: string, onSuccess?: (action: SaveAction) =
   };
 
   const removeProductField = (index: number) => {
-    setProductsList(productsList.filter((_, i) => i !== index));
+    setProductsList((prevProducts) => prevProducts.filter((_, i) => i !== index));
   };
 
   const handleSubmit = (action: SaveAction = 'save') => {

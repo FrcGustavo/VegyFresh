@@ -10,6 +10,7 @@ interface ProductFormData {
   supplier_id: string;
 }
 interface ProductPrice {
+  id?: string | number;
   clientRowId: string;
   price_list_id: string;
   price: number | string;
@@ -66,7 +67,7 @@ export default function ProductForm({
 
           <Typography variant="h6" sx={{ mt: 3, mb: 1 }}>Precios</Typography>
           {prices.map((p, index) => (
-            <Box key={p.clientRowId} sx={{ display: 'flex', gap: 2, mb: 2, alignItems: 'center' }}>
+            <Box key={p.id ?? p.clientRowId} sx={{ display: 'flex', gap: 2, mb: 2, alignItems: 'center' }}>
               <TextField 
                 select 
                 label="Lista de Precio" 
