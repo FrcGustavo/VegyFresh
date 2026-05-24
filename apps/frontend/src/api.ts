@@ -27,7 +27,7 @@ const parseErrorPayload = async (response: Response): Promise<ApiErrorPayload | 
 
 // Default keeps legacy call sites working while new API services can opt into typed responses.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function fetchApi<T = any>(endpoint: string, options?: RequestInit): Promise<T> {
+export async function fetchApi<T = any>(endpoint: string, options?: RequestInit): Promise<T | null> {
   const response = await fetch(`${API_URL}${endpoint}`, {
     ...options,
     headers: {
@@ -42,7 +42,7 @@ export async function fetchApi<T = any>(endpoint: string, options?: RequestInit)
   }
   
   // For DELETE requests or empty responses
-  if (response.status === 204) return null as T;
+  if (response.status === 204) return null;
   
   return parseJson<T>(response);
 }
