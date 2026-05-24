@@ -41,10 +41,12 @@ export function useSupplierForm(id?: string, onSuccess?: (action: SaveAction) =>
           phone_number: existingSupplier.phone_number || '',
           logo_url: existingSupplier.logo_url || '',
         });
+        setLogoFileError('');
       });
     } else if (!id) {
       queueMicrotask(() => {
         setFormData(EMPTY_SUPPLIER_FORM);
+        setLogoFileError('');
       });
     }
   }, [id, existingSupplier]);

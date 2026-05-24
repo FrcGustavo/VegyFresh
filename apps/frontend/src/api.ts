@@ -4,10 +4,10 @@ export interface ApiErrorPayload {
   message?: string;
 }
 
-const parseJson = async <T>(response: Response): Promise<T> => {
+const parseJson = async <T>(response: Response): Promise<T | null> => {
   const text = await response.text();
-  if (!text) {
-    throw new Error('Respuesta vacía del servidor');
+  if (!text || !text.trim()) {
+    return null;
   }
 
   try {

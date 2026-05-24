@@ -45,10 +45,12 @@ export function useUserForm(id?: string, onSuccess?: (action: SaveAction) => voi
           role_id: existingUser.role_id || '',
           avatar_url: existingUser.avatar_url || '',
         });
+        setAvatarFileError('');
       });
     } else if (!id) {
       queueMicrotask(() => {
         setFormData(EMPTY_USER_FORM);
+        setAvatarFileError('');
       });
     }
   }, [id, existingUser]);

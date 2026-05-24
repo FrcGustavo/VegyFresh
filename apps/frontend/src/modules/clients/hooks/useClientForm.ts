@@ -80,10 +80,12 @@ export function useClientForm(id?: string, onSuccess?: (action: SaveAction) => v
           avatar_url: existingClient.avatar_url || '',
           price_list_id: existingClient.price_list_id || '',
         });
+        setAvatarFileError('');
       });
     } else if (!id) {
       queueMicrotask(() => {
         setFormData(EMPTY_CLIENT_FORM);
+        setAvatarFileError('');
       });
     }
   }, [id, existingClient]);
