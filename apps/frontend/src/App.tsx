@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router';
 import { Box, CircularProgress, CssBaseline, ThemeProvider, createTheme, useMediaQuery } from '@mui/material';
 import MainLayout from './layout/MainLayout';
+import { AuthProvider, useAuth } from './auth/AuthContext';
 
 const OrdersList = lazy(() => import('./modules/orders/pages/OrdersList'));
 const ProductsList = lazy(() => import('./modules/products/pages/ProductsList'));
@@ -10,6 +11,8 @@ const ClientsList = lazy(() => import('./modules/clients/pages/ClientsList'));
 const SuppliersList = lazy(() => import('./modules/suppliers/pages/SuppliersList'));
 const UsersList = lazy(() => import('./modules/users/pages/UsersList'));
 const SettingsPage = lazy(() => import('./modules/settings/pages/SettingsPage'));
+const LoginPage = lazy(() => import('./modules/auth/pages/LoginPage'));
+const SignupPage = lazy(() => import('./modules/auth/pages/SignupPage'));
 
 type ThemePreference = 'light' | 'dark' | 'system';
 
@@ -275,6 +278,21 @@ function RouteFallback() {
   );
 }
 
+/** Redirects unauthenticated users to /login. Shows a spinner while auth initialises. */
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
+}
+
 function App() {
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
   const [themePreference, setThemePreference] = useState<ThemePreference>(getStoredThemePreference);
@@ -296,31 +314,39 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline enableColorScheme />
       <BrowserRouter>
-        <Suspense fallback={<RouteFallback />}>
-          <Routes>
-            <Route
-              path="/"
-              element={<MainLayout />}
-            >
-              <Route index element={<Navigate to="/orders" replace />} />
-              <Route path="orders" element={<OrdersList />} />
-              <Route path="products" element={<ProductsList />} />
-              <Route path="price-lists" element={<PriceListsList />} />
-              <Route path="clients" element={<ClientsList />} />
-              <Route path="suppliers" element={<SuppliersList />} />
-              <Route path="users" element={<UsersList />} />
+        <AuthProvider>
+          <Suspense fallback={<RouteFallback />}>
+            <Routes>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/signup" element={<SignupPage />} />
               <Route
-                path="settings"
-                element={(
-                  <SettingsPage
-                    themePreference={themePreference}
-                    onThemePreferenceChange={setThemePreference}
-                  />
-                )}
-              />
-            </Route>
-          </Routes>
-        </Suspense>
+                path="/"
+                element={
+                  <ProtectedRoute>
+                    <MainLayout />
+                  </ProtectedRoute>
+                }
+              >
+                <Route index element={<Navigate to="/orders" replace />} />
+                <Route path="orders" element={<OrdersList />} />
+                <Route path="products" element={<ProductsList />} />
+                <Route path="price-lists" element={<PriceListsList />} />
+                <Route path="clients" element={<ClientsList />} />
+                <Route path="suppliers" element={<SuppliersList />} />
+                <Route path="users" element={<UsersList />} />
+                <Route
+                  path="settings"
+                  element={(
+                    <SettingsPage
+                      themePreference={themePreference}
+                      onThemePreferenceChange={setThemePreference}
+                    />
+                  )}
+                />
+              </Route>
+            </Routes>
+          </Suspense>
+        </AuthProvider>
       </BrowserRouter>
     </ThemeProvider>
   );

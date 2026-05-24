@@ -25,24 +25,93 @@ const parseErrorPayload = async (response: Response): Promise<ApiErrorPayload | 
   }
 };
 
+// ─── Token refresh queue ──────────────────────────────────────────────────────
+let _isRefreshing = false;
+let _refreshQueue: Array<(token: string | null) => void> = [];
+
+async function attemptTokenRefresh(): Promise<string | null> {
+  // Lazy imports to avoid circular dependency issues at module init
+  const { authStorage } = await import('./auth/authStorage');
+  const { authApi } = await import('./auth/authApi');
+
+  const refreshToken = authStorage.getRefreshToken();
+  if (!refreshToken) {
+    window.dispatchEvent(new CustomEvent('auth:logout'));
+    return null;
+  }
+
+  try {
+    const tokens = await authApi.refresh(refreshToken);
+    authStorage.setTokens(tokens.access_token, tokens.refresh_token);
+    return tokens.access_token;
+  } catch {
+    authStorage.clearTokens();
+    window.dispatchEvent(new CustomEvent('auth:logout'));
+    return null;
+  }
+}
+
+function buildHeaders(accessToken: string | null, extra?: HeadersInit): HeadersInit {
+  return {
+    'Content-Type': 'application/json',
+    ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+    ...extra,
+  };
+}
+
 // Default keeps legacy call sites working while new API services can opt into typed responses.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function fetchApi<T = any>(endpoint: string, options?: RequestInit): Promise<T | null> {
+  const { authStorage } = await import('./auth/authStorage');
+  const accessToken = authStorage.getAccessToken();
+
   const response = await fetch(`${API_URL}${endpoint}`, {
     ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
+    headers: buildHeaders(accessToken, options?.headers),
   });
-  
+
+  if (response.status === 401) {
+    let newToken: string | null;
+
+    if (_isRefreshing) {
+      // Queue subsequent 401s until the ongoing refresh resolves
+      newToken = await new Promise<string | null>((resolve) => {
+        _refreshQueue.push(resolve);
+      });
+    } else {
+      _isRefreshing = true;
+      newToken = await attemptTokenRefresh();
+      _refreshQueue.forEach((cb) => cb(newToken));
+      _refreshQueue = [];
+      _isRefreshing = false;
+    }
+
+    if (!newToken) {
+      throw new Error('Sesión expirada. Por favor inicia sesión nuevamente.');
+    }
+
+    // Retry original request with new token
+    const retryResponse = await fetch(`${API_URL}${endpoint}`, {
+      ...options,
+      headers: buildHeaders(newToken, options?.headers),
+    });
+
+    if (!retryResponse.ok) {
+      const error = await parseErrorPayload(retryResponse);
+      throw new Error(error?.message || 'Error en la petición');
+    }
+
+    if (retryResponse.status === 204) return null;
+    return parseJson<T>(retryResponse);
+  }
+
   if (!response.ok) {
     const error = await parseErrorPayload(response);
     throw new Error(error?.message || 'Error en la petición');
   }
-  
+
   // For DELETE requests or empty responses
   if (response.status === 204) return null;
-  
+
   return parseJson<T>(response);
 }
