@@ -77,7 +77,13 @@ export const authApi = {
   me: (accessToken: string): Promise<AuthContextResponse> =>
     fetch(`${API_URL}/auth/me`, {
       headers: { Authorization: `Bearer ${accessToken}` },
-    }).then((r) => r.json() as Promise<AuthContextResponse>),
+    }).then(async (r) => {
+      if (!r.ok) {
+        const err = await r.json().catch(() => ({})) as { message?: string };
+        throw new Error(err.message || 'Error de autenticación');
+      }
+      return r.json() as Promise<AuthContextResponse>;
+    }),
 
   logout: (accessToken: string): Promise<void> =>
     fetch(`${API_URL}/auth/logout`, {

@@ -15,7 +15,7 @@ export class OrganizationsService {
     private readonly organizationUsersRepository: Repository<OrganizationUser>,
   ) {}
 
-  async create(createOrganizationDto: CreateOrganizationDto) {
+  async create(createOrganizationDto: CreateOrganizationDto, userId: string) {
     const folio = await this.buildOrganizationFolio();
     const organization = this.organizationsRepository.create({
       ...createOrganizationDto,
@@ -26,7 +26,18 @@ export class OrganizationsService {
       address: createOrganizationDto.address ?? null,
     });
 
-    return this.organizationsRepository.save(organization);
+    const savedOrganization = await this.organizationsRepository.save(organization);
+
+    // Create organization membership for the creator
+    const membership = this.organizationUsersRepository.create({
+      organization_id: savedOrganization.id,
+      user_id: userId,
+      role: 'owner' as any,
+      is_active: true,
+    });
+    await this.organizationUsersRepository.save(membership);
+
+    return savedOrganization;
   }
 
   async findAll(userId: string) {
@@ -42,7 +53,9 @@ export class OrganizationsService {
     return memberships.map((membership) => membership.organization);
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, userId: string) {
+    await this.findMembershipOrFail(userId, id);
+
     const organization = await this.organizationsRepository.findOne({
       where: { id },
     });
@@ -54,14 +67,14 @@ export class OrganizationsService {
     return organization;
   }
 
-  async update(id: string, updateOrganizationDto: UpdateOrganizationDto) {
-    const organization = await this.findOne(id);
+  async update(id: string, updateOrganizationDto: UpdateOrganizationDto, userId: string) {
+    const organization = await this.findOne(id, userId);
     this.organizationsRepository.merge(organization, updateOrganizationDto);
     return this.organizationsRepository.save(organization);
   }
 
-  async remove(id: string) {
-    const organization = await this.findOne(id);
+  async remove(id: string, userId: string) {
+    const organization = await this.findOne(id, userId);
     await this.organizationsRepository.remove(organization);
     return { id, deleted: true };
   }

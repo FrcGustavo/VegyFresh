@@ -31,21 +31,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Restore session from localStorage on mount
   useEffect(() => {
-    const accessToken = authStorage.getAccessToken();
-    if (!accessToken) {
-      setState({ user: null, isAuthenticated: false, isLoading: false });
-      return;
-    }
-
-    authApi
-      .me(accessToken)
-      .then((response) => {
-        setState({ user: response.user, isAuthenticated: true, isLoading: false });
-      })
-      .catch(() => {
-        authStorage.clearTokens();
+    const restoreSession = async () => {
+      const accessToken = authStorage.getAccessToken();
+      const refreshToken = authStorage.getRefreshToken();
+      
+      if (!accessToken && !refreshToken) {
         setState({ user: null, isAuthenticated: false, isLoading: false });
-      });
+        return;
+      }
+
+      try {
+        const response = await authApi.me(accessToken!);
+        setState({ user: response.user, isAuthenticated: true, isLoading: false });
+      } catch (err) {
+        // If me() fails and refresh token exists, attempt refresh+retry
+        if (refreshToken) {
+          try {
+            const refreshedTokens = await authApi.refresh(refreshToken);
+            authStorage.setTokens(refreshedTokens.access_token, refreshedTokens.refresh_token);
+            const response = await authApi.me(refreshedTokens.access_token);
+            setState({ user: response.user, isAuthenticated: true, isLoading: false });
+          } catch {
+            authStorage.clearTokens();
+            setState({ user: null, isAuthenticated: false, isLoading: false });
+          }
+        } else {
+          authStorage.clearTokens();
+          setState({ user: null, isAuthenticated: false, isLoading: false });
+        }
+      }
+    };
+
+    restoreSession();
   }, []);
 
   // Listen for forced logout (e.g. refresh failed in api.ts)
