@@ -29,10 +29,17 @@ export class OrganizationsService {
     return this.organizationsRepository.save(organization);
   }
 
-  findAll() {
-    return this.organizationsRepository.find({
+  async findAll(userId: string) {
+    const memberships = await this.organizationUsersRepository.find({
+      where: {
+        user_id: userId,
+        is_active: true,
+      },
+      relations: { organization: true },
       order: { created_at: 'DESC' },
     });
+
+    return memberships.map((membership) => membership.organization);
   }
 
   async findOne(id: string) {

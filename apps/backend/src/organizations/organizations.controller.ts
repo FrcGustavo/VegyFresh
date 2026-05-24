@@ -13,6 +13,8 @@ import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { Permissions } from '../auth/decorators/permissions.decorator';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import type { AuthenticatedUser } from '../auth/types/authenticated-user.type';
 
 @ApiTags('organizations')
 @Controller('organizations')
@@ -31,8 +33,8 @@ export class OrganizationsController {
   @Roles('owner', 'admin')
   @Permissions('organization:manage')
   @ApiOperation({ summary: 'List organizations' })
-  findAll() {
-    return this.organizationsService.findAll();
+  findAll(@CurrentUser() user: AuthenticatedUser) {
+    return this.organizationsService.findAll(user.sub);
   }
 
   @Get(':id')
