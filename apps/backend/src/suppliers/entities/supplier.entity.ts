@@ -12,6 +12,8 @@ import {
 } from 'typeorm';
 import { Product } from '../../catalog/products/entities/product.entity';
 import { Organization } from '../../organizations/entities/organization.entity';
+import { Purchase } from '../../warehouse/entities/purchase.entity';
+import { InventoryMovement } from '../../warehouse/entities/inventory-movement.entity';
 
 @Entity('suppliers')
 @Unique('UQ_suppliers_org_folio', ['organization_id', 'folio'])
@@ -46,6 +48,15 @@ export class Supplier {
 
   @OneToMany(() => Product, (product) => product.supplier)
   products: Product[];
+
+  @OneToMany(() => Purchase, (purchase) => purchase.supplier)
+  purchases: Purchase[];
+
+  @OneToMany(
+    () => InventoryMovement,
+    (inventoryMovement) => inventoryMovement.supplier,
+  )
+  inventory_movements: InventoryMovement[];
 
   @CreateDateColumn()
   createdAt: Date;

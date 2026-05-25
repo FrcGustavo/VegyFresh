@@ -14,6 +14,8 @@ import { OrderItem } from '../../../orders/entities/order-item.entity';
 import { ProductPrice } from '../../product-prices/entities/product-price.entity';
 import { Supplier } from '../../../suppliers/entities/supplier.entity';
 import { Organization } from '../../../organizations/entities/organization.entity';
+import { PurchaseItem } from '../../../warehouse/entities/purchase-item.entity';
+import { InventoryMovement } from '../../../warehouse/entities/inventory-movement.entity';
 
 export enum ProductUnit {
   KG = 'kg',
@@ -58,7 +60,7 @@ export class Product {
   @JoinColumn({ name: 'organization_id' })
   organization!: Organization;
 
-  @Column({ type: 'int', default: 0 })
+  @Column({ type: 'decimal', precision: 12, scale: 3, default: 0 })
   stock!: number;
 
   @Column({
@@ -76,6 +78,15 @@ export class Product {
 
   @OneToMany(() => ProductPrice, (productPrice) => productPrice.product)
   productPrices!: ProductPrice[];
+
+  @OneToMany(() => PurchaseItem, (purchaseItem) => purchaseItem.product)
+  purchaseItems!: PurchaseItem[];
+
+  @OneToMany(
+    () => InventoryMovement,
+    (inventoryMovement) => inventoryMovement.product,
+  )
+  inventoryMovements!: InventoryMovement[];
 
   @CreateDateColumn()
   createdAt!: Date;

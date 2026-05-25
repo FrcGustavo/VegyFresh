@@ -14,6 +14,8 @@ import { PriceList } from '../../catalog/price-lists/entities/price-list.entity'
 import { Order } from '../../orders/entities/order.entity';
 import { ProductPrice } from '../../catalog/product-prices/entities/product-price.entity';
 import { User } from '../../users/entities/user.entity';
+import { Purchase } from '../../warehouse/entities/purchase.entity';
+import { InventoryMovement } from '../../warehouse/entities/inventory-movement.entity';
 
 @Entity('organizations')
 export class Organization {
@@ -62,6 +64,15 @@ export class Organization {
 
   @OneToMany(() => Order, (order) => order.organization)
   orders!: Order[];
+
+  @OneToMany(() => Purchase, (purchase) => purchase.organization)
+  purchases!: Purchase[];
+
+  @OneToMany(
+    () => InventoryMovement,
+    (inventoryMovement) => inventoryMovement.organization,
+  )
+  inventory_movements!: InventoryMovement[];
 
   @CreateDateColumn({ name: 'created_at' })
   created_at!: Date;
