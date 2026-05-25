@@ -9,7 +9,9 @@ type UserChangeEvent = { target: { name: string; value: string } };
 interface UserFormData {
   name: string;
   email: string;
+  password: string;
   role_id: string;
+  organization_role: 'member' | 'admin';
   avatar_url: string;
 }
 interface RoleOption {
@@ -19,7 +21,9 @@ interface RoleOption {
 const EMPTY_USER_FORM: UserFormData = {
   name: '',
   email: '',
+  password: '',
   role_id: '',
+  organization_role: 'member',
   avatar_url: '',
 };
 
@@ -29,6 +33,7 @@ export function useUserForm(id?: string, onSuccess?: (action: SaveAction) => voi
   const [formData, setFormData] = useState<UserFormData>(EMPTY_USER_FORM);
   const [avatarFileError, setAvatarFileError] = useState('');
   const [isDisabled, setIsDisabled] = useState(!!id);
+  const canAssignOrganizationRole = !id;
 
   const { data: existingUser, isLoading } = useQuery({
     queryKey: ['users', id],
@@ -42,7 +47,9 @@ export function useUserForm(id?: string, onSuccess?: (action: SaveAction) => voi
         setFormData({
           name: existingUser.name,
           email: existingUser.email,
+          password: '',
           role_id: existingUser.role_id || '',
+          organization_role: 'member',
           avatar_url: existingUser.avatar_url || '',
         });
         setAvatarFileError('');
@@ -92,10 +99,27 @@ export function useUserForm(id?: string, onSuccess?: (action: SaveAction) => voi
   });
 
   const mutation = useMutation({
-    mutationFn: (data: UserFormData) => fetchApi(id ? `/users/${id}` : '/users', {
-      method: id ? 'PATCH' : 'POST',
-      body: JSON.stringify(data)
-    }),
+    mutationFn: (data: UserFormData) => {
+      const payload: Partial<UserFormData> = {
+        name: data.name,
+        email: data.email,
+        role_id: data.role_id,
+        avatar_url: data.avatar_url || undefined,
+      };
+
+      if (!id && canAssignOrganizationRole) {
+        payload.organization_role = data.organization_role;
+      }
+
+      if (!id || data.password) {
+        payload.password = data.password;
+      }
+
+      return fetchApi(id ? `/users/${id}` : '/users', {
+        method: id ? 'PATCH' : 'POST',
+        body: JSON.stringify(payload),
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
     }
@@ -117,6 +141,8 @@ export function useUserForm(id?: string, onSuccess?: (action: SaveAction) => voi
     formData,
     avatarFileError,
     roles,
+    isEditing: !!id,
+    canAssignOrganizationRole,
     isLoading,
     isSaving: mutation.isPending,
     isCreatingRole: createAdminRoleMutation.isPending,

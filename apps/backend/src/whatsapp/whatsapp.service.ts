@@ -97,8 +97,16 @@ export class WhatsappService {
   }
 
   private async processMessage(phone: string, text: string): Promise<void> {
-    const client = await this.clientsService.findByPhone(phone);
-    const products = await this.productsService.findAll();
+    const organizationId = this.appConfig.whatsapp.organizationId;
+    if (!organizationId) {
+      this.logger.warn(
+        '[webhook:incoming] WHATSAPP_ORGANIZATION_ID not configured — skipping tenant-scoped processing',
+      );
+      return;
+    }
+
+    const client = await this.clientsService.findByPhone(phone, organizationId);
+    const products = await this.productsService.findAll({}, organizationId);
 
     const catalog = products.map((p) => ({
       id: p.id,
@@ -133,6 +141,7 @@ export class WhatsappService {
       await this.createOrderFromInterpretation(
         client.id,
         interpretation.extractedData,
+        organizationId,
       );
     }
 
@@ -142,6 +151,7 @@ export class WhatsappService {
   private async createOrderFromInterpretation(
     clientId: string,
     extractedData: Record<string, unknown>,
+    organizationId: string,
   ): Promise<void> {
     const botUserId = this.appConfig.whatsapp.botUserId;
     if (!botUserId) {
@@ -163,7 +173,7 @@ export class WhatsappService {
     }
 
     // Load client with its price list
-    const client = await this.clientsService.findOne(clientId);
+    const client = await this.clientsService.findOne(clientId, organizationId);
     const priceListId = client.priceList?.id ?? null;
 
     // Fetch each product from DB and resolve unit_price from client's price list
@@ -176,7 +186,7 @@ export class WhatsappService {
     for (const raw of validRaw) {
       let product: Product;
       try {
-        product = await this.productsService.findOne(raw.product_id);
+        product = await this.productsService.findOne(raw.product_id, organizationId);
       } catch {
         this.logger.warn(
           `[order:create] Product id=${raw.product_id} not found in DB — skipping item`,
@@ -218,7 +228,7 @@ export class WhatsappService {
         status: OrderStatus.PENDING_REVIEW,
         origin: OrderOrigin.WHATSAPP,
         items,
-      });
+      }, organizationId);
       this.logger.log(
         `[order:create] ✅ Draft order created id=${order.id} items=${items.length}`,
       );

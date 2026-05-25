@@ -22,7 +22,7 @@ export class SuppliersService {
     private readonly suppliersRepository: Repository<Supplier>,
   ) {}
 
-  async create(createSupplierDto: CreateSupplierDto) {
+  async create(createSupplierDto: CreateSupplierDto, organizationId: string) {
     const supplierFolio = await this.buildSupplierFolio(
       this.suppliersRepository.manager,
     );
@@ -32,12 +32,13 @@ export class SuppliersService {
       email: createSupplierDto.email ?? null,
       phone_number: createSupplierDto.phone_number ?? null,
       logo_url: createSupplierDto.logo_url ?? null,
+      organization_id: organizationId,
     });
 
     return this.suppliersRepository.save(supplier);
   }
 
-  findAll(filters: FindAllSuppliersFilters = {}) {
+  findAll(filters: FindAllSuppliersFilters = {}, organizationId: string) {
     const orderBy = this.normalizeOrderBy(filters.orderBy);
     const order = filters.order ?? 'ASC';
     const limit = filters.limit ?? 25;
@@ -45,7 +46,12 @@ export class SuppliersService {
     const search = filters.search?.trim();
 
     return this.suppliersRepository.find({
-      where: search ? { name: ILike(`%${search}%`) } : undefined,
+      where: search
+        ? {
+            name: ILike(`%${search}%`),
+            organization_id: organizationId,
+          }
+        : { organization_id: organizationId },
       relations: { products: true },
       order: { [orderBy]: order },
       take: limit,
@@ -53,9 +59,9 @@ export class SuppliersService {
     });
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, organizationId: string) {
     const supplier = await this.suppliersRepository.findOne({
-      where: { id },
+      where: { id, organization_id: organizationId },
       relations: { products: true },
     });
 
@@ -66,14 +72,18 @@ export class SuppliersService {
     return supplier;
   }
 
-  async update(id: string, updateSupplierDto: UpdateSupplierDto) {
-    const supplier = await this.findOne(id);
+  async update(
+    id: string,
+    updateSupplierDto: UpdateSupplierDto,
+    organizationId: string,
+  ) {
+    const supplier = await this.findOne(id, organizationId);
     this.suppliersRepository.merge(supplier, updateSupplierDto);
     return this.suppliersRepository.save(supplier);
   }
 
-  async remove(id: string) {
-    const supplier = await this.findOne(id);
+  async remove(id: string, organizationId: string) {
+    const supplier = await this.findOne(id, organizationId);
     await this.suppliersRepository.remove(supplier);
     return { id, deleted: true };
   }

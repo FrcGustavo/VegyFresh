@@ -8,24 +8,46 @@ import {
   Param,
   Delete,
   Query,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import type { AuthenticatedUser } from '../auth/types/authenticated-user.type';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { Permissions } from '../auth/decorators/permissions.decorator';
 
 @ApiTags('users')
 @Controller('users')
+@UsePipes(
+  new ValidationPipe({
+    whitelist: true,
+    forbidNonWhitelisted: true,
+    forbidUnknownValues: true,
+    transform: true,
+    stopAtFirstError: true,
+  }),
+)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
+  @Roles('owner', 'admin')
+  @Permissions('users:manage')
   @ApiOperation({ summary: 'Create a new user' })
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
+  create(
+    @Body() createUserDto: CreateUserDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.usersService.create(createUserDto, user.org_id, user.role);
   }
 
   @Get()
+  @Roles('owner', 'admin')
+  @Permissions('users:manage')
   @ApiOperation({ summary: 'Get all users' })
   @ApiQuery({
     name: 'search',
@@ -49,6 +71,7 @@ export class UsersController {
     description: 'Pagination offset',
   })
   findAll(
+    @CurrentUser() user: AuthenticatedUser,
     @Query('search') search?: string,
     @Query('order_by') orderBy?: string,
     @Query('order') order?: string,
@@ -67,34 +90,51 @@ export class UsersController {
       throw new BadRequestException('order must be "asc" or "desc"');
     }
 
-    return this.usersService.findAll({
-      search,
-      orderBy,
-      order: normalizedOrder as 'ASC' | 'DESC' | undefined,
-      limit: parsedLimit,
-      offset: parsedOffset,
-    });
+    return this.usersService.findAll(
+      {
+        search,
+        orderBy,
+        order: normalizedOrder as 'ASC' | 'DESC' | undefined,
+        limit: parsedLimit,
+        offset: parsedOffset,
+      },
+      user.org_id,
+    );
   }
 
   @Get(':id')
+  @Roles('owner', 'admin')
+  @Permissions('users:manage')
   @ApiOperation({ summary: 'Get a user by ID' })
   @ApiParam({ name: 'id', description: 'User ID' })
-  findOne(@Param('id') id: string) {
-    return this.usersService.findOne(id);
+  findOne(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+    return this.usersService.findOne(id, user.org_id);
   }
 
   @Patch(':id')
+  @Roles('owner', 'admin')
+  @Permissions('users:manage')
   @ApiOperation({ summary: 'Update a user' })
   @ApiParam({ name: 'id', description: 'User ID' })
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(id, updateUserDto);
+  update(
+    @Param('id') id: string,
+    @Body() updateUserDto: UpdateUserDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.usersService.update(id, updateUserDto, user.org_id);
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete a user' })
+  @Roles('owner')
+  @Permissions('users:manage')
+  @ApiOperation({
+    summary: 'Remove a user from current organization',
+    description:
+      'Deactivates the user membership in the current organization and only hard-deletes the user when no active memberships remain.',
+  })
   @ApiParam({ name: 'id', description: 'User ID' })
-  remove(@Param('id') id: string) {
-    return this.usersService.remove(id);
+  remove(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+    return this.usersService.remove(id, user.org_id);
   }
 
   private parseNumberQuery(

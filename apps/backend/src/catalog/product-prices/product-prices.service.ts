@@ -18,31 +18,39 @@ export class ProductPricesService {
     private readonly priceListsRepository: Repository<PriceList>,
   ) {}
 
-  async create(createProductPriceDto: CreateProductPriceDto) {
+  async create(
+    createProductPriceDto: CreateProductPriceDto,
+    organizationId: string,
+  ) {
     const [product, priceList] = await Promise.all([
-      this.findProductOrFail(createProductPriceDto.product_id),
-      this.findPriceListOrFail(createProductPriceDto.price_list_id),
+      this.findProductOrFail(createProductPriceDto.product_id, organizationId),
+      this.findPriceListOrFail(
+        createProductPriceDto.price_list_id,
+        organizationId,
+      ),
     ]);
 
     const productPrice = this.productPricesRepository.create({
       ...createProductPriceDto,
       product,
       priceList,
+      organization_id: organizationId,
     });
 
     return this.productPricesRepository.save(productPrice);
   }
 
-  findAll() {
+  findAll(organizationId: string) {
     return this.productPricesRepository.find({
+      where: { organization_id: organizationId },
       relations: { product: true, priceList: true },
       order: { id: 'ASC' },
     });
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, organizationId: string) {
     const productPrice = await this.productPricesRepository.findOne({
-      where: { id },
+      where: { id, organization_id: organizationId },
       relations: { product: true, priceList: true },
     });
 
@@ -53,15 +61,25 @@ export class ProductPricesService {
     return productPrice;
   }
 
-  async update(id: string, updateProductPriceDto: UpdateProductPriceDto) {
-    const productPrice = await this.findOne(id);
+  async update(
+    id: string,
+    updateProductPriceDto: UpdateProductPriceDto,
+    organizationId: string,
+  ) {
+    const productPrice = await this.findOne(id, organizationId);
     const product =
       updateProductPriceDto.product_id !== undefined
-        ? await this.findProductOrFail(updateProductPriceDto.product_id)
+        ? await this.findProductOrFail(
+            updateProductPriceDto.product_id,
+            organizationId,
+          )
         : productPrice.product;
     const priceList =
       updateProductPriceDto.price_list_id !== undefined
-        ? await this.findPriceListOrFail(updateProductPriceDto.price_list_id)
+        ? await this.findPriceListOrFail(
+            updateProductPriceDto.price_list_id,
+            organizationId,
+          )
         : productPrice.priceList;
 
     this.productPricesRepository.merge(productPrice, {
@@ -73,14 +91,17 @@ export class ProductPricesService {
     return this.productPricesRepository.save(productPrice);
   }
 
-  async remove(id: string) {
-    const productPrice = await this.findOne(id);
+  async remove(id: string, organizationId: string) {
+    const productPrice = await this.findOne(id, organizationId);
     await this.productPricesRepository.remove(productPrice);
     return { id, deleted: true };
   }
 
-  private async findProductOrFail(id: string) {
-    const product = await this.productsRepository.findOneBy({ id });
+  private async findProductOrFail(id: string, organizationId: string) {
+    const product = await this.productsRepository.findOneBy({
+      id,
+      organization_id: organizationId,
+    });
     if (!product) {
       throw new NotFoundException(`Product with id ${id} not found`);
     }
@@ -88,8 +109,11 @@ export class ProductPricesService {
     return product;
   }
 
-  private async findPriceListOrFail(id: string) {
-    const priceList = await this.priceListsRepository.findOneBy({ id });
+  private async findPriceListOrFail(id: string, organizationId: string) {
+    const priceList = await this.priceListsRepository.findOneBy({
+      id,
+      organization_id: organizationId,
+    });
     if (!priceList) {
       throw new NotFoundException(`Price list with id ${id} not found`);
     }

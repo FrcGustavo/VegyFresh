@@ -11,6 +11,8 @@ import { OrdersModule } from './orders/orders.module';
 import { CatalogModule } from './catalog/catalog.module';
 import { AiModule } from './ai/ai.module';
 import { WhatsappModule } from './whatsapp/whatsapp.module';
+import { OrganizationsModule } from './organizations/organizations.module';
+import { AuthModule } from './auth/auth.module';
 import config from './config';
 
 @Module({
@@ -39,6 +41,8 @@ import config from './config';
     SuppliersModule,
     OrdersModule,
     CatalogModule,
+    OrganizationsModule,
+    AuthModule,
     AiModule,
     WhatsappModule,
   ],

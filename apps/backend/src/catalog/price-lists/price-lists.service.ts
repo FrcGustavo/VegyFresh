@@ -22,18 +22,22 @@ export class PriceListsService {
     private readonly priceListsRepository: Repository<PriceList>,
   ) {}
 
-  async create(createPriceListDto: CreatePriceListDto) {
+  async create(
+    createPriceListDto: CreatePriceListDto,
+    organizationId: string,
+  ) {
     const priceListFolio = await this.buildPriceListFolio(
       this.priceListsRepository.manager,
     );
     const priceList = this.priceListsRepository.create({
       ...createPriceListDto,
       folio: priceListFolio,
+      organization_id: organizationId,
     });
     return this.priceListsRepository.save(priceList);
   }
 
-  findAll(filters: FindAllPriceListsFilters = {}) {
+  findAll(filters: FindAllPriceListsFilters = {}, organizationId: string) {
     const orderBy = this.normalizeOrderBy(filters.orderBy);
     const order = filters.order ?? 'ASC';
     const limit = filters.limit ?? 25;
@@ -41,7 +45,12 @@ export class PriceListsService {
     const search = filters.search?.trim();
 
     return this.priceListsRepository.find({
-      where: search ? { name: ILike(`%${search}%`) } : undefined,
+      where: search
+        ? {
+            name: ILike(`%${search}%`),
+            organization_id: organizationId,
+          }
+        : { organization_id: organizationId },
       relations: { clients: true, productPrices: { product: true } },
       order: { [orderBy]: order },
       take: limit,
@@ -49,9 +58,9 @@ export class PriceListsService {
     });
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, organizationId: string) {
     const priceList = await this.priceListsRepository.findOne({
-      where: { id },
+      where: { id, organization_id: organizationId },
       relations: {
         clients: true,
         productPrices: { product: true },
@@ -65,14 +74,18 @@ export class PriceListsService {
     return priceList;
   }
 
-  async update(id: string, updatePriceListDto: UpdatePriceListDto) {
-    const priceList = await this.findOne(id);
+  async update(
+    id: string,
+    updatePriceListDto: UpdatePriceListDto,
+    organizationId: string,
+  ) {
+    const priceList = await this.findOne(id, organizationId);
     this.priceListsRepository.merge(priceList, updatePriceListDto);
     return this.priceListsRepository.save(priceList);
   }
 
-  async remove(id: string) {
-    const priceList = await this.findOne(id);
+  async remove(id: string, organizationId: string) {
+    const priceList = await this.findOne(id, organizationId);
     await this.priceListsRepository.remove(priceList);
     return { id, deleted: true };
   }

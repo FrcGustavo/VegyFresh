@@ -13,6 +13,9 @@ import { ApiTags, ApiOperation, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { ClientsService } from './clients.service';
 import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateClientDto } from './dto/update-client.dto';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import type { AuthenticatedUser } from '../auth/types/authenticated-user.type';
+import { Permissions } from '../auth/decorators/permissions.decorator';
 
 @ApiTags('clients')
 @Controller('clients')
@@ -20,12 +23,17 @@ export class ClientsController {
   constructor(private readonly clientsService: ClientsService) {}
 
   @Post()
+  @Permissions('catalog:manage')
   @ApiOperation({ summary: 'Create a new client' })
-  create(@Body() createClientDto: CreateClientDto) {
-    return this.clientsService.create(createClientDto);
+  create(
+    @Body() createClientDto: CreateClientDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.clientsService.create(createClientDto, user.org_id);
   }
 
   @Get()
+  @Permissions('catalog:read')
   @ApiOperation({ summary: 'Get all clients' })
   @ApiQuery({
     name: 'search',
@@ -49,6 +57,7 @@ export class ClientsController {
     description: 'Pagination offset',
   })
   findAll(
+    @CurrentUser() user: AuthenticatedUser,
     @Query('search') search?: string,
     @Query('order_by') orderBy?: string,
     @Query('order') order?: string,
@@ -67,34 +76,44 @@ export class ClientsController {
       throw new BadRequestException('order must be "asc" or "desc"');
     }
 
-    return this.clientsService.findAll({
-      search,
-      orderBy,
-      order: normalizedOrder as 'ASC' | 'DESC' | undefined,
-      limit: parsedLimit,
-      offset: parsedOffset,
-    });
+    return this.clientsService.findAll(
+      {
+        search,
+        orderBy,
+        order: normalizedOrder as 'ASC' | 'DESC' | undefined,
+        limit: parsedLimit,
+        offset: parsedOffset,
+      },
+      user.org_id,
+    );
   }
 
   @Get(':id')
+  @Permissions('catalog:read')
   @ApiOperation({ summary: 'Get a client by ID' })
   @ApiParam({ name: 'id', description: 'Client ID' })
-  findOne(@Param('id') id: string) {
-    return this.clientsService.findOne(id);
+  findOne(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+    return this.clientsService.findOne(id, user.org_id);
   }
 
   @Patch(':id')
+  @Permissions('catalog:manage')
   @ApiOperation({ summary: 'Update a client' })
   @ApiParam({ name: 'id', description: 'Client ID' })
-  update(@Param('id') id: string, @Body() updateClientDto: UpdateClientDto) {
-    return this.clientsService.update(id, updateClientDto);
+  update(
+    @Param('id') id: string,
+    @Body() updateClientDto: UpdateClientDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.clientsService.update(id, updateClientDto, user.org_id);
   }
 
   @Delete(':id')
+  @Permissions('catalog:manage')
   @ApiOperation({ summary: 'Delete a client' })
   @ApiParam({ name: 'id', description: 'Client ID' })
-  remove(@Param('id') id: string) {
-    return this.clientsService.remove(id);
+  remove(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+    return this.clientsService.remove(id, user.org_id);
   }
 
   private parseNumberQuery(

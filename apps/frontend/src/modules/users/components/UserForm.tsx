@@ -4,7 +4,9 @@ type UserChangeEvent = { target: { name: string; value: string } };
 interface UserFormData {
   name: string;
   email: string;
+  password: string;
   role_id: string;
+  organization_role: 'member' | 'admin';
   avatar_url: string;
 }
 interface RoleOption {
@@ -16,6 +18,8 @@ interface UserFormProps {
   formData: UserFormData;
   avatarFileError?: string;
   roles: RoleOption[];
+  isEditing: boolean;
+  canAssignOrganizationRole: boolean;
   isCreatingRole: boolean;
   handleChange: (e: UserChangeEvent) => void;
   handleAvatarFileChange: (file: File) => void;
@@ -28,6 +32,8 @@ export default function UserForm({
   formData,
   avatarFileError,
   roles,
+  isEditing,
+  canAssignOrganizationRole,
   isCreatingRole,
   handleChange,
   handleAvatarFileChange,
@@ -85,10 +91,40 @@ export default function UserForm({
             <Box sx={{ flex: 1, minWidth: 320 }}>
               <TextField fullWidth label="Nombre" name="name" margin="normal" value={formData.name || ''} onChange={handleChange} required disabled={isDisabled} />
               <TextField fullWidth label="Email" name="email" margin="normal" value={formData.email || ''} onChange={handleChange} required disabled={isDisabled} />
+              {!isEditing && (
+                <TextField
+                  fullWidth
+                  label="Contraseña"
+                  name="password"
+                  type="password"
+                  margin="normal"
+                  value={formData.password || ''}
+                  onChange={handleChange}
+                  required
+                  disabled={isDisabled}
+                  slotProps={{ htmlInput: { minLength: 12 } }}
+                  helperText="Debe tener al menos 12 caracteres"
+                />
+              )}
 
               <TextField select fullWidth label="Rol" name="role_id" margin="normal" value={formData.role_id || ''} onChange={handleChange} required disabled={isDisabled}>
                 {roles.map((r) => <MenuItem key={r.id} value={r.id}>{r.name}</MenuItem>)}
               </TextField>
+              {!isEditing && canAssignOrganizationRole && (
+                <TextField
+                  select
+                  fullWidth
+                  label="Rol en la organización"
+                  name="organization_role"
+                  margin="normal"
+                  value={formData.organization_role}
+                  onChange={handleChange}
+                  disabled={isDisabled}
+                >
+                  <MenuItem value="member">Miembro</MenuItem>
+                  <MenuItem value="admin">Administrador</MenuItem>
+                </TextField>
+              )}
 
               {roles.length === 0 && (
                 <Alert severity="warning" sx={{ mt: 2 }}>
