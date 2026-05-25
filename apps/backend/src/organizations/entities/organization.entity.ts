@@ -7,13 +7,13 @@ import {
   PrimaryColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { OrganizationUser } from './organization-user.entity';
 import { Client } from '../../clients/entities/client.entity';
 import { Supplier } from '../../suppliers/entities/supplier.entity';
 import { Product } from '../../catalog/products/entities/product.entity';
 import { PriceList } from '../../catalog/price-lists/entities/price-list.entity';
 import { Order } from '../../orders/entities/order.entity';
 import { ProductPrice } from '../../catalog/product-prices/entities/product-price.entity';
+import { User } from '../../users/entities/user.entity';
 
 @Entity('organizations')
 export class Organization {
@@ -42,11 +42,8 @@ export class Organization {
   @Column({ type: 'text', nullable: true })
   address!: string | null;
 
-  @OneToMany(
-    () => OrganizationUser,
-    (organizationUser) => organizationUser.organization,
-  )
-  organizationUsers!: OrganizationUser[];
+  @OneToMany(() => User, (user) => user.organization)
+  users!: User[];
 
   @OneToMany(() => Client, (client) => client.organization)
   clients!: Client[];

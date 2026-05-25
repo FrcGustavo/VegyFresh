@@ -30,9 +30,6 @@ export class AuthSession {
   @JoinColumn({ name: 'organization_id' })
   organization!: Organization;
 
-  @Column({ type: 'uuid' })
-  membership_id!: string;
-
   @Column({ type: 'text' })
   refresh_token_hash!: string;
 

@@ -7,7 +7,6 @@ import { AuthService } from './auth.service';
 import { User } from '../users/entities/user.entity';
 import { Role } from '../roles/entities/role.entity';
 import { Organization } from '../organizations/entities/organization.entity';
-import { OrganizationUser } from '../organizations/entities/organization-user.entity';
 import { AuthSession } from './entities/auth-session.entity';
 import { AccessTokenStrategy } from './strategies/access-token.strategy';
 import { RefreshTokenStrategy } from './strategies/refresh-token.strategy';
@@ -17,13 +16,7 @@ import { RolesGuard } from './guards/roles.guard';
 @Module({
   imports: [
     JwtModule.register({}),
-    TypeOrmModule.forFeature([
-      User,
-      Role,
-      Organization,
-      OrganizationUser,
-      AuthSession,
-    ]),
+    TypeOrmModule.forFeature([User, Role, Organization, AuthSession]),
   ],
   controllers: [AuthController],
   providers: [

@@ -15,22 +15,23 @@ NestJS API for VegyFresh with JWT auth and tenant-scoped access control.
 - Access and refresh tokens include:
   - `sub` (user id)
   - `org_id` (tenant organization id)
-  - `membership_id` (organization membership id)
+  - `role` (user role name)
+  - `permissions` (role permissions)
   - `session_id` / `sid` (session id)
 - Tenant scoping is resolved from these claims; requests are evaluated inside the authenticated `org_id`.
 
 ### Auth endpoints
 
 - `POST /auth/signup`
-  - Creates user + organization + owner membership in one transaction.
+  - Creates organization + owner user in one transaction.
 - `POST /auth/login`
-  - Accepts `email`, `password`, optional `organization_id`.
-  - If `organization_id` is omitted, first active membership is used.
+  - Accepts `email` and `password`.
+  - User organization and role are loaded directly from `users.organization_id` and `users.role_id`.
 - `POST /auth/refresh`
   - Requires `refresh_token`.
-  - Session must be active, unrevoked, and tied to the same membership.
+  - Session must be active, unrevoked, and tied to the same organization.
 - `GET /auth/me`
-  - Returns current user and tenant membership context.
+  - Returns current user, organization, and role context.
 - `POST /auth/logout`
   - Revokes current session.
 - `POST /auth/logout-all`
@@ -70,13 +71,14 @@ WHATSAPP_ORGANIZATION_ID=<uuid>   # The target organization that receives webhoo
 WHATSAPP_BOT_USER_ID=<uuid>       # The user assigned as the order owner for every webhook order
 ```
 
-**Prerequisite:** The bot user (`WHATSAPP_BOT_USER_ID`) must have an active membership in the
-target organization (`WHATSAPP_ORGANIZATION_ID`). Without this, the `findUserOrFail` check in
-`OrdersService` will throw a `NotFoundException` for every incoming webhook order.
+**Prerequisite:** The bot user (`WHATSAPP_BOT_USER_ID`) must belong to the target organization
+(`WHATSAPP_ORGANIZATION_ID`) via `users.organization_id`. Without this, the `findUserOrFail`
+check in `OrdersService` will throw a `NotFoundException` for every incoming webhook order.
 
-To provision the bot user membership, insert a row into the `organization_users` table:
+To provision this, update the user organization directly:
 
 ```sql
-INSERT INTO organization_users (organization_id, user_id, role, is_active)
-VALUES ('<WHATSAPP_ORGANIZATION_ID>', '<WHATSAPP_BOT_USER_ID>', 'member', true);
+UPDATE users
+SET organization_id = '<WHATSAPP_ORGANIZATION_ID>'
+WHERE id = '<WHATSAPP_BOT_USER_ID>';
 ```

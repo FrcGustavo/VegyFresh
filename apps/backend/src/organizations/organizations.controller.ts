@@ -36,7 +36,10 @@ export class OrganizationsController {
   @Roles('owner', 'admin')
   @Permissions('organization:manage')
   @ApiOperation({ summary: 'Create organization' })
-  create(@Body() createOrganizationDto: CreateOrganizationDto, @CurrentUser() user: AuthenticatedUser) {
+  create(
+    @Body() createOrganizationDto: CreateOrganizationDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
     return this.organizationsService.create(createOrganizationDto, user.sub);
   }
 
@@ -45,7 +48,7 @@ export class OrganizationsController {
   @Permissions('organization:manage')
   @ApiOperation({ summary: 'List organizations' })
   findAll(@CurrentUser() user: AuthenticatedUser) {
-    return this.organizationsService.findAll(user.sub);
+    return this.organizationsService.findAll(user.org_id);
   }
 
   @Get(':id')
@@ -54,7 +57,7 @@ export class OrganizationsController {
   @ApiOperation({ summary: 'Find organization by ID' })
   @ApiParam({ name: 'id', description: 'Organization ID' })
   findOne(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
-    return this.organizationsService.findOne(id, user.sub);
+    return this.organizationsService.findOne(id, user.org_id);
   }
 
   @Patch(':id')
@@ -67,7 +70,12 @@ export class OrganizationsController {
     @Body() updateOrganizationDto: UpdateOrganizationDto,
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    return this.organizationsService.update(id, updateOrganizationDto, user.sub);
+    return this.organizationsService.update(
+      id,
+      updateOrganizationDto,
+      user.org_id,
+      user.role,
+    );
   }
 
   @Delete(':id')
@@ -76,6 +84,6 @@ export class OrganizationsController {
   @ApiOperation({ summary: 'Delete organization' })
   @ApiParam({ name: 'id', description: 'Organization ID' })
   remove(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
-    return this.organizationsService.remove(id, user.sub);
+    return this.organizationsService.remove(id, user.org_id, user.role);
   }
 }

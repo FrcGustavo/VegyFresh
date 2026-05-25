@@ -36,7 +36,7 @@ export class AuthController {
   @ApiOperation({
     summary: 'Signup user and create organization',
     description:
-      'Creates a user, a new tenant organization, and an owner membership bound to that tenant.',
+      'Creates a user, a new tenant organization, and assigns owner role from roles table.',
   })
   signup(@Body() signupDto: SignupDto) {
     return this.authService.signup(signupDto);
@@ -47,7 +47,7 @@ export class AuthController {
   @ApiOperation({
     summary: 'Login with email and password',
     description:
-      'If organization_id is omitted, first active membership is used. Returned JWTs include org_id and membership_id for tenant scoping.',
+      'Returns JWTs that include org_id and role context from the user record.',
   })
   login(@Body() loginDto: LoginDto) {
     return this.authService.login(loginDto);
@@ -59,7 +59,7 @@ export class AuthController {
   @ApiOperation({
     summary: 'Refresh access and refresh token pair',
     description:
-      'Requires refresh token in body. Session must be active and tied to the same tenant membership.',
+      'Requires refresh token in body. Session must be active and tied to the same tenant organization.',
   })
   refresh(
     @Body() refreshTokenDto: RefreshTokenDto,
@@ -73,7 +73,7 @@ export class AuthController {
   @ApiOperation({
     summary: 'Get current authenticated user context',
     description:
-      'Returns user profile plus tenant (organization) and membership context from the access token.',
+      'Returns user profile plus tenant organization and role context.',
   })
   me(@CurrentUser() user: AuthenticatedUser) {
     return this.authService.me(user);
@@ -83,7 +83,8 @@ export class AuthController {
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Revoke current session',
-    description: 'Revokes only the current tenant-bound session (by session_id).',
+    description:
+      'Revokes only the current tenant-bound session (by session_id).',
   })
   logout(@CurrentUser() user: AuthenticatedUser) {
     return this.authService.logout(user);

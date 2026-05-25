@@ -12,10 +12,6 @@ import { Repository } from 'typeorm';
 import { Role } from '../roles/entities/role.entity';
 import * as bcrypt from 'bcrypt';
 import { ConfigService } from '@nestjs/config';
-import {
-  OrganizationUser,
-  OrganizationUserRole,
-} from '../organizations/entities/organization-user.entity';
 import { resolveBcryptSaltRounds } from '../auth/auth-security.config';
 
 type UserOrderField = 'id' | 'folio' | 'name' | 'email' | 'created_at';
@@ -37,8 +33,6 @@ export class UsersService {
     private readonly usersRepository: Repository<User>,
     @InjectRepository(Role)
     private readonly rolesRepository: Repository<Role>,
-    @InjectRepository(OrganizationUser)
-    private readonly organizationUsersRepository: Repository<OrganizationUser>,
     private readonly configService: ConfigService,
   ) {
     this.bcryptSaltRounds = resolveBcryptSaltRounds(this.configService);
@@ -47,7 +41,7 @@ export class UsersService {
   async create(
     createUserDto: CreateUserDto,
     organizationId: string,
-    creatorRole: OrganizationUserRole,
+    creatorRole: string,
   ) {
     if (
       typeof createUserDto.password !== 'string' ||
@@ -57,16 +51,9 @@ export class UsersService {
     }
 
     const role = await this.findRoleOrFail(createUserDto.role_id);
-    const membershipRole = this.resolveOrganizationRole(
-      createUserDto.organization_role,
-      role.name,
-    );
-    if (membershipRole === OrganizationUserRole.OWNER) {
-      throw new BadRequestException('organization_role cannot be owner');
-    }
     if (
-      membershipRole === OrganizationUserRole.ADMIN &&
-      creatorRole !== OrganizationUserRole.OWNER
+      role.name.trim().toLowerCase() === 'admin' &&
+      creatorRole.trim().toLowerCase() !== 'owner'
     ) {
       throw new ForbiddenException(
         'Only organization owners can assign admin role',
@@ -75,8 +62,6 @@ export class UsersService {
 
     return this.usersRepository.manager.transaction(async (manager) => {
       const usersRepository = manager.getRepository(User);
-      const organizationUsersRepository =
-        manager.getRepository(OrganizationUser);
       const userFolio = await this.buildUserFolio(manager);
       const passwordHash = await bcrypt.hash(
         createUserDto.password,
@@ -88,20 +73,12 @@ export class UsersService {
         password_hash: passwordHash,
         folio: userFolio,
         avatar_url: createUserDto.avatar_url ?? null,
+        organization_id: organizationId,
+        role_id: role.id,
         role,
       });
 
-      const savedUser = await usersRepository.save(user);
-
-      const membership = organizationUsersRepository.create({
-        user_id: savedUser.id,
-        organization_id: organizationId,
-        role: membershipRole,
-        is_active: true,
-      });
-      await organizationUsersRepository.save(membership);
-
-      return savedUser;
+      return usersRepository.save(user);
     });
   }
 
@@ -118,12 +95,7 @@ export class UsersService {
       .take(limit)
       .skip(offset);
 
-    qb.innerJoin(
-      OrganizationUser,
-      'organizationUser',
-      'organizationUser.user_id = user.id AND organizationUser.organization_id = :organizationId AND organizationUser.is_active = true',
-      { organizationId },
-    );
+    qb.andWhere('user.organization_id = :organizationId', { organizationId });
 
     if (search) {
       qb.andWhere('user.name ILIKE :search', { search: `%${search}%` });
@@ -133,10 +105,8 @@ export class UsersService {
   }
 
   async findOne(id: string, organizationId: string) {
-    await this.findMembershipOrFail(id, organizationId);
-
     const user = await this.usersRepository.findOne({
-      where: { id },
+      where: { id, organization_id: organizationId },
       relations: { role: true },
     });
 
@@ -171,59 +141,33 @@ export class UsersService {
   }
 
   async remove(id: string, organizationId: string) {
-    return this.usersRepository.manager.transaction(async (manager) => {
-      const usersRepository = manager.getRepository(User);
-      const organizationUsersRepository =
-        manager.getRepository(OrganizationUser);
-      const membership = await organizationUsersRepository.findOne({
-        where: {
-          user_id: id,
-          organization_id: organizationId,
-          is_active: true,
-        },
-      });
+    const user = await this.usersRepository.findOne({
+      where: { id, organization_id: organizationId },
+      relations: { role: true },
+    });
+    if (!user) {
+      throw new NotFoundException(
+        `User with id ${id} was not found in organization ${organizationId}`,
+      );
+    }
 
-      if (!membership) {
-        throw new NotFoundException(
-          `User with id ${id} was not found in organization ${organizationId}`,
+    if (user.role?.name?.trim().toLowerCase() === 'owner') {
+      const activeOwners = await this.usersRepository
+        .createQueryBuilder('user')
+        .innerJoin('user.role', 'role')
+        .where('user.organization_id = :organizationId', { organizationId })
+        .andWhere('LOWER(role.name) = :roleName', { roleName: 'owner' })
+        .getCount();
+
+      if (activeOwners <= 1) {
+        throw new BadRequestException(
+          'Cannot remove the last active owner from organization',
         );
       }
+    }
 
-      if (membership.role === OrganizationUserRole.OWNER) {
-        const activeOwners = await organizationUsersRepository.count({
-          where: {
-            organization_id: organizationId,
-            role: OrganizationUserRole.OWNER,
-            is_active: true,
-          },
-        });
-        if (activeOwners <= 1) {
-          throw new BadRequestException(
-            'Cannot remove the last active owner from organization',
-          );
-        }
-      }
-
-      await organizationUsersRepository.update(
-        { id: membership.id },
-        { is_active: false },
-      );
-
-      const activeMemberships = await organizationUsersRepository.count({
-        where: { user_id: id, is_active: true },
-      });
-      if (activeMemberships > 0) {
-        return { id, deleted: false, membership_deactivated: true };
-      }
-
-      const user = await usersRepository.findOneBy({ id });
-      if (!user) {
-        throw new NotFoundException(`User with id ${id} not found`);
-      }
-
-      await usersRepository.remove(user);
-      return { id, deleted: true, membership_deactivated: true };
-    });
+    await this.usersRepository.remove(user);
+    return { id, deleted: true };
   }
 
   private async findRoleOrFail(id: string) {
@@ -262,34 +206,5 @@ export class UsersService {
     );
     const folioNumber = Number(result?.folio ?? 0);
     return `U${String(folioNumber).padStart(5, '0')}`;
-  }
-
-  private async findMembershipOrFail(userId: string, organizationId: string) {
-    const membership = await this.organizationUsersRepository.findOne({
-      where: {
-        user_id: userId,
-        organization_id: organizationId,
-        is_active: true,
-      },
-    });
-
-    if (!membership) {
-      throw new NotFoundException(
-        `User with id ${userId} was not found in organization ${organizationId}`,
-      );
-    }
-  }
-
-  private resolveOrganizationRole(
-    explicitRole: OrganizationUserRole | undefined,
-    roleName: string,
-  ): OrganizationUserRole {
-    if (explicitRole) {
-      return explicitRole;
-    }
-
-    return roleName.trim().toLowerCase() === 'admin'
-      ? OrganizationUserRole.ADMIN
-      : OrganizationUserRole.MEMBER;
   }
 }
