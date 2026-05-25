@@ -62,7 +62,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             return;
           } catch {
             if (!refreshToken) {
-              throw new Error('Access token is invalid and refresh token is missing');
+              authStorage.clearTokens();
+              setState({ user: null, isAuthenticated: false, isLoading: false });
+              return;
             }
           }
         }
