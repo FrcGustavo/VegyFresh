@@ -42,7 +42,7 @@ export class UsersController {
     @Body() createUserDto: CreateUserDto,
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    return this.usersService.create(createUserDto, user.org_id);
+    return this.usersService.create(createUserDto, user.org_id, user.role);
   }
 
   @Get()

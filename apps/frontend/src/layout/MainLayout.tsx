@@ -44,7 +44,12 @@ export default function MainLayout() {
               />
             )}
             <Tooltip title="Cerrar sesión">
-              <IconButton color="inherit" onClick={() => { void handleLogout(); }} size="small">
+              <IconButton
+                color="inherit"
+                aria-label="Cerrar sesión"
+                onClick={() => { void handleLogout(); }}
+                size="small"
+              >
                 <Logout fontSize="small" />
               </IconButton>
             </Tooltip>

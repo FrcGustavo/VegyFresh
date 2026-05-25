@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -39,12 +44,30 @@ export class UsersService {
     this.bcryptSaltRounds = resolveBcryptSaltRounds(this.configService);
   }
 
-  async create(createUserDto: CreateUserDto, organizationId: string) {
+  async create(
+    createUserDto: CreateUserDto,
+    organizationId: string,
+    creatorRole: OrganizationUserRole,
+  ) {
     if (typeof createUserDto.password !== 'string' || createUserDto.password.trim().length === 0) {
       throw new BadRequestException('password is required');
     }
 
     const role = await this.findRoleOrFail(createUserDto.role_id);
+    const membershipRole = this.resolveOrganizationRole(
+      createUserDto.organization_role,
+      role.name,
+    );
+    if (membershipRole === OrganizationUserRole.OWNER) {
+      throw new BadRequestException('organization_role cannot be owner');
+    }
+    if (
+      membershipRole === OrganizationUserRole.ADMIN &&
+      creatorRole !== OrganizationUserRole.OWNER
+    ) {
+      throw new ForbiddenException('Only organization owners can assign admin role');
+    }
+
     return this.usersRepository.manager.transaction(async (manager) => {
       const usersRepository = manager.getRepository(User);
       const organizationUsersRepository = manager.getRepository(OrganizationUser);
@@ -71,7 +94,7 @@ export class UsersService {
         const membership = organizationUsersRepository.create({
           user_id: savedUser.id,
           organization_id: organizationId,
-          role: OrganizationUserRole.MEMBER,
+          role: membershipRole,
           is_active: true,
         });
         await organizationUsersRepository.save(membership);
@@ -133,7 +156,8 @@ export class UsersService {
       updateUserDto.role_id !== undefined
         ? await this.findRoleOrFail(updateUserDto.role_id)
         : user.role;
-    const { password, ...userData } = updateUserDto;
+    const { password, organization_role: _organizationRole, ...userData } =
+      updateUserDto;
 
     this.usersRepository.merge(user, {
       ...userData,
@@ -147,10 +171,43 @@ export class UsersService {
   }
 
   async remove(id: string, organizationId: string) {
-    const user = await this.findOne(id, organizationId);
-    await this.usersRepository.remove(user);
+    return this.usersRepository.manager.transaction(async (manager) => {
+      const usersRepository = manager.getRepository(User);
+      const organizationUsersRepository = manager.getRepository(OrganizationUser);
+      const membership = await organizationUsersRepository.findOne({
+        where: {
+          user_id: id,
+          organization_id: organizationId,
+          is_active: true,
+        },
+      });
 
-    return { id, deleted: true };
+      if (!membership) {
+        throw new NotFoundException(
+          `User with id ${id} was not found in organization ${organizationId}`,
+        );
+      }
+
+      await organizationUsersRepository.update(
+        { id: membership.id },
+        { is_active: false },
+      );
+
+      const activeMemberships = await organizationUsersRepository.count({
+        where: { user_id: id, is_active: true },
+      });
+      if (activeMemberships > 0) {
+        return { id, deleted: false, membership_deactivated: true };
+      }
+
+      const user = await usersRepository.findOneBy({ id });
+      if (!user) {
+        throw new NotFoundException(`User with id ${id} not found`);
+      }
+
+      await usersRepository.remove(user);
+      return { id, deleted: true, membership_deactivated: true };
+    });
   }
 
   private async findRoleOrFail(id: string) {
@@ -205,5 +262,18 @@ export class UsersService {
         `User with id ${userId} was not found in organization ${organizationId}`,
       );
     }
+  }
+
+  private resolveOrganizationRole(
+    explicitRole: OrganizationUserRole | undefined,
+    roleName: string,
+  ): OrganizationUserRole {
+    if (explicitRole) {
+      return explicitRole;
+    }
+
+    return roleName.trim().toLowerCase() === 'admin'
+      ? OrganizationUserRole.ADMIN
+      : OrganizationUserRole.MEMBER;
   }
 }
