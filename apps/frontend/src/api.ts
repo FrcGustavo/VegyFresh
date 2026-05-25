@@ -72,7 +72,7 @@ export async function fetchApi<T = any>(endpoint: string, options?: RequestInit)
   });
 
   if (response.status === 401) {
-    let newToken: string | null;
+    let newToken: string | null = null;
 
     if (_isRefreshing) {
       // Queue subsequent 401s until the ongoing refresh resolves
