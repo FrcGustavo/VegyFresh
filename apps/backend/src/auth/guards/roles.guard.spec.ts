@@ -39,9 +39,9 @@ describe('RolesGuard permission and tenant security', () => {
       .mockReturnValueOnce(['owner'])
       .mockReturnValueOnce(undefined);
 
-    await expect(
-      guard.canActivate(makeContext({ user: { sub: 'user-1' } })),
-    ).rejects.toThrow(ForbiddenException);
+    await expect(guard.canActivate(makeContext({ user: { sub: 'user-1' } }))).rejects.toThrow(
+      ForbiddenException,
+    );
   });
 
   it('uses user permissions from request context', async () => {

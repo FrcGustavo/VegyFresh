@@ -1,8 +1,4 @@
-import {
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, EntityManager, Repository } from 'typeorm';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
@@ -69,11 +65,7 @@ export class OrganizationsService {
     return memberships.map((membership) => membership.organization);
   }
 
-  async findOne(
-    id: string,
-    userId: string,
-    requiredRoles?: OrganizationUserRole[],
-  ) {
+  async findOne(id: string, userId: string, requiredRoles?: OrganizationUserRole[]) {
     await this.findMembershipOrFail(userId, id, requiredRoles);
 
     const organization = await this.organizationsRepository.findOne({
@@ -101,9 +93,7 @@ export class OrganizationsService {
   }
 
   async remove(id: string, userId: string) {
-    const organization = await this.findOne(id, userId, [
-      OrganizationUserRole.OWNER,
-    ]);
+    const organization = await this.findOne(id, userId, [OrganizationUserRole.OWNER]);
     await this.organizationsRepository.remove(organization);
     return { id, deleted: true };
   }

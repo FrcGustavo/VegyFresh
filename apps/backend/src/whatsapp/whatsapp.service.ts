@@ -186,10 +186,7 @@ export class WhatsappService {
     for (const raw of validRaw) {
       let product: Product;
       try {
-        product = await this.productsService.findOne(
-          raw.product_id,
-          organizationId,
-        );
+        product = await this.productsService.findOne(raw.product_id, organizationId);
       } catch {
         this.logger.warn(
           `[order:create] Product id=${raw.product_id} not found in DB — skipping item`,
@@ -225,16 +222,13 @@ export class WhatsappService {
     }
 
     try {
-      const order = await this.ordersService.create(
-        {
-          client_id: clientId,
-          user_id: botUserId,
-          status: OrderStatus.PENDING_REVIEW,
-          origin: OrderOrigin.WHATSAPP,
-          items,
-        },
-        organizationId,
-      );
+      const order = await this.ordersService.create({
+        client_id: clientId,
+        user_id: botUserId,
+        status: OrderStatus.PENDING_REVIEW,
+        origin: OrderOrigin.WHATSAPP,
+        items,
+      }, organizationId);
       this.logger.log(
         `[order:create] ✅ Draft order created id=${order.id} items=${items.length}`,
       );

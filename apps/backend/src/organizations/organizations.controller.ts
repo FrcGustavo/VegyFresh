@@ -36,10 +36,7 @@ export class OrganizationsController {
   @Roles('owner', 'admin')
   @Permissions('organization:manage')
   @ApiOperation({ summary: 'Create organization' })
-  create(
-    @Body() createOrganizationDto: CreateOrganizationDto,
-    @CurrentUser() user: AuthenticatedUser,
-  ) {
+  create(@Body() createOrganizationDto: CreateOrganizationDto, @CurrentUser() user: AuthenticatedUser) {
     return this.organizationsService.create(createOrganizationDto, user.sub);
   }
 
@@ -70,11 +67,7 @@ export class OrganizationsController {
     @Body() updateOrganizationDto: UpdateOrganizationDto,
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    return this.organizationsService.update(
-      id,
-      updateOrganizationDto,
-      user.sub,
-    );
+    return this.organizationsService.update(id, updateOrganizationDto, user.sub);
   }
 
   @Delete(':id')
