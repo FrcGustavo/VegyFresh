@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router';
 import { fetchApi } from '../../../api';
-import { authStorage } from '../../../auth/authStorage';
 import { validateImageFile } from '../../../utils/imageValidation';
 
 type SaveAction = 'save' | 'save-and-close' | 'save-and-new';
@@ -28,40 +27,13 @@ const EMPTY_USER_FORM: UserFormData = {
   avatar_url: '',
 };
 
-const extractOrganizationRoleFromAccessToken = (): string | null => {
-  const accessToken = authStorage.getAccessToken();
-  if (!accessToken) {
-    return null;
-  }
-
-  const tokenParts = accessToken.split('.');
-  if (tokenParts.length < 2) {
-    return null;
-  }
-
-  try {
-    const normalizedPayload = tokenParts[1]
-      .replace(/-/g, '+')
-      .replace(/_/g, '/');
-    const paddedPayload = normalizedPayload.padEnd(
-      normalizedPayload.length + ((4 - (normalizedPayload.length % 4)) % 4),
-      '=',
-    );
-    const payload = JSON.parse(atob(paddedPayload)) as { role?: unknown };
-    return typeof payload.role === 'string' ? payload.role : null;
-  } catch {
-    return null;
-  }
-};
-
 export function useUserForm(id?: string, onSuccess?: (action: SaveAction) => void) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [formData, setFormData] = useState<UserFormData>(EMPTY_USER_FORM);
   const [avatarFileError, setAvatarFileError] = useState('');
   const [isDisabled, setIsDisabled] = useState(!!id);
-  const currentMembershipRole = extractOrganizationRoleFromAccessToken();
-  const canAssignOrganizationRole = currentMembershipRole === 'owner';
+  const canAssignOrganizationRole = !id;
 
   const { data: existingUser, isLoading } = useQuery({
     queryKey: ['users', id],

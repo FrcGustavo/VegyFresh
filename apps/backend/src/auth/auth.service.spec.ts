@@ -217,7 +217,31 @@ describe('AuthService security flows', () => {
   });
 
   it('signup rejects duplicate email', async () => {
-    usersRepository.findOneBy.mockResolvedValue({ id: 'existing-user' });
+    rolesRepository.findOneBy.mockResolvedValue({
+      id: 'role-owner',
+      name: 'owner',
+    });
+    usersRepository.manager.transaction.mockImplementation((cb) => {
+      const userRepository = {
+        create: jest.fn(() => ({ id: 'user-1', email: 'owner@vegyfresh.com' })),
+        save: jest.fn().mockRejectedValue({
+          code: '23505',
+          constraint: 'users_email_key',
+        }),
+      };
+      const queryMock = jest
+        .fn<Promise<QueryRow[]>, [string]>()
+        .mockResolvedValueOnce([{ folio: 1 }])
+        .mockResolvedValueOnce([{ folio: 1 }]);
+      const getRepositoryMock = jest
+        .fn<unknown, [unknown]>()
+        .mockReturnValueOnce(userRepository)
+        .mockReturnValueOnce(rolesRepository);
+      return cb({
+        query: queryMock,
+        getRepository: getRepositoryMock,
+      });
+    });
 
     await expect(
       service.signup({

@@ -135,7 +135,7 @@ export async function fetchApi<T = any>(endpoint: string, options?: RequestInit)
             : new Error('No fue posible refrescar la sesión');
       } finally {
         _refreshQueue.forEach((cb) =>
-          cb({ token: newToken ?? null, error: refreshError }),
+          cb({ token: newToken, error: refreshError }),
         );
         _refreshQueue = [];
         _isRefreshing = false;

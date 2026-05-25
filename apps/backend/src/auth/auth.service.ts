@@ -62,13 +62,6 @@ export class AuthService {
   }
 
   async signup(dto: SignupDto) {
-    const existingUser = await this.usersRepository.findOneBy({
-      email: dto.email,
-    });
-    if (existingUser) {
-      throw new BadRequestException('Email is already registered');
-    }
-
     const passwordHash = await bcrypt.hash(dto.password, this.bcryptSaltRounds);
 
     const result = await this.usersRepository.manager.transaction(
