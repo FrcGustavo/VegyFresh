@@ -70,7 +70,7 @@ describe('UsersService', () => {
     };
     usersRepository = {
       manager: {
-        transaction: jest.fn(async (callback: (m: unknown) => unknown) =>
+        transaction: jest.fn((callback: (m: unknown) => unknown) =>
           callback(manager),
         ),
       },
