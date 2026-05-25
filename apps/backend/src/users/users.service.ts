@@ -45,36 +45,40 @@ export class UsersService {
     }
 
     const role = await this.findRoleOrFail(createUserDto.role_id);
-    const userFolio = await this.buildUserFolio(this.usersRepository.manager);
-    const passwordHash = await bcrypt.hash(
-      createUserDto.password,
-      this.bcryptSaltRounds,
-    );
-    const user = this.usersRepository.create({
-      name: createUserDto.name,
-      email: createUserDto.email,
-      password_hash: passwordHash,
-      folio: userFolio,
-      avatar_url: createUserDto.avatar_url ?? null,
-      role,
-    });
-
-    const savedUser = await this.usersRepository.save(user);
-
-    const existingMembership = await this.organizationUsersRepository.findOne({
-      where: { user_id: savedUser.id, organization_id: organizationId },
-    });
-    if (!existingMembership) {
-      const membership = this.organizationUsersRepository.create({
-        user_id: savedUser.id,
-        organization_id: organizationId,
-        role: OrganizationUserRole.MEMBER,
-        is_active: true,
+    return this.usersRepository.manager.transaction(async (manager) => {
+      const usersRepository = manager.getRepository(User);
+      const organizationUsersRepository = manager.getRepository(OrganizationUser);
+      const userFolio = await this.buildUserFolio(manager);
+      const passwordHash = await bcrypt.hash(
+        createUserDto.password,
+        this.bcryptSaltRounds,
+      );
+      const user = usersRepository.create({
+        name: createUserDto.name,
+        email: createUserDto.email,
+        password_hash: passwordHash,
+        folio: userFolio,
+        avatar_url: createUserDto.avatar_url ?? null,
+        role,
       });
-      await this.organizationUsersRepository.save(membership);
-    }
 
-    return savedUser;
+      const savedUser = await usersRepository.save(user);
+
+      const existingMembership = await organizationUsersRepository.findOne({
+        where: { user_id: savedUser.id, organization_id: organizationId },
+      });
+      if (!existingMembership) {
+        const membership = organizationUsersRepository.create({
+          user_id: savedUser.id,
+          organization_id: organizationId,
+          role: OrganizationUserRole.MEMBER,
+          is_active: true,
+        });
+        await organizationUsersRepository.save(membership);
+      }
+
+      return savedUser;
+    });
   }
 
   async findAll(filters: FindAllUsersFilters = {}, organizationId: string) {

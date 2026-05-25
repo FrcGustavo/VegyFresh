@@ -1,4 +1,5 @@
 import {
+  ValidationPipe,
   Controller,
   Get,
   Post,
@@ -6,6 +7,7 @@ import {
   Patch,
   Param,
   Delete,
+  UsePipes,
 } from '@nestjs/common';
 import { ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { OrganizationsService } from './organizations.service';
@@ -18,6 +20,15 @@ import type { AuthenticatedUser } from '../auth/types/authenticated-user.type';
 
 @ApiTags('organizations')
 @Controller('organizations')
+@UsePipes(
+  new ValidationPipe({
+    whitelist: true,
+    forbidNonWhitelisted: true,
+    forbidUnknownValues: true,
+    transform: true,
+    stopAtFirstError: true,
+  }),
+)
 export class OrganizationsController {
   constructor(private readonly organizationsService: OrganizationsService) {}
 
