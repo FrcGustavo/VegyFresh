@@ -14,7 +14,7 @@ import { permissionsForRole } from '../constants/org-role-permissions';
 export class RolesGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}
 
-  async canActivate(context: ExecutionContext): Promise<boolean> {
+  canActivate(context: ExecutionContext): boolean {
     const requiredRoles = this.reflector.getAllAndOverride<string[]>(
       ROLES_KEY,
       [context.getHandler(), context.getClass()],
@@ -36,12 +36,16 @@ export class RolesGuard implements CanActivate {
       .getRequest<{ user?: AuthenticatedUser }>();
     const user = request.user;
     if (!user?.sub || !user.org_id || !user.membership_id || !user.role) {
-      throw new ForbiddenException('User context is missing organization scope');
+      throw new ForbiddenException(
+        'User context is missing organization scope',
+      );
     }
 
     const role = user.role;
     const grantedPermissions =
-      user.permissions?.length > 0 ? user.permissions : permissionsForRole(role);
+      user.permissions?.length > 0
+        ? user.permissions
+        : permissionsForRole(role);
 
     if (requiredRoles?.length && !requiredRoles.includes(role)) {
       throw new ForbiddenException('Insufficient organization role');
@@ -65,8 +69,14 @@ export class RolesGuard implements CanActivate {
     return true;
   }
 
-  private hasPermission(grantedPermissions: string[], required: string): boolean {
-    if (grantedPermissions.includes('*') || grantedPermissions.includes(required)) {
+  private hasPermission(
+    grantedPermissions: string[],
+    required: string,
+  ): boolean {
+    if (
+      grantedPermissions.includes('*') ||
+      grantedPermissions.includes(required)
+    ) {
       return true;
     }
 
