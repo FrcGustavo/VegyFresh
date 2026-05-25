@@ -9,7 +9,13 @@ import {
   Delete,
   Query,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiParam, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiTags,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { ClientsService } from './clients.service';
 import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateClientDto } from './dto/update-client.dto';
@@ -18,6 +24,7 @@ import type { AuthenticatedUser } from '../auth/types/authenticated-user.type';
 import { Permissions } from '../auth/decorators/permissions.decorator';
 
 @ApiTags('clients')
+@ApiBearerAuth()
 @Controller('clients')
 export class ClientsController {
   constructor(private readonly clientsService: ClientsService) {}

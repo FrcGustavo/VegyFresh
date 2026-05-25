@@ -7,7 +7,12 @@ import {
   Param,
   Delete,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiParam } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiTags,
+  ApiOperation,
+  ApiParam,
+} from '@nestjs/swagger';
 import { ProductPricesService } from './product-prices.service';
 import { CreateProductPriceDto } from './dto/create-product-price.dto';
 import { UpdateProductPriceDto } from './dto/update-product-price.dto';
@@ -16,6 +21,7 @@ import type { AuthenticatedUser } from '../../auth/types/authenticated-user.type
 import { Permissions } from '../../auth/decorators/permissions.decorator';
 
 @ApiTags('product-prices')
+@ApiBearerAuth()
 @Controller('product-prices')
 export class ProductPricesController {
   constructor(private readonly productPricesService: ProductPricesService) {}

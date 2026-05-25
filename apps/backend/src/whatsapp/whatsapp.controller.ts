@@ -10,7 +10,12 @@ import {
   Req,
   Res,
 } from '@nestjs/common';
-import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 import type { Request, Response } from 'express';
 import { WhatsappService } from './whatsapp.service';
 import { CreateWhatsappDto } from './dto/create-whatsapp.dto';
@@ -62,6 +67,7 @@ export class WhatsappController {
   }
 
   @Post('send')
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Send a direct WhatsApp message through Meta API' })
   sendMessage(@Body() body: CreateWhatsappDto) {
     return this.whatsappService.sendTextMessage(body.to, body.text);

@@ -1,8 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsJWT } from 'class-validator';
+import { IsJWT, IsNotEmpty } from 'class-validator';
 
 export class RefreshTokenDto {
   @ApiProperty()
+  @IsNotEmpty()
   @IsJWT()
   refresh_token!: string;
 }

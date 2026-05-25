@@ -1,5 +1,12 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEmail, IsOptional, IsString, IsUUID } from 'class-validator';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUUID,
+  MinLength,
+} from 'class-validator';
 
 export class LoginDto {
   @ApiProperty({ example: 'john@example.com' })
@@ -7,7 +14,9 @@ export class LoginDto {
   email!: string;
 
   @ApiProperty({ example: 'super-secure-password' })
+  @IsNotEmpty()
   @IsString()
+  @MinLength(12)
   password!: string;
 
   @ApiPropertyOptional({
