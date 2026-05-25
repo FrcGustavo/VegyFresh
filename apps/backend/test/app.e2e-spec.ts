@@ -29,6 +29,9 @@ type TestUser = {
   session_id: string;
 };
 
+const MOCK_REFRESH_TOKEN =
+  'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyLTEifQ.signature';
+
 const accessUsersByToken: Record<string, TestUser> = {
   'token-org1-owner': {
     sub: 'user-1',
@@ -51,8 +54,7 @@ const accessUsersByToken: Record<string, TestUser> = {
 };
 
 const refreshUsersByToken: Record<string, TestUser> = {
-  'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyLTEifQ.signature':
-    accessUsersByToken['token-org1-owner'],
+  [MOCK_REFRESH_TOKEN]: accessUsersByToken['token-org1-owner'],
 };
 
 @Injectable()
@@ -118,11 +120,11 @@ describe('AppController (e2e)', () => {
   beforeEach(async () => {
     authService.signup.mockResolvedValue({
       access_token: 'token-org1-owner',
-      refresh_token: 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyLTEifQ.signature',
+      refresh_token: MOCK_REFRESH_TOKEN,
     });
     authService.login.mockResolvedValue({
       access_token: 'token-org1-owner',
-      refresh_token: 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyLTEifQ.signature',
+      refresh_token: MOCK_REFRESH_TOKEN,
     });
     authService.refreshToken.mockResolvedValue({
       access_token: 'new-token-org1-owner',
@@ -130,8 +132,13 @@ describe('AppController (e2e)', () => {
     });
     authService.logout.mockResolvedValue({ revoked: true });
 
+    const userOrganizations: Record<string, string> = {
+      'user-org1': 'org-1',
+      'user-org2': 'org-2',
+    };
     usersService.findOne.mockImplementation((id: string, orgId: string) => {
-      if (id === 'user-org2' && orgId !== 'org-2') {
+      const expectedOrganizationId = userOrganizations[id];
+      if (expectedOrganizationId && expectedOrganizationId !== orgId) {
         throw new NotFoundException(
           `User with id ${id} was not found in organization ${orgId}`,
         );
@@ -177,7 +184,7 @@ describe('AppController (e2e)', () => {
       .expect(201)
       .expect({
         access_token: 'token-org1-owner',
-        refresh_token: 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyLTEifQ.signature',
+        refresh_token: MOCK_REFRESH_TOKEN,
       });
 
     await request(app.getHttpServer())
@@ -189,14 +196,12 @@ describe('AppController (e2e)', () => {
       .expect(201)
       .expect({
         access_token: 'token-org1-owner',
-        refresh_token: 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyLTEifQ.signature',
+        refresh_token: MOCK_REFRESH_TOKEN,
       });
 
     await request(app.getHttpServer())
       .post('/auth/refresh')
-      .send({
-        refresh_token: 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyLTEifQ.signature',
-      })
+      .send({ refresh_token: MOCK_REFRESH_TOKEN })
       .expect(201)
       .expect({
         access_token: 'new-token-org1-owner',
@@ -210,7 +215,7 @@ describe('AppController (e2e)', () => {
       .expect({ revoked: true });
   });
 
-  it('denies cross-tenant user access', async () => {
+  it('allows same-tenant access and denies cross-tenant user access', async () => {
     await request(app.getHttpServer())
       .get('/users/user-org1')
       .set('Authorization', 'Bearer token-org1-owner')
