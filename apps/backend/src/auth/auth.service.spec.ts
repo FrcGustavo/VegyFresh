@@ -205,6 +205,7 @@ describe('AuthService security flows', () => {
     expect(result.organization.id).toBe('org-1');
     expect(result.membership.role).toBe(OrganizationUserRole.OWNER);
     expect(result.access_token).toBe('access-token');
+    expect(usersRepository.manager.transaction).toHaveBeenCalledTimes(1);
     expect(generateTokensSpy).toHaveBeenCalledWith(
       expect.objectContaining({
         sub: 'user-1',
@@ -214,6 +215,74 @@ describe('AuthService security flows', () => {
       }),
       expect.any(Object),
     );
+  });
+
+  it('signup bubbles failure and prevents auth-context generation when onboarding transaction fails', async () => {
+    rolesRepository.findOneBy.mockResolvedValue({
+      id: 'role-owner',
+      name: 'owner',
+    });
+
+    const userRepository = {
+      create: jest.fn(() => ({ id: 'user-1', email: 'owner@vegyfresh.com' })),
+      save: jest.fn().mockResolvedValue({
+        id: 'user-1',
+        email: 'owner@vegyfresh.com',
+        name: 'Owner',
+      }),
+    };
+    const orgRepository = {
+      create: jest.fn(() => ({
+        id: 'org-1',
+        name: 'Org 1',
+        folio: 'O00001',
+      })),
+      save: jest.fn().mockRejectedValue(new Error('organization save failed')),
+    };
+    const membershipRepository = {
+      create: jest.fn(),
+      save: jest.fn(),
+    };
+    const queryMock = jest
+      .fn<Promise<QueryRow[]>, [string]>()
+      .mockResolvedValueOnce([{ folio: 1 }])
+      .mockResolvedValueOnce([{ folio: 1 }]);
+    usersRepository.manager.transaction.mockImplementation((cb) => {
+      const getRepositoryMock = jest
+        .fn<unknown, [unknown]>()
+        .mockReturnValueOnce(userRepository)
+        .mockReturnValueOnce(rolesRepository)
+        .mockReturnValueOnce(orgRepository)
+        .mockReturnValueOnce(membershipRepository);
+
+      return cb({
+        query: queryMock,
+        getRepository: getRepositoryMock,
+      });
+    });
+
+    const generateTokensSpy = jest
+      .spyOn(service as never, 'generateTokens' as never)
+      .mockResolvedValue({
+        access_token: 'access-token',
+        refresh_token: 'refresh-token',
+      } as never);
+
+    await expect(
+      service.signup({
+        name: 'Owner',
+        email: 'owner@vegyfresh.com',
+        password: 'super-secure-password',
+        organization_name: 'Org 1',
+        organization_legal_name: null,
+        organization_phone_number: null,
+        organization_address: null,
+      }),
+    ).rejects.toThrow('organization save failed');
+
+    expect(usersRepository.manager.transaction).toHaveBeenCalledTimes(1);
+    expect(membershipRepository.save).not.toHaveBeenCalled();
+    expect(generateTokensSpy).not.toHaveBeenCalled();
   });
 
   it('signup rejects duplicate email', async () => {

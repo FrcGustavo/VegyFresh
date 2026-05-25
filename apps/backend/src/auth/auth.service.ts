@@ -113,6 +113,7 @@ export class AuthService {
           organization_id: savedOrganization.id,
           organization: savedOrganization,
           role: OrganizationUserRole.OWNER,
+          is_active: true,
         });
         const savedMembership =
           await organizationUsersRepository.save(membership);
