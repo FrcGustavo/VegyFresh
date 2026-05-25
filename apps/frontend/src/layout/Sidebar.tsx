@@ -1,5 +1,5 @@
 import { Box, Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Toolbar, Divider, Typography } from '@mui/material';
-import { ShoppingCart, Inventory, People, LocalShipping, AdminPanelSettings, LocalOffer, Settings } from '@mui/icons-material';
+import { ShoppingCart, Inventory, People, LocalShipping, AdminPanelSettings, LocalOffer, Settings, Warehouse } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router';
 
 const drawerWidth = 260;
@@ -10,6 +10,7 @@ const menuItems = [
   { text: 'Listas de Precios', icon: <LocalOffer />, path: '/price-lists' },
   { text: 'Clientes', icon: <People />, path: '/clients' },
   { text: 'Proveedores', icon: <LocalShipping />, path: '/suppliers' },
+  { text: 'Almacén', icon: <Warehouse />, path: '/warehouse' },
   { text: 'Usuarios y Roles', icon: <AdminPanelSettings />, path: '/users' },
   { text: 'Configuración', icon: <Settings />, path: '/settings' },
 ];
