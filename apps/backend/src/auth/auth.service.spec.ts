@@ -1,4 +1,8 @@
-import { BadRequestException, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { IsNull } from 'typeorm';
 import { AuthService } from './auth.service';
@@ -441,6 +445,110 @@ describe('AuthService security flows', () => {
         },
       }),
     );
+  });
+
+  it('refresh rejects session tenant mismatch', async () => {
+    const refreshToken = 'refresh-token';
+    const refreshHash = await bcrypt.hash(refreshToken, 10);
+
+    authSessionsRepository.findOne.mockResolvedValue({
+      id: 'session-1',
+      user_id: 'user-1',
+      organization_id: 'org-1',
+      membership_id: 'membership-1',
+      refresh_token_hash: refreshHash,
+      expires_at: new Date(Date.now() + 10_000),
+      revoked_at: null,
+    });
+
+    await expect(
+      service.refreshToken(
+        {
+          sub: 'user-1',
+          email: 'owner@vegyfresh.com',
+          org_id: 'org-2',
+          membership_id: 'membership-2',
+          role: OrganizationUserRole.ADMIN,
+          permissions: ['users:manage'],
+          session_id: 'session-1',
+        },
+        refreshToken,
+      ),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
+    expect(organizationUsersRepository.findOne).not.toHaveBeenCalled();
+  });
+
+  it('me returns user profile with tenant-scoped membership context', async () => {
+    usersRepository.findOneBy.mockResolvedValue({
+      id: 'user-1',
+      email: 'owner@vegyfresh.com',
+      name: 'Owner',
+    });
+    organizationUsersRepository.findOne.mockResolvedValue({
+      id: 'membership-1',
+      user_id: 'user-1',
+      organization_id: 'org-1',
+      role: OrganizationUserRole.OWNER,
+      is_active: true,
+      organization: { id: 'org-1', name: 'Org 1', folio: 'O00001' },
+    });
+
+    const result = await service.me({
+      sub: 'user-1',
+      email: 'owner@vegyfresh.com',
+      org_id: 'org-1',
+      membership_id: 'membership-1',
+      role: OrganizationUserRole.OWNER,
+      permissions: ['*'],
+      session_id: 'session-1',
+    });
+
+    expect(result).toEqual({
+      user: {
+        id: 'user-1',
+        name: 'Owner',
+        email: 'owner@vegyfresh.com',
+      },
+      organization: {
+        id: 'org-1',
+        name: 'Org 1',
+        folio: 'O00001',
+      },
+      membership: {
+        id: 'membership-1',
+        role: OrganizationUserRole.OWNER,
+      },
+    });
+    expect(organizationUsersRepository.findOne).toHaveBeenCalledWith({
+      where: {
+        id: 'membership-1',
+        user_id: 'user-1',
+        organization_id: 'org-1',
+        is_active: true,
+      },
+      relations: { organization: true },
+    });
+  });
+
+  it('me rejects when scoped tenant membership is missing', async () => {
+    usersRepository.findOneBy.mockResolvedValue({
+      id: 'user-1',
+      email: 'owner@vegyfresh.com',
+      name: 'Owner',
+    });
+    organizationUsersRepository.findOne.mockResolvedValue(null);
+
+    await expect(
+      service.me({
+        sub: 'user-1',
+        email: 'owner@vegyfresh.com',
+        org_id: 'org-1',
+        membership_id: 'membership-1',
+        role: OrganizationUserRole.OWNER,
+        permissions: ['*'],
+        session_id: 'session-1',
+      }),
+    ).rejects.toBeInstanceOf(NotFoundException);
   });
 
   it('logout revokes only current session', async () => {

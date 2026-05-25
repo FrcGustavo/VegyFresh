@@ -228,6 +228,12 @@ export class AuthService {
     if (!session) {
       throw new UnauthorizedException('Session is invalid or revoked');
     }
+    if (
+      session.organization_id !== user.org_id ||
+      session.membership_id !== user.membership_id
+    ) {
+      throw new UnauthorizedException('Session tenant context mismatch');
+    }
 
     if (session.expires_at.getTime() <= Date.now()) {
       throw new UnauthorizedException('Refresh token expired');
@@ -274,7 +280,12 @@ export class AuthService {
     }
 
     const membership = await this.organizationUsersRepository.findOne({
-      where: { id: user.membership_id },
+      where: {
+        id: user.membership_id,
+        user_id: user.sub,
+        organization_id: user.org_id,
+        is_active: true,
+      },
       relations: { organization: true },
     });
     if (!membership) {
