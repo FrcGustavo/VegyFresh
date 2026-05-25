@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateOrderDto, CreateOrderItemDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
@@ -266,7 +270,8 @@ export class OrdersService {
     id: string,
     organizationId: string,
     usersRepository: Repository<User> = this.usersRepository,
-    organizationUsersRepository: Repository<OrganizationUser> = this.organizationUsersRepository,
+    organizationUsersRepository: Repository<OrganizationUser> = this
+      .organizationUsersRepository,
   ) {
     const user = await usersRepository.findOneBy({ id });
     if (!user) {
