@@ -102,7 +102,6 @@ export class OrganizationsService {
         organization_id: organizationId,
         is_active: true,
       },
-      relations: { organization: true, user: true },
     });
 
     if (!membership) {

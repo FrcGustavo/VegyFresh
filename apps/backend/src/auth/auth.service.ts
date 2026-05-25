@@ -9,6 +9,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { IsNull, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
+import { randomUUID } from 'node:crypto';
 import { ConfigService } from '@nestjs/config';
 import { User } from '../users/entities/user.entity';
 import { Role } from '../roles/entities/role.entity';
@@ -50,8 +51,6 @@ export class AuthService {
     private readonly usersRepository: Repository<User>,
     @InjectRepository(Role)
     private readonly rolesRepository: Repository<Role>,
-    @InjectRepository(Organization)
-    private readonly organizationsRepository: Repository<Organization>,
     @InjectRepository(OrganizationUser)
     private readonly organizationUsersRepository: Repository<OrganizationUser>,
     @InjectRepository(AuthSession)
@@ -350,21 +349,12 @@ export class AuthService {
       MIN_REFRESH_TOKEN_TTL_MS,
       MAX_REFRESH_TOKEN_TTL_MS,
     );
-
-    const session = this.authSessionsRepository.create({
-      user_id: payload.sub,
-      organization_id: payload.org_id,
-      membership_id: payload.membership_id,
-      refresh_token_hash: '',
-      expires_at: this.addMilliseconds(Date.now(), this.parseDuration(refreshTtl)),
-      revoked_at: null,
-    });
-    const savedSession = await this.authSessionsRepository.save(session);
+    const sessionId = randomUUID();
 
     const tokenPayload: AuthenticatedUser = {
       ...payload,
-      session_id: savedSession.id,
-      sid: savedSession.id,
+      session_id: sessionId,
+      sid: sessionId,
     };
 
     const [accessToken, refreshToken] = await Promise.all([
@@ -377,12 +367,18 @@ export class AuthService {
         expiresIn: refreshTtl as unknown as number,
       }),
     ]);
+    const refreshTokenHash = await bcrypt.hash(refreshToken, this.bcryptSaltRounds);
 
-    savedSession.refresh_token_hash = await bcrypt.hash(
-      refreshToken,
-      this.bcryptSaltRounds,
-    );
-    await this.authSessionsRepository.save(savedSession);
+    const session = this.authSessionsRepository.create({
+      id: sessionId,
+      user_id: payload.sub,
+      organization_id: payload.org_id,
+      membership_id: payload.membership_id,
+      refresh_token_hash: refreshTokenHash,
+      expires_at: this.addMilliseconds(Date.now(), this.parseDuration(refreshTtl)),
+      revoked_at: null,
+    });
+    await this.authSessionsRepository.save(session);
 
     return {
       access_token: accessToken,

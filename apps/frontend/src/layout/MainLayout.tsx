@@ -43,16 +43,18 @@ export default function MainLayout() {
                 sx={{ bgcolor: 'primary.dark', color: 'primary.contrastText', fontSize: '0.85rem' }}
               />
             )}
-            <Tooltip title="Cerrar sesión">
-              <IconButton
-                color="inherit"
-                aria-label="Cerrar sesión"
-                onClick={() => { void handleLogout(); }}
-                size="small"
-              >
-                <Logout fontSize="small" />
-              </IconButton>
-            </Tooltip>
+            {user && (
+              <Tooltip title="Cerrar sesión">
+                <IconButton
+                  color="inherit"
+                  aria-label="Cerrar sesión"
+                  onClick={() => { void handleLogout(); }}
+                  size="small"
+                >
+                  <Logout fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            )}
           </Box>
         </Toolbar>
       </AppBar>
