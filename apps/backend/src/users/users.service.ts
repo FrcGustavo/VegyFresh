@@ -49,7 +49,10 @@ export class UsersService {
     organizationId: string,
     creatorRole: OrganizationUserRole,
   ) {
-    if (typeof createUserDto.password !== 'string' || createUserDto.password.trim().length === 0) {
+    if (
+      typeof createUserDto.password !== 'string' ||
+      createUserDto.password.trim().length === 0
+    ) {
       throw new BadRequestException('password is required');
     }
 
@@ -65,12 +68,15 @@ export class UsersService {
       membershipRole === OrganizationUserRole.ADMIN &&
       creatorRole !== OrganizationUserRole.OWNER
     ) {
-      throw new ForbiddenException('Only organization owners can assign admin role');
+      throw new ForbiddenException(
+        'Only organization owners can assign admin role',
+      );
     }
 
     return this.usersRepository.manager.transaction(async (manager) => {
       const usersRepository = manager.getRepository(User);
-      const organizationUsersRepository = manager.getRepository(OrganizationUser);
+      const organizationUsersRepository =
+        manager.getRepository(OrganizationUser);
       const userFolio = await this.buildUserFolio(manager);
       const passwordHash = await bcrypt.hash(
         createUserDto.password,
@@ -87,23 +93,13 @@ export class UsersService {
 
       const savedUser = await usersRepository.save(user);
 
-      const existingMembership = await organizationUsersRepository.findOne({
-        where: { user_id: savedUser.id, organization_id: organizationId },
+      const membership = organizationUsersRepository.create({
+        user_id: savedUser.id,
+        organization_id: organizationId,
+        role: membershipRole,
+        is_active: true,
       });
-      if (existingMembership) {
-        await organizationUsersRepository.update(
-          { id: existingMembership.id },
-          { role: membershipRole, is_active: true },
-        );
-      } else {
-        const membership = organizationUsersRepository.create({
-          user_id: savedUser.id,
-          organization_id: organizationId,
-          role: membershipRole,
-          is_active: true,
-        });
-        await organizationUsersRepository.save(membership);
-      }
+      await organizationUsersRepository.save(membership);
 
       return savedUser;
     });
@@ -177,7 +173,8 @@ export class UsersService {
   async remove(id: string, organizationId: string) {
     return this.usersRepository.manager.transaction(async (manager) => {
       const usersRepository = manager.getRepository(User);
-      const organizationUsersRepository = manager.getRepository(OrganizationUser);
+      const organizationUsersRepository =
+        manager.getRepository(OrganizationUser);
       const membership = await organizationUsersRepository.findOne({
         where: {
           user_id: id,

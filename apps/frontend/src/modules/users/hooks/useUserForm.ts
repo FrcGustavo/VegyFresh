@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router';
 import { fetchApi } from '../../../api';
+import { authStorage } from '../../../auth/authStorage';
 import { validateImageFile } from '../../../utils/imageValidation';
 
 type SaveAction = 'save' | 'save-and-close' | 'save-and-new';
@@ -11,6 +12,7 @@ interface UserFormData {
   email: string;
   password: string;
   role_id: string;
+  organization_role: 'member' | 'admin';
   avatar_url: string;
 }
 interface RoleOption {
@@ -22,7 +24,34 @@ const EMPTY_USER_FORM: UserFormData = {
   email: '',
   password: '',
   role_id: '',
+  organization_role: 'member',
   avatar_url: '',
+};
+
+const extractOrganizationRoleFromAccessToken = (): string | null => {
+  const accessToken = authStorage.getAccessToken();
+  if (!accessToken) {
+    return null;
+  }
+
+  const tokenParts = accessToken.split('.');
+  if (tokenParts.length < 2) {
+    return null;
+  }
+
+  try {
+    const normalizedPayload = tokenParts[1]
+      .replace(/-/g, '+')
+      .replace(/_/g, '/');
+    const paddedPayload = normalizedPayload.padEnd(
+      normalizedPayload.length + ((4 - (normalizedPayload.length % 4)) % 4),
+      '=',
+    );
+    const payload = JSON.parse(atob(paddedPayload)) as { role?: unknown };
+    return typeof payload.role === 'string' ? payload.role : null;
+  } catch {
+    return null;
+  }
 };
 
 export function useUserForm(id?: string, onSuccess?: (action: SaveAction) => void) {
@@ -31,6 +60,8 @@ export function useUserForm(id?: string, onSuccess?: (action: SaveAction) => voi
   const [formData, setFormData] = useState<UserFormData>(EMPTY_USER_FORM);
   const [avatarFileError, setAvatarFileError] = useState('');
   const [isDisabled, setIsDisabled] = useState(!!id);
+  const currentMembershipRole = extractOrganizationRoleFromAccessToken();
+  const canAssignOrganizationRole = currentMembershipRole === 'owner';
 
   const { data: existingUser, isLoading } = useQuery({
     queryKey: ['users', id],
@@ -46,6 +77,7 @@ export function useUserForm(id?: string, onSuccess?: (action: SaveAction) => voi
           email: existingUser.email,
           password: '',
           role_id: existingUser.role_id || '',
+          organization_role: 'member',
           avatar_url: existingUser.avatar_url || '',
         });
         setAvatarFileError('');
@@ -103,6 +135,10 @@ export function useUserForm(id?: string, onSuccess?: (action: SaveAction) => voi
         avatar_url: data.avatar_url || undefined,
       };
 
+      if (!id && canAssignOrganizationRole) {
+        payload.organization_role = data.organization_role;
+      }
+
       if (!id || data.password) {
         payload.password = data.password;
       }
@@ -134,6 +170,7 @@ export function useUserForm(id?: string, onSuccess?: (action: SaveAction) => voi
     avatarFileError,
     roles,
     isEditing: !!id,
+    canAssignOrganizationRole,
     isLoading,
     isSaving: mutation.isPending,
     isCreatingRole: createAdminRoleMutation.isPending,

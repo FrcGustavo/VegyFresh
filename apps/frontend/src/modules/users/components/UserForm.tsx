@@ -6,6 +6,7 @@ interface UserFormData {
   email: string;
   password: string;
   role_id: string;
+  organization_role: 'member' | 'admin';
   avatar_url: string;
 }
 interface RoleOption {
@@ -18,6 +19,7 @@ interface UserFormProps {
   avatarFileError?: string;
   roles: RoleOption[];
   isEditing: boolean;
+  canAssignOrganizationRole: boolean;
   isCreatingRole: boolean;
   handleChange: (e: UserChangeEvent) => void;
   handleAvatarFileChange: (file: File) => void;
@@ -31,6 +33,7 @@ export default function UserForm({
   avatarFileError,
   roles,
   isEditing,
+  canAssignOrganizationRole,
   isCreatingRole,
   handleChange,
   handleAvatarFileChange,
@@ -107,6 +110,21 @@ export default function UserForm({
               <TextField select fullWidth label="Rol" name="role_id" margin="normal" value={formData.role_id || ''} onChange={handleChange} required disabled={isDisabled}>
                 {roles.map((r) => <MenuItem key={r.id} value={r.id}>{r.name}</MenuItem>)}
               </TextField>
+              {!isEditing && canAssignOrganizationRole && (
+                <TextField
+                  select
+                  fullWidth
+                  label="Rol en la organización"
+                  name="organization_role"
+                  margin="normal"
+                  value={formData.organization_role}
+                  onChange={handleChange}
+                  disabled={isDisabled}
+                >
+                  <MenuItem value="member">Miembro</MenuItem>
+                  <MenuItem value="admin">Administrador</MenuItem>
+                </TextField>
+              )}
 
               {roles.length === 0 && (
                 <Alert severity="warning" sx={{ mt: 2 }}>

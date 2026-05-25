@@ -70,7 +70,6 @@ export class AuthService {
     }
 
     const passwordHash = await bcrypt.hash(dto.password, this.bcryptSaltRounds);
-    const ownerRole = await this.findOrCreateOwnerRole();
 
     const result = await this.usersRepository.manager.transaction(
       async (manager) => {
@@ -78,9 +77,12 @@ export class AuthService {
         const orgFolio = await this.buildOrganizationFolio(manager);
 
         const userRepository = manager.getRepository(User);
+        const roleRepository = manager.getRepository(Role);
         const organizationRepository = manager.getRepository(Organization);
         const organizationUsersRepository =
           manager.getRepository(OrganizationUser);
+        const authSessionsRepository = manager.getRepository(AuthSession);
+        const ownerRole = await this.findOrCreateOwnerRole(roleRepository);
 
         const user = userRepository.create({
           name: dto.name,
@@ -91,7 +93,15 @@ export class AuthService {
           role: ownerRole,
           avatar_url: null,
         });
-        const savedUser = await userRepository.save(user);
+        let savedUser: User;
+        try {
+          savedUser = await userRepository.save(user);
+        } catch (error) {
+          if (this.isEmailConflictError(error)) {
+            throw new BadRequestException('Email is already registered');
+          }
+          throw error;
+        }
 
         const organization = organizationRepository.create({
           folio: orgFolio,
@@ -113,24 +123,27 @@ export class AuthService {
         });
         const savedMembership =
           await organizationUsersRepository.save(membership);
+        const tokens = await this.generateTokens(
+          {
+            sub: savedUser.id,
+            email: savedUser.email,
+            org_id: savedOrganization.id,
+            membership_id: savedMembership.id,
+            role: savedMembership.role,
+            permissions: permissionsForRole(savedMembership.role),
+            session_id: '',
+          },
+          authSessionsRepository,
+        );
 
         return {
           user: savedUser,
           organization: savedOrganization,
           membership: savedMembership,
+          tokens,
         };
       },
     );
-
-    const tokens = await this.generateTokens({
-      sub: result.user.id,
-      email: result.user.email,
-      org_id: result.organization.id,
-      membership_id: result.membership.id,
-      role: result.membership.role,
-      permissions: permissionsForRole(result.membership.role),
-      session_id: '',
-    });
 
     return {
       user: {
@@ -147,7 +160,7 @@ export class AuthService {
         id: result.membership.id,
         role: result.membership.role,
       },
-      ...tokens,
+      ...result.tokens,
     };
   }
 
@@ -312,26 +325,34 @@ export class AuthService {
     return { revoked: true };
   }
 
-  private async findOrCreateOwnerRole() {
-    const existingRole = await this.rolesRepository.findOneBy({
+  private async findOrCreateOwnerRole(
+    roleRepository: Repository<Role> = this.rolesRepository,
+  ) {
+    await roleRepository.upsert(
+      {
+        name: 'owner',
+        permissions: [
+          { action: '*', resource: '*' },
+          { action: 'manage', resource: 'organization' },
+        ],
+      },
+      ['name'],
+    );
+
+    const existingRole = await roleRepository.findOneBy({
       name: 'owner',
     });
     if (existingRole) {
       return existingRole;
     }
 
-    const role = this.rolesRepository.create({
-      name: 'owner',
-      permissions: [
-        { action: '*', resource: '*' },
-        { action: 'manage', resource: 'organization' },
-      ],
-    });
-    return this.rolesRepository.save(role);
+    throw new InternalServerErrorException('Owner role could not be resolved');
   }
 
   private async generateTokens(
     payload: AuthenticatedUser,
+    authSessionsRepository: Repository<AuthSession> = this
+      .authSessionsRepository,
   ): Promise<AuthTokens> {
     const accessSecret = this.resolveSecret('JWT_ACCESS_SECRET');
     const refreshSecret = this.resolveSecret('JWT_REFRESH_SECRET');
@@ -350,6 +371,12 @@ export class AuthService {
       MAX_REFRESH_TOKEN_TTL_MS,
     );
     const sessionId = randomUUID();
+    const accessExpiresInSeconds = Math.floor(
+      this.parseDuration(accessTtl) / 1000,
+    );
+    const refreshExpiresInSeconds = Math.floor(
+      this.parseDuration(refreshTtl) / 1000,
+    );
 
     const tokenPayload: AuthenticatedUser = {
       ...payload,
@@ -360,25 +387,31 @@ export class AuthService {
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(tokenPayload, {
         secret: accessSecret,
-        expiresIn: accessTtl as unknown as number,
+        expiresIn: accessExpiresInSeconds,
       }),
       this.jwtService.signAsync(tokenPayload, {
         secret: refreshSecret,
-        expiresIn: refreshTtl as unknown as number,
+        expiresIn: refreshExpiresInSeconds,
       }),
     ]);
-    const refreshTokenHash = await bcrypt.hash(refreshToken, this.bcryptSaltRounds);
+    const refreshTokenHash = await bcrypt.hash(
+      refreshToken,
+      this.bcryptSaltRounds,
+    );
 
-    const session = this.authSessionsRepository.create({
+    const session = authSessionsRepository.create({
       id: sessionId,
       user_id: payload.sub,
       organization_id: payload.org_id,
       membership_id: payload.membership_id,
       refresh_token_hash: refreshTokenHash,
-      expires_at: this.addMilliseconds(Date.now(), this.parseDuration(refreshTtl)),
+      expires_at: this.addMilliseconds(
+        Date.now(),
+        this.parseDuration(refreshTtl),
+      ),
       revoked_at: null,
     });
-    await this.authSessionsRepository.save(session);
+    await authSessionsRepository.save(session);
 
     return {
       access_token: accessToken,
@@ -409,9 +442,34 @@ export class AuthService {
       return resolveJwtSecret(this.configService, key);
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : 'JWT secrets are not configured';
+        error instanceof Error
+          ? error.message
+          : 'JWT secrets are not configured';
       throw new InternalServerErrorException(message);
     }
+  }
+
+  private isEmailConflictError(error: unknown): boolean {
+    if (
+      typeof error !== 'object' ||
+      error === null ||
+      !('code' in error) ||
+      (error as { code?: unknown }).code !== '23505'
+    ) {
+      return false;
+    }
+
+    const dbError = error as {
+      constraint?: string;
+      detail?: string;
+      message?: string;
+    };
+
+    return Boolean(
+      dbError.constraint?.toLowerCase().includes('email') ||
+      dbError.detail?.toLowerCase().includes('(email)') ||
+      dbError.message?.toLowerCase().includes('email'),
+    );
   }
 
   private async buildUserFolio(manager: {

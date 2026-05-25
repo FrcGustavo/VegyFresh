@@ -52,8 +52,7 @@ type UsersRepositoryMock = {
 };
 type RolesRepositoryMock = {
   findOneBy: jest.Mock<Promise<{ id: string; name: string } | null>, [unknown]>;
-  create: jest.Mock<unknown, [unknown]>;
-  save: jest.Mock<Promise<unknown>, [unknown]>;
+  upsert: jest.Mock<Promise<unknown>, [unknown, unknown]>;
 };
 type OrganizationUsersRepositoryMock = {
   find: jest.Mock<Promise<MembershipRecord[]>, [unknown]>;
@@ -82,7 +81,6 @@ describe('AuthService security flows', () => {
   let service: AuthService;
   let usersRepository: UsersRepositoryMock;
   let rolesRepository: RolesRepositoryMock;
-  let organizationsRepository: Record<string, never>;
   let organizationUsersRepository: OrganizationUsersRepositoryMock;
   let authSessionsRepository: AuthSessionsRepositoryMock;
   let jwtService: { signAsync: jest.Mock<Promise<string>, [unknown, unknown]> };
@@ -99,10 +97,8 @@ describe('AuthService security flows', () => {
         Promise<{ id: string; name: string } | null>,
         [unknown]
       >(),
-      create: jest.fn<unknown, [unknown]>(),
-      save: jest.fn<Promise<unknown>, [unknown]>(),
+      upsert: jest.fn<Promise<unknown>, [unknown, unknown]>(),
     };
-    organizationsRepository = {};
     organizationUsersRepository = {
       find: jest.fn<Promise<MembershipRecord[]>, [unknown]>(),
       findOne: jest.fn<Promise<MembershipRecord | null>, [unknown]>(),
@@ -117,11 +113,10 @@ describe('AuthService security flows', () => {
     service = new AuthService(
       usersRepository as never,
       rolesRepository as never,
-      organizationsRepository as never,
       organizationUsersRepository as never,
       authSessionsRepository as never,
       jwtService as never,
-      makeConfigService() as never,
+      makeConfigService(),
     );
   });
 
@@ -165,6 +160,12 @@ describe('AuthService security flows', () => {
           role: OrganizationUserRole.OWNER,
         }),
       };
+      const authSessionRepository = {
+        create: jest.fn((session: AuthSessionRecord) => session),
+        save: jest
+          .fn<Promise<AuthSessionRecord>, [AuthSessionRecord]>()
+          .mockImplementation((session) => Promise.resolve(session)),
+      };
       const queryMock = jest
         .fn<Promise<QueryRow[]>, [string]>()
         .mockResolvedValueOnce([{ folio: 1 }])
@@ -172,8 +173,10 @@ describe('AuthService security flows', () => {
       const getRepositoryMock = jest
         .fn<unknown, [unknown]>()
         .mockReturnValueOnce(userRepository)
+        .mockReturnValueOnce(rolesRepository)
         .mockReturnValueOnce(orgRepository)
-        .mockReturnValueOnce(membershipRepository);
+        .mockReturnValueOnce(membershipRepository)
+        .mockReturnValueOnce(authSessionRepository);
 
       return cb({
         query: queryMock,
@@ -209,6 +212,7 @@ describe('AuthService security flows', () => {
         membership_id: 'membership-1',
         role: OrganizationUserRole.OWNER,
       }),
+      expect.any(Object),
     );
   });
 

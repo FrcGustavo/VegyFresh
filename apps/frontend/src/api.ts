@@ -27,8 +27,11 @@ const parseErrorPayload = async (response: Response): Promise<ApiErrorPayload | 
 
 // ─── Token refresh queue ──────────────────────────────────────────────────────
 let _isRefreshing = false;
-let _refreshQueue: Array<(token: string | null) => void> = [];
-let _lastRefreshError: Error | null = null;
+type RefreshQueueResult = {
+  token: string | null;
+  error: Error | null;
+};
+let _refreshQueue: Array<(result: RefreshQueueResult) => void> = [];
 
 const getErrorStatus = (error: unknown): number | null => {
   if (
@@ -113,28 +116,34 @@ export async function fetchApi<T = any>(endpoint: string, options?: RequestInit)
 
     if (_isRefreshing) {
       // Queue subsequent 401s until the ongoing refresh resolves
-      newToken = await new Promise<string | null>((resolve) => {
+      const refreshResult = await new Promise<RefreshQueueResult>((resolve) => {
         _refreshQueue.push(resolve);
       });
+      if (refreshResult.error) {
+        throw refreshResult.error;
+      }
+      newToken = refreshResult.token;
     } else {
       _isRefreshing = true;
-      _lastRefreshError = null;
+      let refreshError: Error | null = null;
       try {
         newToken = await attemptTokenRefresh();
       } catch (error) {
-        _lastRefreshError =
+        refreshError =
           error instanceof Error
             ? error
             : new Error('No fue posible refrescar la sesión');
       } finally {
-        _refreshQueue.forEach((cb) => cb(newToken ?? null));
+        _refreshQueue.forEach((cb) =>
+          cb({ token: newToken ?? null, error: refreshError }),
+        );
         _refreshQueue = [];
         _isRefreshing = false;
       }
-    }
 
-    if (_lastRefreshError) {
-      throw _lastRefreshError;
+      if (refreshError) {
+        throw refreshError;
+      }
     }
 
     if (!newToken) {

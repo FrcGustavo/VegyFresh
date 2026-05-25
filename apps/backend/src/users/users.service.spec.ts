@@ -1,10 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import {
-  BadRequestException,
-  ForbiddenException,
-} from '@nestjs/common';
+import { BadRequestException, ForbiddenException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { UsersService } from './users.service';
 import { User } from './entities/user.entity';
@@ -14,6 +11,10 @@ import {
   OrganizationUserRole,
 } from '../organizations/entities/organization-user.entity';
 import type { CreateUserDto } from './dto/create-user.dto';
+
+jest.mock('bcrypt', () => ({
+  hash: jest.fn(),
+}));
 
 describe('UsersService', () => {
   let service: UsersService;
@@ -39,7 +40,6 @@ describe('UsersService', () => {
     getRepository: jest.Mock;
     query: jest.Mock;
   };
-  let hashSpy: jest.SpyInstance;
 
   beforeEach(async () => {
     managerUsersRepository = {
@@ -79,9 +79,7 @@ describe('UsersService', () => {
       findOneBy: jest.fn(),
     };
     organizationUsersRepository = {};
-    hashSpy = jest
-      .spyOn(bcrypt, 'hash')
-      .mockResolvedValue('hashed-password' as never);
+    (bcrypt.hash as jest.Mock).mockResolvedValue('hashed-password');
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -100,10 +98,12 @@ describe('UsersService', () => {
   });
 
   afterEach(() => {
-    hashSpy.mockRestore();
+    jest.clearAllMocks();
   });
 
-  const makeCreateDto = (overrides: Partial<CreateUserDto> = {}): CreateUserDto => ({
+  const makeCreateDto = (
+    overrides: Partial<CreateUserDto> = {},
+  ): CreateUserDto => ({
     name: 'John Doe',
     email: 'john@example.com',
     password: 'very-secure-password',
@@ -112,7 +112,10 @@ describe('UsersService', () => {
   });
 
   it('rejects admin assignment by non-owner creators', async () => {
-    rolesRepository.findOneBy.mockResolvedValue({ id: 'role-1', name: 'admin' });
+    rolesRepository.findOneBy.mockResolvedValue({
+      id: 'role-1',
+      name: 'admin',
+    });
 
     await expect(
       service.create(
@@ -123,26 +126,30 @@ describe('UsersService', () => {
     ).rejects.toThrow(ForbiddenException);
   });
 
-  it('reactivates existing inactive membership during user creation', async () => {
-    rolesRepository.findOneBy.mockResolvedValue({ id: 'role-1', name: 'member' });
+  it('creates membership during user creation', async () => {
+    rolesRepository.findOneBy.mockResolvedValue({
+      id: 'role-1',
+      name: 'member',
+    });
     managerUsersRepository.create.mockReturnValue({ id: 'user-1' });
     managerUsersRepository.save.mockResolvedValue({ id: 'user-1' });
-    managerOrganizationUsersRepository.findOne.mockResolvedValue({
+    managerOrganizationUsersRepository.create.mockReturnValue({
       id: 'membership-1',
-      is_active: false,
     });
 
-    await service.create(
-      makeCreateDto(),
-      'org-1',
-      OrganizationUserRole.OWNER,
-    );
+    await service.create(makeCreateDto(), 'org-1', OrganizationUserRole.OWNER);
 
-    expect(managerOrganizationUsersRepository.update).toHaveBeenCalledWith(
-      { id: 'membership-1' },
-      { role: OrganizationUserRole.MEMBER, is_active: true },
+    expect(managerOrganizationUsersRepository.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        user_id: 'user-1',
+        organization_id: 'org-1',
+        role: OrganizationUserRole.MEMBER,
+        is_active: true,
+      }),
     );
-    expect(managerOrganizationUsersRepository.create).not.toHaveBeenCalled();
+    expect(managerOrganizationUsersRepository.save).toHaveBeenCalledWith({
+      id: 'membership-1',
+    });
   });
 
   it('prevents removing the last active owner of an organization', async () => {
@@ -193,7 +200,9 @@ describe('UsersService', () => {
 
     const result = await service.remove('user-1', 'org-1');
 
-    expect(managerUsersRepository.remove).toHaveBeenCalledWith({ id: 'user-1' });
+    expect(managerUsersRepository.remove).toHaveBeenCalledWith({
+      id: 'user-1',
+    });
     expect(result).toEqual({
       id: 'user-1',
       deleted: true,
