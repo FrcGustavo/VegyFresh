@@ -215,7 +215,7 @@ describe('AppController (e2e)', () => {
       .expect({ revoked: true });
   });
 
-  it('allows same-tenant access and denies cross-tenant user access', async () => {
+  it('allows same-organization access and denies cross-organization user access', async () => {
     await request(app.getHttpServer())
       .get('/users/user-org1')
       .set('Authorization', 'Bearer token-org1-owner')
