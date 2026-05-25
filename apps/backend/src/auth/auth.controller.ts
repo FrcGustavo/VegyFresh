@@ -83,7 +83,8 @@ export class AuthController {
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Revoke current session',
-    description: 'Revokes only the current tenant-bound session (by session_id).',
+    description:
+      'Revokes only the current tenant-bound session (by session_id).',
   })
   logout(@CurrentUser() user: AuthenticatedUser) {
     return this.authService.logout(user);
