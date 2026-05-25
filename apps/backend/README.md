@@ -59,3 +59,24 @@ pnpm --filter backend run build
 pnpm --filter backend run test
 pnpm --filter backend run dev
 ```
+
+## WhatsApp Webhook Integration
+
+The WhatsApp webhook creates orders on behalf of a bot user inside a specific tenant organization.
+Two environment variables control this:
+
+```
+WHATSAPP_ORGANIZATION_ID=<uuid>   # The target organization that receives webhook orders
+WHATSAPP_BOT_USER_ID=<uuid>       # The user assigned as the order owner for every webhook order
+```
+
+**Prerequisite:** The bot user (`WHATSAPP_BOT_USER_ID`) must have an active membership in the
+target organization (`WHATSAPP_ORGANIZATION_ID`). Without this, the `findUserOrFail` check in
+`OrdersService` will throw a `NotFoundException` for every incoming webhook order.
+
+To provision the bot user membership, insert a row into the `organization_users` table:
+
+```sql
+INSERT INTO organization_users (organization_id, user_id, role, is_active)
+VALUES ('<WHATSAPP_ORGANIZATION_ID>', '<WHATSAPP_BOT_USER_ID>', 'member', true);
+```

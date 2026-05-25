@@ -86,11 +86,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return;
         }
 
-        setState({
-          user: null,
-          isAuthenticated: Boolean(accessToken || refreshToken),
-          isLoading: false,
-        });
+        // Non-auth errors (e.g. network failure) should not be treated as
+        // authenticated — downstream code assumes isAuthenticated === true
+        // implies a non-null user.
+        setState({ user: null, isAuthenticated: false, isLoading: false });
       }
     };
 

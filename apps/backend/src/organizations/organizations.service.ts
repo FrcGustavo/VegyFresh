@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, EntityManager, Repository } from 'typeorm';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
@@ -65,8 +65,8 @@ export class OrganizationsService {
     return memberships.map((membership) => membership.organization);
   }
 
-  async findOne(id: string, userId: string) {
-    await this.findMembershipOrFail(userId, id);
+  async findOne(id: string, userId: string, requiredRoles?: OrganizationUserRole[]) {
+    await this.findMembershipOrFail(userId, id, requiredRoles);
 
     const organization = await this.organizationsRepository.findOne({
       where: { id },
@@ -84,18 +84,25 @@ export class OrganizationsService {
     updateOrganizationDto: UpdateOrganizationDto,
     userId: string,
   ) {
-    const organization = await this.findOne(id, userId);
+    const organization = await this.findOne(id, userId, [
+      OrganizationUserRole.OWNER,
+      OrganizationUserRole.ADMIN,
+    ]);
     this.organizationsRepository.merge(organization, updateOrganizationDto);
     return this.organizationsRepository.save(organization);
   }
 
   async remove(id: string, userId: string) {
-    const organization = await this.findOne(id, userId);
+    const organization = await this.findOne(id, userId, [OrganizationUserRole.OWNER]);
     await this.organizationsRepository.remove(organization);
     return { id, deleted: true };
   }
 
-  async findMembershipOrFail(userId: string, organizationId: string) {
+  async findMembershipOrFail(
+    userId: string,
+    organizationId: string,
+    requiredRoles?: OrganizationUserRole[],
+  ) {
     const membership = await this.organizationUsersRepository.findOne({
       where: {
         user_id: userId,
@@ -107,6 +114,12 @@ export class OrganizationsService {
     if (!membership) {
       throw new NotFoundException(
         `Membership for user ${userId} and organization ${organizationId} not found`,
+      );
+    }
+
+    if (requiredRoles && !requiredRoles.includes(membership.role)) {
+      throw new ForbiddenException(
+        `User ${userId} does not have the required role in organization ${organizationId}`,
       );
     }
 

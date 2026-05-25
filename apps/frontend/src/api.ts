@@ -89,6 +89,10 @@ function buildHeaders(
     !(body instanceof URLSearchParams) &&
     !(body instanceof Blob);
 
+  // Only set Content-Type: application/json when a non-FormData body is present.
+  // Omitting it on bodyless requests (e.g. GET) is intentional and more correct;
+  // FormData/URLSearchParams/Blob must not have Content-Type forced so the browser
+  // can set the appropriate type (with boundary for multipart).
   if (shouldSetJsonContentType && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json');
   }
