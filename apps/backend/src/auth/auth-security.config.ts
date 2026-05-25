@@ -37,15 +37,19 @@ export function resolveJwtSecret(
   configService: ConfigService,
   primaryKey: 'JWT_ACCESS_SECRET' | 'JWT_REFRESH_SECRET',
 ): string {
+  const primaryConfigKey =
+    primaryKey === 'JWT_ACCESS_SECRET' ? 'jwtAccessSecret' : 'jwtRefreshSecret';
   const secret =
     configService.get<string>(primaryKey) ??
-    configService.get<string>(`config.${primaryKey === 'JWT_ACCESS_SECRET' ? 'jwtAccessSecret' : 'jwtRefreshSecret'}`) ??
+    configService.get<string>(`config.${primaryConfigKey}`) ??
+    configService.get<string>('JWT_SECRET') ??
+    configService.get<string>('config.jwtSecret') ??
     '';
   const normalized = secret.trim();
 
   if (normalized.length < MIN_SECRET_LENGTH) {
     throw new Error(
-      `${primaryKey} must be at least ${MIN_SECRET_LENGTH} characters`,
+      `${primaryKey} (or JWT_SECRET fallback) must be at least ${MIN_SECRET_LENGTH} characters`,
     );
   }
 

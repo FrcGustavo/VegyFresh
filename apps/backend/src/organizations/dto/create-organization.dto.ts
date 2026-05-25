@@ -4,6 +4,12 @@ export class CreateOrganizationDto {
   @ApiProperty({ example: 'Vegy Fresh Monterrey' })
   name!: string;
 
+  @ApiPropertyOptional({
+    example: 'https://assets.vegyfresh.com/orgs/vegy-fresh/logo.png',
+    nullable: true,
+  })
+  logo_url?: string | null;
+
   @ApiPropertyOptional({ example: 'Vegy Fresh SA de CV', nullable: true })
   legal_name?: string | null;
 

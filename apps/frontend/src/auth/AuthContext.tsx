@@ -34,31 +34,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const restoreSession = async () => {
       const accessToken = authStorage.getAccessToken();
       const refreshToken = authStorage.getRefreshToken();
-      
+
       if (!accessToken && !refreshToken) {
         setState({ user: null, isAuthenticated: false, isLoading: false });
         return;
       }
 
       try {
-        const response = await authApi.me(accessToken!);
-        setState({ user: response.user, isAuthenticated: true, isLoading: false });
-      } catch (err) {
-        // If me() fails and refresh token exists, attempt refresh+retry
-        if (refreshToken) {
-          try {
-            const refreshedTokens = await authApi.refresh(refreshToken);
-            authStorage.setTokens(refreshedTokens.access_token, refreshedTokens.refresh_token);
-            const response = await authApi.me(refreshedTokens.access_token);
-            setState({ user: response.user, isAuthenticated: true, isLoading: false });
-          } catch {
-            authStorage.clearTokens();
-            setState({ user: null, isAuthenticated: false, isLoading: false });
-          }
-        } else {
+        if (accessToken) {
+          const response = await authApi.me(accessToken);
+          setState({ user: response.user, isAuthenticated: true, isLoading: false });
+          return;
+        }
+
+        if (!refreshToken) {
           authStorage.clearTokens();
           setState({ user: null, isAuthenticated: false, isLoading: false });
+          return;
         }
+
+        const refreshedTokens = await authApi.refresh(refreshToken);
+        authStorage.setTokens(refreshedTokens.access_token, refreshedTokens.refresh_token);
+        const response = await authApi.me(refreshedTokens.access_token);
+        setState({ user: response.user, isAuthenticated: true, isLoading: false });
+      } catch {
+        authStorage.clearTokens();
+        setState({ user: null, isAuthenticated: false, isLoading: false });
       }
     };
 

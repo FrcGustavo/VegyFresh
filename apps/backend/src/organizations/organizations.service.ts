@@ -1,10 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, EntityManager, Repository } from 'typeorm';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
 import { Organization } from './entities/organization.entity';
-import { OrganizationUser } from './entities/organization-user.entity';
+import {
+  OrganizationUser,
+  OrganizationUserRole,
+} from './entities/organization-user.entity';
 
 @Injectable()
 export class OrganizationsService {
@@ -13,31 +16,38 @@ export class OrganizationsService {
     private readonly organizationsRepository: Repository<Organization>,
     @InjectRepository(OrganizationUser)
     private readonly organizationUsersRepository: Repository<OrganizationUser>,
+    private readonly dataSource: DataSource,
   ) {}
 
   async create(createOrganizationDto: CreateOrganizationDto, userId: string) {
-    const folio = await this.buildOrganizationFolio();
-    const organization = this.organizationsRepository.create({
-      ...createOrganizationDto,
-      folio,
-      legal_name: createOrganizationDto.legal_name ?? null,
-      email: createOrganizationDto.email ?? null,
-      phone_number: createOrganizationDto.phone_number ?? null,
-      address: createOrganizationDto.address ?? null,
+    return this.dataSource.transaction(async (manager) => {
+      const organizationsRepository = manager.getRepository(Organization);
+      const organizationUsersRepository = manager.getRepository(OrganizationUser);
+
+      const folio = await this.buildOrganizationFolio(manager);
+      const organization = organizationsRepository.create({
+        ...createOrganizationDto,
+        folio,
+        logo_url: createOrganizationDto.logo_url ?? null,
+        legal_name: createOrganizationDto.legal_name ?? null,
+        email: createOrganizationDto.email ?? null,
+        phone_number: createOrganizationDto.phone_number ?? null,
+        address: createOrganizationDto.address ?? null,
+      });
+
+      const savedOrganization = await organizationsRepository.save(organization);
+
+      // Create organization membership for the creator
+      const membership = organizationUsersRepository.create({
+        organization_id: savedOrganization.id,
+        user_id: userId,
+        role: OrganizationUserRole.OWNER,
+        is_active: true,
+      });
+      await organizationUsersRepository.save(membership);
+
+      return savedOrganization;
     });
-
-    const savedOrganization = await this.organizationsRepository.save(organization);
-
-    // Create organization membership for the creator
-    const membership = this.organizationUsersRepository.create({
-      organization_id: savedOrganization.id,
-      user_id: userId,
-      role: 'owner' as any,
-      is_active: true,
-    });
-    await this.organizationUsersRepository.save(membership);
-
-    return savedOrganization;
   }
 
   async findAll(userId: string) {
@@ -98,8 +108,8 @@ export class OrganizationsService {
     return membership;
   }
 
-  private async buildOrganizationFolio() {
-    const [result] = await this.organizationsRepository.manager.query(
+  private async buildOrganizationFolio(manager: EntityManager) {
+    const [result] = await manager.query(
       `SELECT nextval('organizations_folio_seq') AS folio`,
     );
     const folioNumber = Number(result?.folio ?? 0);

@@ -81,10 +81,13 @@ export async function fetchApi<T = any>(endpoint: string, options?: RequestInit)
       });
     } else {
       _isRefreshing = true;
-      newToken = await attemptTokenRefresh();
-      _refreshQueue.forEach((cb) => cb(newToken));
-      _refreshQueue = [];
-      _isRefreshing = false;
+      try {
+        newToken = await attemptTokenRefresh();
+      } finally {
+        _refreshQueue.forEach((cb) => cb(newToken ?? null));
+        _refreshQueue = [];
+        _isRefreshing = false;
+      }
     }
 
     if (!newToken) {

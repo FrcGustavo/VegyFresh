@@ -27,6 +27,9 @@ export class Organization {
   @Column({ type: 'varchar', length: 255 })
   name!: string;
 
+  @Column({ type: 'text', nullable: true })
+  logo_url!: string | null;
+
   @Column({ type: 'varchar', length: 255, nullable: true })
   legal_name!: string | null;
 
