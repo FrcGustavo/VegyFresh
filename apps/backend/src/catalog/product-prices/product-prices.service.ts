@@ -66,26 +66,33 @@ export class ProductPricesService {
     updateProductPriceDto: UpdateProductPriceDto,
     organizationId: string,
   ) {
+    const safeUpdateProductPriceDto = {
+      ...updateProductPriceDto,
+    } as UpdateProductPriceDto & {
+      organization_id?: string;
+    };
+    delete safeUpdateProductPriceDto.organization_id;
     const productPrice = await this.findOne(id, organizationId);
     const product =
-      updateProductPriceDto.product_id !== undefined
+      safeUpdateProductPriceDto.product_id !== undefined
         ? await this.findProductOrFail(
-            updateProductPriceDto.product_id,
+            safeUpdateProductPriceDto.product_id,
             organizationId,
           )
         : productPrice.product;
     const priceList =
-      updateProductPriceDto.price_list_id !== undefined
+      safeUpdateProductPriceDto.price_list_id !== undefined
         ? await this.findPriceListOrFail(
-            updateProductPriceDto.price_list_id,
+            safeUpdateProductPriceDto.price_list_id,
             organizationId,
           )
         : productPrice.priceList;
 
     this.productPricesRepository.merge(productPrice, {
-      ...updateProductPriceDto,
+      ...safeUpdateProductPriceDto,
       product,
       priceList,
+      organization_id: organizationId,
     });
 
     return this.productPricesRepository.save(productPrice);

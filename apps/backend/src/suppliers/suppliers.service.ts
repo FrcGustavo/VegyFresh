@@ -77,8 +77,15 @@ export class SuppliersService {
     updateSupplierDto: UpdateSupplierDto,
     organizationId: string,
   ) {
+    const safeUpdateSupplierDto = {
+      ...updateSupplierDto,
+    } as UpdateSupplierDto & { organization_id?: string };
+    delete safeUpdateSupplierDto.organization_id;
     const supplier = await this.findOne(id, organizationId);
-    this.suppliersRepository.merge(supplier, updateSupplierDto);
+    this.suppliersRepository.merge(supplier, {
+      ...safeUpdateSupplierDto,
+      organization_id: organizationId,
+    });
     return this.suppliersRepository.save(supplier);
   }
 

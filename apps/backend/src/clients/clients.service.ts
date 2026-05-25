@@ -118,22 +118,27 @@ export class ClientsService {
     updateClientDto: UpdateClientDto,
     organizationId: string,
   ) {
+    const safeUpdateClientDto = { ...updateClientDto } as UpdateClientDto & {
+      organization_id?: string;
+    };
+    delete safeUpdateClientDto.organization_id;
     const client = await this.findOne(id, organizationId);
     const priceList =
-      updateClientDto.price_list_id === undefined
+      safeUpdateClientDto.price_list_id === undefined
         ? client.priceList
         : await this.resolvePriceList(
             organizationId,
-            updateClientDto.price_list_id,
+            safeUpdateClientDto.price_list_id,
           );
 
     this.clientsRepository.merge(client, {
-      ...updateClientDto,
+      ...safeUpdateClientDto,
       price_list_id:
-        updateClientDto.price_list_id === undefined
+        safeUpdateClientDto.price_list_id === undefined
           ? client.price_list_id
           : (priceList?.id ?? null),
       priceList,
+      organization_id: organizationId,
     });
 
     return this.clientsRepository.save(client);

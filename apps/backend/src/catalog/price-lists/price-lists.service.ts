@@ -22,10 +22,7 @@ export class PriceListsService {
     private readonly priceListsRepository: Repository<PriceList>,
   ) {}
 
-  async create(
-    createPriceListDto: CreatePriceListDto,
-    organizationId: string,
-  ) {
+  async create(createPriceListDto: CreatePriceListDto, organizationId: string) {
     const priceListFolio = await this.buildPriceListFolio(
       this.priceListsRepository.manager,
     );
@@ -79,8 +76,15 @@ export class PriceListsService {
     updatePriceListDto: UpdatePriceListDto,
     organizationId: string,
   ) {
+    const safeUpdatePriceListDto = {
+      ...updatePriceListDto,
+    } as UpdatePriceListDto & { organization_id?: string };
+    delete safeUpdatePriceListDto.organization_id;
     const priceList = await this.findOne(id, organizationId);
-    this.priceListsRepository.merge(priceList, updatePriceListDto);
+    this.priceListsRepository.merge(priceList, {
+      ...safeUpdatePriceListDto,
+      organization_id: organizationId,
+    });
     return this.priceListsRepository.save(priceList);
   }
 

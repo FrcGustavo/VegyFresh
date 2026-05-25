@@ -103,18 +103,23 @@ export class ProductsService {
     updateProductDto: UpdateProductDto,
     organizationId: string,
   ) {
+    const safeUpdateProductDto = { ...updateProductDto } as UpdateProductDto & {
+      organization_id?: string;
+    };
+    delete safeUpdateProductDto.organization_id;
     const product = await this.findOne(id, organizationId);
     const supplier =
-      updateProductDto.supplier_id !== undefined
+      safeUpdateProductDto.supplier_id !== undefined
         ? await this.findSupplierOrFail(
-            updateProductDto.supplier_id,
+            safeUpdateProductDto.supplier_id,
             organizationId,
           )
         : product.supplier;
 
     this.productsRepository.merge(product, {
-      ...updateProductDto,
+      ...safeUpdateProductDto,
       supplier,
+      organization_id: organizationId,
     });
 
     return this.productsRepository.save(product);
