@@ -8,6 +8,8 @@ import {
   Param,
   Delete,
   Query,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { UsersService } from './users.service';
@@ -20,6 +22,15 @@ import { Permissions } from '../auth/decorators/permissions.decorator';
 
 @ApiTags('users')
 @Controller('users')
+@UsePipes(
+  new ValidationPipe({
+    whitelist: true,
+    forbidNonWhitelisted: true,
+    forbidUnknownValues: true,
+    transform: true,
+    stopAtFirstError: true,
+  }),
+)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 

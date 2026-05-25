@@ -42,9 +42,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       try {
         if (accessToken) {
-          const response = await authApi.me(accessToken);
-          setState({ user: response.user, isAuthenticated: true, isLoading: false });
-          return;
+          try {
+            const response = await authApi.me(accessToken);
+            setState({ user: response.user, isAuthenticated: true, isLoading: false });
+            return;
+          } catch {
+            if (!refreshToken) {
+              throw new Error('Access token is invalid and refresh token is missing');
+            }
+          }
         }
 
         if (!refreshToken) {

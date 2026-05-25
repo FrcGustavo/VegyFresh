@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -40,6 +40,10 @@ export class UsersService {
   }
 
   async create(createUserDto: CreateUserDto, organizationId: string) {
+    if (typeof createUserDto.password !== 'string' || createUserDto.password.trim().length === 0) {
+      throw new BadRequestException('password is required');
+    }
+
     const role = await this.findRoleOrFail(createUserDto.role_id);
     const userFolio = await this.buildUserFolio(this.usersRepository.manager);
     const passwordHash = await bcrypt.hash(

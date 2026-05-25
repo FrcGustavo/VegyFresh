@@ -9,6 +9,7 @@ type UserChangeEvent = { target: { name: string; value: string } };
 interface UserFormData {
   name: string;
   email: string;
+  password: string;
   role_id: string;
   avatar_url: string;
 }
@@ -19,6 +20,7 @@ interface RoleOption {
 const EMPTY_USER_FORM: UserFormData = {
   name: '',
   email: '',
+  password: '',
   role_id: '',
   avatar_url: '',
 };
@@ -42,6 +44,7 @@ export function useUserForm(id?: string, onSuccess?: (action: SaveAction) => voi
         setFormData({
           name: existingUser.name,
           email: existingUser.email,
+          password: '',
           role_id: existingUser.role_id || '',
           avatar_url: existingUser.avatar_url || '',
         });
@@ -92,10 +95,23 @@ export function useUserForm(id?: string, onSuccess?: (action: SaveAction) => voi
   });
 
   const mutation = useMutation({
-    mutationFn: (data: UserFormData) => fetchApi(id ? `/users/${id}` : '/users', {
-      method: id ? 'PATCH' : 'POST',
-      body: JSON.stringify(data)
-    }),
+    mutationFn: (data: UserFormData) => {
+      const payload: Partial<UserFormData> = {
+        name: data.name,
+        email: data.email,
+        role_id: data.role_id,
+        avatar_url: data.avatar_url || undefined,
+      };
+
+      if (!id || data.password) {
+        payload.password = data.password;
+      }
+
+      return fetchApi(id ? `/users/${id}` : '/users', {
+        method: id ? 'PATCH' : 'POST',
+        body: JSON.stringify(payload),
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
     }
@@ -117,6 +133,7 @@ export function useUserForm(id?: string, onSuccess?: (action: SaveAction) => voi
     formData,
     avatarFileError,
     roles,
+    isEditing: !!id,
     isLoading,
     isSaving: mutation.isPending,
     isCreatingRole: createAdminRoleMutation.isPending,
