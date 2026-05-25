@@ -52,10 +52,18 @@ async function attemptTokenRefresh(): Promise<string | null> {
   }
 }
 
-function buildHeaders(accessToken: string | null, extra?: HeadersInit): HeadersInit {
-  const headers = new Headers(extra);
+function buildHeaders(accessToken: string | null, options?: RequestInit): HeadersInit {
+  const headers = new Headers(options?.headers);
+  const body = options?.body;
 
-  if (!headers.has('Content-Type')) {
+  const shouldSetJsonContentType =
+    body !== undefined &&
+    body !== null &&
+    !(body instanceof FormData) &&
+    !(body instanceof URLSearchParams) &&
+    !(body instanceof Blob);
+
+  if (shouldSetJsonContentType && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json');
   }
 
@@ -74,7 +82,7 @@ export async function fetchApi<T = any>(endpoint: string, options?: RequestInit)
 
   const response = await fetch(`${API_URL}${endpoint}`, {
     ...options,
-    headers: buildHeaders(accessToken, options?.headers),
+    headers: buildHeaders(accessToken, options),
   });
 
   if (response.status === 401) {
@@ -103,7 +111,7 @@ export async function fetchApi<T = any>(endpoint: string, options?: RequestInit)
     // Retry original request with new token
     const retryResponse = await fetch(`${API_URL}${endpoint}`, {
       ...options,
-      headers: buildHeaders(newToken, options?.headers),
+      headers: buildHeaders(newToken, options),
     });
 
     if (!retryResponse.ok) {

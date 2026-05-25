@@ -127,7 +127,11 @@ export class UsersController {
   @Delete(':id')
   @Roles('owner')
   @Permissions('users:manage')
-  @ApiOperation({ summary: 'Delete a user' })
+  @ApiOperation({
+    summary: 'Remove a user from current organization',
+    description:
+      'Deactivates the user membership in the current organization and only hard-deletes the user when no active memberships remain.',
+  })
   @ApiParam({ name: 'id', description: 'User ID' })
   remove(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
     return this.usersService.remove(id, user.org_id);
