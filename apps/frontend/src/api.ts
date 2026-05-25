@@ -53,11 +53,17 @@ async function attemptTokenRefresh(): Promise<string | null> {
 }
 
 function buildHeaders(accessToken: string | null, extra?: HeadersInit): HeadersInit {
-  return {
-    'Content-Type': 'application/json',
-    ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-    ...extra,
-  };
+  const headers = new Headers(extra);
+
+  if (!headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json');
+  }
+
+  if (accessToken && !headers.has('Authorization')) {
+    headers.set('Authorization', `Bearer ${accessToken}`);
+  }
+
+  return headers;
 }
 
 // Default keeps legacy call sites working while new API services can opt into typed responses.

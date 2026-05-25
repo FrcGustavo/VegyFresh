@@ -8,7 +8,7 @@ export class LoginDto {
 
   @ApiProperty({ example: 'super-secure-password' })
   @IsString()
-  @MinLength(8)
+  @MinLength(12)
   password!: string;
 
   @ApiPropertyOptional({

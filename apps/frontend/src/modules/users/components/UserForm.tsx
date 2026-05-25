@@ -99,6 +99,8 @@ export default function UserForm({
                   onChange={handleChange}
                   required
                   disabled={isDisabled}
+                  slotProps={{ htmlInput: { minLength: 12 } }}
+                  helperText="Debe tener al menos 12 caracteres"
                 />
               )}
 
