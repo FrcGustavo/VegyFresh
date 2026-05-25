@@ -139,7 +139,7 @@ describe('AppController (e2e)', () => {
 
     usersService.findOne.mockImplementation((id: string, orgId: string) => {
       const expectedOrganizationId = userOrganizations[id];
-      if (expectedOrganizationId && expectedOrganizationId !== orgId) {
+      if (!expectedOrganizationId || expectedOrganizationId !== orgId) {
         throw new NotFoundException(
           `User with id ${id} was not found in organization ${orgId}`,
         );
@@ -210,10 +210,29 @@ describe('AppController (e2e)', () => {
       });
 
     await request(app.getHttpServer())
+      .post('/auth/refresh')
+      .send({ refresh_token: 'invalid-refresh-token' })
+      .expect(401);
+
+    await request(app.getHttpServer())
       .post('/auth/logout')
       .set('Authorization', 'Bearer token-org1-owner')
       .expect(201)
       .expect({ revoked: true });
+  });
+
+  it('returns unauthorized for invalid login credentials', async () => {
+    authService.login.mockRejectedValueOnce(
+      new UnauthorizedException('Invalid credentials'),
+    );
+
+    await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({
+        email: 'owner@vegyfresh.com',
+        password: 'invalid-password',
+      })
+      .expect(401);
   });
 
   it('allows same-organization access and denies cross-organization user access', async () => {
@@ -228,6 +247,11 @@ describe('AppController (e2e)', () => {
 
     await request(app.getHttpServer())
       .get('/users/user-org2')
+      .set('Authorization', 'Bearer token-org1-owner')
+      .expect(404);
+
+    await request(app.getHttpServer())
+      .get('/users/user-missing')
       .set('Authorization', 'Bearer token-org1-owner')
       .expect(404);
   });
