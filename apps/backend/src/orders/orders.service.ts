@@ -33,17 +33,26 @@ export class OrdersService {
       async (manager) => {
         const orderRepository = manager.getRepository(Order);
         const orderItemRepository = manager.getRepository(OrderItem);
+        const clientsRepository = manager.getRepository(Client);
+        const usersRepository = manager.getRepository(User);
+        const productsRepository = manager.getRepository(Product);
+        const organizationUsersRepository =
+          manager.getRepository(OrganizationUser);
         const client = await this.findClientOrFail(
           createOrderDto.client_id,
           organizationId,
+          clientsRepository,
         );
         const user = await this.findUserOrFail(
           createOrderDto.user_id,
           organizationId,
+          usersRepository,
+          organizationUsersRepository,
         );
         const itemsPayload = await this.buildItems(
           createOrderDto.items,
           organizationId,
+          productsRepository,
         );
         const orderFolio = await this.buildOrderFolio(manager);
 
@@ -142,6 +151,11 @@ export class OrdersService {
       async (manager) => {
         const orderRepository = manager.getRepository(Order);
         const orderItemRepository = manager.getRepository(OrderItem);
+        const clientsRepository = manager.getRepository(Client);
+        const usersRepository = manager.getRepository(User);
+        const productsRepository = manager.getRepository(Product);
+        const organizationUsersRepository =
+          manager.getRepository(OrganizationUser);
         const existingOrder = await orderRepository.findOne({
           where: { id, organization_id: organizationId },
         });
@@ -155,18 +169,34 @@ export class OrdersService {
             ? await this.findClientOrFail(
                 updateOrderDto.client_id,
                 organizationId,
+                clientsRepository,
               )
             : await this.findClientOrFail(
                 existingOrder.client_id,
                 organizationId,
+                clientsRepository,
               );
         const user =
           updateOrderDto.user_id !== undefined
-            ? await this.findUserOrFail(updateOrderDto.user_id, organizationId)
-            : await this.findUserOrFail(existingOrder.user_id, organizationId);
+            ? await this.findUserOrFail(
+                updateOrderDto.user_id,
+                organizationId,
+                usersRepository,
+                organizationUsersRepository,
+              )
+            : await this.findUserOrFail(
+                existingOrder.user_id,
+                organizationId,
+                usersRepository,
+                organizationUsersRepository,
+              );
         const itemsPayload =
           updateOrderDto.items !== undefined
-            ? await this.buildItems(updateOrderDto.items, organizationId)
+            ? await this.buildItems(
+                updateOrderDto.items,
+                organizationId,
+                productsRepository,
+              )
             : null;
 
         orderRepository.merge(existingOrder, {
@@ -216,8 +246,12 @@ export class OrdersService {
     return { id, deleted: true };
   }
 
-  private async findClientOrFail(id: string, organizationId: string) {
-    const client = await this.clientsRepository.findOneBy({
+  private async findClientOrFail(
+    id: string,
+    organizationId: string,
+    clientsRepository: Repository<Client> = this.clientsRepository,
+  ) {
+    const client = await clientsRepository.findOneBy({
       id,
       organization_id: organizationId,
     });
@@ -228,13 +262,18 @@ export class OrdersService {
     return client;
   }
 
-  private async findUserOrFail(id: string, organizationId: string) {
-    const user = await this.usersRepository.findOneBy({ id });
+  private async findUserOrFail(
+    id: string,
+    organizationId: string,
+    usersRepository: Repository<User> = this.usersRepository,
+    organizationUsersRepository: Repository<OrganizationUser> = this.organizationUsersRepository,
+  ) {
+    const user = await usersRepository.findOneBy({ id });
     if (!user) {
       throw new NotFoundException(`User with id ${id} not found`);
     }
 
-    const membership = await this.organizationUsersRepository.findOneBy({
+    const membership = await organizationUsersRepository.findOneBy({
       user_id: id,
       organization_id: organizationId,
       is_active: true,
@@ -251,9 +290,10 @@ export class OrdersService {
   private async buildItems(
     items: CreateOrderItemDto[],
     organizationId: string,
+    productsRepository: Repository<Product> = this.productsRepository,
   ) {
     const productIds = [...new Set(items.map((item) => item.product_id))];
-    const products = await this.productsRepository.findBy({
+    const products = await productsRepository.findBy({
       id: In(productIds),
       organization_id: organizationId,
     });
