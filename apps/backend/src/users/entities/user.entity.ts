@@ -7,13 +7,15 @@ import {
   ManyToOne,
   OneToMany,
   PrimaryColumn,
+  Unique,
 } from 'typeorm';
 import { Order } from '../../orders/entities/order.entity';
 import { Role } from '../../roles/entities/role.entity';
-import { OrganizationUser } from '../../organizations/entities/organization-user.entity';
 import { AuthSession } from '../../auth/entities/auth-session.entity';
+import { Organization } from '../../organizations/entities/organization.entity';
 
 @Entity('users')
+@Unique('UQ_users_org_id', ['organization_id', 'id'])
 export class User {
   @PrimaryColumn({ type: 'uuid' })
   @Generated('uuid')
@@ -41,14 +43,17 @@ export class User {
   @Column({ type: 'text', nullable: true })
   avatar_url: string | null;
 
+  @Column({ type: 'uuid' })
+  organization_id: string;
+
+  @ManyToOne(() => Organization, (organization) => organization.users, {
+    onDelete: 'RESTRICT',
+  })
+  @JoinColumn({ name: 'organization_id' })
+  organization: Organization;
+
   @OneToMany(() => Order, (order) => order.user)
   orders: Order[];
-
-  @OneToMany(
-    () => OrganizationUser,
-    (organizationUser) => organizationUser.user,
-  )
-  organizationUsers: OrganizationUser[];
 
   @OneToMany(() => AuthSession, (authSession) => authSession.user)
   authSessions: AuthSession[];

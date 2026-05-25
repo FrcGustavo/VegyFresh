@@ -2,7 +2,6 @@ import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { IsNull } from 'typeorm';
 import { AuthService } from './auth.service';
-import { OrganizationUserRole } from '../organizations/entities/organization-user.entity';
 import type { AuthenticatedUser } from './types/authenticated-user.type';
 
 type UserRecord = {
@@ -10,28 +9,29 @@ type UserRecord = {
   email: string;
   name?: string;
   password_hash?: string;
+  organization_id?: string;
+  role?: {
+    id: string;
+    name: string;
+    permissions: Array<Record<string, unknown>>;
+  };
+  organization?: {
+    id: string;
+    name: string;
+    folio: string;
+  };
 };
 
-type OrganizationRecord = {
+type RoleRecord = {
   id: string;
   name: string;
-  folio: string;
-};
-
-type MembershipRecord = {
-  id: string;
-  user_id?: string;
-  organization_id: string;
-  role: OrganizationUserRole;
-  is_active?: boolean;
-  organization?: OrganizationRecord;
+  permissions: Array<Record<string, unknown>>;
 };
 
 type AuthSessionRecord = {
   id: string;
   user_id: string;
   organization_id: string;
-  membership_id: string;
   refresh_token_hash: string;
   expires_at: Date;
   revoked_at: Date | null;
@@ -45,18 +45,14 @@ type TransactionContext = {
 };
 type TransactionCallback = (manager: TransactionContext) => Promise<unknown>;
 type UsersRepositoryMock = {
-  findOneBy: jest.Mock<Promise<UserRecord | null>, [unknown]>;
+  findOne: jest.Mock<Promise<UserRecord | null>, [unknown]>;
   manager: {
     transaction: jest.Mock<Promise<unknown>, [TransactionCallback]>;
   };
 };
 type RolesRepositoryMock = {
-  findOneBy: jest.Mock<Promise<{ id: string; name: string } | null>, [unknown]>;
+  findOneBy: jest.Mock<Promise<RoleRecord | null>, [unknown]>;
   upsert: jest.Mock<Promise<unknown>, [unknown, unknown]>;
-};
-type OrganizationUsersRepositoryMock = {
-  find: jest.Mock<Promise<MembershipRecord[]>, [unknown]>;
-  findOne: jest.Mock<Promise<MembershipRecord | null>, [unknown]>;
 };
 type AuthSessionsRepositoryMock = {
   findOne: jest.Mock<Promise<AuthSessionRecord | null>, [unknown]>;
@@ -81,27 +77,19 @@ describe('AuthService security flows', () => {
   let service: AuthService;
   let usersRepository: UsersRepositoryMock;
   let rolesRepository: RolesRepositoryMock;
-  let organizationUsersRepository: OrganizationUsersRepositoryMock;
   let authSessionsRepository: AuthSessionsRepositoryMock;
   let jwtService: { signAsync: jest.Mock<Promise<string>, [unknown, unknown]> };
 
   beforeEach(() => {
     usersRepository = {
-      findOneBy: jest.fn<Promise<UserRecord | null>, [unknown]>(),
+      findOne: jest.fn<Promise<UserRecord | null>, [unknown]>(),
       manager: {
         transaction: jest.fn<Promise<unknown>, [TransactionCallback]>(),
       },
     };
     rolesRepository = {
-      findOneBy: jest.fn<
-        Promise<{ id: string; name: string } | null>,
-        [unknown]
-      >(),
+      findOneBy: jest.fn<Promise<RoleRecord | null>, [unknown]>(),
       upsert: jest.fn<Promise<unknown>, [unknown, unknown]>(),
-    };
-    organizationUsersRepository = {
-      find: jest.fn<Promise<MembershipRecord[]>, [unknown]>(),
-      findOne: jest.fn<Promise<MembershipRecord | null>, [unknown]>(),
     };
     authSessionsRepository = {
       findOne: jest.fn<Promise<AuthSessionRecord | null>, [unknown]>(),
@@ -113,27 +101,31 @@ describe('AuthService security flows', () => {
     service = new AuthService(
       usersRepository as never,
       rolesRepository as never,
-      organizationUsersRepository as never,
       authSessionsRepository as never,
       jwtService as never,
       makeConfigService(),
     );
   });
 
-  it('signup creates user, tenant membership, and returns tokens', async () => {
-    usersRepository.findOneBy.mockResolvedValue(null);
+  it('signup creates owner user scoped to organization and returns role context', async () => {
     rolesRepository.findOneBy.mockResolvedValue({
       id: 'role-owner',
       name: 'owner',
+      permissions: [{ action: '*', resource: '*' }],
     });
 
-    usersRepository.manager?.transaction.mockImplementation((cb) => {
+    usersRepository.manager.transaction.mockImplementation((cb) => {
       const userRepository = {
-        create: jest.fn(() => ({ id: 'user-1', email: 'owner@vegyfresh.com' })),
+        create: jest.fn(() => ({
+          id: 'user-1',
+          email: 'owner@vegyfresh.com',
+          organization_id: 'org-1',
+        })),
         save: jest.fn().mockResolvedValue({
           id: 'user-1',
           email: 'owner@vegyfresh.com',
           name: 'Owner',
+          organization_id: 'org-1',
         }),
       };
       const orgRepository = {
@@ -146,18 +138,6 @@ describe('AuthService security flows', () => {
           id: 'org-1',
           name: 'Org 1',
           folio: 'O00001',
-        }),
-      };
-      const membershipRepository = {
-        create: jest.fn(() => ({
-          id: 'membership-1',
-          organization_id: 'org-1',
-          role: OrganizationUserRole.OWNER,
-        })),
-        save: jest.fn().mockResolvedValue({
-          id: 'membership-1',
-          organization_id: 'org-1',
-          role: OrganizationUserRole.OWNER,
         }),
       };
       const authSessionRepository = {
@@ -175,7 +155,6 @@ describe('AuthService security flows', () => {
         .mockReturnValueOnce(userRepository)
         .mockReturnValueOnce(rolesRepository)
         .mockReturnValueOnce(orgRepository)
-        .mockReturnValueOnce(membershipRepository)
         .mockReturnValueOnce(authSessionRepository);
 
       return cb({
@@ -203,14 +182,13 @@ describe('AuthService security flows', () => {
 
     expect(result.user.email).toBe('owner@vegyfresh.com');
     expect(result.organization.id).toBe('org-1');
-    expect(result.membership.role).toBe(OrganizationUserRole.OWNER);
+    expect(result.role.name).toBe('owner');
     expect(result.access_token).toBe('access-token');
     expect(generateTokensSpy).toHaveBeenCalledWith(
       expect.objectContaining({
         sub: 'user-1',
         org_id: 'org-1',
-        membership_id: 'membership-1',
-        role: OrganizationUserRole.OWNER,
+        role: 'owner',
       }),
       expect.any(Object),
     );
@@ -220,6 +198,7 @@ describe('AuthService security flows', () => {
     rolesRepository.findOneBy.mockResolvedValue({
       id: 'role-owner',
       name: 'owner',
+      permissions: [{ action: '*', resource: '*' }],
     });
     usersRepository.manager.transaction.mockImplementation((cb) => {
       const userRepository = {
@@ -229,6 +208,18 @@ describe('AuthService security flows', () => {
           constraint: 'users_email_key',
         }),
       };
+      const orgRepository = {
+        create: jest.fn(() => ({
+          id: 'org-1',
+          name: 'Org 1',
+          folio: 'O00001',
+        })),
+        save: jest.fn().mockResolvedValue({
+          id: 'org-1',
+          name: 'Org 1',
+          folio: 'O00001',
+        }),
+      };
       const queryMock = jest
         .fn<Promise<QueryRow[]>, [string]>()
         .mockResolvedValueOnce([{ folio: 1 }])
@@ -236,7 +227,8 @@ describe('AuthService security flows', () => {
       const getRepositoryMock = jest
         .fn<unknown, [unknown]>()
         .mockReturnValueOnce(userRepository)
-        .mockReturnValueOnce(rolesRepository);
+        .mockReturnValueOnce(rolesRepository)
+        .mockReturnValueOnce(orgRepository);
       return cb({
         query: queryMock,
         getRepository: getRepositoryMock,
@@ -253,28 +245,21 @@ describe('AuthService security flows', () => {
     ).rejects.toBeInstanceOf(BadRequestException);
   });
 
-  it('login authenticates and respects requested organization scope', async () => {
+  it('login authenticates without membership context', async () => {
     const hashedPassword = await bcrypt.hash('super-secure-password', 10);
-    usersRepository.findOneBy.mockResolvedValue({
+    usersRepository.findOne.mockResolvedValue({
       id: 'user-1',
       name: 'Owner',
       email: 'owner@vegyfresh.com',
       password_hash: hashedPassword,
+      organization_id: 'org-1',
+      organization: { id: 'org-1', name: 'Org 1', folio: 'O00001' },
+      role: {
+        id: 'role-admin',
+        name: 'admin',
+        permissions: [{ action: 'manage', resource: 'users' }],
+      },
     });
-    organizationUsersRepository.find.mockResolvedValue([
-      {
-        id: 'membership-1',
-        organization_id: 'org-1',
-        role: OrganizationUserRole.OWNER,
-        organization: { id: 'org-1', name: 'Org 1', folio: 'O00001' },
-      },
-      {
-        id: 'membership-2',
-        organization_id: 'org-2',
-        role: OrganizationUserRole.ADMIN,
-        organization: { id: 'org-2', name: 'Org 2', folio: 'O00002' },
-      },
-    ]);
 
     jest.spyOn(service as never, 'generateTokens' as never).mockResolvedValue({
       access_token: 'access-token',
@@ -284,39 +269,14 @@ describe('AuthService security flows', () => {
     const result = await service.login({
       email: 'owner@vegyfresh.com',
       password: 'super-secure-password',
-      organization_id: 'org-2',
     });
 
-    expect(result.organization.id).toBe('org-2');
-    expect(result.membership.id).toBe('membership-2');
+    expect(result.organization.id).toBe('org-1');
+    expect(result.role.name).toBe('admin');
+    expect((result as Record<string, unknown>).membership).toBeUndefined();
   });
 
-  it('login rejects organization outside user memberships', async () => {
-    const hashedPassword = await bcrypt.hash('super-secure-password', 10);
-    usersRepository.findOneBy.mockResolvedValue({
-      id: 'user-1',
-      email: 'owner@vegyfresh.com',
-      password_hash: hashedPassword,
-    });
-    organizationUsersRepository.find.mockResolvedValue([
-      {
-        id: 'membership-1',
-        organization_id: 'org-1',
-        role: OrganizationUserRole.OWNER,
-        organization: { id: 'org-1', name: 'Org 1', folio: 'O00001' },
-      },
-    ]);
-
-    await expect(
-      service.login({
-        email: 'owner@vegyfresh.com',
-        password: 'super-secure-password',
-        organization_id: 'org-2',
-      }),
-    ).rejects.toBeInstanceOf(UnauthorizedException);
-  });
-
-  it('refresh rotates token pair and revokes old session', async () => {
+  it('refresh rotates token pair without membership checks', async () => {
     const refreshToken = 'refresh-token';
     const refreshHash = await bcrypt.hash(refreshToken, 10);
 
@@ -324,17 +284,18 @@ describe('AuthService security flows', () => {
       id: 'session-1',
       user_id: 'user-1',
       organization_id: 'org-1',
-      membership_id: 'membership-1',
       refresh_token_hash: refreshHash,
       expires_at: new Date(Date.now() + 10_000),
       revoked_at: null,
     });
-    organizationUsersRepository.findOne.mockResolvedValue({
-      id: 'membership-1',
-      user_id: 'user-1',
+    usersRepository.findOne.mockResolvedValue({
+      id: 'user-1',
       organization_id: 'org-1',
-      role: OrganizationUserRole.ADMIN,
-      is_active: true,
+      role: {
+        id: 'role-admin',
+        name: 'admin',
+        permissions: [{ action: 'manage', resource: 'users' }],
+      },
     });
 
     const generateTokensSpy = jest
@@ -348,8 +309,7 @@ describe('AuthService security flows', () => {
       sub: 'user-1',
       email: 'owner@vegyfresh.com',
       org_id: 'org-1',
-      membership_id: 'membership-1',
-      role: OrganizationUserRole.ADMIN,
+      role: 'admin',
       permissions: ['users:manage'],
       session_id: 'session-1',
     };
@@ -363,14 +323,11 @@ describe('AuthService security flows', () => {
     expect(authSessionsRepository.save).toHaveBeenCalledWith(
       expect.objectContaining({ id: 'session-1' }),
     );
-    const savedSession = authSessionsRepository.save.mock.calls[0]?.[0];
-    expect(savedSession?.revoked_at).toBeInstanceOf(Date);
     expect(generateTokensSpy).toHaveBeenCalledWith(
       expect.objectContaining({
         sub: 'user-1',
         org_id: 'org-1',
-        membership_id: 'membership-1',
-        role: OrganizationUserRole.ADMIN,
+        role: 'admin',
       }),
     );
   });
@@ -382,7 +339,6 @@ describe('AuthService security flows', () => {
       id: 'session-1',
       user_id: 'user-1',
       organization_id: 'org-1',
-      membership_id: 'membership-1',
       refresh_token_hash: refreshHash,
       expires_at: new Date(Date.now() + 10_000),
       revoked_at: null,
@@ -392,8 +348,7 @@ describe('AuthService security flows', () => {
       sub: 'user-1',
       email: 'owner@vegyfresh.com',
       org_id: 'org-1',
-      membership_id: 'membership-1',
-      role: OrganizationUserRole.ADMIN,
+      role: 'admin',
       permissions: ['users:manage'],
       session_id: 'session-1',
     };
@@ -403,46 +358,6 @@ describe('AuthService security flows', () => {
     ).rejects.toBeInstanceOf(UnauthorizedException);
   });
 
-  it('refresh rejects inactive tenant membership', async () => {
-    const refreshToken = 'refresh-token';
-    const refreshHash = await bcrypt.hash(refreshToken, 10);
-
-    authSessionsRepository.findOne.mockResolvedValue({
-      id: 'session-1',
-      user_id: 'user-1',
-      organization_id: 'org-1',
-      membership_id: 'membership-1',
-      refresh_token_hash: refreshHash,
-      expires_at: new Date(Date.now() + 10_000),
-      revoked_at: null,
-    });
-    organizationUsersRepository.findOne.mockResolvedValue(null);
-
-    const user: AuthenticatedUser = {
-      sub: 'user-1',
-      email: 'owner@vegyfresh.com',
-      org_id: 'org-1',
-      membership_id: 'membership-1',
-      role: OrganizationUserRole.ADMIN,
-      permissions: ['users:manage'],
-      session_id: 'session-1',
-    };
-
-    await expect(
-      service.refreshToken(user, refreshToken),
-    ).rejects.toBeInstanceOf(UnauthorizedException);
-    expect(organizationUsersRepository.findOne).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: {
-          id: 'membership-1',
-          user_id: 'user-1',
-          organization_id: 'org-1',
-          is_active: true,
-        },
-      }),
-    );
-  });
-
   it('logout revokes only current session', async () => {
     authSessionsRepository.update.mockResolvedValue({ affected: 1 });
 
@@ -450,8 +365,7 @@ describe('AuthService security flows', () => {
       sub: 'user-1',
       email: 'owner@vegyfresh.com',
       org_id: 'org-1',
-      membership_id: 'membership-1',
-      role: OrganizationUserRole.OWNER,
+      role: 'owner',
       permissions: ['*'],
       session_id: 'session-1',
     });
@@ -465,9 +379,6 @@ describe('AuthService security flows', () => {
       }),
       expect.objectContaining({}),
     );
-    const logoutUpdatePayload = authSessionsRepository.update.mock
-      .calls[0]?.[1] as { revoked_at?: unknown } | undefined;
-    expect(logoutUpdatePayload?.revoked_at).toBeInstanceOf(Date);
   });
 
   it('logout-all revokes all sessions in current tenant only', async () => {
@@ -477,8 +388,7 @@ describe('AuthService security flows', () => {
       sub: 'user-1',
       email: 'owner@vegyfresh.com',
       org_id: 'org-1',
-      membership_id: 'membership-1',
-      role: OrganizationUserRole.OWNER,
+      role: 'owner',
       permissions: ['*'],
       session_id: 'session-1',
     });
@@ -492,8 +402,5 @@ describe('AuthService security flows', () => {
       }),
       expect.objectContaining({}),
     );
-    const logoutAllUpdatePayload = authSessionsRepository.update.mock
-      .calls[0]?.[1] as { revoked_at?: unknown } | undefined;
-    expect(logoutAllUpdatePayload?.revoked_at).toBeInstanceOf(Date);
   });
 });

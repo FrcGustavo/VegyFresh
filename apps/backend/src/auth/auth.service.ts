@@ -14,15 +14,11 @@ import { ConfigService } from '@nestjs/config';
 import { User } from '../users/entities/user.entity';
 import { Role } from '../roles/entities/role.entity';
 import { Organization } from '../organizations/entities/organization.entity';
-import {
-  OrganizationUser,
-  OrganizationUserRole,
-} from '../organizations/entities/organization-user.entity';
 import { SignupDto } from './dto/signup.dto';
 import { LoginDto } from './dto/login.dto';
 import { AuthSession } from './entities/auth-session.entity';
 import type { AuthenticatedUser } from './types/authenticated-user.type';
-import { permissionsForRole } from './constants/org-role-permissions';
+import { extractRolePermissions } from './utils/role-permissions';
 import {
   DEFAULT_ACCESS_TOKEN_TTL,
   DEFAULT_REFRESH_TOKEN_TTL,
@@ -51,8 +47,6 @@ export class AuthService {
     private readonly usersRepository: Repository<User>,
     @InjectRepository(Role)
     private readonly rolesRepository: Repository<Role>,
-    @InjectRepository(OrganizationUser)
-    private readonly organizationUsersRepository: Repository<OrganizationUser>,
     @InjectRepository(AuthSession)
     private readonly authSessionsRepository: Repository<AuthSession>,
     private readonly jwtService: JwtService,
@@ -72,16 +66,27 @@ export class AuthService {
         const userRepository = manager.getRepository(User);
         const roleRepository = manager.getRepository(Role);
         const organizationRepository = manager.getRepository(Organization);
-        const organizationUsersRepository =
-          manager.getRepository(OrganizationUser);
         const authSessionsRepository = manager.getRepository(AuthSession);
         const ownerRole = await this.findOrCreateOwnerRole(roleRepository);
+
+        const organization = organizationRepository.create({
+          folio: orgFolio,
+          name: dto.organization_name,
+          legal_name: dto.organization_legal_name ?? null,
+          email: dto.email,
+          phone_number: dto.organization_phone_number ?? null,
+          address: dto.organization_address ?? null,
+        });
+        const savedOrganization =
+          await organizationRepository.save(organization);
 
         const user = userRepository.create({
           name: dto.name,
           folio: userFolio,
           email: dto.email,
           password_hash: passwordHash,
+          organization_id: savedOrganization.id,
+          organization: savedOrganization,
           role_id: ownerRole.id,
           role: ownerRole,
           avatar_url: null,
@@ -95,35 +100,13 @@ export class AuthService {
           }
           throw error;
         }
-
-        const organization = organizationRepository.create({
-          folio: orgFolio,
-          name: dto.organization_name,
-          legal_name: dto.organization_legal_name ?? null,
-          email: dto.email,
-          phone_number: dto.organization_phone_number ?? null,
-          address: dto.organization_address ?? null,
-        });
-        const savedOrganization =
-          await organizationRepository.save(organization);
-
-        const membership = organizationUsersRepository.create({
-          user_id: savedUser.id,
-          user: savedUser,
-          organization_id: savedOrganization.id,
-          organization: savedOrganization,
-          role: OrganizationUserRole.OWNER,
-        });
-        const savedMembership =
-          await organizationUsersRepository.save(membership);
         const tokens = await this.generateTokens(
           {
             sub: savedUser.id,
             email: savedUser.email,
             org_id: savedOrganization.id,
-            membership_id: savedMembership.id,
-            role: savedMembership.role,
-            permissions: permissionsForRole(savedMembership.role),
+            role: ownerRole.name,
+            permissions: extractRolePermissions(ownerRole.permissions),
             session_id: '',
           },
           authSessionsRepository,
@@ -132,7 +115,7 @@ export class AuthService {
         return {
           user: savedUser,
           organization: savedOrganization,
-          membership: savedMembership,
+          role: ownerRole,
           tokens,
         };
       },
@@ -149,16 +132,20 @@ export class AuthService {
         name: result.organization.name,
         folio: result.organization.folio,
       },
-      membership: {
-        id: result.membership.id,
-        role: result.membership.role,
+      role: {
+        id: result.role.id,
+        name: result.role.name,
+        permissions: extractRolePermissions(result.role.permissions),
       },
       ...result.tokens,
     };
   }
 
   async login(dto: LoginDto) {
-    const user = await this.usersRepository.findOneBy({ email: dto.email });
+    const user = await this.usersRepository.findOne({
+      where: { email: dto.email },
+      relations: { role: true, organization: true },
+    });
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
@@ -171,50 +158,31 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const memberships = await this.organizationUsersRepository.find({
-      where: {
-        user_id: user.id,
-        is_active: true,
-      },
-      relations: { organization: true },
-      order: { created_at: 'ASC' },
-    });
-
-    if (memberships.length === 0) {
-      throw new UnauthorizedException('User has no active organization');
-    }
-
-    const membership =
-      dto.organization_id !== undefined
-        ? memberships.find(
-            (item) => item.organization_id === dto.organization_id,
-          )
-        : memberships[0];
-
-    if (!membership) {
-      throw new UnauthorizedException(
-        `User does not belong to organization ${dto.organization_id}`,
-      );
+    if (!user.organization || !user.role) {
+      throw new UnauthorizedException('User is missing organization or role');
     }
 
     const tokens = await this.generateTokens({
       sub: user.id,
       email: user.email,
-      org_id: membership.organization_id,
-      membership_id: membership.id,
-      role: membership.role,
-      permissions: permissionsForRole(membership.role),
+      org_id: user.organization_id,
+      role: user.role.name,
+      permissions: extractRolePermissions(user.role.permissions),
       session_id: '',
     });
 
     return {
       user: { id: user.id, name: user.name, email: user.email },
       organization: {
-        id: membership.organization_id,
-        name: membership.organization.name,
-        folio: membership.organization.folio,
+        id: user.organization.id,
+        name: user.organization.name,
+        folio: user.organization.folio,
       },
-      membership: { id: membership.id, role: membership.role },
+      role: {
+        id: user.role.id,
+        name: user.role.name,
+        permissions: extractRolePermissions(user.role.permissions),
+      },
       ...tokens,
     };
   }
@@ -241,16 +209,15 @@ export class AuthService {
       throw new UnauthorizedException('Refresh token mismatch');
     }
 
-    const membership = await this.organizationUsersRepository.findOne({
+    const dbUser = await this.usersRepository.findOne({
       where: {
-        id: session.membership_id,
-        user_id: user.sub,
+        id: user.sub,
         organization_id: session.organization_id,
-        is_active: true,
       },
+      relations: { role: true },
     });
-    if (!membership) {
-      throw new UnauthorizedException('Membership is not active');
+    if (!dbUser || !dbUser.role) {
+      throw new UnauthorizedException('User is not active in organization');
     }
 
     session.revoked_at = new Date();
@@ -260,26 +227,24 @@ export class AuthService {
       sub: user.sub,
       email: user.email,
       org_id: session.organization_id,
-      membership_id: session.membership_id,
-      role: membership.role,
-      permissions: permissionsForRole(membership.role),
+      role: dbUser.role.name,
+      permissions: extractRolePermissions(dbUser.role.permissions),
       session_id: '',
     });
   }
 
   async me(user: AuthenticatedUser) {
-    const dbUser = await this.usersRepository.findOneBy({ id: user.sub });
+    const dbUser = await this.usersRepository.findOne({
+      where: { id: user.sub, organization_id: user.org_id },
+      relations: { organization: true, role: true },
+    });
     if (!dbUser) {
       throw new NotFoundException(`User with id ${user.sub} not found`);
     }
 
-    const membership = await this.organizationUsersRepository.findOne({
-      where: { id: user.membership_id },
-      relations: { organization: true },
-    });
-    if (!membership) {
+    if (!dbUser.organization || !dbUser.role) {
       throw new NotFoundException(
-        `Membership with id ${user.membership_id} not found`,
+        `User with id ${user.sub} is missing role data`,
       );
     }
 
@@ -290,13 +255,14 @@ export class AuthService {
         email: dbUser.email,
       },
       organization: {
-        id: membership.organization.id,
-        name: membership.organization.name,
-        folio: membership.organization.folio,
+        id: dbUser.organization.id,
+        name: dbUser.organization.name,
+        folio: dbUser.organization.folio,
       },
-      membership: {
-        id: membership.id,
-        role: membership.role,
+      role: {
+        id: dbUser.role.id,
+        name: dbUser.role.name,
+        permissions: extractRolePermissions(dbUser.role.permissions),
       },
     };
   }
@@ -396,7 +362,6 @@ export class AuthService {
       id: sessionId,
       user_id: payload.sub,
       organization_id: payload.org_id,
-      membership_id: payload.membership_id,
       refresh_token_hash: refreshTokenHash,
       expires_at: this.addMilliseconds(
         Date.now(),

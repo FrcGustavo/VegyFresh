@@ -11,7 +11,6 @@ interface UserFormData {
   email: string;
   password: string;
   role_id: string;
-  organization_role: 'member' | 'admin';
   avatar_url: string;
 }
 interface RoleOption {
@@ -23,7 +22,6 @@ const EMPTY_USER_FORM: UserFormData = {
   email: '',
   password: '',
   role_id: '',
-  organization_role: 'member',
   avatar_url: '',
 };
 
@@ -33,7 +31,6 @@ export function useUserForm(id?: string, onSuccess?: (action: SaveAction) => voi
   const [formData, setFormData] = useState<UserFormData>(EMPTY_USER_FORM);
   const [avatarFileError, setAvatarFileError] = useState('');
   const [isDisabled, setIsDisabled] = useState(!!id);
-  const canAssignOrganizationRole = !id;
 
   const { data: existingUser, isLoading } = useQuery({
     queryKey: ['users', id],
@@ -49,7 +46,6 @@ export function useUserForm(id?: string, onSuccess?: (action: SaveAction) => voi
           email: existingUser.email,
           password: '',
           role_id: existingUser.role_id || '',
-          organization_role: 'member',
           avatar_url: existingUser.avatar_url || '',
         });
         setAvatarFileError('');
@@ -107,10 +103,6 @@ export function useUserForm(id?: string, onSuccess?: (action: SaveAction) => voi
         avatar_url: data.avatar_url || undefined,
       };
 
-      if (!id && canAssignOrganizationRole) {
-        payload.organization_role = data.organization_role;
-      }
-
       if (!id || data.password) {
         payload.password = data.password;
       }
@@ -142,7 +134,6 @@ export function useUserForm(id?: string, onSuccess?: (action: SaveAction) => voi
     avatarFileError,
     roles,
     isEditing: !!id,
-    canAssignOrganizationRole,
     isLoading,
     isSaving: mutation.isPending,
     isCreatingRole: createAdminRoleMutation.isPending,

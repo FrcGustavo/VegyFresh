@@ -12,15 +12,16 @@ export interface AuthOrganization {
   folio: string;
 }
 
-export interface AuthMembership {
+export interface AuthRole {
   id: string;
-  role: string;
+  name: string;
+  permissions: string[];
 }
 
 export interface AuthSessionResponse {
   user: AuthUser;
   organization: AuthOrganization;
-  membership: AuthMembership;
+  role: AuthRole;
   access_token: string;
   refresh_token: string;
 }
@@ -33,13 +34,12 @@ export interface AuthRefreshResponse {
 export interface AuthContextResponse {
   user: AuthUser;
   organization: AuthOrganization;
-  membership: AuthMembership;
+  role: AuthRole;
 }
 
 export interface LoginPayload {
   email: string;
   password: string;
-  organization_id?: string;
 }
 
 export interface SignupPayload {

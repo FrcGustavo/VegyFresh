@@ -1,29 +1,27 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, EntityManager, Repository } from 'typeorm';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
 import { Organization } from './entities/organization.entity';
-import {
-  OrganizationUser,
-  OrganizationUserRole,
-} from './entities/organization-user.entity';
+import { User } from '../users/entities/user.entity';
 
 @Injectable()
 export class OrganizationsService {
   constructor(
     @InjectRepository(Organization)
     private readonly organizationsRepository: Repository<Organization>,
-    @InjectRepository(OrganizationUser)
-    private readonly organizationUsersRepository: Repository<OrganizationUser>,
     private readonly dataSource: DataSource,
   ) {}
 
   async create(createOrganizationDto: CreateOrganizationDto, userId: string) {
     return this.dataSource.transaction(async (manager) => {
       const organizationsRepository = manager.getRepository(Organization);
-      const organizationUsersRepository =
-        manager.getRepository(OrganizationUser);
+      const usersRepository = manager.getRepository(User);
 
       const folio = await this.buildOrganizationFolio(manager);
       const organization = organizationsRepository.create({
@@ -39,34 +37,43 @@ export class OrganizationsService {
       const savedOrganization =
         await organizationsRepository.save(organization);
 
-      // Create organization membership for the creator
-      const membership = organizationUsersRepository.create({
-        organization_id: savedOrganization.id,
-        user_id: userId,
-        role: OrganizationUserRole.OWNER,
-        is_active: true,
-      });
-      await organizationUsersRepository.save(membership);
+      const user = await usersRepository.findOneBy({ id: userId });
+      if (!user) {
+        throw new NotFoundException(`User with id ${userId} not found`);
+      }
+
+      await usersRepository.update(
+        { id: userId },
+        {
+          organization_id: savedOrganization.id,
+        },
+      );
 
       return savedOrganization;
     });
   }
 
-  async findAll(userId: string) {
-    const memberships = await this.organizationUsersRepository.find({
+  async findAll(organizationId: string) {
+    return this.organizationsRepository.find({
       where: {
-        user_id: userId,
-        is_active: true,
+        id: organizationId,
       },
-      relations: { organization: true },
       order: { created_at: 'DESC' },
     });
-
-    return memberships.map((membership) => membership.organization);
   }
 
-  async findOne(id: string, userId: string, requiredRoles?: OrganizationUserRole[]) {
-    await this.findMembershipOrFail(userId, id, requiredRoles);
+  async findOne(
+    id: string,
+    currentOrganizationId: string,
+    requiredRoles?: string[],
+    currentRole?: string,
+  ) {
+    this.assertOrganizationAccess(
+      id,
+      currentOrganizationId,
+      requiredRoles,
+      currentRole,
+    );
 
     const organization = await this.organizationsRepository.findOne({
       where: { id },
@@ -82,48 +89,51 @@ export class OrganizationsService {
   async update(
     id: string,
     updateOrganizationDto: UpdateOrganizationDto,
-    userId: string,
+    currentOrganizationId: string,
+    currentRole: string,
   ) {
-    const organization = await this.findOne(id, userId, [
-      OrganizationUserRole.OWNER,
-      OrganizationUserRole.ADMIN,
-    ]);
+    const organization = await this.findOne(
+      id,
+      currentOrganizationId,
+      ['owner', 'admin'],
+      currentRole,
+    );
     this.organizationsRepository.merge(organization, updateOrganizationDto);
     return this.organizationsRepository.save(organization);
   }
 
-  async remove(id: string, userId: string) {
-    const organization = await this.findOne(id, userId, [OrganizationUserRole.OWNER]);
+  async remove(id: string, currentOrganizationId: string, currentRole: string) {
+    const organization = await this.findOne(
+      id,
+      currentOrganizationId,
+      ['owner'],
+      currentRole,
+    );
     await this.organizationsRepository.remove(organization);
     return { id, deleted: true };
   }
 
-  async findMembershipOrFail(
-    userId: string,
-    organizationId: string,
-    requiredRoles?: OrganizationUserRole[],
+  private assertOrganizationAccess(
+    requestedOrganizationId: string,
+    currentOrganizationId: string,
+    requiredRoles?: string[],
+    currentRole?: string,
   ) {
-    const membership = await this.organizationUsersRepository.findOne({
-      where: {
-        user_id: userId,
-        organization_id: organizationId,
-        is_active: true,
-      },
-    });
-
-    if (!membership) {
-      throw new NotFoundException(
-        `Membership for user ${userId} and organization ${organizationId} not found`,
-      );
-    }
-
-    if (requiredRoles && !requiredRoles.includes(membership.role)) {
+    if (requestedOrganizationId !== currentOrganizationId) {
       throw new ForbiddenException(
-        `User ${userId} does not have the required role in organization ${organizationId}`,
+        `User does not have access to organization ${requestedOrganizationId}`,
       );
     }
 
-    return membership;
+    if (!requiredRoles || requiredRoles.length === 0) {
+      return;
+    }
+
+    if (!currentRole || !requiredRoles.includes(currentRole.toLowerCase())) {
+      throw new ForbiddenException(
+        `User does not have the required role in organization ${requestedOrganizationId}`,
+      );
+    }
   }
 
   private async buildOrganizationFolio(manager: EntityManager) {

@@ -129,8 +129,7 @@ export class UsersController {
   @Permissions('users:manage')
   @ApiOperation({
     summary: 'Remove a user from current organization',
-    description:
-      'Deactivates the user membership in the current organization and only hard-deletes the user when no active memberships remain.',
+    description: 'Removes the user from the current organization.',
   })
   @ApiParam({ name: 'id', description: 'User ID' })
   remove(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {

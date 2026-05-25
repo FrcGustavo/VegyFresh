@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateOrderDto, CreateOrderItemDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
@@ -9,7 +13,6 @@ import { Client } from '../clients/entities/client.entity';
 import { User } from '../users/entities/user.entity';
 import { Product } from '../catalog/products/entities/product.entity';
 import { FindOrdersQueryDto } from './dto/find-orders-query.dto';
-import { OrganizationUser } from '../organizations/entities/organization-user.entity';
 
 @Injectable()
 export class OrdersService {
@@ -24,8 +27,6 @@ export class OrdersService {
     private readonly usersRepository: Repository<User>,
     @InjectRepository(Product)
     private readonly productsRepository: Repository<Product>,
-    @InjectRepository(OrganizationUser)
-    private readonly organizationUsersRepository: Repository<OrganizationUser>,
   ) {}
 
   async create(createOrderDto: CreateOrderDto, organizationId: string) {
@@ -36,8 +37,6 @@ export class OrdersService {
         const clientsRepository = manager.getRepository(Client);
         const usersRepository = manager.getRepository(User);
         const productsRepository = manager.getRepository(Product);
-        const organizationUsersRepository =
-          manager.getRepository(OrganizationUser);
         const client = await this.findClientOrFail(
           createOrderDto.client_id,
           organizationId,
@@ -47,7 +46,6 @@ export class OrdersService {
           createOrderDto.user_id,
           organizationId,
           usersRepository,
-          organizationUsersRepository,
         );
         const itemsPayload = await this.buildItems(
           createOrderDto.items,
@@ -154,8 +152,6 @@ export class OrdersService {
         const clientsRepository = manager.getRepository(Client);
         const usersRepository = manager.getRepository(User);
         const productsRepository = manager.getRepository(Product);
-        const organizationUsersRepository =
-          manager.getRepository(OrganizationUser);
         const existingOrder = await orderRepository.findOne({
           where: { id, organization_id: organizationId },
         });
@@ -182,13 +178,11 @@ export class OrdersService {
                 updateOrderDto.user_id,
                 organizationId,
                 usersRepository,
-                organizationUsersRepository,
               )
             : await this.findUserOrFail(
                 existingOrder.user_id,
                 organizationId,
                 usersRepository,
-                organizationUsersRepository,
               );
         const itemsPayload =
           updateOrderDto.items !== undefined
@@ -266,22 +260,13 @@ export class OrdersService {
     id: string,
     organizationId: string,
     usersRepository: Repository<User> = this.usersRepository,
-    organizationUsersRepository: Repository<OrganizationUser> = this.organizationUsersRepository,
   ) {
-    const user = await usersRepository.findOneBy({ id });
+    const user = await usersRepository.findOneBy({
+      id,
+      organization_id: organizationId,
+    });
     if (!user) {
       throw new NotFoundException(`User with id ${id} not found`);
-    }
-
-    const membership = await organizationUsersRepository.findOneBy({
-      user_id: id,
-      organization_id: organizationId,
-      is_active: true,
-    });
-    if (!membership) {
-      throw new NotFoundException(
-        `User with id ${id} is not active in organization ${organizationId}`,
-      );
     }
 
     return user;

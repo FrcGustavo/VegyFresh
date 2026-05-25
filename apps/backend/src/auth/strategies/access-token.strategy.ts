@@ -4,11 +4,11 @@ import { PassportStrategy } from '@nestjs/passport';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { IsNull, Repository } from 'typeorm';
-import { OrganizationUser } from '../../organizations/entities/organization-user.entity';
 import { AuthSession } from '../entities/auth-session.entity';
 import type { AuthenticatedUser } from '../types/authenticated-user.type';
-import { permissionsForRole } from '../constants/org-role-permissions';
 import { resolveJwtSecret } from '../auth-security.config';
+import { User } from '../../users/entities/user.entity';
+import { extractRolePermissions } from '../utils/role-permissions';
 
 @Injectable()
 export class AccessTokenStrategy extends PassportStrategy(
@@ -19,8 +19,8 @@ export class AccessTokenStrategy extends PassportStrategy(
     configService: ConfigService,
     @InjectRepository(AuthSession)
     private readonly authSessionsRepository: Repository<AuthSession>,
-    @InjectRepository(OrganizationUser)
-    private readonly organizationUsersRepository: Repository<OrganizationUser>,
+    @InjectRepository(User)
+    private readonly usersRepository: Repository<User>,
   ) {
     const accessSecret = resolveJwtSecret(configService, 'JWT_ACCESS_SECRET');
     super({
@@ -40,27 +40,29 @@ export class AccessTokenStrategy extends PassportStrategy(
       id: sessionId,
       user_id: payload.sub,
       organization_id: payload.org_id,
-      membership_id: payload.membership_id,
       revoked_at: IsNull(),
     });
     if (!session || session.expires_at.getTime() <= Date.now()) {
       throw new UnauthorizedException('Session is invalid or expired');
     }
 
-    const membership = await this.organizationUsersRepository.findOneBy({
-      id: payload.membership_id,
-      user_id: payload.sub,
-      organization_id: payload.org_id,
-      is_active: true,
+    const user = await this.usersRepository.findOne({
+      where: {
+        id: payload.sub,
+        organization_id: payload.org_id,
+      },
+      relations: {
+        role: true,
+      },
     });
-    if (!membership) {
-      throw new UnauthorizedException('Membership is not active');
+    if (!user || !user.role) {
+      throw new UnauthorizedException('User is not active in organization');
     }
 
     return {
       ...payload,
-      role: membership.role,
-      permissions: permissionsForRole(membership.role),
+      role: user.role.name,
+      permissions: extractRolePermissions(user.role.permissions),
     };
   }
 }

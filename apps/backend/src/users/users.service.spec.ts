@@ -6,10 +6,6 @@ import * as bcrypt from 'bcrypt';
 import { UsersService } from './users.service';
 import { User } from './entities/user.entity';
 import { Role } from '../roles/entities/role.entity';
-import {
-  OrganizationUser,
-  OrganizationUserRole,
-} from '../organizations/entities/organization-user.entity';
 import type { CreateUserDto } from './dto/create-user.dto';
 
 jest.mock('bcrypt', () => ({
@@ -20,21 +16,14 @@ describe('UsersService', () => {
   let service: UsersService;
   let usersRepository: {
     manager: { transaction: jest.Mock };
+    findOne: jest.Mock;
+    createQueryBuilder: jest.Mock;
+    remove: jest.Mock;
   };
   let rolesRepository: { findOneBy: jest.Mock };
-  let organizationUsersRepository: Record<string, unknown>;
   let managerUsersRepository: {
     create: jest.Mock;
     save: jest.Mock;
-    findOneBy: jest.Mock;
-    remove: jest.Mock;
-  };
-  let managerOrganizationUsersRepository: {
-    findOne: jest.Mock;
-    create: jest.Mock;
-    save: jest.Mock;
-    update: jest.Mock;
-    count: jest.Mock;
   };
   let manager: {
     getRepository: jest.Mock;
@@ -45,23 +34,11 @@ describe('UsersService', () => {
     managerUsersRepository = {
       create: jest.fn(),
       save: jest.fn(),
-      findOneBy: jest.fn(),
-      remove: jest.fn(),
-    };
-    managerOrganizationUsersRepository = {
-      findOne: jest.fn(),
-      create: jest.fn(),
-      save: jest.fn(),
-      update: jest.fn(),
-      count: jest.fn(),
     };
     manager = {
       getRepository: jest.fn((entity) => {
         if (entity === User) {
           return managerUsersRepository;
-        }
-        if (entity === OrganizationUser) {
-          return managerOrganizationUsersRepository;
         }
 
         return undefined;
@@ -70,15 +47,17 @@ describe('UsersService', () => {
     };
     usersRepository = {
       manager: {
-        transaction: jest.fn(async (callback: (m: unknown) => unknown) =>
+        transaction: jest.fn((callback: (m: unknown) => unknown) =>
           callback(manager),
         ),
       },
+      findOne: jest.fn(),
+      createQueryBuilder: jest.fn(),
+      remove: jest.fn(),
     };
     rolesRepository = {
       findOneBy: jest.fn(),
     };
-    organizationUsersRepository = {};
     (bcrypt.hash as jest.Mock).mockResolvedValue('hashed-password');
 
     const module: TestingModule = await Test.createTestingModule({
@@ -86,10 +65,6 @@ describe('UsersService', () => {
         UsersService,
         { provide: getRepositoryToken(User), useValue: usersRepository },
         { provide: getRepositoryToken(Role), useValue: rolesRepository },
-        {
-          provide: getRepositoryToken(OrganizationUser),
-          useValue: organizationUsersRepository,
-        },
         { provide: ConfigService, useValue: { get: jest.fn() } },
       ],
     }).compile();
@@ -118,95 +93,73 @@ describe('UsersService', () => {
     });
 
     await expect(
-      service.create(
-        makeCreateDto({ organization_role: OrganizationUserRole.ADMIN }),
-        'org-1',
-        OrganizationUserRole.MEMBER,
-      ),
+      service.create(makeCreateDto(), 'org-1', 'member'),
     ).rejects.toThrow(ForbiddenException);
   });
 
-  it('creates membership during user creation', async () => {
+  it('creates users scoped to organization_id', async () => {
     rolesRepository.findOneBy.mockResolvedValue({
       id: 'role-1',
       name: 'member',
     });
     managerUsersRepository.create.mockReturnValue({ id: 'user-1' });
     managerUsersRepository.save.mockResolvedValue({ id: 'user-1' });
-    managerOrganizationUsersRepository.create.mockReturnValue({
-      id: 'membership-1',
-    });
 
-    await service.create(makeCreateDto(), 'org-1', OrganizationUserRole.OWNER);
+    await service.create(makeCreateDto(), 'org-1', 'owner');
 
-    expect(managerOrganizationUsersRepository.create).toHaveBeenCalledWith(
+    expect(managerUsersRepository.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        user_id: 'user-1',
         organization_id: 'org-1',
-        role: OrganizationUserRole.MEMBER,
-        is_active: true,
+        role_id: 'role-1',
       }),
     );
-    expect(managerOrganizationUsersRepository.save).toHaveBeenCalledWith({
-      id: 'membership-1',
-    });
+    expect(managerUsersRepository.save).toHaveBeenCalledWith({ id: 'user-1' });
   });
 
   it('prevents removing the last active owner of an organization', async () => {
-    managerOrganizationUsersRepository.findOne.mockResolvedValue({
-      id: 'membership-1',
-      role: OrganizationUserRole.OWNER,
-      is_active: true,
+    usersRepository.findOne.mockResolvedValue({
+      id: 'user-1',
+      organization_id: 'org-1',
+      role: { name: 'owner' },
     });
-    managerOrganizationUsersRepository.count.mockResolvedValue(1);
+
+    const queryBuilder = {
+      innerJoin: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      getCount: jest.fn().mockResolvedValue(1),
+    };
+    usersRepository.createQueryBuilder.mockReturnValue(queryBuilder);
 
     await expect(service.remove('user-1', 'org-1')).rejects.toThrow(
       BadRequestException,
     );
-    expect(managerOrganizationUsersRepository.update).not.toHaveBeenCalled();
+    expect(usersRepository.remove).not.toHaveBeenCalled();
   });
 
-  it('deactivates membership without hard-deleting user when other active memberships exist', async () => {
-    managerOrganizationUsersRepository.findOne.mockResolvedValue({
-      id: 'membership-1',
-      role: OrganizationUserRole.MEMBER,
-      is_active: true,
+  it('deletes user when organization has another owner', async () => {
+    usersRepository.findOne.mockResolvedValue({
+      id: 'user-1',
+      organization_id: 'org-1',
+      role: { name: 'owner' },
     });
-    managerOrganizationUsersRepository.count.mockResolvedValue(2);
+
+    const queryBuilder = {
+      innerJoin: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      getCount: jest.fn().mockResolvedValue(2),
+    };
+    usersRepository.createQueryBuilder.mockReturnValue(queryBuilder);
 
     const result = await service.remove('user-1', 'org-1');
 
-    expect(managerOrganizationUsersRepository.update).toHaveBeenCalledWith(
-      { id: 'membership-1' },
-      { is_active: false },
+    expect(usersRepository.remove).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'user-1' }),
     );
     expect(result).toEqual({
       id: 'user-1',
-      deleted: false,
-      membership_deactivated: true,
-    });
-    expect(managerUsersRepository.remove).not.toHaveBeenCalled();
-  });
-
-  it('hard-deletes user when no active memberships remain', async () => {
-    managerOrganizationUsersRepository.findOne.mockResolvedValue({
-      id: 'membership-1',
-      role: OrganizationUserRole.MEMBER,
-      is_active: true,
-    });
-    managerOrganizationUsersRepository.count.mockResolvedValue(0);
-    managerUsersRepository.findOneBy.mockResolvedValue({ id: 'user-1' });
-    managerUsersRepository.remove.mockResolvedValue(undefined);
-
-    const result = await service.remove('user-1', 'org-1');
-
-    expect(managerUsersRepository.remove).toHaveBeenCalledWith({
-      id: 'user-1',
-    });
-    expect(result).toEqual({
-      id: 'user-1',
       deleted: true,
-      membership_deactivated: true,
     });
   });
 });

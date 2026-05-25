@@ -24,7 +24,7 @@ async function bootstrap() {
   const config = new DocumentBuilder()
     .setTitle('VegyFresh Backend API')
     .setDescription(
-      'Backend API documentation for VegyFresh.\n\nAuthentication is JWT-based and tenant-aware: access tokens include org_id and membership_id claims. Protected endpoints are scoped to the authenticated tenant context.',
+      'Backend API documentation for VegyFresh.\n\nAuthentication is JWT-based and tenant-aware: access tokens include org_id, role, and permissions claims. Protected endpoints are scoped to the authenticated tenant context.',
     )
     .setVersion('1.0')
     .addBearerAuth()
