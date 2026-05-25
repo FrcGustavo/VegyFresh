@@ -48,7 +48,9 @@ export class CreateUserDto {
   })
   @ValidateIf((_, value) => value !== null && value !== undefined)
   @IsString()
-  @Matches(/^data:image\/[a-zA-Z0-9.+-]+;base64,[A-Za-z0-9+/=]+$|^https?:\/\/.+$/)
+  @Matches(
+    /^data:image\/[a-zA-Z0-9.+-]+;base64,[A-Za-z0-9+/=]+$|^https?:\/\/.+$/,
+  )
   @IsOptional()
   avatar_url?: string | null;
 }
