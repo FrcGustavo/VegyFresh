@@ -156,8 +156,7 @@ export class UsersService {
       updateUserDto.role_id !== undefined
         ? await this.findRoleOrFail(updateUserDto.role_id)
         : user.role;
-    const { password, organization_role: _organizationRole, ...userData } =
-      updateUserDto;
+    const { password, ...userData } = updateUserDto;
 
     this.usersRepository.merge(user, {
       ...userData,

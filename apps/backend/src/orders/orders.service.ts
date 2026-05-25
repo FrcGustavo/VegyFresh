@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateOrderDto, CreateOrderItemDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
@@ -292,6 +292,10 @@ export class OrdersService {
     organizationId: string,
     productsRepository: Repository<Product> = this.productsRepository,
   ) {
+    if (items.length === 0) {
+      throw new BadRequestException('Order must include at least one item');
+    }
+
     const productIds = [...new Set(items.map((item) => item.product_id))];
     const products = await productsRepository.findBy({
       id: In(productIds),
