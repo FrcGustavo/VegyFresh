@@ -15,6 +15,7 @@ import { CreatePriceListDto } from './dto/create-price-list.dto';
 import { UpdatePriceListDto } from './dto/update-price-list.dto';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../../auth/types/authenticated-user.type';
+import { Permissions } from '../../auth/decorators/permissions.decorator';
 
 @ApiTags('price-lists')
 @Controller('price-lists')
@@ -22,6 +23,7 @@ export class PriceListsController {
   constructor(private readonly priceListsService: PriceListsService) {}
 
   @Post()
+  @Permissions('catalog:manage')
   @ApiOperation({ summary: 'Create a new price list' })
   create(
     @Body() createPriceListDto: CreatePriceListDto,
@@ -31,6 +33,7 @@ export class PriceListsController {
   }
 
   @Get()
+  @Permissions('catalog:read')
   @ApiOperation({ summary: 'Get all price lists' })
   @ApiQuery({
     name: 'search',
@@ -86,6 +89,7 @@ export class PriceListsController {
   }
 
   @Get(':id')
+  @Permissions('catalog:read')
   @ApiOperation({ summary: 'Get a price list by ID' })
   @ApiParam({ name: 'id', description: 'Price list ID' })
   findOne(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
@@ -93,6 +97,7 @@ export class PriceListsController {
   }
 
   @Patch(':id')
+  @Permissions('catalog:manage')
   @ApiOperation({ summary: 'Update a price list' })
   @ApiParam({ name: 'id', description: 'Price list ID' })
   update(
@@ -104,6 +109,7 @@ export class PriceListsController {
   }
 
   @Delete(':id')
+  @Permissions('catalog:manage')
   @ApiOperation({ summary: 'Delete a price list' })
   @ApiParam({ name: 'id', description: 'Price list ID' })
   remove(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {

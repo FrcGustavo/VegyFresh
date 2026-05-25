@@ -15,6 +15,7 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../../auth/types/authenticated-user.type';
+import { Permissions } from '../../auth/decorators/permissions.decorator';
 
 @ApiTags('products')
 @Controller('products')
@@ -22,6 +23,7 @@ export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
   @Post()
+  @Permissions('catalog:manage')
   @ApiOperation({ summary: 'Create a new product' })
   create(
     @Body() createProductDto: CreateProductDto,
@@ -31,6 +33,7 @@ export class ProductsController {
   }
 
   @Get()
+  @Permissions('catalog:read')
   @ApiOperation({ summary: 'Get all products' })
   @ApiQuery({
     name: 'search',
@@ -89,6 +92,7 @@ export class ProductsController {
   }
 
   @Get(':id')
+  @Permissions('catalog:read')
   @ApiOperation({ summary: 'Get a product by ID' })
   @ApiParam({ name: 'id', description: 'Product ID' })
   findOne(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
@@ -96,6 +100,7 @@ export class ProductsController {
   }
 
   @Patch(':id')
+  @Permissions('catalog:manage')
   @ApiOperation({ summary: 'Update a product' })
   @ApiParam({ name: 'id', description: 'Product ID' })
   update(
@@ -107,6 +112,7 @@ export class ProductsController {
   }
 
   @Delete(':id')
+  @Permissions('catalog:manage')
   @ApiOperation({ summary: 'Delete a product' })
   @ApiParam({ name: 'id', description: 'Product ID' })
   remove(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {

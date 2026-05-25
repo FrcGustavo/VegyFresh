@@ -15,6 +15,7 @@ import { CreateSupplierDto } from './dto/create-supplier.dto';
 import { UpdateSupplierDto } from './dto/update-supplier.dto';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../auth/types/authenticated-user.type';
+import { Permissions } from '../auth/decorators/permissions.decorator';
 
 @ApiTags('suppliers')
 @Controller('suppliers')
@@ -22,6 +23,7 @@ export class SuppliersController {
   constructor(private readonly suppliersService: SuppliersService) {}
 
   @Post()
+  @Permissions('catalog:manage')
   @ApiOperation({ summary: 'Create a new supplier' })
   create(
     @Body() createSupplierDto: CreateSupplierDto,
@@ -31,6 +33,7 @@ export class SuppliersController {
   }
 
   @Get()
+  @Permissions('catalog:read')
   @ApiOperation({ summary: 'Get all suppliers' })
   @ApiQuery({
     name: 'search',
@@ -86,6 +89,7 @@ export class SuppliersController {
   }
 
   @Get(':id')
+  @Permissions('catalog:read')
   @ApiOperation({ summary: 'Get a supplier by ID' })
   @ApiParam({ name: 'id', description: 'Supplier ID' })
   findOne(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
@@ -93,6 +97,7 @@ export class SuppliersController {
   }
 
   @Patch(':id')
+  @Permissions('catalog:manage')
   @ApiOperation({ summary: 'Update a supplier' })
   @ApiParam({ name: 'id', description: 'Supplier ID' })
   update(
@@ -104,6 +109,7 @@ export class SuppliersController {
   }
 
   @Delete(':id')
+  @Permissions('catalog:manage')
   @ApiOperation({ summary: 'Delete a supplier' })
   @ApiParam({ name: 'id', description: 'Supplier ID' })
   remove(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {

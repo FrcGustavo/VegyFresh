@@ -15,6 +15,7 @@ import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateClientDto } from './dto/update-client.dto';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../auth/types/authenticated-user.type';
+import { Permissions } from '../auth/decorators/permissions.decorator';
 
 @ApiTags('clients')
 @Controller('clients')
@@ -22,6 +23,7 @@ export class ClientsController {
   constructor(private readonly clientsService: ClientsService) {}
 
   @Post()
+  @Permissions('catalog:manage')
   @ApiOperation({ summary: 'Create a new client' })
   create(
     @Body() createClientDto: CreateClientDto,
@@ -31,6 +33,7 @@ export class ClientsController {
   }
 
   @Get()
+  @Permissions('catalog:read')
   @ApiOperation({ summary: 'Get all clients' })
   @ApiQuery({
     name: 'search',
@@ -86,6 +89,7 @@ export class ClientsController {
   }
 
   @Get(':id')
+  @Permissions('catalog:read')
   @ApiOperation({ summary: 'Get a client by ID' })
   @ApiParam({ name: 'id', description: 'Client ID' })
   findOne(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
@@ -93,6 +97,7 @@ export class ClientsController {
   }
 
   @Patch(':id')
+  @Permissions('catalog:manage')
   @ApiOperation({ summary: 'Update a client' })
   @ApiParam({ name: 'id', description: 'Client ID' })
   update(
@@ -104,6 +109,7 @@ export class ClientsController {
   }
 
   @Delete(':id')
+  @Permissions('catalog:manage')
   @ApiOperation({ summary: 'Delete a client' })
   @ApiParam({ name: 'id', description: 'Client ID' })
   remove(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {

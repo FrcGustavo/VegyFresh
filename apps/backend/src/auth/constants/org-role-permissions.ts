@@ -5,7 +5,9 @@ export const ORG_ROLE_PERMISSIONS: Record<OrganizationUserRole, string[]> = {
   [OrganizationUserRole.ADMIN]: [
     'organization:manage',
     'users:manage',
+    'catalog:read',
     'catalog:manage',
+    'orders:read',
     'orders:manage',
   ],
   [OrganizationUserRole.MEMBER]: ['catalog:read', 'orders:read'],
