@@ -5,6 +5,66 @@ import { AuthService } from './auth.service';
 import { OrganizationUserRole } from '../organizations/entities/organization-user.entity';
 import type { AuthenticatedUser } from './types/authenticated-user.type';
 
+type UserRecord = {
+  id: string;
+  email: string;
+  name?: string;
+  password_hash?: string;
+};
+
+type OrganizationRecord = {
+  id: string;
+  name: string;
+  folio: string;
+};
+
+type MembershipRecord = {
+  id: string;
+  user_id?: string;
+  organization_id: string;
+  role: OrganizationUserRole;
+  is_active?: boolean;
+  organization?: OrganizationRecord;
+};
+
+type AuthSessionRecord = {
+  id: string;
+  user_id: string;
+  organization_id: string;
+  membership_id: string;
+  refresh_token_hash: string;
+  expires_at: Date;
+  revoked_at: Date | null;
+};
+
+type SaveResult = { affected: number };
+type QueryRow = { folio: number };
+type TransactionContext = {
+  query: jest.Mock<Promise<QueryRow[]>, [string]>;
+  getRepository: jest.Mock<unknown, [unknown]>;
+};
+type TransactionCallback = (manager: TransactionContext) => Promise<unknown>;
+type UsersRepositoryMock = {
+  findOneBy: jest.Mock<Promise<UserRecord | null>, [unknown]>;
+  manager: {
+    transaction: jest.Mock<Promise<unknown>, [TransactionCallback]>;
+  };
+};
+type RolesRepositoryMock = {
+  findOneBy: jest.Mock<Promise<{ id: string; name: string } | null>, [unknown]>;
+  create: jest.Mock<unknown, [unknown]>;
+  save: jest.Mock<Promise<unknown>, [unknown]>;
+};
+type OrganizationUsersRepositoryMock = {
+  find: jest.Mock<Promise<MembershipRecord[]>, [unknown]>;
+  findOne: jest.Mock<Promise<MembershipRecord | null>, [unknown]>;
+};
+type AuthSessionsRepositoryMock = {
+  findOne: jest.Mock<Promise<AuthSessionRecord | null>, [unknown]>;
+  save: jest.Mock<Promise<AuthSessionRecord>, [AuthSessionRecord]>;
+  update: jest.Mock<Promise<SaveResult>, [unknown, unknown]>;
+};
+
 const makeConfigService = () => ({
   get: jest.fn((key: string) => {
     const values: Record<string, unknown> = {
@@ -18,42 +78,41 @@ const makeConfigService = () => ({
   }),
 });
 
-type MockRepository = Record<string, any> & {
-  manager?: {
-    transaction: jest.Mock;
-  };
-};
-
 describe('AuthService security flows', () => {
   let service: AuthService;
-  let usersRepository: MockRepository;
-  let rolesRepository: MockRepository;
-  let organizationsRepository: MockRepository;
-  let organizationUsersRepository: MockRepository;
-  let authSessionsRepository: MockRepository;
-  let jwtService: { signAsync: jest.Mock };
+  let usersRepository: UsersRepositoryMock;
+  let rolesRepository: RolesRepositoryMock;
+  let organizationsRepository: Record<string, never>;
+  let organizationUsersRepository: OrganizationUsersRepositoryMock;
+  let authSessionsRepository: AuthSessionsRepositoryMock;
+  let jwtService: { signAsync: jest.Mock<Promise<string>, [unknown, unknown]> };
 
   beforeEach(() => {
     usersRepository = {
-      findOneBy: jest.fn(),
-      manager: { transaction: jest.fn() },
+      findOneBy: jest.fn<Promise<UserRecord | null>, [unknown]>(),
+      manager: {
+        transaction: jest.fn<Promise<unknown>, [TransactionCallback]>(),
+      },
     };
     rolesRepository = {
-      findOneBy: jest.fn(),
-      create: jest.fn(),
-      save: jest.fn(),
+      findOneBy: jest.fn<
+        Promise<{ id: string; name: string } | null>,
+        [unknown]
+      >(),
+      create: jest.fn<unknown, [unknown]>(),
+      save: jest.fn<Promise<unknown>, [unknown]>(),
     };
     organizationsRepository = {};
     organizationUsersRepository = {
-      find: jest.fn(),
-      findOne: jest.fn(),
+      find: jest.fn<Promise<MembershipRecord[]>, [unknown]>(),
+      findOne: jest.fn<Promise<MembershipRecord | null>, [unknown]>(),
     };
     authSessionsRepository = {
-      findOne: jest.fn(),
-      save: jest.fn(),
-      update: jest.fn(),
+      findOne: jest.fn<Promise<AuthSessionRecord | null>, [unknown]>(),
+      save: jest.fn<Promise<AuthSessionRecord>, [AuthSessionRecord]>(),
+      update: jest.fn<Promise<SaveResult>, [unknown, unknown]>(),
     };
-    jwtService = { signAsync: jest.fn() };
+    jwtService = { signAsync: jest.fn<Promise<string>, [unknown, unknown]>() };
 
     service = new AuthService(
       usersRepository as never,
@@ -68,45 +127,66 @@ describe('AuthService security flows', () => {
 
   it('signup creates user, tenant membership, and returns tokens', async () => {
     usersRepository.findOneBy.mockResolvedValue(null);
-    rolesRepository.findOneBy.mockResolvedValue({ id: 'role-owner', name: 'owner' });
+    rolesRepository.findOneBy.mockResolvedValue({
+      id: 'role-owner',
+      name: 'owner',
+    });
 
-    usersRepository.manager?.transaction.mockImplementation(async (cb: any) => {
+    usersRepository.manager?.transaction.mockImplementation((cb) => {
       const userRepository = {
         create: jest.fn(() => ({ id: 'user-1', email: 'owner@vegyfresh.com' })),
-        save: jest.fn(async () => ({
+        save: jest.fn().mockResolvedValue({
           id: 'user-1',
           email: 'owner@vegyfresh.com',
           name: 'Owner',
-        })),
+        }),
       };
       const orgRepository = {
-        create: jest.fn(() => ({ id: 'org-1', name: 'Org 1', folio: 'O00001' })),
-        save: jest.fn(async () => ({ id: 'org-1', name: 'Org 1', folio: 'O00001' })),
+        create: jest.fn(() => ({
+          id: 'org-1',
+          name: 'Org 1',
+          folio: 'O00001',
+        })),
+        save: jest.fn().mockResolvedValue({
+          id: 'org-1',
+          name: 'Org 1',
+          folio: 'O00001',
+        }),
       };
       const membershipRepository = {
-        create: jest.fn(() => ({ id: 'membership-1', role: OrganizationUserRole.OWNER })),
-        save: jest.fn(async () => ({
+        create: jest.fn(() => ({
           id: 'membership-1',
+          organization_id: 'org-1',
           role: OrganizationUserRole.OWNER,
         })),
+        save: jest.fn().mockResolvedValue({
+          id: 'membership-1',
+          organization_id: 'org-1',
+          role: OrganizationUserRole.OWNER,
+        }),
       };
+      const queryMock = jest
+        .fn<Promise<QueryRow[]>, [string]>()
+        .mockResolvedValueOnce([{ folio: 1 }])
+        .mockResolvedValueOnce([{ folio: 1 }]);
+      const getRepositoryMock = jest
+        .fn<unknown, [unknown]>()
+        .mockReturnValueOnce(userRepository)
+        .mockReturnValueOnce(orgRepository)
+        .mockReturnValueOnce(membershipRepository);
 
       return cb({
-        query: jest
-          .fn()
-          .mockResolvedValueOnce([{ folio: 1 }])
-          .mockResolvedValueOnce([{ folio: 1 }]),
-        getRepository: jest
-          .fn()
-          .mockReturnValueOnce(userRepository)
-          .mockReturnValueOnce(orgRepository)
-          .mockReturnValueOnce(membershipRepository),
+        query: queryMock,
+        getRepository: getRepositoryMock,
       });
     });
 
     const generateTokensSpy = jest
       .spyOn(service as never, 'generateTokens' as never)
-      .mockResolvedValue({ access_token: 'access-token', refresh_token: 'refresh-token' } as never);
+      .mockResolvedValue({
+        access_token: 'access-token',
+        refresh_token: 'refresh-token',
+      } as never);
 
     const result = await service.signup({
       name: 'Owner',
@@ -168,9 +248,10 @@ describe('AuthService security flows', () => {
       },
     ]);
 
-    jest
-      .spyOn(service as never, 'generateTokens' as never)
-      .mockResolvedValue({ access_token: 'access-token', refresh_token: 'refresh-token' } as never);
+    jest.spyOn(service as never, 'generateTokens' as never).mockResolvedValue({
+      access_token: 'access-token',
+      refresh_token: 'refresh-token',
+    } as never);
 
     const result = await service.login({
       email: 'owner@vegyfresh.com',
@@ -230,7 +311,10 @@ describe('AuthService security flows', () => {
 
     const generateTokensSpy = jest
       .spyOn(service as never, 'generateTokens' as never)
-      .mockResolvedValue({ access_token: 'new-access', refresh_token: 'new-refresh' } as never);
+      .mockResolvedValue({
+        access_token: 'new-access',
+        refresh_token: 'new-refresh',
+      } as never);
 
     const user: AuthenticatedUser = {
       sub: 'user-1',
@@ -244,10 +328,15 @@ describe('AuthService security flows', () => {
 
     const result = await service.refreshToken(user, refreshToken);
 
-    expect(result).toEqual({ access_token: 'new-access', refresh_token: 'new-refresh' });
+    expect(result).toEqual({
+      access_token: 'new-access',
+      refresh_token: 'new-refresh',
+    });
     expect(authSessionsRepository.save).toHaveBeenCalledWith(
-      expect.objectContaining({ id: 'session-1', revoked_at: expect.any(Date) }),
+      expect.objectContaining({ id: 'session-1' }),
     );
+    const savedSession = authSessionsRepository.save.mock.calls[0]?.[0];
+    expect(savedSession?.revoked_at).toBeInstanceOf(Date);
     expect(generateTokensSpy).toHaveBeenCalledWith(
       expect.objectContaining({
         sub: 'user-1',
@@ -281,9 +370,9 @@ describe('AuthService security flows', () => {
       session_id: 'session-1',
     };
 
-    await expect(service.refreshToken(user, 'refresh-token')).rejects.toBeInstanceOf(
-      UnauthorizedException,
-    );
+    await expect(
+      service.refreshToken(user, 'refresh-token'),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
   });
 
   it('refresh rejects inactive tenant membership', async () => {
@@ -311,17 +400,17 @@ describe('AuthService security flows', () => {
       session_id: 'session-1',
     };
 
-    await expect(service.refreshToken(user, refreshToken)).rejects.toBeInstanceOf(
-      UnauthorizedException,
-    );
+    await expect(
+      service.refreshToken(user, refreshToken),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
     expect(organizationUsersRepository.findOne).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: expect.objectContaining({
+        where: {
           id: 'membership-1',
           user_id: 'user-1',
           organization_id: 'org-1',
           is_active: true,
-        }),
+        },
       }),
     );
   });
@@ -341,9 +430,16 @@ describe('AuthService security flows', () => {
 
     expect(result).toEqual({ revoked: true });
     expect(authSessionsRepository.update).toHaveBeenCalledWith(
-      expect.objectContaining({ id: 'session-1', user_id: 'user-1', revoked_at: IsNull() }),
-      expect.objectContaining({ revoked_at: expect.any(Date) }),
+      expect.objectContaining({
+        id: 'session-1',
+        user_id: 'user-1',
+        revoked_at: IsNull(),
+      }),
+      expect.objectContaining({}),
     );
+    const logoutUpdatePayload = authSessionsRepository.update.mock
+      .calls[0]?.[1] as { revoked_at?: unknown } | undefined;
+    expect(logoutUpdatePayload?.revoked_at).toBeInstanceOf(Date);
   });
 
   it('logout-all revokes all sessions in current tenant only', async () => {
@@ -366,7 +462,10 @@ describe('AuthService security flows', () => {
         organization_id: 'org-1',
         revoked_at: IsNull(),
       }),
-      expect.objectContaining({ revoked_at: expect.any(Date) }),
+      expect.objectContaining({}),
     );
+    const logoutAllUpdatePayload = authSessionsRepository.update.mock
+      .calls[0]?.[1] as { revoked_at?: unknown } | undefined;
+    expect(logoutAllUpdatePayload?.revoked_at).toBeInstanceOf(Date);
   });
 });

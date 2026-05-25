@@ -22,7 +22,8 @@ export class OrganizationsService {
   async create(createOrganizationDto: CreateOrganizationDto, userId: string) {
     return this.dataSource.transaction(async (manager) => {
       const organizationsRepository = manager.getRepository(Organization);
-      const organizationUsersRepository = manager.getRepository(OrganizationUser);
+      const organizationUsersRepository =
+        manager.getRepository(OrganizationUser);
 
       const folio = await this.buildOrganizationFolio(manager);
       const organization = organizationsRepository.create({
@@ -35,7 +36,8 @@ export class OrganizationsService {
         address: createOrganizationDto.address ?? null,
       });
 
-      const savedOrganization = await organizationsRepository.save(organization);
+      const savedOrganization =
+        await organizationsRepository.save(organization);
 
       // Create organization membership for the creator
       const membership = organizationUsersRepository.create({
@@ -77,7 +79,11 @@ export class OrganizationsService {
     return organization;
   }
 
-  async update(id: string, updateOrganizationDto: UpdateOrganizationDto, userId: string) {
+  async update(
+    id: string,
+    updateOrganizationDto: UpdateOrganizationDto,
+    userId: string,
+  ) {
     const organization = await this.findOne(id, userId);
     this.organizationsRepository.merge(organization, updateOrganizationDto);
     return this.organizationsRepository.save(organization);
@@ -109,10 +115,25 @@ export class OrganizationsService {
   }
 
   private async buildOrganizationFolio(manager: EntityManager) {
-    const [result] = await manager.query(
+    const queryResult: unknown = await manager.query(
       `SELECT nextval('organizations_folio_seq') AS folio`,
     );
-    const folioNumber = Number(result?.folio ?? 0);
+    const rows = Array.isArray(queryResult) ? queryResult : [];
+    const folioNumber = this.extractFolioNumber(rows[0]);
     return `O${String(folioNumber).padStart(5, '0')}`;
+  }
+
+  private extractFolioNumber(row: unknown): number {
+    if (!row || typeof row !== 'object') {
+      return 0;
+    }
+
+    const folio = (row as { folio?: unknown }).folio;
+    if (typeof folio !== 'string' && typeof folio !== 'number') {
+      return 0;
+    }
+
+    const parsed = Number(folio);
+    return Number.isFinite(parsed) ? parsed : 0;
   }
 }
