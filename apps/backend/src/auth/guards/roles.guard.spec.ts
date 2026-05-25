@@ -2,11 +2,11 @@ import { ForbiddenException } from '@nestjs/common';
 import { ExecutionContext } from '@nestjs/common/interfaces';
 import { Reflector } from '@nestjs/core';
 import { OrganizationUserRole } from '../../organizations/entities/organization-user.entity';
-import { RolesGuard } from './roles.guard';
+import { PermissionsGuard } from './permissions.guard';
 
-describe('RolesGuard permission and tenant security', () => {
+describe('PermissionsGuard permission and tenant security', () => {
   let reflector: Pick<Reflector, 'getAllAndOverride'>;
-  let guard: RolesGuard;
+  let guard: PermissionsGuard;
 
   const makeContext = (request: Record<string, unknown>) =>
     ({
@@ -21,7 +21,7 @@ describe('RolesGuard permission and tenant security', () => {
     reflector = {
       getAllAndOverride: jest.fn(),
     };
-    guard = new RolesGuard(reflector as Reflector);
+    guard = new PermissionsGuard(reflector as Reflector);
   });
 
   it('allows routes without role/permission decorators', async () => {
