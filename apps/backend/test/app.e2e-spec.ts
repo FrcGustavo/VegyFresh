@@ -57,6 +57,11 @@ const refreshUsersByToken: Record<string, TestUser> = {
   [MOCK_REFRESH_TOKEN]: accessUsersByToken['token-org1-owner'],
 };
 
+const userOrganizations: Record<string, string> = {
+  'user-org1': 'org-1',
+  'user-org2': 'org-2',
+};
+
 @Injectable()
 class FakeAccessTokenGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}
@@ -132,10 +137,6 @@ describe('AppController (e2e)', () => {
     });
     authService.logout.mockResolvedValue({ revoked: true });
 
-    const userOrganizations: Record<string, string> = {
-      'user-org1': 'org-1',
-      'user-org2': 'org-2',
-    };
     usersService.findOne.mockImplementation((id: string, orgId: string) => {
       const expectedOrganizationId = userOrganizations[id];
       if (expectedOrganizationId && expectedOrganizationId !== orgId) {
