@@ -214,7 +214,11 @@ describe('AppController (e2e)', () => {
     await request(app.getHttpServer())
       .get('/users/user-org1')
       .set('Authorization', 'Bearer token-org1-owner')
-      .expect(200);
+      .expect(200)
+      .expect({
+        id: 'user-org1',
+        organization_id: 'org-1',
+      });
 
     await request(app.getHttpServer())
       .get('/users/user-org2')
