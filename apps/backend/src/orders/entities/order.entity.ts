@@ -27,6 +27,7 @@ export enum OrderOrigin {
 }
 
 @Entity('orders')
+@Unique('UQ_orders_org_id', ['organization_id', 'id'])
 @Unique('UQ_orders_org_folio', ['organization_id', 'folio'])
 export class Order {
   @PrimaryColumn({ type: 'uuid' })

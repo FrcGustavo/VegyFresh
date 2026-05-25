@@ -7,6 +7,7 @@ import {
   PrimaryColumn,
 } from 'typeorm';
 import { Product } from '../../catalog/products/entities/product.entity';
+import { Organization } from '../../organizations/entities/organization.entity';
 import { Order } from './order.entity';
 
 @Entity('order_items')
@@ -30,6 +31,13 @@ export class OrderItem {
   })
   @JoinColumn({ name: 'product_id' })
   product!: Product;
+
+  @Column({ type: 'uuid' })
+  organization_id!: string;
+
+  @ManyToOne(() => Organization, { onDelete: 'RESTRICT' })
+  @JoinColumn({ name: 'organization_id' })
+  organization!: Organization;
 
   @Column({ type: 'int' })
   quantity!: number;

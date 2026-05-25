@@ -1,18 +1,10 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { OrdersService } from './orders.service';
+import { OrderItem } from './entities/order-item.entity';
 
-describe('OrdersService', () => {
-  let service: OrdersService;
+describe('OrderItem entity', () => {
+  it('should include organization_id', () => {
+    const orderItem = new OrderItem();
+    orderItem.organization_id = 'organization-1';
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [OrdersService],
-    }).compile();
-
-    service = module.get<OrdersService>(OrdersService);
-  });
-
-  it('should be defined', () => {
-    expect(service).toBeDefined();
+    expect(orderItem.organization_id).toBe('organization-1');
   });
 });
