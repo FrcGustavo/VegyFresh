@@ -90,7 +90,12 @@ export class UsersService {
       const existingMembership = await organizationUsersRepository.findOne({
         where: { user_id: savedUser.id, organization_id: organizationId },
       });
-      if (!existingMembership) {
+      if (existingMembership) {
+        await organizationUsersRepository.update(
+          { id: existingMembership.id },
+          { role: membershipRole, is_active: true },
+        );
+      } else {
         const membership = organizationUsersRepository.create({
           user_id: savedUser.id,
           organization_id: organizationId,
@@ -185,6 +190,21 @@ export class UsersService {
         throw new NotFoundException(
           `User with id ${id} was not found in organization ${organizationId}`,
         );
+      }
+
+      if (membership.role === OrganizationUserRole.OWNER) {
+        const activeOwners = await organizationUsersRepository.count({
+          where: {
+            organization_id: organizationId,
+            role: OrganizationUserRole.OWNER,
+            is_active: true,
+          },
+        });
+        if (activeOwners <= 1) {
+          throw new BadRequestException(
+            'Cannot remove the last active owner from organization',
+          );
+        }
       }
 
       await organizationUsersRepository.update(

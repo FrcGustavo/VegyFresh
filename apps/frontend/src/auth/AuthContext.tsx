@@ -16,6 +16,20 @@ interface AuthContextValue extends AuthState {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+const isAuthRejected = (error: unknown): boolean => {
+  if (
+    typeof error === 'object' &&
+    error !== null &&
+    'status' in error &&
+    typeof (error as { status?: unknown }).status === 'number'
+  ) {
+    const status = (error as { status: number }).status;
+    return status === 401 || status === 403;
+  }
+
+  return false;
+};
+
 export function useAuth(): AuthContextValue {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error('useAuth must be used inside AuthProvider');
@@ -63,9 +77,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         authStorage.setTokens(refreshedTokens.access_token, refreshedTokens.refresh_token);
         const response = await authApi.me(refreshedTokens.access_token);
         setState({ user: response.user, isAuthenticated: true, isLoading: false });
-      } catch {
-        authStorage.clearTokens();
-        setState({ user: null, isAuthenticated: false, isLoading: false });
+      } catch (error) {
+        if (isAuthRejected(error)) {
+          authStorage.clearTokens();
+          setState({ user: null, isAuthenticated: false, isLoading: false });
+          return;
+        }
+
+        setState({
+          user: null,
+          isAuthenticated: Boolean(accessToken || refreshToken),
+          isLoading: false,
+        });
       }
     };
 

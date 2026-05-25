@@ -49,6 +49,16 @@ export interface SignupPayload {
   organization_name: string;
 }
 
+export class AuthApiError extends Error {
+  status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = 'AuthApiError';
+    this.status = status;
+  }
+}
+
 async function postPublic<T>(path: string, body: unknown): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
     method: 'POST',
@@ -58,7 +68,7 @@ async function postPublic<T>(path: string, body: unknown): Promise<T> {
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({})) as { message?: string };
-    throw new Error(err.message || 'Error de autenticación');
+    throw new AuthApiError(err.message || 'Error de autenticación', res.status);
   }
 
   return res.json() as Promise<T>;
@@ -80,7 +90,7 @@ export const authApi = {
     }).then(async (r) => {
       if (!r.ok) {
         const err = await r.json().catch(() => ({})) as { message?: string };
-        throw new Error(err.message || 'Error de autenticación');
+        throw new AuthApiError(err.message || 'Error de autenticación', r.status);
       }
       return r.json() as Promise<AuthContextResponse>;
     }),

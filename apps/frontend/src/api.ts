@@ -28,6 +28,20 @@ const parseErrorPayload = async (response: Response): Promise<ApiErrorPayload | 
 // ─── Token refresh queue ──────────────────────────────────────────────────────
 let _isRefreshing = false;
 let _refreshQueue: Array<(token: string | null) => void> = [];
+let _lastRefreshError: Error | null = null;
+
+const getErrorStatus = (error: unknown): number | null => {
+  if (
+    typeof error === 'object' &&
+    error !== null &&
+    'status' in error &&
+    typeof (error as { status?: unknown }).status === 'number'
+  ) {
+    return (error as { status: number }).status;
+  }
+
+  return null;
+};
 
 async function attemptTokenRefresh(): Promise<string | null> {
   // Lazy imports to avoid circular dependency issues at module init
@@ -45,14 +59,23 @@ async function attemptTokenRefresh(): Promise<string | null> {
     const tokens = await authApi.refresh(refreshToken);
     authStorage.setTokens(tokens.access_token, tokens.refresh_token);
     return tokens.access_token;
-  } catch {
-    authStorage.clearTokens();
-    window.dispatchEvent(new CustomEvent('auth:logout'));
-    return null;
+  } catch (error) {
+    const status = getErrorStatus(error);
+    if (status === 401 || status === 403) {
+      authStorage.clearTokens();
+      window.dispatchEvent(new CustomEvent('auth:logout'));
+      return null;
+    }
+
+    throw error;
   }
 }
 
-function buildHeaders(accessToken: string | null, options?: RequestInit): HeadersInit {
+function buildHeaders(
+  accessToken: string | null,
+  options?: RequestInit,
+  forceAuthorization = false,
+): HeadersInit {
   const headers = new Headers(options?.headers);
   const body = options?.body;
 
@@ -67,7 +90,7 @@ function buildHeaders(accessToken: string | null, options?: RequestInit): Header
     headers.set('Content-Type', 'application/json');
   }
 
-  if (accessToken && !headers.has('Authorization')) {
+  if (accessToken && (forceAuthorization || !headers.has('Authorization'))) {
     headers.set('Authorization', `Bearer ${accessToken}`);
   }
 
@@ -95,13 +118,23 @@ export async function fetchApi<T = any>(endpoint: string, options?: RequestInit)
       });
     } else {
       _isRefreshing = true;
+      _lastRefreshError = null;
       try {
         newToken = await attemptTokenRefresh();
+      } catch (error) {
+        _lastRefreshError =
+          error instanceof Error
+            ? error
+            : new Error('No fue posible refrescar la sesión');
       } finally {
         _refreshQueue.forEach((cb) => cb(newToken ?? null));
         _refreshQueue = [];
         _isRefreshing = false;
       }
+    }
+
+    if (_lastRefreshError) {
+      throw _lastRefreshError;
     }
 
     if (!newToken) {
@@ -111,7 +144,7 @@ export async function fetchApi<T = any>(endpoint: string, options?: RequestInit)
     // Retry original request with new token
     const retryResponse = await fetch(`${API_URL}${endpoint}`, {
       ...options,
-      headers: buildHeaders(newToken, options),
+      headers: buildHeaders(newToken, options, true),
     });
 
     if (!retryResponse.ok) {
