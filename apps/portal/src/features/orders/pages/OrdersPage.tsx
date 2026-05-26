@@ -1,6 +1,5 @@
 import {
   Alert,
-  Button,
   Chip,
   Paper,
   Stack,
@@ -29,14 +28,6 @@ export function OrdersPage() {
   return (
     <Stack spacing={2}>
       <PageHeader title="Orders" subtitle="Your current and historical orders" />
-      <Button
-        variant="contained"
-        component={Link}
-        to="/portal/orders/new"
-        sx={{ width: 'fit-content' }}
-      >
-        Create order
-      </Button>
       <Paper variant="outlined">
         <Table size="small">
           <TableHead>
@@ -67,9 +58,13 @@ export function OrdersPage() {
                   })}
                 </TableCell>
                 <TableCell align="right">
-                  <Button component={Link} to={`/portal/orders/${order.id}`} size="small">
-                    View
-                  </Button>
+                  <Chip
+                    component={Link}
+                    clickable
+                    to={`/portal/orders/${order.id}`}
+                    size="small"
+                    label="View"
+                  />
                 </TableCell>
               </TableRow>
             ))}

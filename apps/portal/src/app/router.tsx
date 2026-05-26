@@ -5,7 +5,6 @@ import { LoginPage } from '../features/auth/pages/LoginPage';
 import { SetupPasswordPage } from '../features/auth/pages/SetupPasswordPage';
 import { DashboardPage } from '../features/dashboard/pages/DashboardPage';
 import { OrdersPage } from '../features/orders/pages/OrdersPage';
-import { CreateOrderPage } from '../features/orders/pages/CreateOrderPage';
 import { OrderDetailPage } from '../features/orders/pages/OrderDetailPage';
 import { ProtectedRoute } from '../shared/components/ProtectedRoute';
 
@@ -28,7 +27,6 @@ export const router = createBrowserRouter([
       { index: true, element: <Navigate to="/portal/dashboard" replace /> },
       { path: 'dashboard', element: <DashboardPage /> },
       { path: 'orders', element: <OrdersPage /> },
-      { path: 'orders/new', element: <CreateOrderPage /> },
       { path: 'orders/:orderId', element: <OrderDetailPage /> },
     ],
   },
