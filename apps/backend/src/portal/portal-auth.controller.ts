@@ -11,7 +11,6 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Public } from '../auth/decorators/public.decorator';
 import { PortalAuthService } from './portal-auth.service';
 import { PortalLoginDto } from './dto/portal-login.dto';
-import { PortalSetupPasswordDto } from './dto/portal-setup-password.dto';
 import { PortalRefreshTokenDto } from './dto/portal-refresh-token.dto';
 import { PortalAccessTokenGuard } from './guards/portal-access-token.guard';
 import { CurrentPortalClient } from './decorators/current-portal-client.decorator';
@@ -36,12 +35,6 @@ export class PortalAuthController {
   @ApiOperation({ summary: 'Login customer portal client' })
   login(@Body() dto: PortalLoginDto) {
     return this.portalAuthService.login(dto);
-  }
-
-  @Post('setup-password')
-  @ApiOperation({ summary: 'Set first password using one-time setup token' })
-  setupPassword(@Body() dto: PortalSetupPasswordDto) {
-    return this.portalAuthService.setupPassword(dto);
   }
 
   @Post('refresh')

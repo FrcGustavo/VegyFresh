@@ -58,6 +58,9 @@ export class Client {
   @Column({ type: 'text', nullable: true })
   avatar_url: string | null;
 
+  @Column({ type: 'text', nullable: true })
+  password_hash: string | null;
+
   @Column({ type: 'uuid', nullable: true })
   price_list_id: string | null;
 

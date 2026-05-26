@@ -4,10 +4,9 @@ import { ClientsService } from './clients.service';
 import { ClientsController } from './clients.controller';
 import { Client } from './entities/client.entity';
 import { PriceList } from '../catalog/price-lists/entities/price-list.entity';
-import { PortalAccount } from '../portal/entities/portal-account.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Client, PriceList, PortalAccount])],
+  imports: [TypeOrmModule.forFeature([Client, PriceList])],
   controllers: [ClientsController],
   providers: [ClientsService],
   exports: [ClientsService],

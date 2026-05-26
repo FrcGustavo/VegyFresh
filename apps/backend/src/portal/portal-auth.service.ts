@@ -3,14 +3,12 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { IsNull, Repository } from 'typeorm';
-import { createHash, randomUUID } from 'node:crypto';
+import { randomUUID } from 'node:crypto';
 import * as bcrypt from 'bcrypt';
 import { Client } from '../clients/entities/client.entity';
 import { PortalAuthSession } from './entities/portal-auth-session.entity';
-import { PortalAccount } from './entities/portal-account.entity';
 import type { AuthenticatedPortalClient } from './types/authenticated-portal-client.type';
 import { PortalLoginDto } from './dto/portal-login.dto';
-import { PortalSetupPasswordDto } from './dto/portal-setup-password.dto';
 import { PortalRefreshTokenDto } from './dto/portal-refresh-token.dto';
 import {
   DEFAULT_ACCESS_TOKEN_TTL,
@@ -33,8 +31,6 @@ export class PortalAuthService {
   constructor(
     @InjectRepository(Client)
     private readonly clientsRepository: Repository<Client>,
-    @InjectRepository(PortalAccount)
-    private readonly portalAccountsRepository: Repository<PortalAccount>,
     @InjectRepository(PortalAuthSession)
     private readonly portalSessionsRepository: Repository<PortalAuthSession>,
     private readonly jwtService: JwtService,
@@ -48,60 +44,22 @@ export class PortalAuthService {
     const client = await this.clientsRepository.findOne({
       where: { email: dto.email.trim().toLowerCase() },
     });
-    const portalAccount = client
-      ? await this.portalAccountsRepository.findOneBy({ client_id: client.id })
-      : null;
-    if (!client || !portalAccount?.password_hash) {
+    if (!client || !client.password_hash) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
     const isPasswordValid = await bcrypt.compare(
       dto.password,
-      portalAccount.password_hash,
+      client.password_hash,
     );
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    portalAccount.last_portal_login_at = new Date();
-    await this.portalAccountsRepository.save(portalAccount);
     const tokens = await this.generateTokens(client);
 
     return {
       client: this.buildClientProfile(client),
-      ...tokens,
-    };
-  }
-
-  async setupPassword(dto: PortalSetupPasswordDto) {
-    const hashedToken = this.hashSetupToken(dto.token);
-    const portalAccount = await this.portalAccountsRepository.findOne({
-      where: { password_setup_token_hash: hashedToken },
-      relations: { client: true },
-    });
-    if (!portalAccount?.client) {
-      throw new UnauthorizedException('Invalid or expired setup link');
-    }
-
-    if (
-      !portalAccount.password_setup_expires_at ||
-      portalAccount.password_setup_expires_at.getTime() <= Date.now()
-    ) {
-      throw new UnauthorizedException('Invalid or expired setup link');
-    }
-
-    portalAccount.password_hash = await bcrypt.hash(
-      dto.password,
-      this.bcryptSaltRounds,
-    );
-    portalAccount.password_setup_token_hash = null;
-    portalAccount.password_setup_expires_at = null;
-    portalAccount.last_portal_login_at = new Date();
-    await this.portalAccountsRepository.save(portalAccount);
-
-    const tokens = await this.generateTokens(portalAccount.client);
-    return {
-      client: this.buildClientProfile(portalAccount.client),
       ...tokens,
     };
   }
@@ -231,7 +189,10 @@ export class PortalAuthService {
       }),
     ]);
 
-    const refreshTokenHash = await bcrypt.hash(refreshToken, this.bcryptSaltRounds);
+    const refreshTokenHash = await bcrypt.hash(
+      refreshToken,
+      this.bcryptSaltRounds,
+    );
     const session = this.portalSessionsRepository.create({
       id: sessionId,
       client_id: client.id,
@@ -248,10 +209,6 @@ export class PortalAuthService {
     };
   }
 
-  private hashSetupToken(token: string) {
-    return createHash('sha256').update(token).digest('hex');
-  }
-
   private async verifyRefreshToken(token: string) {
     const refreshSecret =
       this.configService.get<string>('PORTAL_JWT_REFRESH_SECRET') ??
@@ -259,12 +216,14 @@ export class PortalAuthService {
       resolveJwtSecret(this.configService, 'JWT_REFRESH_SECRET');
 
     try {
-      return await this.jwtService.verifyAsync<AuthenticatedPortalClient>(token, {
-        secret: refreshSecret,
-      });
+      return await this.jwtService.verifyAsync<AuthenticatedPortalClient>(
+        token,
+        {
+          secret: refreshSecret,
+        },
+      );
     } catch {
       throw new UnauthorizedException('Invalid refresh token');
     }
   }
-
 }

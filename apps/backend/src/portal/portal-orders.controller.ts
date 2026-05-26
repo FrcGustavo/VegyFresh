@@ -1,10 +1,7 @@
 import {
-  Body,
   Controller,
   Get,
   Param,
-  Patch,
-  Post,
   Query,
   UseGuards,
   UsePipes,
@@ -17,8 +14,6 @@ import { CurrentPortalClient } from './decorators/current-portal-client.decorato
 import type { AuthenticatedPortalClient } from './types/authenticated-portal-client.type';
 import { PortalOrdersService } from './portal-orders.service';
 import { PortalOrdersQueryDto } from './dto/portal-orders-query.dto';
-import { PortalCreateOrderDto } from './dto/portal-create-order.dto';
-import { PortalCancelOrderDto } from './dto/portal-cancel-order.dto';
 
 @ApiTags('portal-orders')
 @Controller('portal/orders')
@@ -52,24 +47,5 @@ export class PortalOrdersController {
     @Param('id') id: string,
   ) {
     return this.portalOrdersService.findOne(user, id);
-  }
-
-  @Post()
-  @ApiOperation({ summary: 'Create order from portal' })
-  create(
-    @CurrentPortalClient() user: AuthenticatedPortalClient,
-    @Body() dto: PortalCreateOrderDto,
-  ) {
-    return this.portalOrdersService.create(user, dto);
-  }
-
-  @Patch(':id/cancel')
-  @ApiOperation({ summary: 'Cancel portal order' })
-  cancel(
-    @CurrentPortalClient() user: AuthenticatedPortalClient,
-    @Param('id') id: string,
-    @Body() dto: PortalCancelOrderDto,
-  ) {
-    return this.portalOrdersService.cancel(user, id, dto);
   }
 }
