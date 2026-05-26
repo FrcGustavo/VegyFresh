@@ -1,9 +1,16 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { authStorage } from './authStorage';
-import { authApi, type AuthUser, type LoginPayload, type SignupPayload } from './authApi';
+import {
+  authApi,
+  type AuthRole,
+  type AuthUser,
+  type LoginPayload,
+  type SignupPayload,
+} from './authApi';
 
 interface AuthState {
   user: AuthUser | null;
+  role: AuthRole | null;
   isAuthenticated: boolean;
   isLoading: boolean;
 }
@@ -39,6 +46,7 @@ export function useAuth(): AuthContextValue {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>({
     user: null,
+    role: null,
     isAuthenticated: false,
     isLoading: true,
   });
@@ -50,7 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const refreshToken = authStorage.getRefreshToken();
 
       if (!accessToken && !refreshToken) {
-        setState({ user: null, isAuthenticated: false, isLoading: false });
+        setState({ user: null, role: null, isAuthenticated: false, isLoading: false });
         return;
       }
 
@@ -58,12 +66,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (accessToken) {
           try {
             const response = await authApi.me(accessToken);
-            setState({ user: response.user, isAuthenticated: true, isLoading: false });
+            setState({
+              user: response.user,
+              role: response.role,
+              isAuthenticated: true,
+              isLoading: false,
+            });
             return;
           } catch {
             if (!refreshToken) {
               authStorage.clearTokens();
-              setState({ user: null, isAuthenticated: false, isLoading: false });
+              setState({ user: null, role: null, isAuthenticated: false, isLoading: false });
               return;
             }
           }
@@ -71,25 +84,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (!refreshToken) {
           authStorage.clearTokens();
-          setState({ user: null, isAuthenticated: false, isLoading: false });
+          setState({ user: null, role: null, isAuthenticated: false, isLoading: false });
           return;
         }
 
         const refreshedTokens = await authApi.refresh(refreshToken);
         authStorage.setTokens(refreshedTokens.access_token, refreshedTokens.refresh_token);
         const response = await authApi.me(refreshedTokens.access_token);
-        setState({ user: response.user, isAuthenticated: true, isLoading: false });
+        setState({
+          user: response.user,
+          role: response.role,
+          isAuthenticated: true,
+          isLoading: false,
+        });
       } catch (error) {
         if (isAuthRejected(error)) {
           authStorage.clearTokens();
-          setState({ user: null, isAuthenticated: false, isLoading: false });
+          setState({ user: null, role: null, isAuthenticated: false, isLoading: false });
           return;
         }
 
         // Non-auth errors (e.g. network failure) should not be treated as
         // authenticated — downstream code assumes isAuthenticated === true
         // implies a non-null user.
-        setState({ user: null, isAuthenticated: false, isLoading: false });
+        setState({ user: null, role: null, isAuthenticated: false, isLoading: false });
       }
     };
 
@@ -100,7 +118,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const handleForceLogout = () => {
       authStorage.clearTokens();
-      setState({ user: null, isAuthenticated: false, isLoading: false });
+      setState({ user: null, role: null, isAuthenticated: false, isLoading: false });
     };
 
     window.addEventListener('auth:logout', handleForceLogout);
@@ -110,13 +128,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (payload: LoginPayload): Promise<void> => {
     const response = await authApi.login(payload);
     authStorage.setTokens(response.access_token, response.refresh_token);
-    setState({ user: response.user, isAuthenticated: true, isLoading: false });
+    setState({
+      user: response.user,
+      role: response.role,
+      isAuthenticated: true,
+      isLoading: false,
+    });
   };
 
   const signup = async (payload: SignupPayload): Promise<void> => {
     const response = await authApi.signup(payload);
     authStorage.setTokens(response.access_token, response.refresh_token);
-    setState({ user: response.user, isAuthenticated: true, isLoading: false });
+    setState({
+      user: response.user,
+      role: response.role,
+      isAuthenticated: true,
+      isLoading: false,
+    });
   };
 
   const logout = async (): Promise<void> => {
@@ -126,7 +154,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     authStorage.clearTokens();
-    setState({ user: null, isAuthenticated: false, isLoading: false });
+    setState({ user: null, role: null, isAuthenticated: false, isLoading: false });
   };
 
   return (
