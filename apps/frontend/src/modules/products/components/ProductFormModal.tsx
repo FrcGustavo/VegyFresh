@@ -91,7 +91,7 @@ export default function ProductFormModal({
       title={title ?? (productId ? 'Editar Producto' : 'Crear Nuevo Producto')}
       initialWidth={initialWidth}
       initialHeight={initialHeight}
-      toolbar={isEditing ? toolbar : undefined}
+      toolbar={toolbar}
       renderContent={() => (
         <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
           {/* Tabs Menu */}

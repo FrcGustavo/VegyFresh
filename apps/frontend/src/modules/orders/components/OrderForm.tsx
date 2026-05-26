@@ -21,18 +21,14 @@ interface OrderFormItem {
   name: string;
   unit: string;
 }
-interface ClientOption {
-  id: string;
-  folio?: string | null;
-  name?: string | null;
-}
 
 interface OrderFormProps {
   formData: OrderFormData;
   items: OrderFormItem[];
-  clients: ClientOption[];
+  clientLookup: { folio: string; name: string };
   totalGeneral: number;
   handleChange: (e: OrderChangeEvent) => void;
+  updateClientLookup: (field: 'folio' | 'name', value: string) => void;
   addItemField: () => void;
   updateItemField: (index: number, field: string, value: string | number | null) => void;
   handleSubmit: (action: 'save' | 'save-and-close' | 'save-and-new') => void;
@@ -42,9 +38,10 @@ interface OrderFormProps {
 export default function OrderForm({
   formData,
   items,
-  clients,
+  clientLookup,
   totalGeneral,
   handleChange,
+  updateClientLookup,
   addItemField,
   updateItemField,
   handleSubmit,
@@ -64,7 +61,6 @@ export default function OrderForm({
   };
 
   const totalProducts = items.length;
-  const selectedClient = clients.find((client) => client.id === formData.client_id);
   const cellSx = { '&.MuiTableCell-root': { padding: '0 !important', border: '1px solid', borderColor: 'divider' } };
   const cellInputSx = {
     margin: 0,
@@ -131,15 +127,17 @@ export default function OrderForm({
               <TextField
                 fullWidth
                 label="Client folio"
-                value={selectedClient?.folio || ''}
-                // slotProps={{ input: { readOnly: true } }}
+                value={clientLookup.folio}
+                onChange={(e) => updateClientLookup('folio', e.target.value)}
+                disabled={isDisabled}
               />
               <TextField
                 fullWidth
                 label="Client name"
-                value={selectedClient?.name || ''}
+                value={clientLookup.name}
+                onChange={(e) => updateClientLookup('name', e.target.value)}
                 required
-                slotProps={{ input: { readOnly: true } }}
+                disabled={isDisabled}
               />
             </Box>
 
