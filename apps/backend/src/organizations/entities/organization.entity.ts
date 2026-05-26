@@ -14,8 +14,8 @@ import { PriceList } from '../../catalog/price-lists/entities/price-list.entity'
 import { Order } from '../../orders/entities/order.entity';
 import { ProductPrice } from '../../catalog/product-prices/entities/product-price.entity';
 import { User } from '../../users/entities/user.entity';
-import { Purchase } from '../../warehouse/entities/purchase.entity';
-import { InventoryMovement } from '../../warehouse/entities/inventory-movement.entity';
+import { Purchase } from '../../purchase/entities/purchase.entity';
+import { InventoryMovement } from '../../inventory/entities/inventory-movement.entity';
 
 @Entity('organizations')
 export class Organization {

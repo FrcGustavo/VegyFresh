@@ -1,13 +1,13 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { WarehouseController } from './warehouse.controller';
-import { WarehouseService } from './warehouse.service';
 import { Purchase } from './entities/purchase.entity';
 import { PurchaseItem } from './entities/purchase-item.entity';
-import { InventoryMovement } from './entities/inventory-movement.entity';
+import { InventoryMovement } from '../inventory/entities/inventory-movement.entity';
 import { Supplier } from '../suppliers/entities/supplier.entity';
 import { Product } from '../catalog/products/entities/product.entity';
 import { User } from '../users/entities/user.entity';
+import { PurchaseService } from './purchase.service';
+import { PurchaseController } from './purchase.controller';
 
 @Module({
   imports: [
@@ -20,8 +20,8 @@ import { User } from '../users/entities/user.entity';
       User,
     ]),
   ],
-  controllers: [WarehouseController],
-  providers: [WarehouseService],
-  exports: [WarehouseService],
+  controllers: [PurchaseController],
+  providers: [PurchaseService],
+  exports: [PurchaseService],
 })
-export class WarehouseModule {}
+export class PurchaseModule {}

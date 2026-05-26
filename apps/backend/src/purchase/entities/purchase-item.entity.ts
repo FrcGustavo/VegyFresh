@@ -9,7 +9,7 @@ import {
 import { Purchase } from './purchase.entity';
 import { Product } from '../../catalog/products/entities/product.entity';
 
-@Entity('purchase_items')
+@Entity('inventory_entry_items')
 export class PurchaseItem {
   @PrimaryColumn({ type: 'uuid' })
   @Generated('uuid')

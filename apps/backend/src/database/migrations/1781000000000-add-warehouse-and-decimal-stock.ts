@@ -6,9 +6,7 @@ type RoleRow = {
   permissions: Array<Record<string, unknown> | string> | null;
 };
 
-export class AddWarehouseAndDecimalStock1781000000000
-  implements MigrationInterface
-{
+export class AddWarehouseAndDecimalStock1781000000000 implements MigrationInterface {
   name = 'AddWarehouseAndDecimalStock1781000000000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
@@ -181,9 +179,15 @@ export class AddWarehouseAndDecimalStock1781000000000
     await queryRunner.query(
       `DROP INDEX IF EXISTS "IDX_inventory_movements_product"`,
     );
-    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_inventory_movements_org"`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_purchase_items_product"`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_purchase_items_purchase"`);
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "IDX_inventory_movements_org"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "IDX_purchase_items_product"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "IDX_purchase_items_purchase"`,
+    );
     await queryRunner.query(`DROP INDEX IF EXISTS "IDX_purchases_date"`);
     await queryRunner.query(`DROP INDEX IF EXISTS "IDX_purchases_supplier"`);
     await queryRunner.query(`DROP INDEX IF EXISTS "IDX_purchases_org"`);
@@ -229,15 +233,15 @@ export class AddWarehouseAndDecimalStock1781000000000
             'catalog:*',
             'orders:*',
             'users:manage',
-            'warehouse:read',
-            'warehouse:manage',
+            'inventory:read',
+            'inventory:manage',
           ]),
         ],
       );
     } else {
       const permissions = this.normalizePermissions(adminRole.permissions);
-      permissions.add('warehouse:read');
-      permissions.add('warehouse:manage');
+      permissions.add('inventory:read');
+      permissions.add('inventory:manage');
       await queryRunner.query(
         `UPDATE "roles" SET "permissions" = $1::jsonb WHERE "id" = $2`,
         [JSON.stringify(Array.from(permissions)), adminRole.id],
@@ -247,12 +251,15 @@ export class AddWarehouseAndDecimalStock1781000000000
     if (!memberRole) {
       await queryRunner.query(
         `INSERT INTO "roles" ("name", "permissions") VALUES ($1, $2::jsonb)`,
-        ['member', JSON.stringify(['catalog:read', 'orders:read', 'warehouse:read'])],
+        [
+          'member',
+          JSON.stringify(['catalog:read', 'orders:read', 'inventory:read']),
+        ],
       );
     } else {
       const permissions = this.normalizePermissions(memberRole.permissions);
-      permissions.add('warehouse:read');
-      permissions.delete('warehouse:manage');
+      permissions.add('inventory:read');
+      permissions.delete('inventory:manage');
       await queryRunner.query(
         `UPDATE "roles" SET "permissions" = $1::jsonb WHERE "id" = $2`,
         [JSON.stringify(Array.from(permissions)), memberRole.id],
@@ -263,12 +270,15 @@ export class AddWarehouseAndDecimalStock1781000000000
   private async removeWarehousePermissions(queryRunner: QueryRunner) {
     const rows = (await queryRunner.query(
       `SELECT id, permissions FROM "roles" WHERE LOWER(name) IN ('admin', 'member')`,
-    )) as Array<{ id: string; permissions: Array<Record<string, unknown> | string> | null }>;
+    )) as Array<{
+      id: string;
+      permissions: Array<Record<string, unknown> | string> | null;
+    }>;
 
     for (const row of rows) {
       const permissions = this.normalizePermissions(row.permissions);
-      permissions.delete('warehouse:read');
-      permissions.delete('warehouse:manage');
+      permissions.delete('inventory:read');
+      permissions.delete('inventory:manage');
       await queryRunner.query(
         `UPDATE "roles" SET "permissions" = $1::jsonb WHERE "id" = $2`,
         [JSON.stringify(Array.from(permissions)), row.id],

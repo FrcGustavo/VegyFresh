@@ -12,8 +12,8 @@ import {
 } from 'typeorm';
 import { Product } from '../../catalog/products/entities/product.entity';
 import { Organization } from '../../organizations/entities/organization.entity';
-import { Purchase } from '../../warehouse/entities/purchase.entity';
-import { InventoryMovement } from '../../warehouse/entities/inventory-movement.entity';
+import { Purchase } from '../../purchase/entities/purchase.entity';
+import { InventoryMovement } from '../../inventory/entities/inventory-movement.entity';
 
 @Entity('suppliers')
 @Unique('UQ_suppliers_org_folio', ['organization_id', 'folio'])

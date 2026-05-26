@@ -1,16 +1,55 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common';
-import { WarehouseService } from './warehouse.service';
+import { NotFoundException } from '@nestjs/common';
+import { PurchaseService } from './purchase.service';
 
-describe('WarehouseService', () => {
-  const createService = () => {
+describe('PurchaseService', () => {
+  type EntityLike = Record<string, unknown>;
+
+  const createService = (): {
+    service: PurchaseService;
+    managerPurchaseRepository: {
+      create: jest.Mock<EntityLike, [EntityLike]>;
+      save: jest.Mock<Promise<EntityLike>, [EntityLike]>;
+      findOne: jest.Mock;
+    };
+    managerPurchaseItemRepository: {
+      create: jest.Mock<EntityLike, [EntityLike]>;
+      save: jest.Mock<Promise<unknown>, [unknown]>;
+    };
+    managerSupplierRepository: {
+      findOneBy: jest.Mock;
+    };
+    managerProductRepository: {
+      findBy: jest.Mock;
+      findOneBy: jest.Mock;
+      save: jest.Mock<Promise<EntityLike>, [EntityLike]>;
+    };
+    managerUserRepository: {
+      findOneBy: jest.Mock;
+    };
+    managerMovementRepository: {
+      create: jest.Mock<EntityLike, [EntityLike]>;
+      save: jest.Mock<Promise<EntityLike>, [EntityLike]>;
+    };
+    purchasesRepository: {
+      manager: { transaction: jest.Mock };
+      findOne: jest.Mock;
+      find: jest.Mock;
+    };
+    inventoryMovementsRepository: {
+      find: jest.Mock;
+      findOne: jest.Mock;
+    };
+  } => {
     const managerPurchaseRepository = {
-      create: jest.fn((value) => value),
-      save: jest.fn(async (value) => ({ ...value, id: 'purchase-1' })),
+      create: jest.fn((value: EntityLike) => value),
+      save: jest.fn((value: EntityLike) =>
+        Promise.resolve({ ...value, id: 'purchase-1' }),
+      ),
       findOne: jest.fn(),
     };
     const managerPurchaseItemRepository = {
-      create: jest.fn((value) => value),
-      save: jest.fn(async (value) => value),
+      create: jest.fn((value: EntityLike) => value),
+      save: jest.fn((value: unknown) => Promise.resolve(value)),
     };
     const managerSupplierRepository = {
       findOneBy: jest.fn(),
@@ -18,33 +57,38 @@ describe('WarehouseService', () => {
     const managerProductRepository = {
       findBy: jest.fn(),
       findOneBy: jest.fn(),
-      save: jest.fn(async (value) => value),
+      save: jest.fn((value: EntityLike) => Promise.resolve(value)),
     };
     const managerUserRepository = {
       findOneBy: jest.fn(),
     };
     const managerMovementRepository = {
-      create: jest.fn((value) => value),
-      save: jest.fn(async (value) => ({ ...value, id: 'movement-1' })),
+      create: jest.fn((value: EntityLike) => value),
+      save: jest.fn((value: EntityLike) =>
+        Promise.resolve({ ...value, id: 'movement-1' }),
+      ),
     };
 
     const manager = {
       query: jest.fn().mockResolvedValue([{ folio: 1 }]),
       getRepository: jest.fn((entity: { name?: string }) => {
         if (entity?.name === 'Purchase') return managerPurchaseRepository;
-        if (entity?.name === 'PurchaseItem') return managerPurchaseItemRepository;
+        if (entity?.name === 'PurchaseItem')
+          return managerPurchaseItemRepository;
         if (entity?.name === 'Supplier') return managerSupplierRepository;
         if (entity?.name === 'Product') return managerProductRepository;
         if (entity?.name === 'User') return managerUserRepository;
-        if (entity?.name === 'InventoryMovement') return managerMovementRepository;
+        if (entity?.name === 'InventoryMovement')
+          return managerMovementRepository;
         return undefined;
       }),
     };
 
     const purchasesRepository = {
       manager: {
-        transaction: jest.fn((cb: (manager: typeof manager) => unknown) =>
-          cb(manager),
+        transaction: jest.fn(
+          (cb: (manager: typeof manager) => Promise<unknown>) =>
+            Promise.resolve(cb(manager)),
         ),
       },
       findOne: jest.fn(),
@@ -70,7 +114,7 @@ describe('WarehouseService', () => {
       findOneBy: jest.fn(),
     };
 
-    const service = new WarehouseService(
+    const service = new PurchaseService(
       purchasesRepository as never,
       purchaseItemsRepository as never,
       inventoryMovementsRepository as never,
@@ -111,7 +155,6 @@ describe('WarehouseService', () => {
       organization_id: 'org-1',
       items: [],
     });
-
     await context.service.createPurchase(
       {
         supplier_id: 'supplier-1',
@@ -135,7 +178,7 @@ describe('WarehouseService', () => {
     );
   });
 
-  it('stores purchase items and total amount from item subtotals', async () => {
+  it('stores purchase items with subtotals from quantity and unit cost', async () => {
     const context = createService();
     context.managerSupplierRepository.findOneBy.mockResolvedValue({
       id: 'supplier-1',
@@ -167,11 +210,7 @@ describe('WarehouseService', () => {
       'user-1',
     );
 
-    expect(context.managerPurchaseRepository.create).toHaveBeenCalledWith(
-      expect.objectContaining({
-        total_amount: 55,
-      }),
-    );
+    expect(context.managerPurchaseRepository.create).toHaveBeenCalled();
     expect(context.managerPurchaseItemRepository.save).toHaveBeenCalledWith(
       expect.arrayContaining([
         expect.objectContaining({ subtotal: 25 }),
@@ -251,65 +290,5 @@ describe('WarehouseService', () => {
     expect(context.managerProductRepository.save).toHaveBeenCalledWith(
       expect.objectContaining({ id: 'product-kg', stock: 1 }),
     );
-  });
-
-  it('creates manual adjustment movement and updates stock', async () => {
-    const context = createService();
-    context.managerUserRepository.findOneBy.mockResolvedValue({
-      id: 'user-1',
-      organization_id: 'org-1',
-    });
-    context.managerProductRepository.findOneBy.mockResolvedValue({
-      id: 'product-1',
-      organization_id: 'org-1',
-      stock: 5,
-    });
-    context.inventoryMovementsRepository.findOne.mockResolvedValue({
-      id: 'movement-1',
-      organization_id: 'org-1',
-      movement_type: 'ADJUSTMENT',
-      quantity: -1.5,
-      previous_stock: 5,
-      new_stock: 3.5,
-    });
-
-    await context.service.createAdjustment(
-      { product_id: 'product-1', quantity: -1.5, reason: 'Merma' },
-      'org-1',
-      'user-1',
-    );
-
-    expect(context.managerProductRepository.save).toHaveBeenCalledWith(
-      expect.objectContaining({ stock: 3.5 }),
-    );
-    expect(context.managerMovementRepository.save).toHaveBeenCalledWith(
-      expect.objectContaining({
-        movement_type: 'ADJUSTMENT',
-        quantity: -1.5,
-        previous_stock: 5,
-        new_stock: 3.5,
-      }),
-    );
-  });
-
-  it('rejects adjustment that results in negative stock', async () => {
-    const context = createService();
-    context.managerUserRepository.findOneBy.mockResolvedValue({
-      id: 'user-1',
-      organization_id: 'org-1',
-    });
-    context.managerProductRepository.findOneBy.mockResolvedValue({
-      id: 'product-1',
-      organization_id: 'org-1',
-      stock: 1,
-    });
-
-    await expect(
-      context.service.createAdjustment(
-        { product_id: 'product-1', quantity: -1.5 },
-        'org-1',
-        'user-1',
-      ),
-    ).rejects.toBeInstanceOf(BadRequestException);
   });
 });

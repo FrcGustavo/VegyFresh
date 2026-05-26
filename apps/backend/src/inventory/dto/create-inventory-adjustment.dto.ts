@@ -15,7 +15,8 @@ export class CreateInventoryAdjustmentDto {
 
   @ApiProperty({
     example: -1.25,
-    description: 'Signed quantity delta. Positive increases stock, negative reduces.',
+    description:
+      'Signed quantity delta. Positive increases stock, negative reduces.',
   })
   @Type(() => Number)
   @IsNumber({ maxDecimalPlaces: 3 })

@@ -14,8 +14,8 @@ import { OrderItem } from '../../../orders/entities/order-item.entity';
 import { ProductPrice } from '../../product-prices/entities/product-price.entity';
 import { Supplier } from '../../../suppliers/entities/supplier.entity';
 import { Organization } from '../../../organizations/entities/organization.entity';
-import { PurchaseItem } from '../../../warehouse/entities/purchase-item.entity';
-import { InventoryMovement } from '../../../warehouse/entities/inventory-movement.entity';
+import { PurchaseItem } from '../../../purchase/entities/purchase-item.entity';
+import { InventoryMovement } from '../../../inventory/entities/inventory-movement.entity';
 
 export enum ProductUnit {
   KG = 'kg',

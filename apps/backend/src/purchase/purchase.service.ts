@@ -13,12 +13,11 @@ import { PurchaseItem } from './entities/purchase-item.entity';
 import {
   InventoryMovement,
   InventoryMovementType,
-} from './entities/inventory-movement.entity';
+} from '../inventory/entities/inventory-movement.entity';
 import { CreatePurchaseDto } from './dto/create-purchase.dto';
-import { CreateInventoryAdjustmentDto } from './dto/create-inventory-adjustment.dto';
 
 @Injectable()
-export class WarehouseService {
+export class PurchaseService {
   constructor(
     @InjectRepository(Purchase)
     private readonly purchasesRepository: Repository<Purchase>,
@@ -58,7 +57,8 @@ export class WarehouseService {
         const suppliersRepository = manager.getRepository(Supplier);
         const productsRepository = manager.getRepository(Product);
         const usersRepository = manager.getRepository(User);
-        const inventoryMovementsRepository = manager.getRepository(InventoryMovement);
+        const inventoryMovementsRepository =
+          manager.getRepository(InventoryMovement);
 
         const supplier = await this.findSupplierOrFail(
           createPurchaseDto.supplier_id,
@@ -87,7 +87,6 @@ export class WarehouseService {
           purchase_date: createPurchaseDto.purchase_date
             ? new Date(createPurchaseDto.purchase_date)
             : new Date(),
-          total_amount: itemsPayload.totalAmount,
           notes: createPurchaseDto.notes ?? null,
         });
         const savedPurchase = await purchasesRepository.save(purchase);
@@ -153,87 +152,6 @@ export class WarehouseService {
     return purchase;
   }
 
-  async findInventory(organizationId: string) {
-    return this.productsRepository.find({
-      where: { organization_id: organizationId },
-      relations: { supplier: true },
-      order: { name: 'ASC' },
-    });
-  }
-
-  async findInventoryMovements(organizationId: string) {
-    return this.inventoryMovementsRepository.find({
-      where: { organization_id: organizationId },
-      relations: {
-        product: true,
-        supplier: true,
-        purchase: true,
-        user: true,
-      },
-      order: { created_at: 'DESC' },
-    });
-  }
-
-  async createAdjustment(
-    dto: CreateInventoryAdjustmentDto,
-    organizationId: string,
-    userId: string,
-  ) {
-    const movementId = await this.purchasesRepository.manager.transaction(
-      async (manager) => {
-        const productsRepository = manager.getRepository(Product);
-        const usersRepository = manager.getRepository(User);
-        const movementsRepository = manager.getRepository(InventoryMovement);
-
-        const user = await this.findUserOrFail(userId, organizationId, usersRepository);
-        const product = await this.findProductOrFail(
-          dto.product_id,
-          organizationId,
-          productsRepository,
-        );
-        const delta = this.roundQuantity(Number(dto.quantity));
-        if (delta === 0) {
-          throw new BadRequestException('Adjustment quantity must be different from zero');
-        }
-
-        const previousStock = this.toQuantity(product.stock);
-        const newStock = this.roundQuantity(previousStock + delta);
-        if (newStock < 0) {
-          throw new BadRequestException('Adjustment results in negative stock');
-        }
-
-        product.stock = newStock;
-        await productsRepository.save(product);
-
-        const movement = movementsRepository.create({
-          organization_id: organizationId,
-          product_id: product.id,
-          product,
-          user_id: user.id,
-          user,
-          supplier_id: null,
-          purchase_id: null,
-          movement_type: InventoryMovementType.ADJUSTMENT,
-          quantity: delta,
-          previous_stock: previousStock,
-          new_stock: newStock,
-          reason: dto.reason ?? null,
-        });
-        const savedMovement = await movementsRepository.save(movement);
-        return savedMovement.id;
-      },
-    );
-
-    const movement = await this.inventoryMovementsRepository.findOne({
-      where: { id: movementId, organization_id: organizationId },
-      relations: { product: true, user: true, supplier: true, purchase: true },
-    });
-    if (!movement) {
-      throw new NotFoundException('Inventory movement was not found');
-    }
-    return movement;
-  }
-
   private async findSupplierOrFail(
     id: string,
     organizationId: string,
@@ -248,22 +166,6 @@ export class WarehouseService {
     }
 
     return supplier;
-  }
-
-  private async findProductOrFail(
-    id: string,
-    organizationId: string,
-    productsRepository: Repository<Product> = this.productsRepository,
-  ) {
-    const product = await productsRepository.findOneBy({
-      id,
-      organization_id: organizationId,
-    });
-    if (!product) {
-      throw new NotFoundException(`Product with id ${id} not found`);
-    }
-
-    return product;
   }
 
   private async findUserOrFail(
@@ -296,7 +198,9 @@ export class WarehouseService {
       id: In(productIds),
       organization_id: organizationId,
     });
-    const productMap = new Map(products.map((product) => [product.id, product]));
+    const productMap = new Map(
+      products.map((product) => [product.id, product]),
+    );
 
     const normalizedItems = items.map((item) => {
       const product = productMap.get(item.product_id);
@@ -309,10 +213,14 @@ export class WarehouseService {
       const quantity = this.roundQuantity(Number(item.quantity));
       const unitCost = this.roundCurrency(Number(item.unit_cost));
       if (quantity <= 0) {
-        throw new BadRequestException('Item quantity must be greater than zero');
+        throw new BadRequestException(
+          'Item quantity must be greater than zero',
+        );
       }
       if (unitCost <= 0) {
-        throw new BadRequestException('Item unit_cost must be greater than zero');
+        throw new BadRequestException(
+          'Item unit_cost must be greater than zero',
+        );
       }
 
       const subtotal = this.roundCurrency(quantity * unitCost);
@@ -324,19 +232,14 @@ export class WarehouseService {
       };
     });
 
-    return {
-      items: normalizedItems,
-      totalAmount: this.roundCurrency(
-        normalizedItems.reduce((sum, item) => sum + item.subtotal, 0),
-      ),
-    };
+    return { items: normalizedItems };
   }
 
   private async buildPurchaseFolio(manager: {
     query: (query: string) => Promise<Array<{ folio: string | number }>>;
   }) {
     const [result] = await manager.query(
-      `SELECT nextval('purchases_folio_seq') AS folio`,
+      `SELECT nextval('inventory_entries_folio_seq') AS folio`,
     );
     const folioNumber = Number(result?.folio ?? 0);
     return `C${String(folioNumber).padStart(5, '0')}`;

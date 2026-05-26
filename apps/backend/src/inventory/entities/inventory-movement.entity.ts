@@ -11,7 +11,7 @@ import { Product } from '../../catalog/products/entities/product.entity';
 import { Organization } from '../../organizations/entities/organization.entity';
 import { User } from '../../users/entities/user.entity';
 import { Supplier } from '../../suppliers/entities/supplier.entity';
-import { Purchase } from './purchase.entity';
+import { Purchase } from '../../purchase/entities/purchase.entity';
 
 export enum InventoryMovementType {
   IN = 'IN',

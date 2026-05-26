@@ -13,10 +13,10 @@ import { Supplier } from '../../suppliers/entities/supplier.entity';
 import { Organization } from '../../organizations/entities/organization.entity';
 import { User } from '../../users/entities/user.entity';
 import { PurchaseItem } from './purchase-item.entity';
-import { InventoryMovement } from './inventory-movement.entity';
+import { InventoryMovement } from '../../inventory/entities/inventory-movement.entity';
 
-@Entity('purchases')
-@Unique('UQ_purchases_org_folio', ['organization_id', 'folio'])
+@Entity('inventory_entries')
+@Unique('UQ_inventory_entries_org_folio', ['organization_id', 'folio'])
 export class Purchase {
   @PrimaryColumn({ type: 'uuid' })
   @Generated('uuid')
@@ -52,9 +52,6 @@ export class Purchase {
 
   @Column({ type: 'timestamp' })
   purchase_date!: Date;
-
-  @Column({ type: 'decimal', precision: 12, scale: 2 })
-  total_amount!: number;
 
   @Column({ type: 'text', nullable: true })
   notes!: string | null;

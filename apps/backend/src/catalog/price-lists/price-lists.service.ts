@@ -22,10 +22,7 @@ export class PriceListsService {
     private readonly priceListsRepository: Repository<PriceList>,
   ) {}
 
-  async create(
-    createPriceListDto: CreatePriceListDto,
-    organizationId: string,
-  ) {
+  async create(createPriceListDto: CreatePriceListDto, organizationId: string) {
     const priceListFolio = await this.buildPriceListFolio(
       this.priceListsRepository.manager,
     );
