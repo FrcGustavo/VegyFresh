@@ -1,8 +1,6 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddTenantScopedDataConstraints1779551000000
-  implements MigrationInterface
-{
+export class AddTenantScopedDataConstraints1779551000000 implements MigrationInterface {
   name = 'AddTenantScopedDataConstraints1779551000000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
@@ -155,9 +153,7 @@ export class AddTenantScopedDataConstraints1779551000000
     );
     await queryRunner.query(`DROP INDEX IF EXISTS "IDX_orders_org_user"`);
     await queryRunner.query(`DROP INDEX IF EXISTS "IDX_orders_org_client"`);
-    await queryRunner.query(
-      `DROP INDEX IF EXISTS "IDX_products_org_supplier"`,
-    );
+    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_products_org_supplier"`);
     await queryRunner.query(
       `DROP INDEX IF EXISTS "IDX_clients_org_price_list"`,
     );

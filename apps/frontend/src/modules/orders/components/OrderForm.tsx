@@ -110,7 +110,7 @@ export default function OrderForm({
   };
 
   const isAlphaNumericInput = (value: string) => /^[a-zA-Z0-9\s]*$/.test(value);
-  const isIntegerInput = (value: string) => /^\d*$/.test(value);
+  const isDecimalQuantityInput = (value: string) => /^\d*([.]\d{0,3})?$/.test(value);
   const isDecimalInput = (value: string) => /^\d*([.]\d{0,2})?$/.test(value);
 
   return (
@@ -279,7 +279,7 @@ export default function OrderForm({
                           variant="standard"
                           value={item.quantity}
                           onChange={(e) => {
-                            if (!isIntegerInput(e.target.value)) return;
+                            if (!isDecimalQuantityInput(e.target.value)) return;
                             updateItemField(index, 'quantity', e.target.value);
                           }}
                           onKeyDown={(e) => handleArrowNavigation(e, index, 3)}

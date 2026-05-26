@@ -6,26 +6,28 @@ import {
   ManyToOne,
   PrimaryColumn,
 } from 'typeorm';
+import { Purchase } from './purchase.entity';
 import { Product } from '../../catalog/products/entities/product.entity';
-import { Order } from './order.entity';
 
-@Entity('order_items')
-export class OrderItem {
+@Entity('inventory_entry_items')
+export class PurchaseItem {
   @PrimaryColumn({ type: 'uuid' })
   @Generated('uuid')
   id!: string;
 
   @Column({ type: 'uuid' })
-  order_id!: string;
+  purchase_id!: string;
 
-  @ManyToOne(() => Order, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'order_id' })
-  order!: Order;
+  @ManyToOne(() => Purchase, (purchase) => purchase.items, {
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'purchase_id' })
+  purchase!: Purchase;
 
   @Column({ type: 'uuid' })
   product_id!: string;
 
-  @ManyToOne(() => Product, {
+  @ManyToOne(() => Product, (product) => product.purchaseItems, {
     onDelete: 'RESTRICT',
   })
   @JoinColumn({ name: 'product_id' })
@@ -34,9 +36,9 @@ export class OrderItem {
   @Column({ type: 'decimal', precision: 12, scale: 3 })
   quantity!: number;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
-  unit_price!: number;
+  @Column({ type: 'decimal', precision: 12, scale: 2 })
+  unit_cost!: number;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  @Column({ type: 'decimal', precision: 12, scale: 2 })
   subtotal!: number;
 }

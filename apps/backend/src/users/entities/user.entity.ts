@@ -13,6 +13,8 @@ import { Order } from '../../orders/entities/order.entity';
 import { Role } from '../../roles/entities/role.entity';
 import { AuthSession } from '../../auth/entities/auth-session.entity';
 import { Organization } from '../../organizations/entities/organization.entity';
+import { Purchase } from '../../purchase/entities/purchase.entity';
+import { InventoryMovement } from '../../inventory/entities/inventory-movement.entity';
 
 @Entity('users')
 @Unique('UQ_users_org_id', ['organization_id', 'id'])
@@ -57,6 +59,15 @@ export class User {
 
   @OneToMany(() => AuthSession, (authSession) => authSession.user)
   authSessions: AuthSession[];
+
+  @OneToMany(() => Purchase, (purchase) => purchase.user)
+  purchases: Purchase[];
+
+  @OneToMany(
+    () => InventoryMovement,
+    (inventoryMovement) => inventoryMovement.user,
+  )
+  inventoryMovements: InventoryMovement[];
 
   @CreateDateColumn({ name: 'created_at' })
   created_at: Date;
