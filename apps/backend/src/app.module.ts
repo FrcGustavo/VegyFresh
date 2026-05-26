@@ -13,7 +13,8 @@ import { AiModule } from './ai/ai.module';
 import { WhatsappModule } from './whatsapp/whatsapp.module';
 import { OrganizationsModule } from './organizations/organizations.module';
 import { AuthModule } from './auth/auth.module';
-import { WarehouseModule } from './warehouse/warehouse.module';
+import { InventoryModule } from './inventory/inventory.module';
+import { PurchaseModule } from './purchase/purchase.module';
 import config from './config';
 
 @Module({
@@ -44,7 +45,8 @@ import config from './config';
     CatalogModule,
     OrganizationsModule,
     AuthModule,
-    WarehouseModule,
+    InventoryModule,
+    PurchaseModule,
     AiModule,
     WhatsappModule,
   ],
