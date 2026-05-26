@@ -14,6 +14,7 @@ import { WhatsappModule } from './whatsapp/whatsapp.module';
 import { OrganizationsModule } from './organizations/organizations.module';
 import { AuthModule } from './auth/auth.module';
 import { WarehouseModule } from './warehouse/warehouse.module';
+import { PortalModule } from './portal/portal.module';
 import config from './config';
 
 @Module({
@@ -45,6 +46,7 @@ import config from './config';
     OrganizationsModule,
     AuthModule,
     WarehouseModule,
+    PortalModule,
     AiModule,
     WhatsappModule,
   ],

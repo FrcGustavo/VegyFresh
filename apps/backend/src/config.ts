@@ -15,6 +15,12 @@ export default registerAs('config', () => {
     jwtAccessTtl: process.env.JWT_ACCESS_TTL ?? '15m',
     jwtRefreshSecret: process.env.JWT_REFRESH_SECRET,
     jwtRefreshTtl: process.env.JWT_REFRESH_TTL ?? '7d',
+    portalJwtAccessSecret: process.env.PORTAL_JWT_ACCESS_SECRET,
+    portalJwtAccessTtl: process.env.PORTAL_JWT_ACCESS_TTL ?? '15m',
+    portalJwtRefreshSecret: process.env.PORTAL_JWT_REFRESH_SECRET,
+    portalJwtRefreshTtl: process.env.PORTAL_JWT_REFRESH_TTL ?? '7d',
+    customerPortalUrl: process.env.CUSTOMER_PORTAL_URL,
+    portalSystemUserId: process.env.PORTAL_SYSTEM_USER_ID,
     bcryptSaltRounds: parseInt(process.env.BCRYPT_SALT_ROUNDS ?? '12', 10),
     whatsapp: {
       verifyToken: process.env.WHATSAPP_VERIFY_TOKEN,

@@ -17,13 +17,17 @@ import { Organization } from '../../organizations/entities/organization.entity';
 export enum OrderStatus {
   PENDING_REVIEW = 'PENDING_REVIEW',
   APPROVED = 'APPROVED',
+  IN_PROGRESS = 'IN_PROGRESS',
   REJECTED = 'REJECTED',
   DELIVERED = 'DELIVERED',
+  CANCELED = 'CANCELED',
 }
 
 export enum OrderOrigin {
   WHATSAPP = 'WHATSAPP',
+  ADMIN = 'ADMIN',
   MANUAL = 'MANUAL',
+  PORTAL = 'PORTAL',
 }
 
 @Entity('orders')
