@@ -10,7 +10,7 @@ const menuItems = [
   { text: 'Listas de Precios', icon: <LocalOffer />, path: '/price-lists' },
   { text: 'Clientes', icon: <People />, path: '/clients' },
   { text: 'Proveedores', icon: <LocalShipping />, path: '/suppliers' },
-  { text: 'Almacén', icon: <Warehouse />, path: '/warehouse' },
+  { text: 'Inventario', icon: <Warehouse />, path: '/inventory' },
   { text: 'Usuarios y Roles', icon: <AdminPanelSettings />, path: '/users' },
   { text: 'Configuración', icon: <Settings />, path: '/settings' },
 ];

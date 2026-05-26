@@ -10,7 +10,7 @@ const PriceListsList = lazy(() => import('./modules/products/price-lists/pages/P
 const ClientsList = lazy(() => import('./modules/clients/pages/ClientsList'));
 const SuppliersList = lazy(() => import('./modules/suppliers/pages/SuppliersList'));
 const UsersList = lazy(() => import('./modules/users/pages/UsersList'));
-const WarehousePage = lazy(() => import('./modules/warehouse/pages/WarehousePage'));
+const InventoryPage = lazy(() => import('./modules/inventory/pages/InventoryPage'));
 const SettingsPage = lazy(() => import('./modules/settings/pages/SettingsPage'));
 const LoginPage = lazy(() => import('./modules/auth/pages/LoginPage'));
 const SignupPage = lazy(() => import('./modules/auth/pages/SignupPage'));
@@ -334,7 +334,7 @@ function App() {
                 <Route path="price-lists" element={<PriceListsList />} />
                 <Route path="clients" element={<ClientsList />} />
                 <Route path="suppliers" element={<SuppliersList />} />
-                <Route path="warehouse" element={<WarehousePage />} />
+                <Route path="inventory" element={<InventoryPage />} />
                 <Route path="users" element={<UsersList />} />
                 <Route
                   path="settings"
