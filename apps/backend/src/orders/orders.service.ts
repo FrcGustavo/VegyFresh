@@ -235,9 +235,10 @@ export class OrdersService {
 
   async remove(id: string, organizationId: string) {
     const order = await this.findOne(id, organizationId);
-    await this.ordersRepository.remove(order);
+    order.status = OrderStatus.CANCELED;
+    await this.ordersRepository.save(order);
 
-    return { id, deleted: true };
+    return { id, canceled: true };
   }
 
   private async findClientOrFail(

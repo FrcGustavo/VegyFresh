@@ -1,6 +1,8 @@
 import { Box, Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Toolbar, Divider, Typography } from '@mui/material';
 import { ShoppingCart, Inventory, People, LocalShipping, AdminPanelSettings, LocalOffer, Settings, Warehouse } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router';
+import { useAuth } from '../auth/AuthContext';
+import { canAccessUsersResource } from '../auth/authorization';
 
 const drawerWidth = 260;
 
@@ -11,13 +13,22 @@ const menuItems = [
   { text: 'Clientes', icon: <People />, path: '/clients' },
   { text: 'Proveedores', icon: <LocalShipping />, path: '/suppliers' },
   { text: 'Inventario', icon: <Warehouse />, path: '/inventory' },
-  { text: 'Usuarios y Roles', icon: <AdminPanelSettings />, path: '/users' },
+  { text: 'Usuarios y Roles', icon: <AdminPanelSettings />, path: '/users', canAccess: canAccessUsersResource },
   { text: 'Configuración', icon: <Settings />, path: '/settings' },
 ];
 
 export default function Sidebar() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { role } = useAuth();
+
+  const visibleMenuItems = menuItems.filter((item) => {
+    if (!item.canAccess) {
+      return true;
+    }
+
+    return item.canAccess(role);
+  });
 
   return (
     <Drawer
@@ -36,7 +47,7 @@ export default function Sidebar() {
       <Divider />
       <Box sx={{ overflow: 'auto' }}>
         <List>
-          {menuItems.map((item) => {
+          {visibleMenuItems.map((item) => {
             const isSelected = location.pathname.startsWith(item.path);
             return (
               <ListItem key={item.text} disablePadding>

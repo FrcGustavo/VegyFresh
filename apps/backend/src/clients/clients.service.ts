@@ -1,9 +1,13 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateClientDto } from './dto/update-client.dto';
 import { Client } from './entities/client.entity';
-import { ILike, Repository } from 'typeorm';
+import { Brackets, Repository } from 'typeorm';
 import { PriceList } from '../catalog/price-lists/entities/price-list.entity';
 
 type ClientOrderField =
@@ -67,18 +71,25 @@ export class ClientsService {
     const offset = filters.offset ?? 0;
     const search = filters.search?.trim();
 
-    return this.clientsRepository.find({
-      where: search
-        ? {
-            name: ILike(`%${search}%`),
-            organization_id: organizationId,
-          }
-        : { organization_id: organizationId },
-      relations: { priceList: true },
-      order: { [orderBy]: order },
-      take: limit,
-      skip: offset,
-    });
+    const qb = this.clientsRepository
+      .createQueryBuilder('client')
+      .leftJoinAndSelect('client.priceList', 'priceList')
+      .where('client.organization_id = :organizationId', { organizationId })
+      .orderBy(`client.${orderBy}`, order)
+      .take(limit)
+      .skip(offset);
+
+    if (search) {
+      qb.andWhere(
+        new Brackets((innerQb) => {
+          innerQb
+            .where('client.name ILIKE :search', { search: `%${search}%` })
+            .orWhere('client.folio ILIKE :search', { search: `%${search}%` });
+        }),
+      );
+    }
+
+    return qb.getMany();
   }
 
   findByPhone(phoneNumber: string, organizationId: string) {
@@ -145,6 +156,22 @@ export class ClientsService {
     return { id, deleted: true };
   }
 
+  async activatePortalAccess(id: string, organizationId: string) {
+    const client = await this.findOne(id, organizationId);
+    this.assertPortalEligibleClient(client);
+    throw new BadRequestException(
+      'Portal setup links are disabled. Set client password directly.',
+    );
+  }
+
+  async resetPortalSetupLink(id: string, organizationId: string) {
+    const client = await this.findOne(id, organizationId);
+    this.assertPortalEligibleClient(client);
+    throw new BadRequestException(
+      'Portal setup links are disabled. Set client password directly.',
+    );
+  }
+
   private async resolvePriceList(organizationId: string, id?: string | null) {
     if (id === undefined || id === null) {
       return null;
@@ -188,5 +215,13 @@ export class ClientsService {
     );
     const folioNumber = Number(result?.folio ?? 0);
     return `C${String(folioNumber).padStart(5, '0')}`;
+  }
+
+  private assertPortalEligibleClient(client: Client) {
+    if (!client.email?.trim()) {
+      throw new BadRequestException(
+        'Client must have an email before enabling portal access',
+      );
+    }
   }
 }

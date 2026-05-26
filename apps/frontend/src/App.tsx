@@ -3,6 +3,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router';
 import { Box, CircularProgress, CssBaseline, ThemeProvider, createTheme, useMediaQuery } from '@mui/material';
 import MainLayout from './layout/MainLayout';
 import { AuthProvider, useAuth } from './auth/AuthContext';
+import type { AuthRole } from './auth/authApi';
+import { canAccessUsersResource } from './auth/authorization';
 
 const OrdersList = lazy(() => import('./modules/orders/pages/OrdersList'));
 const ProductsList = lazy(() => import('./modules/products/pages/ProductsList'));
@@ -294,6 +296,18 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
 }
 
+function RoleProtectedRoute({
+  children,
+  canAccess,
+}: {
+  children: ReactNode;
+  canAccess: (role: AuthRole | null | undefined) => boolean;
+}) {
+  const { role } = useAuth();
+
+  return canAccess(role) ? <>{children}</> : <Navigate to="/orders" replace />;
+}
+
 function App() {
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
   const [themePreference, setThemePreference] = useState<ThemePreference>(getStoredThemePreference);
@@ -335,7 +349,14 @@ function App() {
                 <Route path="clients" element={<ClientsList />} />
                 <Route path="suppliers" element={<SuppliersList />} />
                 <Route path="inventory" element={<InventoryPage />} />
-                <Route path="users" element={<UsersList />} />
+                <Route
+                  path="users"
+                  element={(
+                    <RoleProtectedRoute canAccess={canAccessUsersResource}>
+                      <UsersList />
+                    </RoleProtectedRoute>
+                  )}
+                />
                 <Route
                   path="settings"
                   element={(

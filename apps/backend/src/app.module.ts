@@ -15,6 +15,7 @@ import { OrganizationsModule } from './organizations/organizations.module';
 import { AuthModule } from './auth/auth.module';
 import { InventoryModule } from './inventory/inventory.module';
 import { PurchaseModule } from './purchase/purchase.module';
+import { PortalModule } from './portal/portal.module';
 import config from './config';
 
 @Module({
@@ -47,6 +48,7 @@ import config from './config';
     AuthModule,
     InventoryModule,
     PurchaseModule,
+    PortalModule,
     AiModule,
     WhatsappModule,
   ],

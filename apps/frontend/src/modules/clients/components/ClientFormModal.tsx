@@ -98,7 +98,7 @@ export default function ClientFormModal({
       title={title ?? (clientId ? 'Editar Cliente' : 'Crear Cliente')}
       initialWidth={initialWidth}
       initialHeight={initialHeight}
-      toolbar={isEditing ? toolbar : undefined}
+      toolbar={toolbar}
       renderContent={() =>
         formProps.isLoading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>

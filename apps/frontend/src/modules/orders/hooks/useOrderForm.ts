@@ -12,6 +12,8 @@ interface ProductPriceRef {
 }
 interface ClientRef {
   id: string;
+  folio?: string | null;
+  name?: string | null;
   priceList?: { productPrices?: ProductPriceRef[] } | null;
 }
 interface ProductRef {
@@ -76,8 +78,11 @@ export function useOrderForm(id?: string, onSuccess?: (action: SaveAction) => vo
   const [formData, setFormData] = useState<OrderFormData>(EMPTY_FORM_DATA);
   const [items, setItems] = useState<OrderFormItem[]>([createEmptyItem()]);
   const [isDisabled, setIsDisabled] = useState(!!id);
+  const [clientLookup, setClientLookup] = useState({ folio: '', name: '' });
   const lookupTimersRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const lookupVersionRef = useRef<Record<string, number>>({});
+  const clientLookupTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const clientLookupVersionRef = useRef(0);
 
   const { data: existingOrder, isLoading: isLoadingOrder } = useQuery({
     queryKey: ['orders', id],
@@ -151,8 +156,20 @@ export function useOrderForm(id?: string, onSuccess?: (action: SaveAction) => vo
 
   const selectedClient = useMemo(() => clients.find((c) => c.id === formData.client_id), [clients, formData.client_id]);
 
+  useEffect(() => {
+    if (selectedClient) {
+      setClientLookup({
+        folio: selectedClient.folio ?? '',
+        name: selectedClient.name ?? '',
+      });
+    }
+  }, [selectedClient]);
+
   useEffect(() => () => {
     Object.values(lookupTimersRef.current).forEach((timer) => clearTimeout(timer));
+    if (clientLookupTimerRef.current) {
+      clearTimeout(clientLookupTimerRef.current);
+    }
   }, []);
 
   const totalGeneral = useMemo(() => {
@@ -162,6 +179,59 @@ export function useOrderForm(id?: string, onSuccess?: (action: SaveAction) => vo
   const handleChange = (e: OrderChangeEvent) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const updateClientLookup = (
+    field: 'folio' | 'name',
+    rawValue: string,
+  ) => {
+    setClientLookup((prev) => ({ ...prev, [field]: rawValue }));
+    const searchText = rawValue.trim();
+
+    if (clientLookupTimerRef.current) {
+      clearTimeout(clientLookupTimerRef.current);
+    }
+
+    if (!searchText) {
+      setFormData((prev) => ({ ...prev, client_id: '' }));
+      return;
+    }
+
+    const requestVersion = clientLookupVersionRef.current + 1;
+    clientLookupVersionRef.current = requestVersion;
+
+    clientLookupTimerRef.current = setTimeout(async () => {
+      const response = await fetchApi(
+        `/clients?search=${encodeURIComponent(searchText)}&limit=50&order_by=name&order=asc`,
+      );
+      const clientsFromApi = (Array.isArray(response)
+        ? response
+        : (response?.data ?? [])) as ClientRef[];
+      const normalizedSearch = searchText.toLowerCase();
+      const clientMatch = clientsFromApi.find((client) => {
+        if (field === 'folio') {
+          return (
+            String(client.folio ?? '').trim().toLowerCase() === normalizedSearch
+          );
+        }
+        return String(client.name ?? '').trim().toLowerCase() === normalizedSearch;
+      });
+
+      if (clientLookupVersionRef.current !== requestVersion) {
+        return;
+      }
+
+      if (!clientMatch) {
+        setFormData((prev) => ({ ...prev, client_id: '' }));
+        return;
+      }
+
+      setFormData((prev) => ({ ...prev, client_id: clientMatch.id }));
+      setClientLookup({
+        folio: clientMatch.folio ?? '',
+        name: clientMatch.name ?? '',
+      });
+    }, 250);
   };
 
   const addItemField = () => {
@@ -323,6 +393,11 @@ export function useOrderForm(id?: string, onSuccess?: (action: SaveAction) => vo
   });
 
   const handleSubmit = (action: SaveAction = 'save') => {
+    if (!formData.client_id) {
+      alert('Debe seleccionar un cliente válido por folio o nombre.');
+      return;
+    }
+
     const validItems = items.filter((item) => String(item.product_id || '').trim() !== '');
 
     if (validItems.length === 0) {
@@ -362,6 +437,7 @@ export function useOrderForm(id?: string, onSuccess?: (action: SaveAction) => vo
     formData,
     items,
     clients,
+    clientLookup,
     users,
     totalGeneral,
     isLoading: isLoadingOrder,
@@ -371,6 +447,7 @@ export function useOrderForm(id?: string, onSuccess?: (action: SaveAction) => vo
     removeItemField,
     updateItemField,
     handleSubmit,
+    updateClientLookup,
     isDisabled,
     setIsDisabled
   };
