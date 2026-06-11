@@ -13,6 +13,7 @@ import { Client } from '../clients/entities/client.entity';
 import { User } from '../users/entities/user.entity';
 import { Product } from '../catalog/products/entities/product.entity';
 import { FindOrdersQueryDto } from './dto/find-orders-query.dto';
+import { FoliosService } from '../folios/folios.service';
 
 @Injectable()
 export class OrdersService {
@@ -27,6 +28,7 @@ export class OrdersService {
     private readonly usersRepository: Repository<User>,
     @InjectRepository(Product)
     private readonly productsRepository: Repository<Product>,
+    private readonly foliosService: FoliosService,
   ) {}
 
   async create(createOrderDto: CreateOrderDto, organizationId: string) {
@@ -52,7 +54,10 @@ export class OrdersService {
           organizationId,
           productsRepository,
         );
-        const orderFolio = await this.buildOrderFolio(manager);
+        const orderFolio = await this.foliosService.generateFolio(
+          'orders',
+          organizationId,
+        );
 
         const order = orderRepository.create({
           client_id: client.id,
@@ -315,16 +320,6 @@ export class OrdersService {
         0,
       ),
     };
-  }
-
-  private async buildOrderFolio(manager: {
-    query: (query: string) => Promise<Array<{ folio: string | number }>>;
-  }) {
-    const [result] = await manager.query(
-      `SELECT nextval('orders_folio_seq') AS folio`,
-    );
-    const folioNumber = Number(result?.folio ?? 0);
-    return `P${String(folioNumber).padStart(5, '0')}`;
   }
 
   private getOrderByColumn(orderBy?: string) {

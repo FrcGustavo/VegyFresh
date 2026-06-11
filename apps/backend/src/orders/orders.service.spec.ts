@@ -26,8 +26,10 @@ describe('OrdersService', () => {
     const managerProductsRepository = {
       findBy: jest.fn().mockResolvedValue([]),
     };
+    const foliosService = {
+      nextFolio: jest.fn().mockResolvedValue('P1'),
+    };
     const manager = {
-      query: jest.fn().mockResolvedValue([{ folio: 1 }]),
       getRepository: jest.fn((entity: { name?: string }) => {
         if (entity?.name === 'Order') return managerOrderRepository;
         if (entity?.name === 'OrderItem') return managerOrderItemRepository;
@@ -56,6 +58,7 @@ describe('OrdersService', () => {
       {} as never,
       {} as never,
       {} as never,
+      foliosService as never,
     );
 
     await expect(
