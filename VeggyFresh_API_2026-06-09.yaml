@@ -1,0 +1,810 @@
+type: collection.insomnia.rest/5.0
+schema_version: "5.1"
+name: VegyFresh API
+meta:
+  id: wrk_veggyfresh_api
+  created: 1749481235000
+  modified: 1749481235000
+collection:
+  - name: Public Endpoints
+    meta:
+      id: fld_public_endpoints
+      created: 1749481235000
+      modified: 1749481235000
+      sortKey: -1749481235000
+    children:
+      - name: Health Check
+        url: http://localhost:3000/
+        meta:
+          id: ws-req-health-check
+          created: 1749481235000
+          modified: 1749481235000
+        method: GET
+        headers:
+          - name: User-Agent
+            value: insomnia/12.5.0
+
+      - name: Auth Signup (Public)
+        url: http://localhost:3000/auth/signup?skipAuth=true
+        meta:
+          id: ws-req-signup-public
+          created: 1749481236000
+          modified: 1749481236000
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "name": "John Doe",
+              "email": "test@example.com",
+              "password": "SecurePass123!"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+
+      - name: Auth Login (Public)
+        url: http://localhost:3000/auth/login?skipAuth=true
+        meta:
+          id: ws-req-login-public
+          created: 1749481237000
+          modified: 1749481237000
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "email": "test@example.com",
+              "password": "SecurePass123!"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+
+      - name: Portal Login (Public)
+        url: http://localhost:3000/portal/auth/login?skipAuth=true
+        meta:
+          id: ws-req-portal-login-public
+          created: 1749481238000
+          modified: 1749481238000
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "email": "customer@mail.com",
+              "password": "CustomerPass123!"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+
+      - name: WhatsApp Send (Public)
+        url: http://localhost:3000/whatsapp/send?skipAuth=true
+        meta:
+          id: ws-req-whatsapp-send-public
+          created: 1749481239000
+          modified: 1749481239000
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "to": "5491122334455",
+              "text": "Hola! Ya recibimos tu pedido."
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+
+      - name: AI Interpret (Public)
+        url: http://localhost:3000/ai/interpret?skipAuth=true
+        meta:
+          id: ws-req-ai-interpret-public
+          created: 1749481240000
+          modified: 1749481240000
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "message": "Quiero comprar tomates frescos",
+              "context": {}
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+
+  - name: Organizations
+    meta:
+      id: fld_organizations
+      created: 1749481241000
+      modified: 1749481241000
+      sortKey: -1749481241000
+    children:
+      - name: Create Organization
+        url: http://localhost:3000/organizations
+        meta:
+          id: ws-req-create-org
+          created: 1749481241000
+          modified: 1749481241000
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "name": "Mi Organización",
+              "domain": "mi-organization.com"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer YOUR_ACCESS_TOKEN
+
+      - name: Get Organization by ID
+        url: http://localhost:3000/organizations/:id
+        meta:
+          id: ws-req-get-org
+          created: 1749481241000
+          modified: 1749481241000
+        method: GET
+        pathParameters:
+          parameters:
+            - id: id
+              value: "550e8400-e29b-41d4-a716-446655440001"
+              position: 1
+        headers:
+          - name: Authorization
+            value: Bearer YOUR_ACCESS_TOKEN
+
+  - name: Users
+    meta:
+      id: fld_users
+      created: 1749481242000
+      modified: 1749481242000
+      sortKey: -1749481242000
+    children:
+      - name: Create User
+        url: http://localhost:3000/users
+        meta:
+          id: ws-req-create-user
+          created: 1749481242000
+          modified: 1749481242000
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "name": "Nuevo Usuario",
+              "email": "newuser@mail.com",
+              "password": "SecureUser123!"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer YOUR_ACCESS_TOKEN
+
+      - name: List Users
+        url: http://localhost:3000/users
+        meta:
+          id: ws-req-list-users
+          created: 1749481242000
+          modified: 1749481242000
+        method: GET
+        queryParams:
+          parameters:
+            - key: search
+              value: ""
+            - key: order_by
+              value: created_at
+            - key: order
+              value: asc
+            - key: limit
+              value: "25"
+            - key: offset
+              value: "0"
+        headers:
+          - name: Authorization
+            value: Bearer YOUR_ACCESS_TOKEN
+
+      - name: Get User by ID
+        url: http://localhost:3000/users/:id
+        meta:
+          id: ws-req-get-user
+          created: 1749481242000
+          modified: 1749481242000
+        method: GET
+        pathParameters:
+          parameters:
+            - id: id
+              value: "550e8400-e29b-41d4-a716-446655440002"
+              position: 1
+        headers:
+          - name: Authorization
+            value: Bearer YOUR_ACCESS_TOKEN
+
+  - name: Suppliers
+    meta:
+      id: fld_suppliers
+      created: 1749481243000
+      modified: 1749481243000
+      sortKey: -1749481243000
+    children:
+      - name: Create Supplier
+        url: http://localhost:3000/suppliers
+        meta:
+          id: ws-req-create-supplier
+          created: 1749481243000
+          modified: 1749481243000
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "name": "Proveedor Alimentos SA",
+              "email": "ventas@proveedor.com",
+              "phone_number": "+549115555555"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer YOUR_ACCESS_TOKEN
+
+      - name: List Suppliers
+        url: http://localhost:3000/suppliers
+        meta:
+          id: ws-req-list-suppliers
+          created: 1749481243000
+          modified: 1749481243000
+        method: GET
+        queryParams:
+          parameters:
+            - key: search
+              value: ""
+            - key: order_by
+              value: created_at
+            - key: order
+              value: asc
+            - key: limit
+              value: "25"
+            - key: offset
+              value: "0"
+        headers:
+          - name: Authorization
+            value: Bearer YOUR_ACCESS_TOKEN
+
+      - name: Get Supplier by ID
+        url: http://localhost:3000/suppliers/:id
+        meta:
+          id: ws-req-get-supplier
+          created: 1749481243000
+          modified: 1749481243000
+        method: GET
+        pathParameters:
+          parameters:
+            - id: id
+              value: "550e8400-e29b-41d4-a716-446655440003"
+              position: 1
+        headers:
+          - name: Authorization
+            value: Bearer YOUR_ACCESS_TOKEN
+
+  - name: Clients
+    meta:
+      id: fld_clients
+      created: 1749481244000
+      modified: 1749481244000
+      sortKey: -1749481244000
+    children:
+      - name: Create Client
+        url: http://localhost:3000/clients
+        meta:
+          id: ws-req-create-client
+          created: 1749481244000
+          modified: 1749481244000
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "name": "Supermercado La Esquina",
+              "phone_number": "+549115556666",
+              "email": "ventas@supermercado.com"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer YOUR_ACCESS_TOKEN
+
+      - name: List Clients
+        url: http://localhost:3000/clients
+        meta:
+          id: ws-req-list-clients
+          created: 1749481244000
+          modified: 1749481244000
+        method: GET
+        queryParams:
+          parameters:
+            - key: search
+              value: ""
+            - key: order_by
+              value: created_at
+            - key: order
+              value: asc
+            - key: limit
+              value: "25"
+            - key: offset
+              value: "0"
+        headers:
+          - name: Authorization
+            value: Bearer YOUR_ACCESS_TOKEN
+
+      - name: Get Client by ID
+        url: http://localhost:3000/clients/:id
+        meta:
+          id: ws-req-get-client
+          created: 1749481244000
+          modified: 1749481244000
+        method: GET
+        pathParameters:
+          parameters:
+            - id: id
+              value: "550e8400-e29b-41d4-a716-446655440004"
+              position: 1
+        headers:
+          - name: Authorization
+            value: Bearer YOUR_ACCESS_TOKEN
+
+
+  - name: Products (Catalog)
+    meta:
+      id: fld_products
+      created: 1749481245000
+      modified: 1749481245000
+      sortKey: -1749481245000
+    children:
+      - name: Create Product
+        url: http://localhost:3000/products
+        meta:
+          id: ws-req-create-product
+          created: 1749481245000
+          modified: 1749481245000
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "sku": "TOM-001",
+              "name": "Tomate perita",
+              "supplier_id": "550e8400-e29b-41d4-a716-446655440003"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer YOUR_ACCESS_TOKEN
+
+      - name: List Products
+        url: http://localhost:3000/products
+        meta:
+          id: ws-req-list-products
+          created: 1749481245000
+          modified: 1749481245000
+        method: GET
+        queryParams:
+          parameters:
+            - key: search
+              value: ""
+            - key: order_by
+              value: created_at
+            - key: order
+              value: asc
+            - key: limit
+              value: "25"
+            - key: offset
+              value: "0"
+        headers:
+          - name: Authorization
+            value: Bearer YOUR_ACCESS_TOKEN
+
+      - name: Get Product by ID
+        url: http://localhost:3000/products/:id
+        meta:
+          id: ws-req-get-product
+          created: 1749481245000
+          modified: 1749481245000
+        method: GET
+        pathParameters:
+          parameters:
+            - id: id
+              value: "550e8400-e29b-41d4-a716-446655440005"
+              position: 1
+        headers:
+          - name: Authorization
+            value: Bearer YOUR_ACCESS_TOKEN
+
+  - name: Product Prices
+    meta:
+      id: fld_product_prices
+      created: 1749481246000
+      modified: 1749481246000
+      sortKey: -1749481246000
+    children:
+      - name: Create Product Price
+        url: http://localhost:3000/product-prices
+        meta:
+          id: ws-req-create-price
+          created: 1749481246000
+          modified: 1749481246000
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "product_id": "550e8400-e29b-41d4-a716-446655440005",
+              "price": 25.50
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer YOUR_ACCESS_TOKEN
+
+      - name: List Product Prices
+        url: http://localhost:3000/product-prices
+        meta:
+          id: ws-req-list-prices
+          created: 1749481246000
+          modified: 1749481246000
+        method: GET
+
+      - name: Get Product Price by ID
+        url: http://localhost:3000/product-prices/:id
+        meta:
+          id: ws-req-get-price
+          created: 1749481246000
+          modified: 1749481246000
+        method: GET
+        pathParameters:
+          parameters:
+            - id: id
+              value: "550e8400-e29b-41d4-a716-446655440006"
+              position: 1
+        headers:
+          - name: Authorization
+            value: Bearer YOUR_ACCESS_TOKEN
+
+  - name: Price Lists
+    meta:
+      id: fld_price_lists
+      created: 1749481247000
+      modified: 1749481247000
+      sortKey: -1749481247000
+    children:
+      - name: Create Price List
+        url: http://localhost:3000/price-lists
+        meta:
+          id: ws-req-create-price-list
+          created: 1749481247000
+          modified: 1749481247000
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "name": "Precio Cliente VIP"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer YOUR_ACCESS_TOKEN
+
+      - name: List Price Lists
+        url: http://localhost:3000/price-lists
+        meta:
+          id: ws-req-list-price-lists
+          created: 1749481247000
+          modified: 1749481247000
+        method: GET
+        queryParams:
+          parameters:
+            - key: search
+              value: ""
+            - key: order_by
+              value: created_at
+            - key: order
+              value: asc
+            - key: limit
+              value: "25"
+            - key: offset
+              value: "0"
+        headers:
+          - name: Authorization
+            value: Bearer YOUR_ACCESS_TOKEN
+
+      - name: Get Price List by ID
+        url: http://localhost:3000/price-lists/:id
+        meta:
+          id: ws-req-get-price-list
+          created: 1749481247000
+          modified: 1749481247000
+        method: GET
+        pathParameters:
+          parameters:
+            - id: id
+              value: "550e8400-e29b-41d4-a716-446655440007"
+              position: 1
+        headers:
+          - name: Authorization
+            value: Bearer YOUR_ACCESS_TOKEN
+
+
+  - name: Purchases
+    meta:
+      id: fld_purchases
+      created: 1749481248000
+      modified: 1749481248000
+      sortKey: -1749481248000
+    children:
+      - name: List Purchases
+        url: http://localhost:3000/purchases
+        meta:
+          id: ws-req-list-purchases
+          created: 1749481248000
+          modified: 1749481248000
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer YOUR_ACCESS_TOKEN
+
+      - name: Create Purchase
+        url: http://localhost:3000/purchases
+        meta:
+          id: ws-req-create-purchase
+          created: 1749481248000
+          modified: 1749481248000
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "supplier_id": "550e8400-e29b-41d4-a716-446655440003",
+              "items": [
+                {
+                  "product_id": "550e8400-e29b-41d4-a716-446655440005",
+                  "quantity": 10,
+                  "unit_cost": 34.90
+                }
+              ]
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer YOUR_ACCESS_TOKEN
+
+      - name: Get Purchase by ID
+        url: http://localhost:3000/purchases/:id
+        meta:
+          id: ws-req-get-purchase
+          created: 1749481248000
+          modified: 1749481248000
+        method: GET
+        pathParameters:
+          parameters:
+            - id: id
+              value: "550e8400-e29b-41d4-a716-446655440008"
+              position: 1
+        headers:
+          - name: Authorization
+            value: Bearer YOUR_ACCESS_TOKEN
+
+  - name: Orders
+    meta:
+      id: fld_orders
+      created: 1749481249000
+      modified: 1749481249000
+      sortKey: -1749481249000
+    children:
+      - name: List Orders
+        url: http://localhost:3000/orders
+        meta:
+          id: ws-req-list-orders
+          created: 1749481249000
+          modified: 1749481249000
+        method: GET
+        queryParams:
+          parameters:
+            - key: created_filter
+              value: "all"
+            - key: order_by
+              value: created_at
+            - key: order
+              value: desc
+            - key: limit
+              value: "25"
+            - key: offset
+              value: "0"
+        headers:
+          - name: Authorization
+            value: Bearer YOUR_ACCESS_TOKEN
+
+      - name: Create Order
+        url: http://localhost:3000/orders
+        meta:
+          id: ws-req-create-order
+          created: 1749481249000
+          modified: 1749481249000
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "client_id": "550e8400-e29b-41d4-a716-446655440004",
+              "user_id": "550e8400-e29b-41d4-a716-446655440002",
+              "origin": "WHATSAPP",
+              "items": [
+                {
+                  "product_id": "550e8400-e29b-41d4-a716-446655440005",
+                  "quantity": 3,
+                  "unit_price": 25.50
+                }
+              ],
+              "status": "PENDING_REVIEW"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer YOUR_ACCESS_TOKEN
+
+      - name: Get Order by ID
+        url: http://localhost:3000/orders/:id
+        meta:
+          id: ws-req-get-order
+          created: 1749481249000
+          modified: 1749481249000
+        method: GET
+        pathParameters:
+          parameters:
+            - id: id
+              value: "550e8400-e29b-41d4-a716-446655440009"
+              position: 1
+        headers:
+          - name: Authorization
+            value: Bearer YOUR_ACCESS_TOKEN
+
+  - name: Inventory
+    meta:
+      id: fld_inventory
+      created: 1749481250000
+      modified: 1749481250000
+      sortKey: -1749481250000
+    children:
+      - name: Get Inventory Snapshot
+        url: http://localhost:3000/inventory/inventory
+        meta:
+          id: ws-req-get-inventory
+          created: 1749481250000
+          modified: 1749481250000
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer YOUR_ACCESS_TOKEN
+
+      - name: Get Inventory Movements
+        url: http://localhost:3000/inventory/inventory/movements
+        meta:
+          id: ws-req-get-movements
+          created: 1749481250000
+          modified: 1749481250000
+        method: GET
+
+      - name: Create Inventory Adjustment
+        url: http://localhost:3000/inventory/inventory/adjustments
+        meta:
+          id: ws-req-create-adjustment
+          created: 1749481250000
+          modified: 1749481250000
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "product_id": "550e8400-e29b-41d4-a716-446655440005",
+              "quantity": -1.5,
+              "reason": "Merma por almacenamiento"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer YOUR_ACCESS_TOKEN
+
+
+  - name: Portal (Customer)
+    meta:
+      id: fld_portal
+      created: 1749481251000
+      modified: 1749481251000
+      sortKey: -1749481251000
+    children:
+      - name: Portal Login
+        url: http://localhost:3000/portal/auth/login?skipAuth=true
+        meta:
+          id: ws-req-portal-auth-login
+          created: 1749481251000
+          modified: 1749481251000
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "email": "customer@mail.com",
+              "password": "CustomerPass123!"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+
+      - name: Portal Refresh Token
+        url: http://localhost:3000/portal/auth/refresh?skipAuth=true
+        meta:
+          id: ws-req-portal-refresh
+          created: 1749481251000
+          modified: 1749481251000
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "refresh_token": "YOUR_PORTAL_REFRESH_TOKEN"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+
+      - name: List My Orders (Portal)
+        url: http://localhost:3000/portal/orders
+        meta:
+          id: ws-req-portal-orders-list
+          created: 1749481251000
+          modified: 1749481251000
+        method: GET
+        queryParams:
+          parameters:
+            - key: created_filter
+              value: "all"
+            - key: order_by
+              value: created_at
+            - key: order
+              value: desc
+            - key: limit
+              value: "25"
+            - key: offset
+              value: "0"
+        headers:
+          - name: Authorization
+            value: Bearer YOUR_PORTAL_ACCESS_TOKEN
+
+      - name: Get Order Detail (Portal)
+        url: http://localhost:3000/portal/orders/:id
+        meta:
+          id: ws-req-portal-order-detail
+          created: 1749481251000
+          modified: 1749481251000
+        method: GET
+        pathParameters:
+          parameters:
+            - id: id
+              value: "550e8400-e29b-41d4-a716-446655440010"
+              position: 1
+        headers:
+          - name: Authorization
+            value: Bearer YOUR_PORTAL_ACCESS_TOKEN
+

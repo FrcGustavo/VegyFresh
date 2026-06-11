@@ -6,7 +6,7 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags, ApiResponse } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { SignupDto } from './dto/signup.dto';
 import { LoginDto } from './dto/login.dto';
@@ -32,6 +32,27 @@ export class AuthController {
 
   @Post('signup')
   @Public()
+  @ApiResponse({
+    status: 201,
+    description: 'User account created',
+    schema: {
+      example: {
+        id: 'user_123',
+        email: 'user@example.com',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Validation error',
+    schema: {
+      example: {
+        statusCode: 400,
+        message: ['email is required'],
+        error: 'Bad Request',
+      },
+    },
+  })
   @ApiOperation({
     summary: 'Signup user',
     description:
@@ -43,6 +64,31 @@ export class AuthController {
 
   @Post('login')
   @Public()
+  @ApiResponse({
+    status: 200,
+    description: 'Login successful',
+    schema: {
+      example: {
+        access_token: 'eyJhbGci...',
+        refresh_token: 'eyJhbGci...',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Validation error',
+    schema: {
+      example: {
+        statusCode: 400,
+        message: ['email is required'],
+        error: 'Bad Request',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Invalid credentials',
+  })
   @ApiOperation({
     summary: 'Login with email and password',
     description:
@@ -55,6 +101,31 @@ export class AuthController {
   @Post('refresh')
   @Public()
   @UseGuards(RefreshTokenGuard)
+  @ApiResponse({
+    status: 200,
+    description: 'Token refresh successful',
+    schema: {
+      example: {
+        access_token: 'eyJhbGci...',
+        refresh_token: 'eyJhbGci...',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Validation error',
+    schema: {
+      example: {
+        statusCode: 400,
+        message: ['refresh_token is required'],
+        error: 'Bad Request',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Invalid or expired refresh token',
+  })
   @ApiOperation({
     summary: 'Refresh access and refresh token pair',
     description:
@@ -69,6 +140,14 @@ export class AuthController {
 
   @Post('logout')
   @ApiBearerAuth()
+  @ApiResponse({
+    status: 200,
+    description: 'Session revoked successfully',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - missing or invalid token',
+  })
   @ApiOperation({
     summary: 'Revoke current session',
     description:

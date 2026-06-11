@@ -4,7 +4,7 @@ import { Box, CircularProgress, CssBaseline, ThemeProvider, createTheme, useMedi
 import MainLayout from './layout/MainLayout';
 import { AuthProvider, useAuth } from './auth/AuthContext';
 import type { AuthRole } from './auth/authApi';
-import { canAccessUsersResource } from './auth/authorization';
+import { canAccessUsersResource, canAccessOrganizationResource } from './auth/authorization';
 
 const OrdersList = lazy(() => import('./modules/orders/pages/OrdersList'));
 const ProductsList = lazy(() => import('./modules/products/pages/ProductsList'));
@@ -12,10 +12,14 @@ const PriceListsList = lazy(() => import('./modules/products/price-lists/pages/P
 const ClientsList = lazy(() => import('./modules/clients/pages/ClientsList'));
 const SuppliersList = lazy(() => import('./modules/suppliers/pages/SuppliersList'));
 const UsersList = lazy(() => import('./modules/users/pages/UsersList'));
+const OrganizationPage = lazy(() => import('./modules/organization/pages/OrganizationPage'));
 const InventoryPage = lazy(() => import('./modules/inventory/pages/InventoryPage'));
 const SettingsPage = lazy(() => import('./modules/settings/pages/SettingsPage'));
 const LoginPage = lazy(() => import('./modules/auth/pages/LoginPage'));
 const SignupPage = lazy(() => import('./modules/auth/pages/SignupPage'));
+const OrganizationSetupPage = lazy(
+  () => import('./modules/auth/pages/OrganizationSetupPage'),
+);
 
 type ThemePreference = 'light' | 'dark' | 'system';
 
@@ -296,6 +300,29 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
 }
 
+/** Allows only authenticated users without organization to access org setup. */
+function OrganizationSetupRoute({ children }: { children: ReactNode }) {
+  const { isAuthenticated, isLoading, organization } = useAuth();
+
+  if (isLoading) {
+    return (
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (organization) {
+    return <Navigate to="/orders" replace />;
+  }
+
+  return <>{children}</>;
+}
+
 function RoleProtectedRoute({
   children,
   canAccess,
@@ -306,6 +333,11 @@ function RoleProtectedRoute({
   const { role } = useAuth();
 
   return canAccess(role) ? <>{children}</> : <Navigate to="/orders" replace />;
+}
+
+function HomeRedirect() {
+  const { organization } = useAuth();
+  return <Navigate to={organization ? '/orders' : '/organization'} replace />;
 }
 
 function App() {
@@ -335,6 +367,14 @@ function App() {
               <Route path="/login" element={<LoginPage />} />
               <Route path="/signup" element={<SignupPage />} />
               <Route
+                path="/organization-setup"
+                element={
+                  <OrganizationSetupRoute>
+                    <OrganizationSetupPage />
+                  </OrganizationSetupRoute>
+                }
+              />
+              <Route
                 path="/"
                 element={
                   <ProtectedRoute>
@@ -342,7 +382,7 @@ function App() {
                   </ProtectedRoute>
                 }
               >
-                <Route index element={<Navigate to="/orders" replace />} />
+                <Route index element={<HomeRedirect />} />
                 <Route path="orders" element={<OrdersList />} />
                 <Route path="products" element={<ProductsList />} />
                 <Route path="price-lists" element={<PriceListsList />} />
@@ -354,6 +394,14 @@ function App() {
                   element={(
                     <RoleProtectedRoute canAccess={canAccessUsersResource}>
                       <UsersList />
+                    </RoleProtectedRoute>
+                  )}
+                />
+                <Route
+                  path="organization"
+                  element={(
+                    <RoleProtectedRoute canAccess={canAccessOrganizationResource}>
+                      <OrganizationPage />
                     </RoleProtectedRoute>
                   )}
                 />

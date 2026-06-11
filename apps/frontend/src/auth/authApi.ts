@@ -20,10 +20,49 @@ export interface AuthRole {
 
 export interface AuthSessionResponse {
   user: AuthUser;
-  organization: AuthOrganization;
+  organization: AuthOrganization | null;
   role: AuthRole;
   access_token: string;
   refresh_token: string;
+}
+
+export interface SignupResponse {
+  user: AuthUser;
+  role: AuthRole;
+  access_token: string;
+  refresh_token: string;
+}
+
+export interface SetupOrganizationPayload {
+  email: string;
+  password: string;
+  name: string;
+  logo_url?: string | null;
+  legal_name?: string | null;
+  organization_email?: string | null;
+  phone_number?: string | null;
+  address?: string | null;
+  product_folio_prefix?: string | null;
+  price_list_folio_prefix?: string | null;
+  order_folio_prefix?: string | null;
+  client_folio_prefix?: string | null;
+  supplier_folio_prefix?: string | null;
+  purchase_folio_prefix?: string | null;
+}
+
+export interface SetupOrganizationAuthPayload {
+  name: string;
+  logo_url?: string | null;
+  legal_name?: string | null;
+  organization_email?: string | null;
+  phone_number?: string | null;
+  address?: string | null;
+  product_folio_prefix?: string | null;
+  price_list_folio_prefix?: string | null;
+  order_folio_prefix?: string | null;
+  client_folio_prefix?: string | null;
+  supplier_folio_prefix?: string | null;
+  purchase_folio_prefix?: string | null;
 }
 
 export interface AuthRefreshResponse {
@@ -33,7 +72,7 @@ export interface AuthRefreshResponse {
 
 export interface AuthContextResponse {
   user: AuthUser;
-  organization: AuthOrganization;
+  organization: AuthOrganization | null;
   role: AuthRole;
 }
 
@@ -46,7 +85,6 @@ export interface SignupPayload {
   name: string;
   email: string;
   password: string;
-  organization_name: string;
 }
 
 export class AuthApiError extends Error {
@@ -74,12 +112,36 @@ async function postPublic<T>(path: string, body: unknown): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+async function postAuthenticated<T>(path: string, accessToken: string, body: unknown): Promise<T> {
+  const res = await fetch(`${API_URL}${path}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({})) as { message?: string };
+    throw new AuthApiError(err.message || 'Error de autenticación', res.status);
+  }
+
+  return res.json() as Promise<T>;
+}
+
 export const authApi = {
   login: (payload: LoginPayload) =>
     postPublic<AuthSessionResponse>('/auth/login', payload),
 
   signup: (payload: SignupPayload) =>
-    postPublic<AuthSessionResponse>('/auth/signup', payload),
+    postPublic<SignupResponse>('/auth/signup', payload),
+
+  setupOrganization: (payload: SetupOrganizationPayload) =>
+    postPublic<AuthSessionResponse>('/auth/setup-organization', payload),
+
+  setupOrganizationAuth: (accessToken: string, payload: SetupOrganizationAuthPayload) =>
+    postAuthenticated<AuthSessionResponse>('/auth/setup-organization-auth', accessToken, payload),
 
   refresh: (refreshToken: string) =>
     postPublic<AuthRefreshResponse>('/auth/refresh', { refresh_token: refreshToken }),

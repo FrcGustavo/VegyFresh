@@ -2,7 +2,7 @@ import { Box, Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText
 import { ShoppingCart, Inventory, People, LocalShipping, AdminPanelSettings, LocalOffer, Settings, Warehouse } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router';
 import { useAuth } from '../auth/AuthContext';
-import { canAccessUsersResource } from '../auth/authorization';
+import { canAccessUsersResource, canAccessOrganizationResource } from '../auth/authorization';
 
 const drawerWidth = 260;
 
@@ -14,6 +14,7 @@ const menuItems = [
   { text: 'Proveedores', icon: <LocalShipping />, path: '/suppliers' },
   { text: 'Inventario', icon: <Warehouse />, path: '/inventory' },
   { text: 'Usuarios y Roles', icon: <AdminPanelSettings />, path: '/users', canAccess: canAccessUsersResource },
+  { text: 'Organización', icon: <Settings />, path: '/organization', canAccess: canAccessOrganizationResource },
   { text: 'Configuración', icon: <Settings />, path: '/settings' },
 ];
 

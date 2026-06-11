@@ -27,8 +27,9 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      await login({ email, password });
-      void navigate('/orders');
+      const response = await login({ email, password });
+      // If user has no organization, redirect to setup; otherwise to orders
+      void navigate(response.organization ? '/orders' : '/organization-setup');
     } catch (err) {
       setError((err as Error).message || 'Credenciales inválidas');
     } finally {

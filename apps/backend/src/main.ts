@@ -20,6 +20,8 @@ async function bootstrap() {
     credentials: true,
   });
 
+  app.setGlobalPrefix('api/v1');
+
   // Configure Swagger documentation
   const config = new DocumentBuilder()
     .setTitle('VegyFresh Backend API')

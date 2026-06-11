@@ -9,7 +9,7 @@ import {
   Delete,
   Query,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiParam, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiParam, ApiQuery, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
 import { ClientsService } from './clients.service';
 import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateClientDto } from './dto/update-client.dto';
@@ -23,7 +23,37 @@ export class ClientsController {
   constructor(private readonly clientsService: ClientsService) {}
 
   @Post()
+  @ApiBearerAuth()
   @Permissions('catalog:manage')
+  @ApiResponse({
+    status: 201,
+    description: 'Client created successfully',
+    schema: {
+      example: {
+        id: 'client_123',
+        name: 'ABC Trading',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Validation error',
+    schema: {
+      example: {
+        statusCode: 400,
+        message: ['name is required'],
+        error: 'Bad Request',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - missing or invalid token',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - insufficient permissions',
+  })
   @ApiOperation({ summary: 'Create a new client' })
   create(
     @Body() createClientDto: CreateClientDto,
@@ -33,7 +63,26 @@ export class ClientsController {
   }
 
   @Get()
+  @ApiBearerAuth()
   @Permissions('catalog:read')
+  @ApiResponse({
+    status: 200,
+    description: 'List of clients',
+    schema: {
+      example: {
+        data: [{ id: 'client_123', name: 'ABC Trading' }],
+        total: 1,
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - missing or invalid token',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - insufficient permissions',
+  })
   @ApiOperation({ summary: 'Get all clients' })
   @ApiQuery({
     name: 'search',
@@ -89,7 +138,30 @@ export class ClientsController {
   }
 
   @Get(':id')
+  @ApiBearerAuth()
   @Permissions('catalog:read')
+  @ApiResponse({
+    status: 200,
+    description: 'Client found',
+    schema: {
+      example: {
+        id: 'client_123',
+        name: 'ABC Trading',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - missing or invalid token',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - insufficient permissions',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Client not found',
+  })
   @ApiOperation({ summary: 'Get a client by ID' })
   @ApiParam({ name: 'id', description: 'Client ID' })
   findOne(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
@@ -97,7 +169,41 @@ export class ClientsController {
   }
 
   @Patch(':id')
+  @ApiBearerAuth()
   @Permissions('catalog:manage')
+  @ApiResponse({
+    status: 200,
+    description: 'Client updated successfully',
+    schema: {
+      example: {
+        id: 'client_123',
+        name: 'ABC Trading Updated',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Validation error',
+    schema: {
+      example: {
+        statusCode: 400,
+        message: ['field must be a string'],
+        error: 'Bad Request',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - missing or invalid token',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - insufficient permissions',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Client not found',
+  })
   @ApiOperation({ summary: 'Update a client' })
   @ApiParam({ name: 'id', description: 'Client ID' })
   update(
@@ -109,7 +215,24 @@ export class ClientsController {
   }
 
   @Delete(':id')
+  @ApiBearerAuth()
   @Permissions('catalog:manage')
+  @ApiResponse({
+    status: 200,
+    description: 'Client deleted successfully',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - missing or invalid token',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - insufficient permissions',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Client not found',
+  })
   @ApiOperation({ summary: 'Delete a client' })
   @ApiParam({ name: 'id', description: 'Client ID' })
   remove(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {

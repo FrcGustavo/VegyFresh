@@ -9,7 +9,7 @@ import {
   Delete,
   Query,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiParam, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiParam, ApiQuery, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
 import { PriceListsService } from './price-lists.service';
 import { CreatePriceListDto } from './dto/create-price-list.dto';
 import { UpdatePriceListDto } from './dto/update-price-list.dto';
@@ -23,7 +23,37 @@ export class PriceListsController {
   constructor(private readonly priceListsService: PriceListsService) {}
 
   @Post()
+  @ApiBearerAuth()
   @Permissions('catalog:manage')
+  @ApiResponse({
+    status: 201,
+    description: 'Price list created successfully',
+    schema: {
+      example: {
+        id: 'pricelist_123',
+        name: 'Standard Pricing',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Validation error',
+    schema: {
+      example: {
+        statusCode: 400,
+        message: ['name is required'],
+        error: 'Bad Request',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - missing or invalid token',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - insufficient permissions',
+  })
   @ApiOperation({ summary: 'Create a new price list' })
   create(
     @Body() createPriceListDto: CreatePriceListDto,
@@ -33,7 +63,26 @@ export class PriceListsController {
   }
 
   @Get()
+  @ApiBearerAuth()
   @Permissions('catalog:read')
+  @ApiResponse({
+    status: 200,
+    description: 'List of price lists',
+    schema: {
+      example: {
+        data: [{ id: 'pricelist_123', name: 'Standard Pricing' }],
+        total: 1,
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - missing or invalid token',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - insufficient permissions',
+  })
   @ApiOperation({ summary: 'Get all price lists' })
   @ApiQuery({
     name: 'search',
@@ -89,7 +138,30 @@ export class PriceListsController {
   }
 
   @Get(':id')
+  @ApiBearerAuth()
   @Permissions('catalog:read')
+  @ApiResponse({
+    status: 200,
+    description: 'Price list found',
+    schema: {
+      example: {
+        id: 'pricelist_123',
+        name: 'Standard Pricing',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - missing or invalid token',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - insufficient permissions',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Price list not found',
+  })
   @ApiOperation({ summary: 'Get a price list by ID' })
   @ApiParam({ name: 'id', description: 'Price list ID' })
   findOne(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
@@ -97,7 +169,41 @@ export class PriceListsController {
   }
 
   @Patch(':id')
+  @ApiBearerAuth()
   @Permissions('catalog:manage')
+  @ApiResponse({
+    status: 200,
+    description: 'Price list updated successfully',
+    schema: {
+      example: {
+        id: 'pricelist_123',
+        name: 'Standard Pricing Updated',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Validation error',
+    schema: {
+      example: {
+        statusCode: 400,
+        message: ['field must be a string'],
+        error: 'Bad Request',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - missing or invalid token',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - insufficient permissions',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Price list not found',
+  })
   @ApiOperation({ summary: 'Update a price list' })
   @ApiParam({ name: 'id', description: 'Price list ID' })
   update(
@@ -109,7 +215,24 @@ export class PriceListsController {
   }
 
   @Delete(':id')
+  @ApiBearerAuth()
   @Permissions('catalog:manage')
+  @ApiResponse({
+    status: 200,
+    description: 'Price list deleted successfully',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - missing or invalid token',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - insufficient permissions',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Price list not found',
+  })
   @ApiOperation({ summary: 'Delete a price list' })
   @ApiParam({ name: 'id', description: 'Price list ID' })
   remove(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {

@@ -11,7 +11,7 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiParam, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiParam, ApiQuery, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -35,8 +35,39 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
+  @ApiBearerAuth()
   @Roles('owner', 'admin')
   @Permissions('users:manage')
+  @ApiResponse({
+    status: 201,
+    description: 'User created successfully',
+    schema: {
+      example: {
+        id: 'user_123',
+        email: 'user@example.com',
+        name: 'John Doe',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Validation error',
+    schema: {
+      example: {
+        statusCode: 400,
+        message: ['email is required'],
+        error: 'Bad Request',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - missing or invalid token',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - insufficient permissions',
+  })
   @ApiOperation({ summary: 'Create a new user' })
   create(
     @Body() createUserDto: CreateUserDto,
@@ -46,8 +77,27 @@ export class UsersController {
   }
 
   @Get()
+  @ApiBearerAuth()
   @Roles('owner', 'admin')
   @Permissions('users:manage')
+  @ApiResponse({
+    status: 200,
+    description: 'List of users',
+    schema: {
+      example: {
+        data: [{ id: 'user_123', email: 'user@example.com', name: 'John Doe' }],
+        total: 1,
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - missing or invalid token',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - insufficient permissions',
+  })
   @ApiOperation({ summary: 'Get all users' })
   @ApiQuery({
     name: 'search',
@@ -103,8 +153,32 @@ export class UsersController {
   }
 
   @Get(':id')
+  @ApiBearerAuth()
   @Roles('owner', 'admin')
   @Permissions('users:manage')
+  @ApiResponse({
+    status: 200,
+    description: 'User found',
+    schema: {
+      example: {
+        id: 'user_123',
+        email: 'user@example.com',
+        name: 'John Doe',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - missing or invalid token',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - insufficient permissions',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'User not found',
+  })
   @ApiOperation({ summary: 'Get a user by ID' })
   @ApiParam({ name: 'id', description: 'User ID' })
   findOne(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
@@ -112,8 +186,43 @@ export class UsersController {
   }
 
   @Patch(':id')
+  @ApiBearerAuth()
   @Roles('owner', 'admin')
   @Permissions('users:manage')
+  @ApiResponse({
+    status: 200,
+    description: 'User updated successfully',
+    schema: {
+      example: {
+        id: 'user_123',
+        email: 'user@example.com',
+        name: 'John Doe Updated',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Validation error',
+    schema: {
+      example: {
+        statusCode: 400,
+        message: ['field must be a string'],
+        error: 'Bad Request',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - missing or invalid token',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - insufficient permissions',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'User not found',
+  })
   @ApiOperation({ summary: 'Update a user' })
   @ApiParam({ name: 'id', description: 'User ID' })
   update(
@@ -125,8 +234,25 @@ export class UsersController {
   }
 
   @Delete(':id')
+  @ApiBearerAuth()
   @Roles('owner')
   @Permissions('users:manage')
+  @ApiResponse({
+    status: 200,
+    description: 'User removed from organization',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - missing or invalid token',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - insufficient permissions',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'User not found',
+  })
   @ApiOperation({
     summary: 'Remove a user from current organization',
     description: 'Removes the user from the current organization.',

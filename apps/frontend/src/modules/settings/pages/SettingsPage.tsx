@@ -1,4 +1,6 @@
 import { Box, FormControl, InputLabel, MenuItem, Paper, Select, Typography } from '@mui/material';
+import { Button } from '@mui/material';
+import { useNavigate } from 'react-router';
 
 interface SettingsPageProps {
   themePreference: 'light' | 'dark' | 'system';
@@ -9,6 +11,8 @@ export default function SettingsPage({
   themePreference,
   onThemePreferenceChange,
 }: SettingsPageProps) {
+  const navigate = useNavigate();
+
   return (
     <Box sx={{ p: 2 }}>
       <Typography variant="h5" gutterBottom>
@@ -31,6 +35,15 @@ export default function SettingsPage({
             <MenuItem value="system">Sistema</MenuItem>
           </Select>
         </FormControl>
+      </Paper>
+
+      <Paper sx={{ p: 2, maxWidth: 420, mt: 2 }}>
+        <Typography variant="subtitle1" gutterBottom>
+          Organización
+        </Typography>
+        <Button variant="contained" onClick={() => navigate('/organization')}>
+          Editar organización
+        </Button>
       </Paper>
     </Box>
   );

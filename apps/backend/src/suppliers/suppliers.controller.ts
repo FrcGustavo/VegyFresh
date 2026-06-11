@@ -9,7 +9,7 @@ import {
   Delete,
   Query,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiParam, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiParam, ApiQuery, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
 import { SuppliersService } from './suppliers.service';
 import { CreateSupplierDto } from './dto/create-supplier.dto';
 import { UpdateSupplierDto } from './dto/update-supplier.dto';
@@ -23,7 +23,37 @@ export class SuppliersController {
   constructor(private readonly suppliersService: SuppliersService) {}
 
   @Post()
+  @ApiBearerAuth()
   @Permissions('catalog:manage')
+  @ApiResponse({
+    status: 201,
+    description: 'Supplier created successfully',
+    schema: {
+      example: {
+        id: 'supplier_123',
+        name: 'Fresh Produce Inc',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Validation error',
+    schema: {
+      example: {
+        statusCode: 400,
+        message: ['name is required'],
+        error: 'Bad Request',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - missing or invalid token',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - insufficient permissions',
+  })
   @ApiOperation({ summary: 'Create a new supplier' })
   create(
     @Body() createSupplierDto: CreateSupplierDto,
@@ -33,7 +63,26 @@ export class SuppliersController {
   }
 
   @Get()
+  @ApiBearerAuth()
   @Permissions('catalog:read')
+  @ApiResponse({
+    status: 200,
+    description: 'List of suppliers',
+    schema: {
+      example: {
+        data: [{ id: 'supplier_123', name: 'Fresh Produce Inc' }],
+        total: 1,
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - missing or invalid token',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - insufficient permissions',
+  })
   @ApiOperation({ summary: 'Get all suppliers' })
   @ApiQuery({
     name: 'search',
@@ -89,7 +138,30 @@ export class SuppliersController {
   }
 
   @Get(':id')
+  @ApiBearerAuth()
   @Permissions('catalog:read')
+  @ApiResponse({
+    status: 200,
+    description: 'Supplier found',
+    schema: {
+      example: {
+        id: 'supplier_123',
+        name: 'Fresh Produce Inc',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - missing or invalid token',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - insufficient permissions',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Supplier not found',
+  })
   @ApiOperation({ summary: 'Get a supplier by ID' })
   @ApiParam({ name: 'id', description: 'Supplier ID' })
   findOne(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
@@ -97,7 +169,41 @@ export class SuppliersController {
   }
 
   @Patch(':id')
+  @ApiBearerAuth()
   @Permissions('catalog:manage')
+  @ApiResponse({
+    status: 200,
+    description: 'Supplier updated successfully',
+    schema: {
+      example: {
+        id: 'supplier_123',
+        name: 'Fresh Produce Inc Updated',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Validation error',
+    schema: {
+      example: {
+        statusCode: 400,
+        message: ['field must be a string'],
+        error: 'Bad Request',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - missing or invalid token',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - insufficient permissions',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Supplier not found',
+  })
   @ApiOperation({ summary: 'Update a supplier' })
   @ApiParam({ name: 'id', description: 'Supplier ID' })
   update(
@@ -109,7 +215,24 @@ export class SuppliersController {
   }
 
   @Delete(':id')
+  @ApiBearerAuth()
   @Permissions('catalog:manage')
+  @ApiResponse({
+    status: 200,
+    description: 'Supplier deleted successfully',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - missing or invalid token',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - insufficient permissions',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Supplier not found',
+  })
   @ApiOperation({ summary: 'Delete a supplier' })
   @ApiParam({ name: 'id', description: 'Supplier ID' })
   remove(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {

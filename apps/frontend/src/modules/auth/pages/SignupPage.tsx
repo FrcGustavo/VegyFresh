@@ -1,13 +1,13 @@
 import { useState, type FormEvent } from 'react';
 import {
+  Alert,
   Box,
   Button,
   Card,
   CardContent,
+  CircularProgress,
   TextField,
   Typography,
-  Alert,
-  CircularProgress,
 } from '@mui/material';
 import { Link, useNavigate } from 'react-router';
 import { useAuth } from '../../../auth/AuthContext';
@@ -19,18 +19,21 @@ export default function SignupPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [organizationName, setOrganizationName] = useState('');
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSignup = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
     try {
-      await signup({ name, email, password, organization_name: organizationName });
-      void navigate('/orders');
+      await signup({
+        name,
+        email,
+        password,
+      });
+      void navigate('/organization-setup');
     } catch (err) {
       setError((err as Error).message || 'Error al crear la cuenta');
     } finally {
@@ -48,13 +51,13 @@ export default function SignupPage() {
         bgcolor: 'background.default',
       }}
     >
-      <Card sx={{ width: '100%', maxWidth: 440, p: 2 }} elevation={3}>
+      <Card sx={{ width: '100%', maxWidth: 560, p: 2 }} elevation={3}>
         <CardContent>
           <Typography variant="h5" sx={{ fontWeight: 700, mb: 0.5 }} color="primary">
             VegyFresh
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-            Crea tu cuenta y organización
+            Crea tu usuario para comenzar.
           </Typography>
 
           {error && (
@@ -63,14 +66,17 @@ export default function SignupPage() {
             </Alert>
           )}
 
-          <Box component="form" onSubmit={(e) => { void handleSubmit(e); }}>
+          <Box component="form" onSubmit={(event) => { void handleSignup(event); }}>
+            <Typography variant="subtitle2" sx={{ mb: 1 }}>
+              Datos del usuario
+            </Typography>
             <TextField
               label="Nombre completo"
               fullWidth
               required
               autoComplete="name"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(event) => setName(event.target.value)}
             />
             <TextField
               label="Correo electrónico"
@@ -79,7 +85,7 @@ export default function SignupPage() {
               required
               autoComplete="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(event) => setEmail(event.target.value)}
             />
             <TextField
               label="Contraseña"
@@ -89,16 +95,8 @@ export default function SignupPage() {
               autoComplete="new-password"
               slotProps={{ htmlInput: { minLength: 12 } }}
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(event) => setPassword(event.target.value)}
             />
-            <TextField
-              label="Nombre de la organización"
-              fullWidth
-              required
-              value={organizationName}
-              onChange={(e) => setOrganizationName(e.target.value)}
-            />
-
             <Button
               type="submit"
               variant="contained"
@@ -107,7 +105,7 @@ export default function SignupPage() {
               disabled={loading}
               sx={{ mt: 2, mb: 1 }}
             >
-              {loading ? <CircularProgress size={20} color="inherit" /> : 'Crear cuenta'}
+              {loading ? <CircularProgress size={20} color="inherit" /> : 'Registrarme'}
             </Button>
           </Box>
 

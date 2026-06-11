@@ -2,22 +2,30 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 import { authStorage } from './authStorage';
 import {
   authApi,
+  type AuthOrganization,
   type AuthRole,
   type AuthUser,
   type LoginPayload,
+  type SetupOrganizationAuthPayload,
+  type SignupResponse,
   type SignupPayload,
 } from './authApi';
 
 interface AuthState {
   user: AuthUser | null;
+  organization: AuthOrganization | null;
   role: AuthRole | null;
   isAuthenticated: boolean;
   isLoading: boolean;
 }
 
 interface AuthContextValue extends AuthState {
-  login: (payload: LoginPayload) => Promise<void>;
-  signup: (payload: SignupPayload) => Promise<void>;
+  login: (payload: LoginPayload) => ReturnType<typeof authApi.login>;
+  signup: (payload: SignupPayload) => Promise<SignupResponse>;
+  completeOrganization: (
+    payload: SetupOrganizationAuthPayload,
+  ) => Promise<void>;
+  refreshSession: () => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -46,6 +54,7 @@ export function useAuth(): AuthContextValue {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>({
     user: null,
+    organization: null,
     role: null,
     isAuthenticated: false,
     isLoading: true,
@@ -58,7 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const refreshToken = authStorage.getRefreshToken();
 
       if (!accessToken && !refreshToken) {
-        setState({ user: null, role: null, isAuthenticated: false, isLoading: false });
+        setState({ user: null, organization: null, role: null, isAuthenticated: false, isLoading: false });
         return;
       }
 
@@ -68,6 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const response = await authApi.me(accessToken);
             setState({
               user: response.user,
+              organization: response.organization,
               role: response.role,
               isAuthenticated: true,
               isLoading: false,
@@ -76,7 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           } catch {
             if (!refreshToken) {
               authStorage.clearTokens();
-              setState({ user: null, role: null, isAuthenticated: false, isLoading: false });
+              setState({ user: null, organization: null, role: null, isAuthenticated: false, isLoading: false });
               return;
             }
           }
@@ -84,7 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (!refreshToken) {
           authStorage.clearTokens();
-          setState({ user: null, role: null, isAuthenticated: false, isLoading: false });
+          setState({ user: null, organization: null, role: null, isAuthenticated: false, isLoading: false });
           return;
         }
 
@@ -93,6 +103,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const response = await authApi.me(refreshedTokens.access_token);
         setState({
           user: response.user,
+          organization: response.organization,
           role: response.role,
           isAuthenticated: true,
           isLoading: false,
@@ -100,14 +111,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } catch (error) {
         if (isAuthRejected(error)) {
           authStorage.clearTokens();
-          setState({ user: null, role: null, isAuthenticated: false, isLoading: false });
+          setState({ user: null, organization: null, role: null, isAuthenticated: false, isLoading: false });
           return;
         }
 
         // Non-auth errors (e.g. network failure) should not be treated as
         // authenticated — downstream code assumes isAuthenticated === true
         // implies a non-null user.
-        setState({ user: null, role: null, isAuthenticated: false, isLoading: false });
+        setState({ user: null, organization: null, role: null, isAuthenticated: false, isLoading: false });
       }
     };
 
@@ -118,29 +129,69 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const handleForceLogout = () => {
       authStorage.clearTokens();
-      setState({ user: null, role: null, isAuthenticated: false, isLoading: false });
+      setState({ user: null, organization: null, role: null, isAuthenticated: false, isLoading: false });
     };
 
     window.addEventListener('auth:logout', handleForceLogout);
     return () => window.removeEventListener('auth:logout', handleForceLogout);
   }, []);
 
-  const login = async (payload: LoginPayload): Promise<void> => {
+  const login = async (payload: LoginPayload) => {
     const response = await authApi.login(payload);
     authStorage.setTokens(response.access_token, response.refresh_token);
     setState({
       user: response.user,
+      organization: response.organization,
+      role: response.role,
+      isAuthenticated: true,
+      isLoading: false,
+    });
+    return response;
+  };
+
+  const refreshSession = async (): Promise<void> => {
+    const accessToken = authStorage.getAccessToken();
+    if (!accessToken) {
+      throw new Error('No hay sesión activa');
+    }
+
+    const response = await authApi.me(accessToken);
+    setState({
+      user: response.user,
+      organization: response.organization,
       role: response.role,
       isAuthenticated: true,
       isLoading: false,
     });
   };
 
-  const signup = async (payload: SignupPayload): Promise<void> => {
+  const signup = async (payload: SignupPayload) => {
     const response = await authApi.signup(payload);
+    // Signup now returns tokens; log user in immediately
     authStorage.setTokens(response.access_token, response.refresh_token);
     setState({
       user: response.user,
+      organization: null, // No organization yet
+      role: response.role,
+      isAuthenticated: true,
+      isLoading: false,
+    });
+    return response;
+  };
+
+  const completeOrganization = async (
+    payload: SetupOrganizationAuthPayload,
+  ): Promise<void> => {
+    const accessToken = authStorage.getAccessToken();
+    if (!accessToken) {
+      throw new Error('No hay sesión activa para completar la organización');
+    }
+    const response = await authApi.setupOrganizationAuth(accessToken, payload);
+    // Update tokens with org-scoped ones
+    authStorage.setTokens(response.access_token, response.refresh_token);
+    setState({
+      user: response.user,
+      organization: response.organization,
       role: response.role,
       isAuthenticated: true,
       isLoading: false,
@@ -154,11 +205,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     authStorage.clearTokens();
-    setState({ user: null, role: null, isAuthenticated: false, isLoading: false });
+    setState({ user: null, organization: null, role: null, isAuthenticated: false, isLoading: false });
   };
 
   return (
-    <AuthContext.Provider value={{ ...state, login, signup, logout }}>
+    <AuthContext.Provider
+      value={{
+        ...state,
+        login,
+        signup,
+        completeOrganization,
+        refreshSession,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

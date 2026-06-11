@@ -9,7 +9,7 @@ import {
   Delete,
   Query,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiParam, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiParam, ApiQuery, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -23,7 +23,37 @@ export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
   @Post()
+  @ApiBearerAuth()
   @Permissions('catalog:manage')
+  @ApiResponse({
+    status: 201,
+    description: 'Product created successfully',
+    schema: {
+      example: {
+        id: 'product_123',
+        name: 'Tomato',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Validation error',
+    schema: {
+      example: {
+        statusCode: 400,
+        message: ['name is required'],
+        error: 'Bad Request',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - missing or invalid token',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - insufficient permissions',
+  })
   @ApiOperation({ summary: 'Create a new product' })
   create(
     @Body() createProductDto: CreateProductDto,
@@ -33,7 +63,26 @@ export class ProductsController {
   }
 
   @Get()
+  @ApiBearerAuth()
   @Permissions('catalog:read')
+  @ApiResponse({
+    status: 200,
+    description: 'List of products',
+    schema: {
+      example: {
+        data: [{ id: 'product_123', name: 'Tomato' }],
+        total: 1,
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - missing or invalid token',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - insufficient permissions',
+  })
   @ApiOperation({ summary: 'Get all products' })
   @ApiQuery({
     name: 'search',
@@ -59,10 +108,7 @@ export class ProductsController {
   findAll(
     @CurrentUser() user: AuthenticatedUser,
     @Query('search') search?: string,
-    @Query('serach') misspelledSearch?: string,
     @Query('order_by') orderBy?: string,
-    @Query('field') fieldAlias?: string,
-    @Query('filed') filedAlias?: string,
     @Query('order') order?: string,
     @Query('limit') limit?: string,
     @Query('offset') offset?: string,
@@ -81,8 +127,8 @@ export class ProductsController {
 
     return this.productsService.findAll(
       {
-        search: search ?? misspelledSearch,
-        orderBy: orderBy ?? fieldAlias ?? filedAlias,
+        search,
+        orderBy,
         order: normalizedOrder as 'ASC' | 'DESC' | undefined,
         limit: parsedLimit,
         offset: parsedOffset,
@@ -92,7 +138,30 @@ export class ProductsController {
   }
 
   @Get(':id')
+  @ApiBearerAuth()
   @Permissions('catalog:read')
+  @ApiResponse({
+    status: 200,
+    description: 'Product found',
+    schema: {
+      example: {
+        id: 'product_123',
+        name: 'Tomato',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - missing or invalid token',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - insufficient permissions',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Product not found',
+  })
   @ApiOperation({ summary: 'Get a product by ID' })
   @ApiParam({ name: 'id', description: 'Product ID' })
   findOne(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
@@ -100,7 +169,41 @@ export class ProductsController {
   }
 
   @Patch(':id')
+  @ApiBearerAuth()
   @Permissions('catalog:manage')
+  @ApiResponse({
+    status: 200,
+    description: 'Product updated successfully',
+    schema: {
+      example: {
+        id: 'product_123',
+        name: 'Tomato Updated',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Validation error',
+    schema: {
+      example: {
+        statusCode: 400,
+        message: ['field must be a string'],
+        error: 'Bad Request',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - missing or invalid token',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - insufficient permissions',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Product not found',
+  })
   @ApiOperation({ summary: 'Update a product' })
   @ApiParam({ name: 'id', description: 'Product ID' })
   update(
@@ -112,7 +215,24 @@ export class ProductsController {
   }
 
   @Delete(':id')
+  @ApiBearerAuth()
   @Permissions('catalog:manage')
+  @ApiResponse({
+    status: 200,
+    description: 'Product deleted successfully',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - missing or invalid token',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - insufficient permissions',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Product not found',
+  })
   @ApiOperation({ summary: 'Delete a product' })
   @ApiParam({ name: 'id', description: 'Product ID' })
   remove(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
