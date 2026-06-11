@@ -121,6 +121,7 @@ describe('PurchaseService', () => {
       suppliersRepository as never,
       productsRepository as never,
       usersRepository as never,
+      { nextFolio: jest.fn().mockResolvedValue('C1') } as never,
     );
 
     return {

@@ -15,6 +15,7 @@ import {
   InventoryMovementType,
 } from '../inventory/entities/inventory-movement.entity';
 import { CreatePurchaseDto } from './dto/create-purchase.dto';
+import { FoliosService } from '../folios/folios.service';
 
 @Injectable()
 export class PurchaseService {
@@ -22,18 +23,19 @@ export class PurchaseService {
     @InjectRepository(Purchase)
     private readonly purchasesRepository: Repository<Purchase>,
     @InjectRepository(PurchaseItem)
-    private readonly purchaseItemsRepository: Repository<PurchaseItem>,
-    @InjectRepository(InventoryMovement)
-    private readonly inventoryMovementsRepository: Repository<InventoryMovement>,
+    // private readonly purchaseItemsRepository: Repository<PurchaseItem>,
+    // @InjectRepository(InventoryMovement)
+    // private readonly inventoryMovementsRepository: Repository<InventoryMovement>,
     @InjectRepository(Supplier)
     private readonly suppliersRepository: Repository<Supplier>,
     @InjectRepository(Product)
     private readonly productsRepository: Repository<Product>,
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
+    private readonly foliosService: FoliosService,
   ) {}
 
-  async findPurchases(organizationId: string) {
+  async findAll(organizationId: string) {
     return this.purchasesRepository.find({
       where: { organization_id: organizationId },
       relations: {
@@ -45,7 +47,7 @@ export class PurchaseService {
     });
   }
 
-  async createPurchase(
+  async create(
     createPurchaseDto: CreatePurchaseDto,
     organizationId: string,
     userId: string,
@@ -59,18 +61,20 @@ export class PurchaseService {
         const usersRepository = manager.getRepository(User);
         const inventoryMovementsRepository =
           manager.getRepository(InventoryMovement);
-
-        const supplier = await this.findSupplierOrFail(
+        const supplier = await this.getSupplier(
           createPurchaseDto.supplier_id,
           organizationId,
           suppliersRepository,
         );
-        const user = await this.findUserOrFail(
+        const user = await this.getUser(
           userId,
           organizationId,
           usersRepository,
         );
-        const purchaseFolio = await this.buildPurchaseFolio(manager);
+        const purchaseFolio = await this.foliosService.generateFolio(
+          'inventory_entries',
+          organizationId,
+        );
         const itemsPayload = await this.buildPurchaseItems(
           createPurchaseDto.items,
           organizationId,
@@ -133,10 +137,10 @@ export class PurchaseService {
       },
     );
 
-    return this.findPurchaseById(purchaseId, organizationId);
+    return this.find(purchaseId, organizationId);
   }
 
-  async findPurchaseById(id: string, organizationId: string) {
+  async findOne(id: string, organizationId: string) {
     const purchase = await this.purchasesRepository.findOne({
       where: { id, organization_id: organizationId },
       relations: {
@@ -152,7 +156,7 @@ export class PurchaseService {
     return purchase;
   }
 
-  private async findSupplierOrFail(
+  private async getSupplier(
     id: string,
     organizationId: string,
     suppliersRepository: Repository<Supplier> = this.suppliersRepository,
@@ -168,7 +172,7 @@ export class PurchaseService {
     return supplier;
   }
 
-  private async findUserOrFail(
+  private async getUser(
     id: string,
     organizationId: string,
     usersRepository: Repository<User> = this.usersRepository,
@@ -233,16 +237,6 @@ export class PurchaseService {
     });
 
     return { items: normalizedItems };
-  }
-
-  private async buildPurchaseFolio(manager: {
-    query: (query: string) => Promise<Array<{ folio: string | number }>>;
-  }) {
-    const [result] = await manager.query(
-      `SELECT nextval('inventory_entries_folio_seq') AS folio`,
-    );
-    const folioNumber = Number(result?.folio ?? 0);
-    return `C${String(folioNumber).padStart(5, '0')}`;
   }
 
   private toQuantity(value: number | string | null | undefined): number {

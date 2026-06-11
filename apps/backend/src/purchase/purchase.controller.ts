@@ -22,20 +22,20 @@ export class PurchaseController {
   @Get()
   @Permissions('inventory:read')
   @ApiOperation({ summary: 'Get all purchases' })
-  findPurchases(@CurrentOrganization() organizationId: string) {
-    return this.purchaseService.findPurchases(organizationId);
+  findAll(@CurrentOrganization() organizationId: string) {
+    return this.purchaseService.findAll(organizationId);
   }
 
   @Post()
   @Permissions('inventory:manage')
   @ApiOperation({ summary: 'Create a purchase and increase stock' })
-  createPurchase(
+  create(
     @Body(new ValidationPipe({ transform: true }))
     createPurchaseDto: CreatePurchaseDto,
     @CurrentOrganization() organizationId: string,
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    return this.purchaseService.createPurchase(
+    return this.purchaseService.create(
       createPurchaseDto,
       organizationId,
       user.sub,
@@ -46,10 +46,7 @@ export class PurchaseController {
   @Permissions('inventory:read')
   @ApiOperation({ summary: 'Get purchase details by id' })
   @ApiParam({ name: 'id', description: 'Purchase ID' })
-  findPurchaseById(
-    @Param('id') id: string,
-    @CurrentOrganization() organizationId: string,
-  ) {
-    return this.purchaseService.findPurchaseById(id, organizationId);
+  find(@Param('id') id: string, @CurrentOrganization() organizationId: string) {
+    return this.purchaseService.find(id, organizationId);
   }
 }
