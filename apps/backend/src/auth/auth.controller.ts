@@ -1,7 +1,6 @@
 import {
   Body,
   Controller,
-  Get,
   Post,
   UseGuards,
   UsePipes,
@@ -34,9 +33,9 @@ export class AuthController {
   @Post('signup')
   @Public()
   @ApiOperation({
-    summary: 'Signup user and create organization',
+    summary: 'Signup user',
     description:
-      'Creates a user, a new tenant organization, and assigns owner role from roles table.',
+      'Creates a user account and leaves organization setup for later.',
   })
   signup(@Body() signupDto: SignupDto) {
     return this.authService.signup(signupDto);
@@ -68,17 +67,6 @@ export class AuthController {
     return this.authService.refreshToken(user, refreshTokenDto.refresh_token);
   }
 
-  @Get('me')
-  @ApiBearerAuth()
-  @ApiOperation({
-    summary: 'Get current authenticated user context',
-    description:
-      'Returns user profile plus tenant organization and role context.',
-  })
-  me(@CurrentUser() user: AuthenticatedUser) {
-    return this.authService.me(user);
-  }
-
   @Post('logout')
   @ApiBearerAuth()
   @ApiOperation({
@@ -88,16 +76,5 @@ export class AuthController {
   })
   logout(@CurrentUser() user: AuthenticatedUser) {
     return this.authService.logout(user);
-  }
-
-  @Post('logout-all')
-  @ApiBearerAuth()
-  @ApiOperation({
-    summary: 'Revoke all sessions for current user/org',
-    description:
-      'Revokes every active session for the current user within the current tenant organization.',
-  })
-  logoutAll(@CurrentUser() user: AuthenticatedUser) {
-    return this.authService.logoutAll(user);
   }
 }

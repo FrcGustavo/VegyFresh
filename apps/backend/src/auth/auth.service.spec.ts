@@ -50,9 +50,11 @@ type UsersRepositoryMock = {
     transaction: jest.Mock<Promise<unknown>, [TransactionCallback]>;
   };
 };
-type RolesRepositoryMock = {
-  findOneBy: jest.Mock<Promise<RoleRecord | null>, [unknown]>;
-  upsert: jest.Mock<Promise<unknown>, [unknown, unknown]>;
+type FoliosServiceMock = {
+  nextFolio: jest.Mock<Promise<string>, [string, string, unknown?]>;
+};
+type RolesServiceMock = {
+  ensureOwnerRole: jest.Mock<Promise<RoleRecord>, []>;
 };
 type AuthSessionsRepositoryMock = {
   findOne: jest.Mock<Promise<AuthSessionRecord | null>, [unknown]>;
@@ -76,7 +78,8 @@ const makeConfigService = () => ({
 describe('AuthService security flows', () => {
   let service: AuthService;
   let usersRepository: UsersRepositoryMock;
-  let rolesRepository: RolesRepositoryMock;
+  let foliosService: FoliosServiceMock;
+  let rolesService: RolesServiceMock;
   let authSessionsRepository: AuthSessionsRepositoryMock;
   let jwtService: { signAsync: jest.Mock<Promise<string>, [unknown, unknown]> };
 
@@ -87,9 +90,11 @@ describe('AuthService security flows', () => {
         transaction: jest.fn<Promise<unknown>, [TransactionCallback]>(),
       },
     };
-    rolesRepository = {
-      findOneBy: jest.fn<Promise<RoleRecord | null>, [unknown]>(),
-      upsert: jest.fn<Promise<unknown>, [unknown, unknown]>(),
+    foliosService = {
+      nextFolio: jest.fn<Promise<string>, [string, string, unknown?]>(),
+    };
+    rolesService = {
+      ensureOwnerRole: jest.fn<Promise<RoleRecord>, []>(),
     };
     authSessionsRepository = {
       findOne: jest.fn<Promise<AuthSessionRecord | null>, [unknown]>(),
@@ -100,62 +105,40 @@ describe('AuthService security flows', () => {
 
     service = new AuthService(
       usersRepository as never,
-      rolesRepository as never,
+      rolesService as never,
       authSessionsRepository as never,
+      foliosService as never,
       jwtService as never,
       makeConfigService(),
     );
   });
 
-  it('signup creates owner user scoped to organization and returns role context', async () => {
-    rolesRepository.findOneBy.mockResolvedValue({
+  it('signup creates a standalone user and returns role context', async () => {
+    rolesService.ensureOwnerRole.mockResolvedValue({
       id: 'role-owner',
       name: 'owner',
       permissions: [{ action: '*', resource: '*' }],
     });
+    foliosService.nextFolio.mockResolvedValue('U00001');
 
     usersRepository.manager.transaction.mockImplementation((cb) => {
       const userRepository = {
         create: jest.fn(() => ({
           id: 'user-1',
           email: 'owner@vegyfresh.com',
-          organization_id: 'org-1',
+          organization_id: null,
         })),
         save: jest.fn().mockResolvedValue({
           id: 'user-1',
           email: 'owner@vegyfresh.com',
           name: 'Owner',
-          organization_id: 'org-1',
+          organization_id: null,
         }),
       };
-      const orgRepository = {
-        create: jest.fn(() => ({
-          id: 'org-1',
-          name: 'Org 1',
-          folio: 'O00001',
-        })),
-        save: jest.fn().mockResolvedValue({
-          id: 'org-1',
-          name: 'Org 1',
-          folio: 'O00001',
-        }),
-      };
-      const authSessionRepository = {
-        create: jest.fn((session: AuthSessionRecord) => session),
-        save: jest
-          .fn<Promise<AuthSessionRecord>, [AuthSessionRecord]>()
-          .mockImplementation((session) => Promise.resolve(session)),
-      };
-      const queryMock = jest
-        .fn<Promise<QueryRow[]>, [string]>()
-        .mockResolvedValueOnce([{ folio: 1 }])
-        .mockResolvedValueOnce([{ folio: 1 }]);
+      const queryMock = jest.fn<Promise<QueryRow[]>, [string]>();
       const getRepositoryMock = jest
         .fn<unknown, [unknown]>()
-        .mockReturnValueOnce(userRepository)
-        .mockReturnValueOnce(rolesRepository)
-        .mockReturnValueOnce(orgRepository)
-        .mockReturnValueOnce(authSessionRepository);
+        .mockReturnValueOnce(userRepository);
 
       return cb({
         query: queryMock,
@@ -163,43 +146,29 @@ describe('AuthService security flows', () => {
       });
     });
 
-    const generateTokensSpy = jest
-      .spyOn(service as never, 'generateTokens' as never)
-      .mockResolvedValue({
-        access_token: 'access-token',
-        refresh_token: 'refresh-token',
-      } as never);
-
     const result = await service.signup({
       name: 'Owner',
       email: 'owner@vegyfresh.com',
       password: 'super-secure-password',
-      organization_name: 'Org 1',
-      organization_legal_name: null,
-      organization_phone_number: null,
-      organization_address: null,
     });
 
     expect(result.user.email).toBe('owner@vegyfresh.com');
-    expect(result.organization.id).toBe('org-1');
     expect(result.role.name).toBe('owner');
-    expect(result.access_token).toBe('access-token');
-    expect(generateTokensSpy).toHaveBeenCalledWith(
-      expect.objectContaining({
-        sub: 'user-1',
-        org_id: 'org-1',
-        role: 'owner',
-      }),
+    expect(rolesService.ensureOwnerRole).toHaveBeenCalledTimes(1);
+    expect(foliosService.nextFolio).toHaveBeenCalledWith(
+      'users',
+      'global',
       expect.any(Object),
     );
   });
 
   it('signup rejects duplicate email', async () => {
-    rolesRepository.findOneBy.mockResolvedValue({
+    rolesService.ensureOwnerRole.mockResolvedValue({
       id: 'role-owner',
       name: 'owner',
       permissions: [{ action: '*', resource: '*' }],
     });
+    foliosService.nextFolio.mockResolvedValue('U00001');
     usersRepository.manager.transaction.mockImplementation((cb) => {
       const userRepository = {
         create: jest.fn(() => ({ id: 'user-1', email: 'owner@vegyfresh.com' })),
@@ -208,27 +177,10 @@ describe('AuthService security flows', () => {
           constraint: 'users_email_key',
         }),
       };
-      const orgRepository = {
-        create: jest.fn(() => ({
-          id: 'org-1',
-          name: 'Org 1',
-          folio: 'O00001',
-        })),
-        save: jest.fn().mockResolvedValue({
-          id: 'org-1',
-          name: 'Org 1',
-          folio: 'O00001',
-        }),
-      };
-      const queryMock = jest
-        .fn<Promise<QueryRow[]>, [string]>()
-        .mockResolvedValueOnce([{ folio: 1 }])
-        .mockResolvedValueOnce([{ folio: 1 }]);
+      const queryMock = jest.fn<Promise<QueryRow[]>, [string]>();
       const getRepositoryMock = jest
         .fn<unknown, [unknown]>()
-        .mockReturnValueOnce(userRepository)
-        .mockReturnValueOnce(rolesRepository)
-        .mockReturnValueOnce(orgRepository);
+        .mockReturnValueOnce(userRepository);
       return cb({
         query: queryMock,
         getRepository: getRepositoryMock,
@@ -240,7 +192,6 @@ describe('AuthService security flows', () => {
         name: 'Owner',
         email: 'owner@vegyfresh.com',
         password: 'super-secure-password',
-        organization_name: 'Org 1',
       }),
     ).rejects.toBeInstanceOf(BadRequestException);
   });
