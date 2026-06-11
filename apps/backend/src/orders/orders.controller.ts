@@ -8,7 +8,13 @@ import {
   Delete,
   Query,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiParam, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiParam,
+  ApiBearerAuth,
+  ApiResponse,
+} from '@nestjs/swagger';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
@@ -31,7 +37,7 @@ export class OrdersController {
       example: {
         id: 'order_123',
         clientId: 'client_123',
-        total: 100.00,
+        total: 100.0,
       },
     },
   })
@@ -70,7 +76,7 @@ export class OrdersController {
     description: 'List of orders',
     schema: {
       example: {
-        data: [{ id: 'order_123', clientId: 'client_123', total: 100.00 }],
+        data: [{ id: 'order_123', clientId: 'client_123', total: 100.0 }],
         total: 1,
       },
     },
@@ -112,7 +118,7 @@ export class OrdersController {
       example: {
         id: 'order_123',
         clientId: 'client_123',
-        total: 100.00,
+        total: 100.0,
       },
     },
   })
@@ -147,7 +153,7 @@ export class OrdersController {
       example: {
         id: 'order_123',
         clientId: 'client_123',
-        total: 150.00,
+        total: 150.0,
       },
     },
   })

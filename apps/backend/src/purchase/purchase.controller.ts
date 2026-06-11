@@ -6,7 +6,13 @@ import {
   Post,
   ValidationPipe,
 } from '@nestjs/common';
-import { ApiOperation, ApiParam, ApiTags, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiOperation,
+  ApiParam,
+  ApiTags,
+  ApiBearerAuth,
+  ApiResponse,
+} from '@nestjs/swagger';
 import { Permissions } from '../auth/decorators/permissions.decorator';
 import { CurrentOrganization } from '../auth/decorators/current-organization.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';

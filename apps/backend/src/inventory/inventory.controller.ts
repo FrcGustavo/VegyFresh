@@ -1,5 +1,10 @@
 import { Body, Controller, Get, Post, ValidationPipe } from '@nestjs/common';
-import { ApiOperation, ApiTags, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiOperation,
+  ApiTags,
+  ApiBearerAuth,
+  ApiResponse,
+} from '@nestjs/swagger';
 import { InventoryService } from './inventory.service';
 import { Permissions } from '../auth/decorators/permissions.decorator';
 import { CurrentOrganization } from '../auth/decorators/current-organization.decorator';
