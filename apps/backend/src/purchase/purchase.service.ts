@@ -137,7 +137,7 @@ export class PurchaseService {
       },
     );
 
-    return this.find(purchaseId, organizationId);
+    return this.findOne(purchaseId, organizationId);
   }
 
   async findOne(id: string, organizationId: string) {
