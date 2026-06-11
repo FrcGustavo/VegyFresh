@@ -50,7 +50,6 @@ export class RolesService implements OnModuleInit {
   }
 
   async ensureRole(name: string, permissions: RolePermission[]) {
-    console.log(`Ensuring role: ${name}`);
     const existingRole = await this.rolesRepository.findOneBy({ name });
     if (existingRole) {
       return existingRole;
