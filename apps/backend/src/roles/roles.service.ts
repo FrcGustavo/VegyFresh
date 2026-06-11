@@ -1,51 +1,75 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { CreateRoleDto } from './dto/create-role.dto';
-import { UpdateRoleDto } from './dto/update-role.dto';
 import { Role } from './entities/role.entity';
 import { Repository } from 'typeorm';
 
+type RolePermission = Record<string, unknown>;
+
+type DefaultRoleDefinition = {
+  name: string;
+  permissions: RolePermission[];
+};
+
+const DEFAULT_ROLES: DefaultRoleDefinition[] = [
+  {
+    name: 'owner',
+    permissions: [
+      { action: '*', resource: '*' },
+      { action: 'manage', resource: 'organization' },
+    ],
+  },
+  {
+    name: 'admin',
+    permissions: [
+      { action: 'manage', resource: 'users' },
+      { action: 'read', resource: 'orders' },
+      { action: 'manage', resource: 'orders' },
+      { action: 'read', resource: 'catalog' },
+      { action: 'manage', resource: 'catalog' },
+      { action: 'read', resource: 'inventory' },
+      { action: 'manage', resource: 'inventory' },
+    ],
+  },
+];
+
 @Injectable()
-export class RolesService {
+export class RolesService implements OnModuleInit {
   constructor(
     @InjectRepository(Role)
     private readonly rolesRepository: Repository<Role>,
   ) {}
 
-  create(createRoleDto: CreateRoleDto) {
-    const role = this.rolesRepository.create({
-      ...createRoleDto,
-      permissions: createRoleDto.permissions ?? [],
-    });
-
-    return this.rolesRepository.save(role);
+  async onModuleInit() {
+    await this.setupDefaultRoles();
   }
 
-  findAll() {
-    return this.rolesRepository.find({
-      order: { id: 'ASC' },
-    });
+  async setupDefaultRoles() {
+    for (const roleDefinition of DEFAULT_ROLES) {
+      await this.ensureRole(roleDefinition.name, roleDefinition.permissions);
+    }
   }
 
-  async findOne(id: string) {
-    const role = await this.rolesRepository.findOneBy({ id });
-
-    if (!role) {
-      throw new NotFoundException(`Role with id ${id} not found`);
+  async ensureRole(name: string, permissions: RolePermission[]) {
+    const existingRole = await this.rolesRepository.findOneBy({ name });
+    if (existingRole) {
+      return existingRole;
     }
 
-    return role;
-  }
+    const role = this.rolesRepository.create({
+      name,
+      permissions,
+    });
 
-  async update(id: string, updateRoleDto: UpdateRoleDto) {
-    const role = await this.findOne(id);
-    this.rolesRepository.merge(role, updateRoleDto);
     return this.rolesRepository.save(role);
   }
 
-  async remove(id: string) {
-    const role = await this.findOne(id);
-    await this.rolesRepository.remove(role);
-    return { id, deleted: true };
+  async getOwnerRole() {
+    const ownerRole = await this.rolesRepository.findOneBy({ name: 'owner' });
+
+    if (!ownerRole) {
+      throw new Error('Owner role not found');
+    }
+
+    return ownerRole;
   }
 }
