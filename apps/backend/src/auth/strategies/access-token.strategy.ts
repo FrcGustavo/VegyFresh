@@ -31,16 +31,36 @@ export class AccessTokenStrategy extends PassportStrategy(
   }
 
   async validate(payload: AuthenticatedUser): Promise<AuthenticatedUser> {
+    // For org-less tokens (signup state), allow minimal validation
+    if (!payload.org_id) {
+      const user = await this.usersRepository.findOne({
+        where: { id: payload.sub },
+        relations: { role: true },
+      });
+      if (!user || !user.role) {
+        throw new UnauthorizedException('User not found or missing role');
+      }
+      return {
+        ...payload,
+        role: user.role.name,
+        permissions: extractRolePermissions(user.role.permissions),
+      };
+    }
+
+    // For org-scoped tokens, validate session and organization
     const sessionId = payload.session_id ?? payload.sid;
     if (!sessionId) {
       throw new UnauthorizedException('Token missing session identifier');
     }
 
-    const session = await this.authSessionsRepository.findOneBy({
-      id: sessionId,
-      user_id: payload.sub,
-      organization_id: payload.org_id,
-      revoked_at: IsNull(),
+    const session = await this.authSessionsRepository.findOne({
+      where: {
+        id: sessionId,
+        user_id: payload.sub,
+        organization_id: payload.org_id,
+        revoked_at: IsNull(),
+      },
+      relations: { user: { role: true, organization: true } },
     });
     if (!session || session.expires_at.getTime() <= Date.now()) {
       throw new UnauthorizedException('Session is invalid or expired');
@@ -53,14 +73,16 @@ export class AccessTokenStrategy extends PassportStrategy(
       },
       relations: {
         role: true,
+        organization: true,
       },
     });
-    if (!user || !user.role) {
+    if (!user || !user.role || !user.organization) {
       throw new UnauthorizedException('User is not active in organization');
     }
 
     return {
       ...payload,
+      org_id: user.organization.id,
       role: user.role.name,
       permissions: extractRolePermissions(user.role.permissions),
     };
