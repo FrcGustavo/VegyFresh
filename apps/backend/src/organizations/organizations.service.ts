@@ -4,17 +4,30 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, EntityManager, Repository } from 'typeorm';
+import { DataSource, IsNull, Repository } from 'typeorm';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
 import { Organization } from './entities/organization.entity';
 import { User } from '../users/entities/user.entity';
+import { AuthSession } from '../auth/entities/auth-session.entity';
+import { FoliosService } from '../folios/folios.service';
+
+const DEFAULT_ORGANIZATION_FOLIO_PREFIXES = {
+  product_folio_prefix: 'P',
+  price_list_folio_prefix: 'LP',
+  order_folio_prefix: 'P',
+  client_folio_prefix: 'C',
+  supplier_folio_prefix: 'P',
+  purchase_folio_prefix: 'C',
+} as const;
 
 @Injectable()
 export class OrganizationsService {
   constructor(
     @InjectRepository(Organization)
     private readonly organizationsRepository: Repository<Organization>,
+    @InjectRepository(User)
+    private readonly foliosService: FoliosService,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -22,25 +35,46 @@ export class OrganizationsService {
     return this.dataSource.transaction(async (manager) => {
       const organizationsRepository = manager.getRepository(Organization);
       const usersRepository = manager.getRepository(User);
+      const authSessionsRepository = manager.getRepository(AuthSession);
+      const user = await usersRepository.findOne({ where: { id: userId } });
 
-      const folio = await this.buildOrganizationFolio(manager);
+      if (user?.organization_id) {
+        throw new ForbiddenException(
+          'User already belongs to an organization and cannot create a new one',
+        );
+      }
+
+      const folio = await this.foliosService.generateFolio('organizations');
       const organization = organizationsRepository.create({
-        ...createOrganizationDto,
         folio,
+        name: createOrganizationDto.name,
         logo_url: createOrganizationDto.logo_url ?? null,
         legal_name: createOrganizationDto.legal_name ?? null,
         email: createOrganizationDto.email ?? null,
         phone_number: createOrganizationDto.phone_number ?? null,
         address: createOrganizationDto.address ?? null,
+        product_folio_prefix:
+          createOrganizationDto.product_folio_prefix ??
+          DEFAULT_ORGANIZATION_FOLIO_PREFIXES.product_folio_prefix,
+        price_list_folio_prefix:
+          createOrganizationDto.price_list_folio_prefix ??
+          DEFAULT_ORGANIZATION_FOLIO_PREFIXES.price_list_folio_prefix,
+        order_folio_prefix:
+          createOrganizationDto.order_folio_prefix ??
+          DEFAULT_ORGANIZATION_FOLIO_PREFIXES.order_folio_prefix,
+        client_folio_prefix:
+          createOrganizationDto.client_folio_prefix ??
+          DEFAULT_ORGANIZATION_FOLIO_PREFIXES.client_folio_prefix,
+        supplier_folio_prefix:
+          createOrganizationDto.supplier_folio_prefix ??
+          DEFAULT_ORGANIZATION_FOLIO_PREFIXES.supplier_folio_prefix,
+        purchase_folio_prefix:
+          createOrganizationDto.purchase_folio_prefix ??
+          DEFAULT_ORGANIZATION_FOLIO_PREFIXES.purchase_folio_prefix,
       });
 
       const savedOrganization =
         await organizationsRepository.save(organization);
-
-      const user = await usersRepository.findOneBy({ id: userId });
-      if (!user) {
-        throw new NotFoundException(`User with id ${userId} not found`);
-      }
 
       await usersRepository.update(
         { id: userId },
@@ -49,34 +83,18 @@ export class OrganizationsService {
         },
       );
 
+      await authSessionsRepository.update(
+        { user_id: userId, revoked_at: IsNull() },
+        { organization_id: savedOrganization.id },
+      );
+
       return savedOrganization;
     });
   }
 
-  async findAll(organizationId: string) {
-    return this.organizationsRepository.find({
-      where: {
-        id: organizationId,
-      },
-      order: { created_at: 'DESC' },
-    });
-  }
-
-  async findOne(
-    id: string,
-    currentOrganizationId: string,
-    requiredRoles?: string[],
-    currentRole?: string,
-  ) {
-    this.assertOrganizationAccess(
-      id,
-      currentOrganizationId,
-      requiredRoles,
-      currentRole,
-    );
-
+  async findOne(id: string, userId: string) {
     const organization = await this.organizationsRepository.findOne({
-      where: { id },
+      where: { id, users: { id: userId } },
     });
 
     if (!organization) {
@@ -88,74 +106,12 @@ export class OrganizationsService {
 
   async update(
     id: string,
+    userId: string,
     updateOrganizationDto: UpdateOrganizationDto,
-    currentOrganizationId: string,
-    currentRole: string,
   ) {
-    const organization = await this.findOne(
-      id,
-      currentOrganizationId,
-      ['owner', 'admin'],
-      currentRole,
-    );
+    const organization = await this.findOne(id, userId);
     this.organizationsRepository.merge(organization, updateOrganizationDto);
+
     return this.organizationsRepository.save(organization);
-  }
-
-  async remove(id: string, currentOrganizationId: string, currentRole: string) {
-    const organization = await this.findOne(
-      id,
-      currentOrganizationId,
-      ['owner'],
-      currentRole,
-    );
-    await this.organizationsRepository.remove(organization);
-    return { id, deleted: true };
-  }
-
-  private assertOrganizationAccess(
-    requestedOrganizationId: string,
-    currentOrganizationId: string,
-    requiredRoles?: string[],
-    currentRole?: string,
-  ) {
-    if (requestedOrganizationId !== currentOrganizationId) {
-      throw new ForbiddenException(
-        `User does not have access to organization ${requestedOrganizationId}`,
-      );
-    }
-
-    if (!requiredRoles || requiredRoles.length === 0) {
-      return;
-    }
-
-    if (!currentRole || !requiredRoles.includes(currentRole.toLowerCase())) {
-      throw new ForbiddenException(
-        `User does not have the required role in organization ${requestedOrganizationId}`,
-      );
-    }
-  }
-
-  private async buildOrganizationFolio(manager: EntityManager) {
-    const queryResult: unknown = await manager.query(
-      `SELECT nextval('organizations_folio_seq') AS folio`,
-    );
-    const rows = Array.isArray(queryResult) ? queryResult : [];
-    const folioNumber = this.extractFolioNumber(rows[0]);
-    return `O${String(folioNumber).padStart(5, '0')}`;
-  }
-
-  private extractFolioNumber(row: unknown): number {
-    if (!row || typeof row !== 'object') {
-      return 0;
-    }
-
-    const folio = (row as { folio?: unknown }).folio;
-    if (typeof folio !== 'string' && typeof folio !== 'number') {
-      return 0;
-    }
-
-    const parsed = Number(folio);
-    return Number.isFinite(parsed) ? parsed : 0;
   }
 }

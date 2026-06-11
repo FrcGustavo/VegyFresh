@@ -35,6 +35,27 @@ export class Organization {
   @Column({ type: 'varchar', length: 255, nullable: true })
   legal_name!: string | null;
 
+  @Column({ type: 'varchar', length: 10, nullable: true })
+  product_folio_prefix!: string | null;
+
+  @Column({ type: 'varchar', length: 10, nullable: true })
+  price_list_folio_prefix!: string | null;
+
+  @Column({ type: 'varchar', length: 10, nullable: true })
+  order_folio_prefix!: string | null;
+
+  @Column({ type: 'varchar', length: 10, nullable: true })
+  client_folio_prefix!: string | null;
+
+  @Column({ type: 'varchar', length: 10, nullable: true })
+  supplier_folio_prefix!: string | null;
+
+  @Column({ type: 'varchar', length: 10, nullable: true })
+  purchase_folio_prefix!: string | null;
+
+  @Column({ type: 'varchar', length: 10, nullable: true })
+  user_folio_prefix!: string | null;
+
   @Column({ type: 'varchar', length: 255, nullable: true })
   email!: string | null;
 

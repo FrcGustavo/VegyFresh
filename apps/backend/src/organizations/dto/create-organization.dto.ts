@@ -14,7 +14,7 @@ export class CreateOrganizationDto {
   @ApiProperty({ example: 'Vegy Fresh Monterrey' })
   @IsString()
   @MinLength(2)
-  @MaxLength(160)
+  @MaxLength(255)
   name!: string;
 
   @ApiPropertyOptional({
@@ -31,7 +31,7 @@ export class CreateOrganizationDto {
   @ValidateIf((_, value) => value !== null && value !== undefined)
   @IsString()
   @MinLength(2)
-  @MaxLength(160)
+  @MaxLength(255)
   @IsOptional()
   legal_name?: string | null;
 
@@ -52,7 +52,91 @@ export class CreateOrganizationDto {
   @ValidateIf((_, value) => value !== null && value !== undefined)
   @IsString()
   @MinLength(3)
-  @MaxLength(255)
+  @MaxLength(1000)
   @IsOptional()
   address?: string | null;
+
+  @ApiPropertyOptional({
+    example: 'P',
+    nullable: true,
+    description: 'Custom prefix for product folios',
+  })
+  @ValidateIf((_, value) => value !== null && value !== undefined)
+  @IsString()
+  @MaxLength(10)
+  @Matches(/^[A-Za-z0-9]+$/)
+  @IsOptional()
+  product_folio_prefix?: string | null;
+
+  @ApiPropertyOptional({
+    example: 'LP',
+    nullable: true,
+    description: 'Custom prefix for price list folios',
+  })
+  @ValidateIf((_, value) => value !== null && value !== undefined)
+  @IsString()
+  @MaxLength(10)
+  @Matches(/^[A-Za-z0-9]+$/)
+  @IsOptional()
+  price_list_folio_prefix?: string | null;
+
+  @ApiPropertyOptional({
+    example: 'O',
+    nullable: true,
+    description: 'Custom prefix for order folios',
+  })
+  @ValidateIf((_, value) => value !== null && value !== undefined)
+  @IsString()
+  @MaxLength(10)
+  @Matches(/^[A-Za-z0-9]+$/)
+  @IsOptional()
+  order_folio_prefix?: string | null;
+
+  @ApiPropertyOptional({
+    example: 'C',
+    nullable: true,
+    description: 'Custom prefix for client folios',
+  })
+  @ValidateIf((_, value) => value !== null && value !== undefined)
+  @IsString()
+  @MaxLength(10)
+  @Matches(/^[A-Za-z0-9]+$/)
+  @IsOptional()
+  client_folio_prefix?: string | null;
+
+  @ApiPropertyOptional({
+    example: 'S',
+    nullable: true,
+    description: 'Custom prefix for supplier folios',
+  })
+  @ValidateIf((_, value) => value !== null && value !== undefined)
+  @IsString()
+  @MaxLength(10)
+  @Matches(/^[A-Za-z0-9]+$/)
+  @IsOptional()
+  supplier_folio_prefix?: string | null;
+
+  @ApiPropertyOptional({
+    example: 'U',
+    nullable: true,
+    description: 'Custom prefix for user folios',
+  })
+  @ValidateIf((_, value) => value !== null && value !== undefined)
+  @IsString()
+  @MaxLength(10)
+  @Matches(/^[A-Za-z0-9]+$/)
+  @IsOptional()
+  user_folio_prefix?: string | null;
+
+  @ApiPropertyOptional({
+    example: 'C',
+    nullable: true,
+    description: 'Custom prefix for purchase folios',
+  })
+  @ValidateIf((_, value) => value !== null && value !== undefined)
+  @IsString()
+  @MaxLength(10)
+  @Matches(/^[A-Za-z0-9]+$/)
+  @IsOptional()
+  purchase_folio_prefix?: string | null;
 }
