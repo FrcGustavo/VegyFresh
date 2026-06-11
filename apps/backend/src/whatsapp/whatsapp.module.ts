@@ -5,9 +5,16 @@ import { CatalogModule } from '../catalog/catalog.module';
 import { OrdersModule } from '../orders/orders.module';
 import { WhatsappService } from './whatsapp.service';
 import { WhatsappController } from './whatsapp.controller';
+import { OrganizationsModule } from 'src/organizations/organizations.module';
 
 @Module({
-  imports: [AiModule, ClientsModule, CatalogModule, OrdersModule],
+  imports: [
+    AiModule,
+    ClientsModule,
+    CatalogModule,
+    OrdersModule,
+    OrganizationsModule,
+  ],
   controllers: [WhatsappController],
   providers: [WhatsappService],
 })
