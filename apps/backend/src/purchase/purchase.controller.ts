@@ -47,6 +47,6 @@ export class PurchaseController {
   @ApiOperation({ summary: 'Get purchase details by id' })
   @ApiParam({ name: 'id', description: 'Purchase ID' })
   find(@Param('id') id: string, @CurrentOrganization() organizationId: string) {
-    return this.purchaseService.find(id, organizationId);
+    return this.purchaseService.findOne(id, organizationId);
   }
 }
