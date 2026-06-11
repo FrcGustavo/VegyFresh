@@ -21,54 +21,55 @@ import { InventoryMovement } from '../../inventory/entities/inventory-movement.e
 export class User {
   @PrimaryColumn({ type: 'uuid' })
   @Generated('uuid')
-  id: string;
+  id!: string;
 
   @Column({ type: 'varchar', length: 255 })
-  name: string;
+  name!: string;
 
-  @Column({ type: 'varchar', length: 40, unique: true })
-  folio: string;
+  @Column({ type: 'varchar', length: 40 })
+  folio!: string;
 
   @Column({ type: 'varchar', length: 255, unique: true })
-  email: string;
+  email!: string;
 
   @Column({ type: 'text' })
-  password_hash: string;
+  password_hash!: string;
 
   @Column({ type: 'uuid' })
-  role_id: string;
+  role_id!: string;
 
   @ManyToOne(() => Role, (role) => role.users, { onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'role_id' })
-  role: Role;
+  role!: Role;
 
   @Column({ type: 'text', nullable: true })
-  avatar_url: string | null;
+  avatar_url!: string | null;
 
-  @Column({ type: 'uuid' })
-  organization_id: string;
+  @Column({ type: 'uuid', nullable: true })
+  organization_id!: string | null;
 
   @ManyToOne(() => Organization, (organization) => organization.users, {
     onDelete: 'RESTRICT',
+    nullable: true,
   })
   @JoinColumn({ name: 'organization_id' })
-  organization: Organization;
+  organization!: Organization | null;
 
   @OneToMany(() => Order, (order) => order.user)
-  orders: Order[];
+  orders!: Order[];
 
   @OneToMany(() => AuthSession, (authSession) => authSession.user)
-  authSessions: AuthSession[];
+  authSessions!: AuthSession[];
 
   @OneToMany(() => Purchase, (purchase) => purchase.user)
-  purchases: Purchase[];
+  purchases!: Purchase[];
 
   @OneToMany(
     () => InventoryMovement,
     (inventoryMovement) => inventoryMovement.user,
   )
-  inventoryMovements: InventoryMovement[];
+  inventoryMovements!: InventoryMovement[];
 
   @CreateDateColumn({ name: 'created_at' })
-  created_at: Date;
+  created_at!: Date;
 }

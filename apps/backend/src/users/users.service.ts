@@ -13,6 +13,7 @@ import { Role } from '../roles/entities/role.entity';
 import * as bcrypt from 'bcrypt';
 import { ConfigService } from '@nestjs/config';
 import { resolveBcryptSaltRounds } from '../auth/auth-security.config';
+import { FoliosService } from '../folios/folios.service';
 
 type UserOrderField = 'id' | 'folio' | 'name' | 'email' | 'created_at';
 
@@ -33,6 +34,7 @@ export class UsersService {
     private readonly usersRepository: Repository<User>,
     @InjectRepository(Role)
     private readonly rolesRepository: Repository<Role>,
+    private readonly foliosService: FoliosService,
     private readonly configService: ConfigService,
   ) {
     this.bcryptSaltRounds = resolveBcryptSaltRounds(this.configService);
@@ -62,7 +64,10 @@ export class UsersService {
 
     return this.usersRepository.manager.transaction(async (manager) => {
       const usersRepository = manager.getRepository(User);
-      const userFolio = await this.buildUserFolio(manager);
+      const userFolio = await this.foliosService.generateFolio(
+        'users',
+        organizationId,
+      );
       const passwordHash = await bcrypt.hash(
         createUserDto.password,
         this.bcryptSaltRounds,
@@ -182,7 +187,7 @@ export class UsersService {
 
   private normalizeOrderBy(orderBy?: string): UserOrderField {
     if (!orderBy) {
-      return 'id';
+      return 'folio';
     }
 
     const allowedFields = new Set<UserOrderField>([
@@ -190,21 +195,11 @@ export class UsersService {
       'folio',
       'name',
       'email',
-      'created_at',
+      'folio',
     ]);
 
     return allowedFields.has(orderBy as UserOrderField)
       ? (orderBy as UserOrderField)
-      : 'id';
-  }
-
-  private async buildUserFolio(manager: {
-    query: (query: string) => Promise<Array<{ folio: string | number }>>;
-  }) {
-    const [result] = await manager.query(
-      `SELECT nextval('users_folio_seq') AS folio`,
-    );
-    const folioNumber = Number(result?.folio ?? 0);
-    return `U${String(folioNumber).padStart(5, '0')}`;
+      : 'folio';
   }
 }

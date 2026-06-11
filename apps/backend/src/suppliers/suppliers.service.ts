@@ -4,6 +4,7 @@ import { CreateSupplierDto } from './dto/create-supplier.dto';
 import { UpdateSupplierDto } from './dto/update-supplier.dto';
 import { Supplier } from './entities/supplier.entity';
 import { ILike, Repository } from 'typeorm';
+import { FoliosService } from '../folios/folios.service';
 
 type SupplierOrderField = 'id' | 'folio' | 'name' | 'createdAt' | 'updatedAt';
 
@@ -20,11 +21,13 @@ export class SuppliersService {
   constructor(
     @InjectRepository(Supplier)
     private readonly suppliersRepository: Repository<Supplier>,
+    private readonly foliosService: FoliosService,
   ) {}
 
   async create(createSupplierDto: CreateSupplierDto, organizationId: string) {
-    const supplierFolio = await this.buildSupplierFolio(
-      this.suppliersRepository.manager,
+    const supplierFolio = await this.foliosService.generateFolio(
+      'suppliers',
+      organizationId,
     );
     const supplier = this.suppliersRepository.create({
       ...createSupplierDto,
@@ -104,15 +107,5 @@ export class SuppliersService {
     return allowedFields.has(orderBy as SupplierOrderField)
       ? (orderBy as SupplierOrderField)
       : 'id';
-  }
-
-  private async buildSupplierFolio(manager: {
-    query: (query: string) => Promise<Array<{ folio: string | number }>>;
-  }) {
-    const [result] = await manager.query(
-      `SELECT nextval('suppliers_folio_seq') AS folio`,
-    );
-    const folioNumber = Number(result?.folio ?? 0);
-    return `S${String(folioNumber).padStart(5, '0')}`;
   }
 }
