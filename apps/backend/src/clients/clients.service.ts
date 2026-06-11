@@ -9,6 +9,7 @@ import { UpdateClientDto } from './dto/update-client.dto';
 import { Client } from './entities/client.entity';
 import { Brackets, Repository } from 'typeorm';
 import { PriceList } from '../catalog/price-lists/entities/price-list.entity';
+import { FoliosService } from '../folios/folios.service';
 
 type ClientOrderField =
   | 'id'
@@ -33,16 +34,20 @@ export class ClientsService {
     private readonly clientsRepository: Repository<Client>,
     @InjectRepository(PriceList)
     private readonly priceListsRepository: Repository<PriceList>,
+    private readonly foliosService: FoliosService,
   ) {}
 
   async create(createClientDto: CreateClientDto, organizationId: string) {
-    const priceList = await this.resolvePriceList(
+    const priceList = await this.getPriceList(
       organizationId,
       createClientDto.price_list_id,
     );
-    const clientFolio = await this.buildClientFolio(
-      this.clientsRepository.manager,
+
+    const clientFolio = await this.foliosService.generateFolio(
+      'clients',
+      organizationId,
     );
+
     const client = this.clientsRepository.create({
       ...createClientDto,
       folio: clientFolio,
@@ -92,25 +97,6 @@ export class ClientsService {
     return qb.getMany();
   }
 
-  findByPhone(phoneNumber: string, organizationId: string) {
-    // Normalize: strip non-digits and leading zeros for comparison
-    const normalized = phoneNumber.replace(/\D/g, '');
-    const query = this.clientsRepository
-      .createQueryBuilder('client')
-      .where(
-        "REGEXP_REPLACE(client.phone_number, '[^0-9]', '', 'g') LIKE :phone",
-        {
-          phone: `%${normalized}`,
-        },
-      );
-
-    query.andWhere('client.organization_id = :organizationId', {
-      organizationId,
-    });
-
-    return query.getOne();
-  }
-
   async findOne(id: string, organizationId: string) {
     const client = await this.clientsRepository.findOne({
       where: { id, organization_id: organizationId },
@@ -133,7 +119,7 @@ export class ClientsService {
     const priceList =
       updateClientDto.price_list_id === undefined
         ? client.priceList
-        : await this.resolvePriceList(
+        : await this.getPriceList(
             organizationId,
             updateClientDto.price_list_id,
           );
@@ -156,38 +142,6 @@ export class ClientsService {
     return { id, deleted: true };
   }
 
-  async activatePortalAccess(id: string, organizationId: string) {
-    const client = await this.findOne(id, organizationId);
-    this.assertPortalEligibleClient(client);
-    throw new BadRequestException(
-      'Portal setup links are disabled. Set client password directly.',
-    );
-  }
-
-  async resetPortalSetupLink(id: string, organizationId: string) {
-    const client = await this.findOne(id, organizationId);
-    this.assertPortalEligibleClient(client);
-    throw new BadRequestException(
-      'Portal setup links are disabled. Set client password directly.',
-    );
-  }
-
-  private async resolvePriceList(organizationId: string, id?: string | null) {
-    if (id === undefined || id === null) {
-      return null;
-    }
-
-    const priceList = await this.priceListsRepository.findOneBy({
-      id,
-      organization_id: organizationId,
-    });
-    if (!priceList) {
-      throw new NotFoundException(`Price list with id ${id} not found`);
-    }
-
-    return priceList;
-  }
-
   private normalizeOrderBy(orderBy?: string): ClientOrderField {
     if (!orderBy) {
       return 'id';
@@ -207,21 +161,44 @@ export class ClientsService {
       : 'id';
   }
 
-  private async buildClientFolio(manager: {
-    query: (query: string) => Promise<Array<{ folio: string | number }>>;
-  }) {
-    const [result] = await manager.query(
-      `SELECT nextval('clients_folio_seq') AS folio`,
-    );
-    const folioNumber = Number(result?.folio ?? 0);
-    return `C${String(folioNumber).padStart(5, '0')}`;
-  }
+  private async getPriceList(
+    organizationId?: string,
+    priceListId?: string | null,
+  ) {
+    if (!priceListId) {
+      throw new BadRequestException('Price list is required');
+    }
 
-  private assertPortalEligibleClient(client: Client) {
-    if (!client.email?.trim()) {
-      throw new BadRequestException(
-        'Client must have an email before enabling portal access',
+    const priceList = await this.priceListsRepository.findOneBy({
+      id: priceListId,
+      organization_id: organizationId,
+    });
+
+    if (!priceList) {
+      throw new NotFoundException(
+        `Price list with id ${priceListId} not found`,
       );
     }
+
+    return priceList;
+  }
+
+  findByPhone(phoneNumber: string, organizationId: string) {
+    // Normalize: strip non-digits and leading zeros for comparison
+    const normalized = phoneNumber.replace(/\D/g, '');
+    const query = this.clientsRepository
+      .createQueryBuilder('client')
+      .where(
+        "REGEXP_REPLACE(client.phone_number, '[^0-9]', '', 'g') LIKE :phone",
+        {
+          phone: `%${normalized}`,
+        },
+      );
+
+    query.andWhere('client.organization_id = :organizationId', {
+      organizationId,
+    });
+
+    return query.getOne();
   }
 }

@@ -116,26 +116,6 @@ export class ClientsController {
     return this.clientsService.remove(id, user.org_id);
   }
 
-  @Post(':id/portal-access')
-  @Permissions('catalog:manage')
-  @ApiOperation({ summary: 'Activate portal access for a client' })
-  activatePortalAccess(
-    @Param('id') id: string,
-    @CurrentUser() user: AuthenticatedUser,
-  ) {
-    return this.clientsService.activatePortalAccess(id, user.org_id);
-  }
-
-  @Post(':id/portal-access/reset-setup-link')
-  @Permissions('catalog:manage')
-  @ApiOperation({ summary: 'Reset one-time portal setup link for a client' })
-  resetPortalSetupLink(
-    @Param('id') id: string,
-    @CurrentUser() user: AuthenticatedUser,
-  ) {
-    return this.clientsService.resetPortalSetupLink(id, user.org_id);
-  }
-
   private parseNumberQuery(
     value: string | undefined,
     paramName: string,
