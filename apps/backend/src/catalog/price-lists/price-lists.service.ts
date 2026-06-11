@@ -4,6 +4,7 @@ import { CreatePriceListDto } from './dto/create-price-list.dto';
 import { UpdatePriceListDto } from './dto/update-price-list.dto';
 import { PriceList } from './entities/price-list.entity';
 import { ILike, Repository } from 'typeorm';
+import { FoliosService } from '../../folios/folios.service';
 
 type PriceListOrderField = 'id' | 'folio' | 'name' | 'createdAt' | 'updatedAt';
 
@@ -20,11 +21,13 @@ export class PriceListsService {
   constructor(
     @InjectRepository(PriceList)
     private readonly priceListsRepository: Repository<PriceList>,
+    private readonly foliosService: FoliosService,
   ) {}
 
   async create(createPriceListDto: CreatePriceListDto, organizationId: string) {
-    const priceListFolio = await this.buildPriceListFolio(
-      this.priceListsRepository.manager,
+    const priceListFolio = await this.foliosService.generateFolio(
+      'price_lists',
+      organizationId,
     );
     const priceList = this.priceListsRepository.create({
       ...createPriceListDto,
@@ -103,15 +106,5 @@ export class PriceListsService {
     return allowedFields.has(orderBy as PriceListOrderField)
       ? (orderBy as PriceListOrderField)
       : 'id';
-  }
-
-  private async buildPriceListFolio(manager: {
-    query: (query: string) => Promise<Array<{ folio: string | number }>>;
-  }) {
-    const [result] = await manager.query(
-      `SELECT nextval('price_lists_folio_seq') AS folio`,
-    );
-    const folioNumber = Number(result?.folio ?? 0);
-    return `L${String(folioNumber).padStart(5, '0')}`;
   }
 }

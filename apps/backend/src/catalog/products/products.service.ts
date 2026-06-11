@@ -5,6 +5,7 @@ import { UpdateProductDto } from './dto/update-product.dto';
 import { Product, ProductUnit } from './entities/product.entity';
 import { ILike, Repository } from 'typeorm';
 import { Supplier } from '../../suppliers/entities/supplier.entity';
+import { FoliosService } from '../../folios/folios.service';
 
 type ProductOrderField =
   | 'id'
@@ -31,6 +32,7 @@ export class ProductsService {
     private readonly productsRepository: Repository<Product>,
     @InjectRepository(Supplier)
     private readonly suppliersRepository: Repository<Supplier>,
+    private readonly foliosService: FoliosService,
   ) {}
 
   async create(createProductDto: CreateProductDto, organizationId: string) {
@@ -38,8 +40,9 @@ export class ProductsService {
       createProductDto.supplier_id,
       organizationId,
     );
-    const productFolio = await this.buildProductFolio(
-      this.productsRepository.manager,
+    const productFolio = await this.foliosService.generateFolio(
+      'products',
+      organizationId,
     );
     const product = this.productsRepository.create({
       ...createProductDto,
@@ -137,16 +140,6 @@ export class ProductsService {
     }
 
     return supplier;
-  }
-
-  private async buildProductFolio(manager: {
-    query: (query: string) => Promise<Array<{ folio: string | number }>>;
-  }) {
-    const [result] = await manager.query(
-      `SELECT nextval('products_folio_seq') AS folio`,
-    );
-    const folioNumber = Number(result?.folio ?? 0);
-    return `P${String(folioNumber).padStart(5, '0')}`;
   }
 
   private normalizeOrderBy(orderBy?: string): ProductOrderField {
