@@ -1,5 +1,5 @@
 import { ForbiddenException } from '@nestjs/common';
-import { OrganizationsService } from './organizations.service';
+import { OrganizationsService } from 'src/organizations/organizations.service';
 
 describe('OrganizationsService', () => {
   it('scopes organization listing by current user organization_id', async () => {

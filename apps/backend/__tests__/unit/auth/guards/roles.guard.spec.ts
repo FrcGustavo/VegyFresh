@@ -1,7 +1,7 @@
 import { ForbiddenException } from '@nestjs/common';
 import { ExecutionContext } from '@nestjs/common/interfaces';
 import { Reflector } from '@nestjs/core';
-import { RolesGuard } from './roles.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
 
 describe('RolesGuard permission and tenant security', () => {
   let reflector: Pick<Reflector, 'getAllAndOverride'>;

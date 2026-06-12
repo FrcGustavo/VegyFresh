@@ -3,10 +3,10 @@ import { ConfigService } from '@nestjs/config';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { BadRequestException, ForbiddenException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
-import { UsersService } from './users.service';
-import { User } from './entities/user.entity';
-import { Role } from '../roles/entities/role.entity';
-import type { CreateUserDto } from './dto/create-user.dto';
+import { UsersService } from 'src/users/users.service';
+import { User } from 'src/users/entities/user.entity';
+import { Role } from 'src/roles/entities/role.entity';
+import type { CreateUserDto } from 'src/users/dto/create-user.dto';
 
 jest.mock('bcrypt', () => ({
   hash: jest.fn(),

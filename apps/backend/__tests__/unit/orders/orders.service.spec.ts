@@ -1,6 +1,6 @@
 import { NotFoundException } from '@nestjs/common';
-import { OrdersService } from './orders.service';
-import { OrderStatus } from './entities/order.entity';
+import { OrdersService } from 'src/orders/orders.service';
+import { OrderStatus } from 'src/orders/entities/order.entity';
 
 describe('OrdersService', () => {
   it('validates assigned users by users.organization_id', async () => {

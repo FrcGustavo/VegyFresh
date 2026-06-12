@@ -1,8 +1,8 @@
 import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { IsNull } from 'typeorm';
-import { AuthService } from './auth.service';
-import type { AuthenticatedUser } from './types/authenticated-user.type';
+import { AuthService } from 'src/auth/auth.service';
+import type { AuthenticatedUser } from 'src/auth/types/authenticated-user.type';
 
 type UserRecord = {
   id: string;

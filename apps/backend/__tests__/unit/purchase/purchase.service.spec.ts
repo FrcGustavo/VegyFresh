@@ -1,5 +1,5 @@
 import { NotFoundException } from '@nestjs/common';
-import { PurchaseService } from './purchase.service';
+import { PurchaseService } from 'src/purchase/purchase.service';
 
 describe('PurchaseService', () => {
   type EntityLike = Record<string, unknown>;
