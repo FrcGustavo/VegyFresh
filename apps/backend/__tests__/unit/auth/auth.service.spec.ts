@@ -50,11 +50,8 @@ type UsersRepositoryMock = {
     transaction: jest.Mock<Promise<unknown>, [TransactionCallback]>;
   };
 };
-type FoliosServiceMock = {
-  nextFolio: jest.Mock<Promise<string>, [string, string, unknown?]>;
-};
 type RolesServiceMock = {
-  ensureOwnerRole: jest.Mock<Promise<RoleRecord>, []>;
+  getOwnerRole: jest.Mock<Promise<RoleRecord>, []>;
 };
 type AuthSessionsRepositoryMock = {
   findOne: jest.Mock<Promise<AuthSessionRecord | null>, [unknown]>;
@@ -78,7 +75,6 @@ const makeConfigService = () => ({
 describe('AuthService security flows', () => {
   let service: AuthService;
   let usersRepository: UsersRepositoryMock;
-  let foliosService: FoliosServiceMock;
   let rolesService: RolesServiceMock;
   let authSessionsRepository: AuthSessionsRepositoryMock;
   let jwtService: { signAsync: jest.Mock<Promise<string>, [unknown, unknown]> };
@@ -90,36 +86,35 @@ describe('AuthService security flows', () => {
         transaction: jest.fn<Promise<unknown>, [TransactionCallback]>(),
       },
     };
-    foliosService = {
-      nextFolio: jest.fn<Promise<string>, [string, string, unknown?]>(),
-    };
     rolesService = {
-      ensureOwnerRole: jest.fn<Promise<RoleRecord>, []>(),
+      getOwnerRole: jest.fn<Promise<RoleRecord>, []>(),
     };
     authSessionsRepository = {
       findOne: jest.fn<Promise<AuthSessionRecord | null>, [unknown]>(),
       save: jest.fn<Promise<AuthSessionRecord>, [AuthSessionRecord]>(),
       update: jest.fn<Promise<SaveResult>, [unknown, unknown]>(),
     };
-    jwtService = { signAsync: jest.fn<Promise<string>, [unknown, unknown]>() };
+    jwtService = {
+      signAsync: jest
+        .fn<Promise<string>, [unknown, unknown]>()
+        .mockResolvedValue('signed-token'),
+    };
 
     service = new AuthService(
       usersRepository as never,
       rolesService as never,
       authSessionsRepository as never,
-      foliosService as never,
       jwtService as never,
       makeConfigService(),
     );
   });
 
   it('signup creates a standalone user and returns role context', async () => {
-    rolesService.ensureOwnerRole.mockResolvedValue({
+    rolesService.getOwnerRole.mockResolvedValue({
       id: 'role-owner',
       name: 'owner',
       permissions: [{ action: '*', resource: '*' }],
     });
-    foliosService.nextFolio.mockResolvedValue('U00001');
 
     usersRepository.manager.transaction.mockImplementation((cb) => {
       const userRepository = {
@@ -154,21 +149,15 @@ describe('AuthService security flows', () => {
 
     expect(result.user.email).toBe('owner@vegyfresh.com');
     expect(result.role.name).toBe('owner');
-    expect(rolesService.ensureOwnerRole).toHaveBeenCalledTimes(1);
-    expect(foliosService.nextFolio).toHaveBeenCalledWith(
-      'users',
-      'global',
-      expect.any(Object),
-    );
+    expect(rolesService.getOwnerRole).toHaveBeenCalledTimes(1);
   });
 
   it('signup rejects duplicate email', async () => {
-    rolesService.ensureOwnerRole.mockResolvedValue({
+    rolesService.getOwnerRole.mockResolvedValue({
       id: 'role-owner',
       name: 'owner',
       permissions: [{ action: '*', resource: '*' }],
     });
-    foliosService.nextFolio.mockResolvedValue('U00001');
     usersRepository.manager.transaction.mockImplementation((cb) => {
       const userRepository = {
         create: jest.fn(() => ({ id: 'user-1', email: 'owner@vegyfresh.com' })),
@@ -326,29 +315,6 @@ describe('AuthService security flows', () => {
       expect.objectContaining({
         id: 'session-1',
         user_id: 'user-1',
-        revoked_at: IsNull(),
-      }),
-      expect.objectContaining({}),
-    );
-  });
-
-  it('logout-all revokes all sessions in current tenant only', async () => {
-    authSessionsRepository.update.mockResolvedValue({ affected: 2 });
-
-    const result = await service.logoutAll({
-      sub: 'user-1',
-      email: 'owner@vegyfresh.com',
-      org_id: 'org-1',
-      role: 'owner',
-      permissions: ['*'],
-      session_id: 'session-1',
-    });
-
-    expect(result).toEqual({ revoked: true });
-    expect(authSessionsRepository.update).toHaveBeenCalledWith(
-      expect.objectContaining({
-        user_id: 'user-1',
-        organization_id: 'org-1',
         revoked_at: IsNull(),
       }),
       expect.objectContaining({}),

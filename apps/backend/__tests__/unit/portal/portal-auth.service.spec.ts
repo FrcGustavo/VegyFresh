@@ -36,7 +36,7 @@ describe('PortalAuthService', () => {
     clientsRepository.findOne.mockResolvedValue(null);
 
     await expect(
-      service.login({ email: 'missing@vegyfresh.com', password: 'x' } as never),
+      service.login({ email: 'missing@vegyfresh.com', password: 'x' }),
     ).rejects.toBeInstanceOf(UnauthorizedException);
   });
 

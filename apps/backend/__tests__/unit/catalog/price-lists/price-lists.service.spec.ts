@@ -29,7 +29,7 @@ describe('PriceListsService', () => {
     priceListsRepository.create.mockImplementation((value) => value);
     priceListsRepository.save.mockResolvedValue({ id: 'pl-1' });
 
-    await service.create({ name: 'Retail' } as never, 'org-1');
+    await service.create({ name: 'Retail' }, 'org-1');
 
     expect(foliosService.generateFolio).toHaveBeenCalledWith(
       'price_lists',

@@ -30,11 +30,15 @@ describe('PurchaseController', () => {
     const dto = { supplier_id: 'supplier-1', items: [] };
     purchaseServiceMock.create.mockResolvedValue({ id: 'purchase-1' });
 
-    const result = await controller.create(dto as never, 'org-1', {
+    const result = await controller.create(dto, 'org-1', {
       sub: 'user-1',
     } as never);
 
-    expect(purchaseServiceMock.create).toHaveBeenCalledWith(dto, 'org-1', 'user-1');
+    expect(purchaseServiceMock.create).toHaveBeenCalledWith(
+      dto,
+      'org-1',
+      'user-1',
+    );
     expect(result).toEqual({ id: 'purchase-1' });
   });
 });

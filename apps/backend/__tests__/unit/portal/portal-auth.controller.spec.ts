@@ -22,7 +22,7 @@ describe('PortalAuthController', () => {
     const dto = { email: 'client@vegyfresh.com', password: 'secret' };
     serviceMock.login.mockResolvedValue({ access_token: 'token' });
 
-    const result = await controller.login(dto as never);
+    const result = await controller.login(dto);
 
     expect(serviceMock.login).toHaveBeenCalledWith(dto);
     expect(result).toEqual({ access_token: 'token' });
@@ -32,7 +32,7 @@ describe('PortalAuthController', () => {
     const dto = { refresh_token: 'refresh' };
     serviceMock.refresh.mockResolvedValue({ access_token: 'new-token' });
 
-    const result = await controller.refresh(dto as never);
+    const result = await controller.refresh(dto);
 
     expect(serviceMock.refresh).toHaveBeenCalledWith(dto);
     expect(result).toEqual({ access_token: 'new-token' });

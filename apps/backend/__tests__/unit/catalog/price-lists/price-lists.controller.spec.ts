@@ -24,7 +24,7 @@ describe('PriceListsController', () => {
     const dto = { name: 'Retail' };
     serviceMock.create.mockResolvedValue({ id: 'pl-1' });
 
-    const result = await controller.create(dto as never, {
+    const result = await controller.create(dto, {
       org_id: 'org-1',
     } as never);
 

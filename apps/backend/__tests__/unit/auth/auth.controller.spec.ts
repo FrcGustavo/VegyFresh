@@ -43,7 +43,9 @@ describe('AuthController', () => {
   it('delegates refresh with current user', async () => {
     const dto = { refresh_token: 'refresh-token' };
     const user = { sub: 'user-1' };
-    authServiceMock.refreshToken.mockResolvedValue({ access_token: 'new-token' });
+    authServiceMock.refreshToken.mockResolvedValue({
+      access_token: 'new-token',
+    });
 
     const result = await controller.refresh(dto, user as never);
 

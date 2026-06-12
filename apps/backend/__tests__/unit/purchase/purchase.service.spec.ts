@@ -35,10 +35,6 @@ describe('PurchaseService', () => {
       findOne: jest.Mock;
       find: jest.Mock;
     };
-    inventoryMovementsRepository: {
-      find: jest.Mock;
-      findOne: jest.Mock;
-    };
   } => {
     const managerPurchaseRepository = {
       create: jest.fn((value: EntityLike) => value),
@@ -94,13 +90,6 @@ describe('PurchaseService', () => {
       findOne: jest.fn(),
       find: jest.fn(),
     };
-    const purchaseItemsRepository = {
-      save: jest.fn(),
-    };
-    const inventoryMovementsRepository = {
-      find: jest.fn(),
-      findOne: jest.fn(),
-    };
     const suppliersRepository = {
       findOneBy: jest.fn(),
     };
@@ -116,12 +105,10 @@ describe('PurchaseService', () => {
 
     const service = new PurchaseService(
       purchasesRepository as never,
-      purchaseItemsRepository as never,
-      inventoryMovementsRepository as never,
       suppliersRepository as never,
       productsRepository as never,
-      usersRepository,
-      { nextFolio: jest.fn().mockResolvedValue('C1') },
+      usersRepository as never,
+      { generateFolio: jest.fn().mockResolvedValue('C1') } as never,
     );
 
     return {
@@ -134,7 +121,6 @@ describe('PurchaseService', () => {
       managerUserRepository,
       managerMovementRepository,
       purchasesRepository,
-      inventoryMovementsRepository,
     };
   };
 
@@ -156,7 +142,7 @@ describe('PurchaseService', () => {
       organization_id: 'org-1',
       items: [],
     });
-    await context.service.createPurchase(
+    await context.service.create(
       {
         supplier_id: 'supplier-1',
         purchase_date: '2026-05-25T00:00:00.000Z',
@@ -199,7 +185,7 @@ describe('PurchaseService', () => {
       items: [],
     });
 
-    await context.service.createPurchase(
+    await context.service.create(
       {
         supplier_id: 'supplier-1',
         items: [
@@ -225,7 +211,7 @@ describe('PurchaseService', () => {
     context.managerSupplierRepository.findOneBy.mockResolvedValue(null);
 
     await expect(
-      context.service.createPurchase(
+      context.service.create(
         {
           supplier_id: 'supplier-x',
           items: [{ product_id: 'product-1', quantity: 1, unit_cost: 10 }],
@@ -249,7 +235,7 @@ describe('PurchaseService', () => {
     context.managerProductRepository.findBy.mockResolvedValue([]);
 
     await expect(
-      context.service.createPurchase(
+      context.service.create(
         {
           supplier_id: 'supplier-1',
           items: [{ product_id: 'product-x', quantity: 1, unit_cost: 10 }],
@@ -279,7 +265,7 @@ describe('PurchaseService', () => {
       items: [],
     });
 
-    await context.service.createPurchase(
+    await context.service.create(
       {
         supplier_id: 'supplier-1',
         items: [{ product_id: 'product-kg', quantity: 0.875, unit_cost: 40 }],

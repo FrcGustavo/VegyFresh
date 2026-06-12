@@ -1,31 +1,29 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { ConfigService } from '@nestjs/config';
 import { WhatsappService } from 'src/whatsapp/whatsapp.service';
-import { AiService } from 'src/ai/ai.service';
+import { ClientsService } from 'src/clients/clients.service';
+import { ProductsService } from 'src/catalog/products/products.service';
+import { OrdersService } from 'src/orders/orders.service';
 
 describe('WhatsappService', () => {
   let service: WhatsappService;
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        WhatsappService,
-        {
-          provide: ConfigService,
-          useValue: {
-            get: jest.fn(),
-          },
+  beforeEach(() => {
+    service = new WhatsappService(
+      {
+        whatsapp: {
+          verifyToken: 'verify-token',
+          organizationId: 'org-1',
+          botUserId: 'user-1',
+          accessToken: '',
+          phoneNumberId: '',
+          apiVersion: 'v20.0',
+          appSecret: 'secret',
         },
-        {
-          provide: AiService,
-          useValue: {
-            interpretMessage: jest.fn(),
-          },
-        },
-      ],
-    }).compile();
-
-    service = module.get<WhatsappService>(WhatsappService);
+      } as never,
+      { interpretMessage: jest.fn() } as never,
+      {} as ClientsService,
+      {} as ProductsService,
+      {} as OrdersService,
+    );
   });
 
   it('should be defined', () => {

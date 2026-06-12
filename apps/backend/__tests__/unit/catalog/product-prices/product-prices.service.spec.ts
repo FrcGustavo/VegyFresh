@@ -39,7 +39,7 @@ describe('ProductPricesService', () => {
         product_id: 'product-1',
         price_list_id: 'pl-1',
         price: 9.99,
-      } as never,
+      },
       'org-1',
     );
 
@@ -57,7 +57,7 @@ describe('ProductPricesService', () => {
           product_id: 'missing-product',
           price_list_id: 'pl-1',
           price: 9.99,
-        } as never,
+        },
         'org-1',
       ),
     ).rejects.toBeInstanceOf(NotFoundException);

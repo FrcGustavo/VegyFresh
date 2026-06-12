@@ -21,7 +21,7 @@ describe('PortalOrdersController', () => {
     const query = { page: '1', pageSize: '10' };
     serviceMock.findAll.mockResolvedValue([{ id: 'order-1' }]);
 
-    const result = await controller.findAll(user as never, query as never);
+    const result = await controller.findAll(user as never, query);
 
     expect(serviceMock.findAll).toHaveBeenCalledWith(user, query);
     expect(result).toEqual([{ id: 'order-1' }]);

@@ -29,7 +29,7 @@ describe('PortalOrdersService', () => {
 
     const result = await service.findAll(
       { sub: 'client-1', organization_id: 'org-1' } as never,
-      {} as never,
+      {},
     );
 
     expect(ordersRepository.createQueryBuilder).toHaveBeenCalledWith('order');

@@ -1,45 +1,41 @@
-import { ForbiddenException } from '@nestjs/common';
+import { NotFoundException } from '@nestjs/common';
 import { OrganizationsService } from 'src/organizations/organizations.service';
 
 describe('OrganizationsService', () => {
-  it('scopes organization listing by current user organization_id', async () => {
+  it('findOne scopes by organization id and user membership', async () => {
     const organizationsRepository = {
-      find: jest.fn().mockResolvedValue([{ id: 'org-1' }]),
-      findOne: jest.fn(),
+      findOne: jest.fn().mockResolvedValue({ id: 'org-1' }),
       merge: jest.fn(),
       save: jest.fn(),
-      remove: jest.fn(),
     };
-
     const service = new OrganizationsService(
       organizationsRepository as never,
       {} as never,
+      {} as never,
     );
 
-    await service.findAll('org-1');
+    const result = await service.findOne('org-1', 'user-1');
 
-    expect(organizationsRepository.find).toHaveBeenCalledWith({
-      where: { id: 'org-1' },
-      order: { created_at: 'DESC' },
+    expect(organizationsRepository.findOne).toHaveBeenCalledWith({
+      where: { id: 'org-1', users: { id: 'user-1' } },
     });
+    expect(result).toEqual({ id: 'org-1' });
   });
 
-  it('denies access to another organization id', async () => {
+  it('findOne throws when user has no access to organization', async () => {
     const organizationsRepository = {
-      find: jest.fn(),
-      findOne: jest.fn(),
+      findOne: jest.fn().mockResolvedValue(null),
       merge: jest.fn(),
       save: jest.fn(),
-      remove: jest.fn(),
     };
-
     const service = new OrganizationsService(
       organizationsRepository as never,
       {} as never,
+      {} as never,
     );
 
-    await expect(service.findOne('org-2', 'org-1')).rejects.toBeInstanceOf(
-      ForbiddenException,
+    await expect(service.findOne('org-2', 'user-1')).rejects.toBeInstanceOf(
+      NotFoundException,
     );
   });
 });

@@ -6,6 +6,7 @@ import * as bcrypt from 'bcrypt';
 import { UsersService } from 'src/users/users.service';
 import { User } from 'src/users/entities/user.entity';
 import { Role } from 'src/roles/entities/role.entity';
+import { FoliosService } from 'src/folios/folios.service';
 import type { CreateUserDto } from 'src/users/dto/create-user.dto';
 
 jest.mock('bcrypt', () => ({
@@ -65,6 +66,10 @@ describe('UsersService', () => {
         UsersService,
         { provide: getRepositoryToken(User), useValue: usersRepository },
         { provide: getRepositoryToken(Role), useValue: rolesRepository },
+        {
+          provide: FoliosService,
+          useValue: { generateFolio: jest.fn().mockResolvedValue('U0001') },
+        },
         { provide: ConfigService, useValue: { get: jest.fn() } },
       ],
     }).compile();

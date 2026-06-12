@@ -21,7 +21,7 @@ describe('OrganizationsController', () => {
     const dto = { name: 'Org 1' };
     serviceMock.create.mockResolvedValue({ id: 'org-1' });
 
-    const result = await controller.create(dto as never, { sub: 'user-1' } as never);
+    const result = await controller.create(dto, { sub: 'user-1' } as never);
 
     expect(serviceMock.create).toHaveBeenCalledWith(dto, 'user-1');
     expect(result).toEqual({ id: 'org-1' });
@@ -30,7 +30,9 @@ describe('OrganizationsController', () => {
   it('delegates findOne using user context', async () => {
     serviceMock.findOne.mockResolvedValue({ id: 'org-1' });
 
-    const result = await controller.findOne('org-1', { sub: 'user-1' } as never);
+    const result = await controller.findOne('org-1', {
+      sub: 'user-1',
+    } as never);
 
     expect(serviceMock.findOne).toHaveBeenCalledWith('org-1', 'user-1');
     expect(result).toEqual({ id: 'org-1' });

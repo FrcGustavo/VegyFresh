@@ -23,7 +23,7 @@ describe('ProductPricesController', () => {
     const dto = { product_id: 'product-1', price_list_id: 'pl-1', price: 10 };
     serviceMock.create.mockResolvedValue({ id: 'pp-1' });
 
-    const result = await controller.create(dto as never, {
+    const result = await controller.create(dto, {
       org_id: 'org-1',
     } as never);
 
@@ -35,7 +35,7 @@ describe('ProductPricesController', () => {
     const dto = { price: 11 };
     serviceMock.update.mockResolvedValue({ id: 'pp-1' });
 
-    const result = await controller.update('pp-1', dto as never, {
+    const result = await controller.update('pp-1', dto, {
       org_id: 'org-1',
     } as never);
 
