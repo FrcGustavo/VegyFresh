@@ -118,7 +118,8 @@ export class AuthController {
   })
   @ApiOperation({
     summary: 'Get current user context',
-    description: 'Returns the current user, organization, and role from the access token session.',
+    description:
+      'Returns the current user, organization, and role from the access token session.',
   })
   me(@CurrentUser() user: AuthenticatedUser) {
     return this.authService.me(user);
