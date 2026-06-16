@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   Post,
   UseGuards,
   UsePipes,
@@ -17,6 +18,7 @@ import { SignupDto } from './dto/signup.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { Public } from './decorators/public.decorator';
+import { AccessTokenGuard } from './guards/access-token.guard';
 import { RefreshTokenGuard } from './guards/refresh-token.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
 import type { AuthenticatedUser } from './types/authenticated-user.type';
@@ -101,6 +103,25 @@ export class AuthController {
   })
   login(@Body() loginDto: LoginDto) {
     return this.authService.login(loginDto);
+  }
+
+  @Get('me')
+  @UseGuards(AccessTokenGuard)
+  @ApiBearerAuth()
+  @ApiResponse({
+    status: 200,
+    description: 'Authenticated user context',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - missing or invalid token',
+  })
+  @ApiOperation({
+    summary: 'Get current user context',
+    description: 'Returns the current user, organization, and role from the access token session.',
+  })
+  me(@CurrentUser() user: AuthenticatedUser) {
+    return this.authService.me(user);
   }
 
   @Post('refresh')

@@ -58,7 +58,6 @@ export class OrganizationsController {
     @Body() createOrganizationDto: CreateOrganizationDto,
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    console.log('RUTA');
     return this.organizationsService.create(createOrganizationDto, user.sub);
   }
 
@@ -80,7 +79,6 @@ export class OrganizationsController {
   @ApiOperation({ summary: 'Find organization by ID' })
   @ApiParam({ name: 'id', description: 'Organization ID' })
   findOne(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
-    console.log({ id, user });
     return this.organizationsService.findOne(id, user.sub);
   }
 

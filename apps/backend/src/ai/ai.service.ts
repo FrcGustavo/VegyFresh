@@ -22,7 +22,7 @@ export class AiService {
     const provider =
       this.configService.get<string>('AI_PROVIDER')?.toLowerCase() ??
       'heuristic';
-    // console.log({ provider })
+
     try {
       if (provider === 'openai') {
         return await this.callOpenAi(message, context);
@@ -87,10 +87,8 @@ Respond with ONLY a JSON object with these keys:
       choices?: Array<{ message?: { content?: string } }>;
     };
 
-    // console.log({ data });
-
     const content = data.choices?.[0]?.message?.content;
-    // console.log({ content, message, context });
+
     return this.parseModelResponse(content, message, context, 'openai');
   }
 

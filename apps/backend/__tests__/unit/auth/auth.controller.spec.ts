@@ -5,6 +5,7 @@ describe('AuthController', () => {
   const authServiceMock = {
     signup: jest.fn(),
     login: jest.fn(),
+    me: jest.fn(),
     refreshToken: jest.fn(),
     logout: jest.fn(),
   };
@@ -38,6 +39,16 @@ describe('AuthController', () => {
 
     expect(authServiceMock.login).toHaveBeenCalledWith(dto);
     expect(result).toEqual({ access_token: 'token' });
+  });
+
+  it('delegates me with current user', async () => {
+    const user = { sub: 'user-1' };
+    authServiceMock.me.mockResolvedValue({ user: { id: 'user-1' } });
+
+    const result = await controller.me(user as never);
+
+    expect(authServiceMock.me).toHaveBeenCalledWith(user);
+    expect(result).toEqual({ user: { id: 'user-1' } });
   });
 
   it('delegates refresh with current user', async () => {

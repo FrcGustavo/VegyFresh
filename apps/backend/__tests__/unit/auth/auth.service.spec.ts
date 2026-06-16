@@ -216,6 +216,34 @@ describe('AuthService security flows', () => {
     expect((result as Record<string, unknown>).membership).toBeUndefined();
   });
 
+  it('me returns the current user context', async () => {
+    usersRepository.findOne.mockResolvedValue({
+      id: 'user-1',
+      name: 'Owner',
+      email: 'owner@vegyfresh.com',
+      organization_id: 'org-1',
+      organization: { id: 'org-1', name: 'Org 1', folio: 'O00001' },
+      role: {
+        id: 'role-admin',
+        name: 'admin',
+        permissions: [{ action: 'manage', resource: 'users' }],
+      },
+    });
+
+    const result = await service.me({
+      sub: 'user-1',
+      email: 'owner@vegyfresh.com',
+      org_id: 'org-1',
+      role: 'admin',
+      permissions: ['users:manage'],
+      session_id: 'session-1',
+    });
+
+    expect(result.user.email).toBe('owner@vegyfresh.com');
+    expect(result.organization?.id).toBe('org-1');
+    expect(result.role.name).toBe('admin');
+  });
+
   it('refresh rotates token pair without membership checks', async () => {
     const refreshToken = 'refresh-token';
     const refreshHash = await bcrypt.hash(refreshToken, 10);
