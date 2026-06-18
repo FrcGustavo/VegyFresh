@@ -62,7 +62,7 @@ type ClientSeed = {
   email: string;
 };
 
-type HttpMethod = 'GET' | 'POST';
+type HttpMethod = "GET" | "POST";
 
 class ApiClient {
   constructor(
@@ -71,20 +71,24 @@ class ApiClient {
   ) {}
 
   async get<T>(path: string): Promise<T> {
-    return this.request<T>('GET', path);
+    return this.request<T>("GET", path);
   }
 
   async post<T>(path: string, body: unknown): Promise<T> {
-    return this.request<T>('POST', path, body);
+    return this.request<T>("POST", path, body);
   }
 
-  private async request<T>(method: HttpMethod, path: string, body?: unknown): Promise<T> {
+  private async request<T>(
+    method: HttpMethod,
+    path: string,
+    body?: unknown,
+  ): Promise<T> {
     const headers: Record<string, string> = {
-      Accept: 'application/json',
+      Accept: "application/json",
     };
 
     if (body !== undefined) {
-      headers['Content-Type'] = 'application/json';
+      headers["Content-Type"] = "application/json";
     }
 
     if (this.bearerToken) {
@@ -119,7 +123,7 @@ function tryParseJson(raw: string): unknown {
 }
 
 function normalizeBaseUrl(baseUrl: string): string {
-  return baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+  return baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
 }
 
 function logStep(step: string): void {
@@ -132,7 +136,7 @@ const TARGET_CLIENTS = 20;
 const TARGET_ORDERS = 50;
 
 function pad(value: number): string {
-  return value.toString().padStart(3, '0');
+  return value.toString().padStart(3, "0");
 }
 
 function createSupplierSeeds(count: number): SupplierSeed[] {
@@ -150,7 +154,7 @@ function createClientSeeds(count: number): ClientSeed[] {
     const number = index + 1;
     return {
       name: `Cliente Mayorista ${pad(number)}`,
-      phoneNumber: `+54911000${number.toString().padStart(4, '0')}`,
+      phoneNumber: `+54911000${number.toString().padStart(4, "0")}`,
       email: `cliente${number}@vegyfresh.local`,
     };
   });
@@ -180,153 +184,164 @@ function buildProductsForCategory(
 
 function createProductSeeds(): ProductSeed[] {
   const verduras = [
-    'Acelga',
-    'Aji morron rojo',
-    'Aji morron verde',
-    'Apio',
-    'Berenjena',
-    'Brocoli',
-    'Calabaza anco',
-    'Calabaza cabutia',
-    'Cebolla blanca',
-    'Cebolla morada',
-    'Cebolla de verdeo',
-    'Coliflor',
-    'Espinaca',
-    'Lechuga criolla',
-    'Lechuga mantecosa',
-    'Lechuga morada',
-    'Papa negra',
-    'Papa blanca',
-    'Pepino',
-    'Puerro',
-    'Rabanito',
-    'Remolacha',
-    'Repollo blanco',
-    'Repollo morado',
-    'Tomate perita',
-    'Tomate redondo',
-    'Zanahoria',
-    'Zucchini verde',
-    'Zucchini amarillo',
-    'Zapallito redondo',
+    "Acelga",
+    "Aji morron rojo",
+    "Aji morron verde",
+    "Apio",
+    "Berenjena",
+    "Brocoli",
+    "Calabaza anco",
+    "Calabaza cabutia",
+    "Cebolla blanca",
+    "Cebolla morada",
+    "Cebolla de verdeo",
+    "Coliflor",
+    "Espinaca",
+    "Lechuga criolla",
+    "Lechuga mantecosa",
+    "Lechuga morada",
+    "Papa negra",
+    "Papa blanca",
+    "Pepino",
+    "Puerro",
+    "Rabanito",
+    "Remolacha",
+    "Repollo blanco",
+    "Repollo morado",
+    "Tomate perita",
+    "Tomate redondo",
+    "Zanahoria",
+    "Zucchini verde",
+    "Zucchini amarillo",
+    "Zapallito redondo",
   ];
 
   const frutas = [
-    'Anana',
-    'Banana ecuatoriana',
-    'Ciruela',
-    'Durazno',
-    'Frambuesa',
-    'Frutilla',
-    'Granada',
-    'Kiwi',
-    'Limon',
-    'Mandarina',
-    'Mango',
-    'Manzana roja',
-    'Manzana verde',
-    'Melon',
-    'Naranja ombligo',
-    'Pera williams',
-    'Pomelo rosado',
-    'Sandia',
-    'Uva blanca',
-    'Uva negra',
-    'Arandano',
-    'Palta hass',
-    'Cereza',
-    'Higo',
-    'Membrillo',
+    "Anana",
+    "Banana ecuatoriana",
+    "Ciruela",
+    "Durazno",
+    "Frambuesa",
+    "Frutilla",
+    "Granada",
+    "Kiwi",
+    "Limon",
+    "Mandarina",
+    "Mango",
+    "Manzana roja",
+    "Manzana verde",
+    "Melon",
+    "Naranja ombligo",
+    "Pera williams",
+    "Pomelo rosado",
+    "Sandia",
+    "Uva blanca",
+    "Uva negra",
+    "Arandano",
+    "Palta hass",
+    "Cereza",
+    "Higo",
+    "Membrillo",
   ];
 
   const hierbas = [
-    'Albahaca',
-    'Cedron',
-    'Ciboulette',
-    'Cilantro',
-    'Eneldo',
-    'Estragon',
-    'Hierbabuena',
-    'Laurel',
-    'Menta',
-    'Oregano fresco',
-    'Perejil',
-    'Romero',
-    'Salvia',
-    'Tomillo',
-    'Lemongrass',
+    "Albahaca",
+    "Cedron",
+    "Ciboulette",
+    "Cilantro",
+    "Eneldo",
+    "Estragon",
+    "Hierbabuena",
+    "Laurel",
+    "Menta",
+    "Oregano fresco",
+    "Perejil",
+    "Romero",
+    "Salvia",
+    "Tomillo",
+    "Lemongrass",
   ];
 
   const legumbres = [
-    'Arveja seca',
-    'Lenteja clasica',
-    'Lenteja turca',
-    'Poroto alubia',
-    'Poroto negro',
-    'Poroto colorado',
-    'Garbanzo chico',
-    'Garbanzo grande',
-    'Soja amarilla',
-    'Haba seca',
-    'Mungo',
-    'Azuki',
-    'Poroto pallares',
-    'Arveja partida',
-    'Poroto canario',
+    "Arveja seca",
+    "Lenteja clasica",
+    "Lenteja turca",
+    "Poroto alubia",
+    "Poroto negro",
+    "Poroto colorado",
+    "Garbanzo chico",
+    "Garbanzo grande",
+    "Soja amarilla",
+    "Haba seca",
+    "Mungo",
+    "Azuki",
+    "Poroto pallares",
+    "Arveja partida",
+    "Poroto canario",
   ];
 
   const cereales = [
-    'Arroz integral',
-    'Arroz yamanI',
-    'Arroz largo fino',
-    'Avena arrollada',
-    'Avena instantanea',
-    'Cebada perlada',
-    'Centeno en grano',
-    'Maiz pisingallo',
-    'Maiz blanco',
-    'Mijo',
-    'Quinoa blanca',
-    'Quinoa roja',
-    'Trigo burgol',
-    'Trigo candeal',
-    'Amaranto',
+    "Arroz integral",
+    "Arroz yamanI",
+    "Arroz largo fino",
+    "Avena arrollada",
+    "Avena instantanea",
+    "Cebada perlada",
+    "Centeno en grano",
+    "Maiz pisingallo",
+    "Maiz blanco",
+    "Mijo",
+    "Quinoa blanca",
+    "Quinoa roja",
+    "Trigo burgol",
+    "Trigo candeal",
+    "Amaranto",
   ];
 
   const all = [
-    ...buildProductsForCategory('VER', 'verduras', verduras, 900),
-    ...buildProductsForCategory('FRU', 'frutas', frutas, 1200),
-    ...buildProductsForCategory('HER', 'hierbas', hierbas, 700),
-    ...buildProductsForCategory('LEG', 'legumbres', legumbres, 1500),
-    ...buildProductsForCategory('CER', 'cereales', cereales, 1300),
+    ...buildProductsForCategory("VER", "verduras", verduras, 900),
+    ...buildProductsForCategory("FRU", "frutas", frutas, 1200),
+    ...buildProductsForCategory("HER", "hierbas", hierbas, 700),
+    ...buildProductsForCategory("LEG", "legumbres", legumbres, 1500),
+    ...buildProductsForCategory("CER", "cereales", cereales, 1300),
   ];
 
   return all.slice(0, TARGET_PRODUCTS);
 }
 
-async function ensureRole(api: ApiClient, name: string, permissions: Record<string, unknown>[]): Promise<Role> {
-  const existing = await api.get<Role[]>('/roles');
+async function ensureRole(
+  api: ApiClient,
+  name: string,
+  permissions: Record<string, unknown>[],
+): Promise<Role> {
+  const existing = await api.get<Role[]>("/roles");
   const found = existing.find((role) => role.name === name);
   if (found) return found;
 
-  return api.post<Role>('/roles', { name, permissions });
+  return api.post<Role>("/roles", { name, permissions });
 }
 
-async function ensurePriceList(api: ApiClient, name: string): Promise<PriceList> {
-  const existing = await api.get<PriceList[]>('/price-lists');
+async function ensurePriceList(
+  api: ApiClient,
+  name: string,
+): Promise<PriceList> {
+  const existing = await api.get<PriceList[]>("/price-lists");
   const found = existing.find((priceList) => priceList.name === name);
   if (found) return found;
 
-  return api.post<PriceList>('/price-lists', { name });
+  return api.post<PriceList>("/price-lists", { name });
 }
 
-async function ensureSupplier(api: ApiClient, name: string, contactInfo: string): Promise<Supplier> {
-  const existing = await api.get<Supplier[]>('/suppliers');
+async function ensureSupplier(
+  api: ApiClient,
+  name: string,
+  contactInfo: string,
+): Promise<Supplier> {
+  const existing = await api.get<Supplier[]>("/suppliers");
   const found = existing.find((supplier) => supplier.name === name);
   if (found) return found;
 
-  return api.post<Supplier>('/suppliers', {
+  return api.post<Supplier>("/suppliers", {
     name,
     contact_info: contactInfo,
   });
@@ -334,13 +349,19 @@ async function ensureSupplier(api: ApiClient, name: string, contactInfo: string)
 
 async function ensureProduct(
   api: ApiClient,
-  input: { sku: string; name: string; supplierId: string; stock: number; description?: string },
+  input: {
+    sku: string;
+    name: string;
+    supplierId: string;
+    stock: number;
+    description?: string;
+  },
 ): Promise<Product> {
-  const existing = await api.get<Product[]>('/products');
+  const existing = await api.get<Product[]>("/products");
   const found = existing.find((product) => product.sku === input.sku);
   if (found) return found;
 
-  return api.post<Product>('/products', {
+  return api.post<Product>("/products", {
     sku: input.sku,
     name: input.name,
     supplier_id: input.supplierId,
@@ -354,7 +375,7 @@ async function ensureProductPrice(
   api: ApiClient,
   input: { productId: string; priceListId: string; price: number },
 ): Promise<ProductPrice> {
-  const existing = await api.get<ProductPrice[]>('/product-prices');
+  const existing = await api.get<ProductPrice[]>("/product-prices");
   const found = existing.find(
     (productPrice) =>
       productPrice.product_id === input.productId &&
@@ -363,7 +384,7 @@ async function ensureProductPrice(
 
   if (found) return found;
 
-  return api.post<ProductPrice>('/product-prices', {
+  return api.post<ProductPrice>("/product-prices", {
     product_id: input.productId,
     price_list_id: input.priceListId,
     price: input.price,
@@ -372,13 +393,20 @@ async function ensureProductPrice(
 
 async function ensureClient(
   api: ApiClient,
-  input: { name: string; phoneNumber: string; email: string; priceListId: string },
+  input: {
+    name: string;
+    phoneNumber: string;
+    email: string;
+    priceListId: string;
+  },
 ): Promise<Client> {
-  const existing = await api.get<Client[]>('/clients');
-  const found = existing.find((client) => client.phone_number === input.phoneNumber);
+  const existing = await api.get<Client[]>("/clients");
+  const found = existing.find(
+    (client) => client.phone_number === input.phoneNumber,
+  );
   if (found) return found;
 
-  return api.post<Client>('/clients', {
+  return api.post<Client>("/clients", {
     name: input.name,
     phone_number: input.phoneNumber,
     email: input.email,
@@ -390,11 +418,11 @@ async function ensureUser(
   api: ApiClient,
   input: { name: string; email: string; passwordHash: string; roleId: string },
 ): Promise<User> {
-  const existing = await api.get<User[]>('/users');
+  const existing = await api.get<User[]>("/users");
   const found = existing.find((user) => user.email === input.email);
   if (found) return found;
 
-  return api.post<User>('/users', {
+  return api.post<User>("/users", {
     name: input.name,
     email: input.email,
     password_hash: input.passwordHash,
@@ -404,7 +432,7 @@ async function ensureUser(
 
 async function run(): Promise<void> {
   const baseUrl = normalizeBaseUrl(
-    process.env.SEED_API_BASE_URL ?? 'http://localhost:3000',
+    process.env.SEED_API_BASE_URL ?? "http://localhost:3000",
   );
   const token = process.env.SEED_API_BEARER_TOKEN;
 
@@ -412,27 +440,29 @@ async function run(): Promise<void> {
 
   console.log(`[seed] Target API: ${baseUrl}`);
 
-  logStep('Creando roles');
-  const adminRole = await ensureRole(api, 'admin', [
-    { action: 'manage', resource: '*' },
+  logStep("Creando roles");
+  const adminRole = await ensureRole(api, "admin", [
+    { action: "manage", resource: "*" },
   ]);
 
-  logStep('Creando listas de precio');
-  const minorista = await ensurePriceList(api, 'Lista Minorista');
-  const mayorista = await ensurePriceList(api, 'Lista Mayorista');
+  logStep("Creando listas de precio");
+  const minorista = await ensurePriceList(api, "Lista Minorista");
+  const mayorista = await ensurePriceList(api, "Lista Mayorista");
 
   logStep(`Asegurando ${TARGET_SUPPLIERS} proveedores`);
   const supplierSeeds = createSupplierSeeds(TARGET_SUPPLIERS);
   for (const supplierSeed of supplierSeeds) {
     await ensureSupplier(api, supplierSeed.name, supplierSeed.contactInfo);
   }
-  const suppliers = await api.get<Supplier[]>('/suppliers');
+  const suppliers = await api.get<Supplier[]>("/suppliers");
   const targetSuppliers = supplierSeeds
     .map((seed) => suppliers.find((supplier) => supplier.name === seed.name))
     .filter((supplier): supplier is Supplier => supplier !== undefined);
 
   if (targetSuppliers.length === 0) {
-    throw new Error('No se pudieron asegurar proveedores para asignar productos');
+    throw new Error(
+      "No se pudieron asegurar proveedores para asignar productos",
+    );
   }
 
   logStep(`Asegurando ${TARGET_PRODUCTS} productos de multiples categorias`);
@@ -450,16 +480,18 @@ async function run(): Promise<void> {
     });
   }
 
-  const products = await api.get<Product[]>('/products');
+  const products = await api.get<Product[]>("/products");
   const targetProducts = productSeeds
     .map((seed) => products.find((product) => product.sku === seed.sku))
     .filter((product): product is Product => product !== undefined);
 
   if (targetProducts.length === 0) {
-    throw new Error('No se pudieron asegurar productos para generar precios y pedidos');
+    throw new Error(
+      "No se pudieron asegurar productos para generar precios y pedidos",
+    );
   }
 
-  logStep('Asegurando precios para lista minorista y mayorista');
+  logStep("Asegurando precios para lista minorista y mayorista");
   for (const productSeed of productSeeds) {
     const product = targetProducts.find(
       (existingProduct) => existingProduct.sku === productSeed.sku,
@@ -482,7 +514,7 @@ async function run(): Promise<void> {
     });
   }
 
-  const productPrices = await api.get<ProductPrice[]>('/product-prices');
+  const productPrices = await api.get<ProductPrice[]>("/product-prices");
 
   logStep(`Asegurando ${TARGET_CLIENTS} clientes`);
   const clientSeeds = createClientSeeds(TARGET_CLIENTS);
@@ -497,7 +529,7 @@ async function run(): Promise<void> {
     });
   }
 
-  const clients = await api.get<Client[]>('/clients');
+  const clients = await api.get<Client[]>("/clients");
   const targetClients = clientSeeds
     .map((seed) =>
       clients.find((client) => client.phone_number === seed.phoneNumber),
@@ -505,19 +537,19 @@ async function run(): Promise<void> {
     .filter((client): client is Client => client !== undefined);
 
   if (targetClients.length === 0) {
-    throw new Error('No se pudieron asegurar clientes para generar pedidos');
+    throw new Error("No se pudieron asegurar clientes para generar pedidos");
   }
 
-  logStep('Asegurando 1 usuario admin');
+  logStep("Asegurando 1 usuario admin");
   const adminUser = await ensureUser(api, {
-    name: 'Administrador VegyFresh',
-    email: 'admin@vegyfresh.local',
-    passwordHash: 'seed_admin_password_hash_change_me',
+    name: "Administrador VegyFresh",
+    email: "admin@vegyfresh.local",
+    passwordHash: "seed_admin_password_hash_change_me",
     roleId: adminRole.id,
   });
 
   logStep(`Asegurando al menos ${TARGET_ORDERS} pedidos`);
-  const existingOrders = await api.get<Order[]>('/orders');
+  const existingOrders = await api.get<Order[]>("/orders");
   const missingOrders = Math.max(0, TARGET_ORDERS - existingOrders.length);
 
   for (let index = 0; index < missingOrders; index += 1) {
@@ -527,14 +559,15 @@ async function run(): Promise<void> {
     const unitPrice =
       productPrices.find(
         (value) =>
-          value.product_id === product.id && value.price_list_id === mayorista.id,
+          value.product_id === product.id &&
+          value.price_list_id === mayorista.id,
       )?.price ?? 1000;
 
-    await api.post<Order>('/orders', {
+    await api.post<Order>("/orders", {
       client_id: client.id,
       user_id: adminUser.id,
-      origin: 'MANUAL',
-      status: 'PENDING_REVIEW',
+      origin: "MANUAL",
+      status: "PENDING_REVIEW",
       items: [
         {
           product_id: product.id,
@@ -545,10 +578,10 @@ async function run(): Promise<void> {
     });
   }
 
-  const orders = await api.get<Order[]>('/orders');
+  const orders = await api.get<Order[]>("/orders");
 
-  console.log('\n[seed] Seed completado con exito');
-  console.log('[seed] Resumen final:');
+  console.log("\n[seed] Seed completado con exito");
+  console.log("[seed] Resumen final:");
   console.log(`- role admin: ${adminRole.id}`);
   console.log(`- listas de precio: 2 (${minorista.name}, ${mayorista.name})`);
   console.log(`- proveedores objetivo: ${TARGET_SUPPLIERS}`);
@@ -559,7 +592,7 @@ async function run(): Promise<void> {
 }
 
 run().catch((error: unknown) => {
-  console.error('\n[seed] Error ejecutando seed');
+  console.error("\n[seed] Error ejecutando seed");
   if (error instanceof Error) {
     console.error(error.message);
   } else {

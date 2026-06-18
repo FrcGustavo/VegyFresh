@@ -5,6 +5,7 @@
 ## Issue Linkage (required)
 
 <!-- Use exactly one of the lines below -->
+
 - Closes #<issue-number>
 - Refs #<issue-number>
 
