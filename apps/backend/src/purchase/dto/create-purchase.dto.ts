@@ -13,16 +13,19 @@ import {
 import { Type } from 'class-transformer';
 
 export class CreatePurchaseItemDto {
+  /** Product received from the supplier. */
   @ApiProperty({ example: '550e8400-e29b-41d4-a716-446655440000' })
   @IsUUID()
   product_id!: string;
 
+  /** Quantity received in the product's unit of measure. */
   @ApiProperty({ example: 12.5 })
   @Type(() => Number)
   @IsNumber({ maxDecimalPlaces: 3 })
   @Min(0.001)
   quantity!: number;
 
+  /** Acquisition cost for one product unit. */
   @ApiProperty({ example: 34.9 })
   @Type(() => Number)
   @IsNumber({ maxDecimalPlaces: 2 })
@@ -31,10 +34,12 @@ export class CreatePurchaseItemDto {
 }
 
 export class CreatePurchaseDto {
+  /** Supplier from whom the products were purchased. */
   @ApiProperty({ example: '550e8400-e29b-41d4-a716-446655440000' })
   @IsUUID()
   supplier_id!: string;
 
+  /** Purchase date and time in ISO 8601 format. */
   @ApiPropertyOptional({
     type: String,
     format: 'date-time',
@@ -44,12 +49,14 @@ export class CreatePurchaseDto {
   @IsString()
   purchase_date?: string;
 
+  /** Additional information about the purchase. */
   @ApiPropertyOptional({ example: 'Compra semanal de frutas', nullable: true })
   @IsOptional()
   @IsString()
   @MaxLength(1000)
   notes?: string | null;
 
+  /** Products and acquisition costs included in the purchase. */
   @ApiProperty({ type: [CreatePurchaseItemDto] })
   @IsArray()
   @ArrayMinSize(1)

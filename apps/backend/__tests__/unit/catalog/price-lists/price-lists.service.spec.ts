@@ -1,5 +1,7 @@
 import { NotFoundException } from '@nestjs/common';
+import { PriceList } from 'src/catalog/price-lists/entities/price-list.entity';
 import { PriceListsService } from 'src/catalog/price-lists/price-lists.service';
+import type { DeepPartial } from 'typeorm';
 
 describe('PriceListsService', () => {
   const priceListsRepository = {
@@ -26,7 +28,9 @@ describe('PriceListsService', () => {
 
   it('creates price list with generated folio and organization', async () => {
     foliosService.generateFolio.mockResolvedValue('PL0001');
-    priceListsRepository.create.mockImplementation((value) => value);
+    priceListsRepository.create.mockImplementation(
+      (value: DeepPartial<PriceList>): PriceList => value as PriceList,
+    );
     priceListsRepository.save.mockResolvedValue({ id: 'pl-1' });
 
     await service.create({ name: 'Retail' }, 'org-1');

@@ -1,5 +1,7 @@
 import { NotFoundException } from '@nestjs/common';
+import { Product } from 'src/catalog/products/entities/product.entity';
 import { ProductsService } from 'src/catalog/products/products.service';
+import type { DeepPartial } from 'typeorm';
 
 describe('ProductsService', () => {
   const productsRepository = {
@@ -31,7 +33,9 @@ describe('ProductsService', () => {
   it('creates product with defaults and tenant scope', async () => {
     suppliersRepository.findOneBy.mockResolvedValue({ id: 'supplier-1' });
     foliosService.generateFolio.mockResolvedValue('P0001');
-    productsRepository.create.mockImplementation((value) => value);
+    productsRepository.create.mockImplementation(
+      (value: DeepPartial<Product>): Product => value as Product,
+    );
     productsRepository.save.mockResolvedValue({ id: 'product-1' });
 
     await service.create(

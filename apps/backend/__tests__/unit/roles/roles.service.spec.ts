@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { RolesService } from 'src/roles/roles.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Role } from 'src/roles/entities/role.entity';
+import type { DeepPartial } from 'typeorm';
 
 describe('RolesService', () => {
   let service: RolesService;
@@ -45,8 +46,12 @@ describe('RolesService', () => {
     rolesRepository.findOneBy
       .mockResolvedValueOnce(null)
       .mockResolvedValueOnce(null);
-    rolesRepository.create.mockImplementation((value) => value);
-    rolesRepository.save.mockImplementation(async (value) => value);
+    rolesRepository.create.mockImplementation(
+      (value: DeepPartial<Role>): Role => value as Role,
+    );
+    rolesRepository.save.mockImplementation(
+      (value: Role): Promise<Role> => Promise.resolve(value),
+    );
 
     await service.setupDefaultRoles();
 

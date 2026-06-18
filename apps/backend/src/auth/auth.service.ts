@@ -14,7 +14,6 @@ import { User } from '../users/entities/user.entity';
 import { SignupDto } from './dto/signup.dto';
 import { LoginDto } from './dto/login.dto';
 import { AuthSession } from './entities/auth-session.entity';
-import { FoliosService } from '../folios/folios.service';
 import type { AuthenticatedUser } from './types/authenticated-user.type';
 import { extractRolePermissions } from './utils/role-permissions';
 import { RolesService } from '../roles/roles.service';

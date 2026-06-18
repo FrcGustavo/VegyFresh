@@ -1,6 +1,14 @@
 import { BadRequestException } from '@nestjs/common';
-import { InventoryMovementType } from 'src/inventory/entities/inventory-movement.entity';
+import {
+  InventoryMovement,
+  InventoryMovementType,
+} from 'src/inventory/entities/inventory-movement.entity';
 import { InventoryService } from 'src/inventory/inventory.service';
+import type { DeepPartial } from 'typeorm';
+
+type TransactionManager = {
+  getRepository: (entity: { name?: string }) => unknown;
+};
 
 describe('InventoryService', () => {
   const makeService = () => {
@@ -13,23 +21,35 @@ describe('InventoryService', () => {
       findOneBy: jest.fn(),
     };
     const movementsRepository = {
-      create: jest.fn((value) => value),
-      save: jest.fn(async (value) => ({ ...value, id: 'movement-1' })),
+      create: jest.fn(
+        (value: DeepPartial<InventoryMovement>): InventoryMovement =>
+          value as InventoryMovement,
+      ),
+      save: jest.fn(
+        (value: DeepPartial<InventoryMovement>): Promise<InventoryMovement> =>
+          Promise.resolve({
+            ...value,
+            id: 'movement-1',
+          } as InventoryMovement),
+      ),
     };
     const inventoryMovementsRepository = {
       find: jest.fn(),
       findOne: jest.fn(),
       manager: {
-        transaction: jest.fn(async (cb) =>
-          cb({
-            getRepository: jest.fn((entity: { name?: string }) => {
-              if (entity?.name === 'Product') return productsRepository;
-              if (entity?.name === 'User') return usersRepository;
-              if (entity?.name === 'InventoryMovement')
-                return movementsRepository;
-              return undefined;
+        transaction: jest.fn(
+          <Result>(
+            callback: (manager: TransactionManager) => Promise<Result>,
+          ): Promise<Result> =>
+            callback({
+              getRepository: jest.fn((entity: { name?: string }): unknown => {
+                if (entity?.name === 'Product') return productsRepository;
+                if (entity?.name === 'User') return usersRepository;
+                if (entity?.name === 'InventoryMovement')
+                  return movementsRepository;
+                return undefined;
+              }),
             }),
-          }),
         ),
       },
     };

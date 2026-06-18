@@ -1,5 +1,7 @@
 import { UnauthorizedException } from '@nestjs/common';
+import { PortalAuthSession } from 'src/portal/entities/portal-auth-session.entity';
 import { PortalAuthService } from 'src/portal/portal-auth.service';
+import type { DeepPartial } from 'typeorm';
 
 describe('PortalAuthService', () => {
   const clientsRepository = {
@@ -10,7 +12,10 @@ describe('PortalAuthService', () => {
     findOneBy: jest.fn(),
     save: jest.fn(),
     update: jest.fn(),
-    create: jest.fn((value) => value),
+    create: jest.fn(
+      (value: DeepPartial<PortalAuthSession>): PortalAuthSession =>
+        value as PortalAuthSession,
+    ),
   };
   const jwtService = {
     signAsync: jest.fn(),
