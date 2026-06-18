@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router';
-import { fetchApi } from '../../../api';
-import { validateImageFile } from '../../../utils/imageValidation';
+import { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router";
+import { fetchApi } from "../../../api";
+import { validateImageFile } from "../../../utils/imageValidation";
 
-type SaveAction = 'save' | 'save-and-close' | 'save-and-new';
+type SaveAction = "save" | "save-and-close" | "save-and-new";
 type UserChangeEvent = { target: { name: string; value: string } };
 interface UserFormData {
   name: string;
@@ -18,22 +18,25 @@ interface RoleOption {
   name: string;
 }
 const EMPTY_USER_FORM: UserFormData = {
-  name: '',
-  email: '',
-  password: '',
-  role_id: '',
-  avatar_url: '',
+  name: "",
+  email: "",
+  password: "",
+  role_id: "",
+  avatar_url: "",
 };
 
-export function useUserForm(id?: string, onSuccess?: (action: SaveAction) => void) {
+export function useUserForm(
+  id?: string,
+  onSuccess?: (action: SaveAction) => void,
+) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [formData, setFormData] = useState<UserFormData>(EMPTY_USER_FORM);
-  const [avatarFileError, setAvatarFileError] = useState('');
+  const [avatarFileError, setAvatarFileError] = useState("");
   const [isDisabled, setIsDisabled] = useState(!!id);
 
   const { data: existingUser, isLoading } = useQuery({
-    queryKey: ['users', id],
+    queryKey: ["users", id],
     queryFn: () => fetchApi(`/users/${id}`),
     enabled: !!id,
   });
@@ -44,22 +47,27 @@ export function useUserForm(id?: string, onSuccess?: (action: SaveAction) => voi
         setFormData({
           name: existingUser.name,
           email: existingUser.email,
-          password: '',
-          role_id: existingUser.role_id || '',
-          avatar_url: existingUser.avatar_url || '',
+          password: "",
+          role_id: existingUser.role_id || "",
+          avatar_url: existingUser.avatar_url || "",
         });
-        setAvatarFileError('');
+        setAvatarFileError("");
       });
     } else if (!id) {
       queueMicrotask(() => {
         setFormData(EMPTY_USER_FORM);
-        setAvatarFileError('');
+        setAvatarFileError("");
       });
     }
   }, [id, existingUser]);
 
-  const { data: rolesData } = useQuery({ queryKey: ['roles'], queryFn: () => fetchApi('/roles') });
-  const roles = (Array.isArray(rolesData) ? rolesData : (rolesData?.data || [])) as RoleOption[];
+  const { data: rolesData } = useQuery({
+    queryKey: ["roles"],
+    queryFn: () => fetchApi("/roles"),
+  });
+  const roles = (
+    Array.isArray(rolesData) ? rolesData : rolesData?.data || []
+  ) as RoleOption[];
 
   const handleChange = (e: UserChangeEvent) => {
     const { name, value } = e.target;
@@ -73,11 +81,11 @@ export function useUserForm(id?: string, onSuccess?: (action: SaveAction) => voi
       return;
     }
 
-    setAvatarFileError('');
+    setAvatarFileError("");
     const reader = new FileReader();
     reader.onload = () => {
       const result = reader.result;
-      if (typeof result === 'string') {
+      if (typeof result === "string") {
         setFormData((prev) => ({ ...prev, avatar_url: result }));
       }
     };
@@ -85,13 +93,14 @@ export function useUserForm(id?: string, onSuccess?: (action: SaveAction) => voi
   };
 
   const createAdminRoleMutation = useMutation({
-    mutationFn: () => fetchApi('/roles', {
-      method: 'POST',
-      body: JSON.stringify({ name: 'Admin', permissions: [] })
-    }),
+    mutationFn: () =>
+      fetchApi("/roles", {
+        method: "POST",
+        body: JSON.stringify({ name: "Admin", permissions: [] }),
+      }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['roles'] });
-    }
+      queryClient.invalidateQueries({ queryKey: ["roles"] });
+    },
   });
 
   const mutation = useMutation({
@@ -107,25 +116,25 @@ export function useUserForm(id?: string, onSuccess?: (action: SaveAction) => voi
         payload.password = data.password;
       }
 
-      return fetchApi(id ? `/users/${id}` : '/users', {
-        method: id ? 'PATCH' : 'POST',
+      return fetchApi(id ? `/users/${id}` : "/users", {
+        method: id ? "PATCH" : "POST",
         body: JSON.stringify(payload),
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] });
-    }
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+    },
   });
 
-  const handleSubmit = (action: SaveAction = 'save') => {
+  const handleSubmit = (action: SaveAction = "save") => {
     mutation.mutate(formData, {
       onSuccess: () => {
         if (onSuccess) {
           onSuccess(action);
         } else {
-          navigate('/users');
+          navigate("/users");
         }
-      }
+      },
     });
   };
 
@@ -142,6 +151,6 @@ export function useUserForm(id?: string, onSuccess?: (action: SaveAction) => voi
     handleSubmit,
     createAdminRole: () => createAdminRoleMutation.mutate(),
     isDisabled,
-    setIsDisabled
+    setIsDisabled,
   };
 }

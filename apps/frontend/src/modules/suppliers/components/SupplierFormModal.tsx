@@ -1,8 +1,8 @@
-import { Box, CircularProgress } from '@mui/material';
-import FloatingModal from '../../../components/FloatingModal';
-import ModalToolbar from '../../../components/ModalToolbar';
-import { useSupplierForm } from '../hooks/useSupplierForm';
-import SupplierForm from './SupplierForm';
+import { Box, CircularProgress } from "@mui/material";
+import FloatingModal from "../../../components/FloatingModal";
+import ModalToolbar from "../../../components/ModalToolbar";
+import { useSupplierForm } from "../hooks/useSupplierForm";
+import SupplierForm from "./SupplierForm";
 
 interface SupplierListItemRef {
   id: string | number;
@@ -32,8 +32,10 @@ export default function SupplierFormModal({
 }: SupplierFormModalProps) {
   const isEditing = !!supplierId;
 
-  const handleOnSuccess = (action: 'save' | 'save-and-close' | 'save-and-new') => {
-    if (action === 'save-and-close') {
+  const handleOnSuccess = (
+    action: "save" | "save-and-close" | "save-and-new",
+  ) => {
+    if (action === "save-and-close") {
       onClose();
     }
   };
@@ -59,9 +61,9 @@ export default function SupplierFormModal({
     <ModalToolbar
       isDisabled={formProps.isDisabled}
       onEditToggle={() => formProps.setIsDisabled(!formProps.isDisabled)}
-      onSave={() => formProps.handleSubmit('save')}
-      onSaveAndClose={() => formProps.handleSubmit('save-and-close')}
-      onSaveAndNew={() => formProps.handleSubmit('save-and-new')}
+      onSave={() => formProps.handleSubmit("save")}
+      onSaveAndClose={() => formProps.handleSubmit("save-and-close")}
+      onSaveAndNew={() => formProps.handleSubmit("save-and-new")}
       onNavigateUp={handleNavigateUp}
       onNavigateDown={handleNavigateDown}
       canNavigateUp={canNavigateUp}
@@ -75,20 +77,17 @@ export default function SupplierFormModal({
     <FloatingModal
       isOpen={isOpen}
       onClose={onClose}
-      title={'Proveedor'}
+      title={"Proveedor"}
       initialWidth={initialWidth}
       initialHeight={initialHeight}
       toolbar={toolbar}
       renderContent={() =>
         formProps.isLoading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+          <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
             <CircularProgress />
           </Box>
         ) : (
-          <SupplierForm
-            {...formProps}
-            isDisabled={formProps.isDisabled}
-          />
+          <SupplierForm {...formProps} isDisabled={formProps.isDisabled} />
         )
       }
     />

@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router';
-import { fetchApi } from '../../../api';
-import { validateImageFile } from '../../../utils/imageValidation';
+import { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router";
+import { fetchApi } from "../../../api";
+import { validateImageFile } from "../../../utils/imageValidation";
 
-type SaveAction = 'save' | 'save-and-close' | 'save-and-new';
+type SaveAction = "save" | "save-and-close" | "save-and-new";
 type SupplierChangeEvent = { target: { name: string; value: string } };
 interface SupplierFormData {
   name: string;
@@ -13,21 +13,25 @@ interface SupplierFormData {
   logo_url: string;
 }
 const EMPTY_SUPPLIER_FORM: SupplierFormData = {
-  name: '',
-  email: '',
-  phone_number: '',
-  logo_url: '',
+  name: "",
+  email: "",
+  phone_number: "",
+  logo_url: "",
 };
 
-export function useSupplierForm(id?: string, onSuccess?: (action: SaveAction) => void) {
+export function useSupplierForm(
+  id?: string,
+  onSuccess?: (action: SaveAction) => void,
+) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const [formData, setFormData] = useState<SupplierFormData>(EMPTY_SUPPLIER_FORM);
-  const [logoFileError, setLogoFileError] = useState('');
+  const [formData, setFormData] =
+    useState<SupplierFormData>(EMPTY_SUPPLIER_FORM);
+  const [logoFileError, setLogoFileError] = useState("");
   const [isDisabled, setIsDisabled] = useState(!!id);
 
   const { data: existingSupplier, isLoading } = useQuery({
-    queryKey: ['suppliers', id],
+    queryKey: ["suppliers", id],
     queryFn: () => fetchApi(`/suppliers/${id}`),
     enabled: !!id,
   });
@@ -37,16 +41,16 @@ export function useSupplierForm(id?: string, onSuccess?: (action: SaveAction) =>
       queueMicrotask(() => {
         setFormData({
           name: existingSupplier.name,
-          email: existingSupplier.email || '',
-          phone_number: existingSupplier.phone_number || '',
-          logo_url: existingSupplier.logo_url || '',
+          email: existingSupplier.email || "",
+          phone_number: existingSupplier.phone_number || "",
+          logo_url: existingSupplier.logo_url || "",
         });
-        setLogoFileError('');
+        setLogoFileError("");
       });
     } else if (!id) {
       queueMicrotask(() => {
         setFormData(EMPTY_SUPPLIER_FORM);
-        setLogoFileError('');
+        setLogoFileError("");
       });
     }
   }, [id, existingSupplier]);
@@ -63,11 +67,11 @@ export function useSupplierForm(id?: string, onSuccess?: (action: SaveAction) =>
       return;
     }
 
-    setLogoFileError('');
+    setLogoFileError("");
     const reader = new FileReader();
     reader.onload = () => {
       const result = reader.result;
-      if (typeof result === 'string') {
+      if (typeof result === "string") {
         setFormData((prev) => ({ ...prev, logo_url: result }));
       }
     };
@@ -75,24 +79,25 @@ export function useSupplierForm(id?: string, onSuccess?: (action: SaveAction) =>
   };
 
   const mutation = useMutation({
-    mutationFn: (data: SupplierFormData) => fetchApi(id ? `/suppliers/${id}` : '/suppliers', {
-      method: id ? 'PATCH' : 'POST',
-      body: JSON.stringify(data)
-    }),
+    mutationFn: (data: SupplierFormData) =>
+      fetchApi(id ? `/suppliers/${id}` : "/suppliers", {
+        method: id ? "PATCH" : "POST",
+        body: JSON.stringify(data),
+      }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['suppliers'] });
-    }
+      queryClient.invalidateQueries({ queryKey: ["suppliers"] });
+    },
   });
 
-  const handleSubmit = (action: SaveAction = 'save') => {
+  const handleSubmit = (action: SaveAction = "save") => {
     mutation.mutate(formData, {
       onSuccess: () => {
         if (onSuccess) {
           onSuccess(action);
         } else {
-          navigate('/suppliers');
+          navigate("/suppliers");
         }
-      }
+      },
     });
   };
 
@@ -105,6 +110,6 @@ export function useSupplierForm(id?: string, onSuccess?: (action: SaveAction) =>
     handleLogoFileChange,
     handleSubmit,
     isDisabled,
-    setIsDisabled
+    setIsDisabled,
   };
 }

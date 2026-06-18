@@ -1,7 +1,11 @@
-import type { ReactNode } from 'react';
-import { useEffect, useId, useRef, useState } from 'react';
-import { Paper, Box, IconButton, Tooltip } from '@mui/material';
-import { Close as CloseIcon, Minimize as MinimizeIcon, Maximize as MaximizeIcon } from '@mui/icons-material';
+import type { ReactNode } from "react";
+import { useEffect, useId, useRef, useState } from "react";
+import { Paper, Box, IconButton, Tooltip } from "@mui/material";
+import {
+  Close as CloseIcon,
+  Minimize as MinimizeIcon,
+  Maximize as MaximizeIcon,
+} from "@mui/icons-material";
 
 interface FloatingModalProps {
   isOpen: boolean;
@@ -43,16 +47,19 @@ export default function FloatingModal({
   if (!isOpen) return null;
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    if (e.key === 'Escape') {
+    if (e.key === "Escape") {
       onClose();
     }
   };
 
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-    if ((e.target as HTMLElement).closest('button') || (e.target as HTMLElement).closest('input')) {
+    if (
+      (e.target as HTMLElement).closest("button") ||
+      (e.target as HTMLElement).closest("input")
+    ) {
       return;
     }
-    
+
     setIsDragging(true);
     setDragOffset({
       x: e.clientX - position.x,
@@ -86,19 +93,19 @@ export default function FloatingModal({
       onMouseLeave={handleMouseUp}
       onKeyDown={handleKeyDown}
       sx={{
-        position: 'fixed',
+        position: "fixed",
         left: `${position.x}px`,
         top: `${position.y}px`,
         width: isMinimized ? 300 : `${initialWidth}px`,
-        height: isMinimized ? 'auto' : `${initialHeight}px`,
+        height: isMinimized ? "auto" : `${initialHeight}px`,
         zIndex: 1300,
-        display: 'flex',
-        flexDirection: 'column',
+        display: "flex",
+        flexDirection: "column",
         minHeight: 0,
-        overflow: 'hidden',
+        overflow: "hidden",
         boxShadow: 6,
-        userSelect: isDragging ? 'none' : 'auto',
-        transition: isDragging ? 'none' : 'all 0.2s',
+        userSelect: isDragging ? "none" : "auto",
+        transition: isDragging ? "none" : "all 0.2s",
       }}
     >
       {/* Header - Draggable */}
@@ -106,28 +113,36 @@ export default function FloatingModal({
         data-testid="floating-modal-header"
         onMouseDown={handleMouseDown}
         sx={{
-          padding: '0.5rem 1rem',
-          backgroundColor: 'primary.main',
-          color: 'white',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          cursor: isDragging ? 'grabbing' : 'grab',
-          userSelect: 'none',
+          padding: "0.5rem 1rem",
+          backgroundColor: "primary.main",
+          color: "white",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          cursor: isDragging ? "grabbing" : "grab",
+          userSelect: "none",
         }}
       >
-        <Box component="h2" id={titleId} sx={{ m: 0, fontSize: '1rem', fontWeight: 600 }}>
+        <Box
+          component="h2"
+          id={titleId}
+          sx={{ m: 0, fontSize: "1rem", fontWeight: 600 }}
+        >
           {title}
         </Box>
         <Box>
-          <Tooltip title={isMinimized ? 'Maximizar' : 'Minimizar'}>
+          <Tooltip title={isMinimized ? "Maximizar" : "Minimizar"}>
             <IconButton
-              aria-label={isMinimized ? 'Maximizar' : 'Minimizar'}
+              aria-label={isMinimized ? "Maximizar" : "Minimizar"}
               size="small"
               onClick={() => setIsMinimized(!isMinimized)}
-              sx={{ color: 'white' }}
+              sx={{ color: "white" }}
             >
-              {isMinimized ? <MaximizeIcon fontSize="small" /> : <MinimizeIcon fontSize="small" />}
+              {isMinimized ? (
+                <MaximizeIcon fontSize="small" />
+              ) : (
+                <MinimizeIcon fontSize="small" />
+              )}
             </IconButton>
           </Tooltip>
           <Tooltip title="Cerrar">
@@ -135,7 +150,7 @@ export default function FloatingModal({
               aria-label="Cerrar"
               size="small"
               onClick={onClose}
-              sx={{ color: 'white' }}
+              sx={{ color: "white" }}
             >
               <CloseIcon fontSize="small" />
             </IconButton>
@@ -148,7 +163,7 @@ export default function FloatingModal({
 
       {/* Content */}
       {!isMinimized && (
-        <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
+        <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
           {renderContent ? renderContent() : children}
         </Box>
       )}

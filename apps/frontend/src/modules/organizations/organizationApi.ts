@@ -1,4 +1,4 @@
-import { fetchApi } from '../../api';
+import { fetchApi } from "../../api";
 
 export interface OrganizationDto {
   id: string;
@@ -36,17 +36,16 @@ export interface UpdateOrganizationPayload {
 
 export const organizationApi = {
   create: (payload: UpdateOrganizationPayload) =>
-    fetchApi<OrganizationDto>('/organizations', {
-      method: 'POST',
+    fetchApi<OrganizationDto>("/organizations", {
+      method: "POST",
       body: JSON.stringify(payload),
     }),
 
-  getById: (id: string) =>
-    fetchApi<OrganizationDto>(`/organizations/${id}`),
+  getById: (id: string) => fetchApi<OrganizationDto>(`/organizations/${id}`),
 
   update: (id: string, payload: UpdateOrganizationPayload) =>
     fetchApi<OrganizationDto>(`/organizations/${id}`, {
-      method: 'PATCH',
+      method: "PATCH",
       body: JSON.stringify(payload),
     }),
 };

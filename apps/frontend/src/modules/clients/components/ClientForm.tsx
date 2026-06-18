@@ -7,9 +7,9 @@ import {
   Autocomplete,
   Divider,
   Typography,
-} from '@mui/material';
+} from "@mui/material";
 
-type ClientFormSection = 'general' | 'address' | 'price-list';
+type ClientFormSection = "general" | "address" | "price-list";
 type ClientChangeEvent = { target: { name: string; value: string } };
 
 interface ClientFormData {
@@ -44,7 +44,7 @@ interface ClientFormProps {
   coloniaOptions: string[];
   handleChange: (e: ClientChangeEvent) => void;
   handleAvatarFileChange: (file: File) => void;
-  handleSubmit: (action: 'save' | 'save-and-close' | 'save-and-new') => void;
+  handleSubmit: (action: "save" | "save-and-close" | "save-and-new") => void;
   section: ClientFormSection;
   isDisabled?: boolean;
 }
@@ -62,34 +62,46 @@ export default function ClientForm({
   handleAvatarFileChange,
   handleSubmit,
   section,
-  isDisabled = false
+  isDisabled = false,
 }: ClientFormProps) {
   return (
     <Box>
-      <form onSubmit={(e) => { e.preventDefault(); handleSubmit('save'); }}>
-        {section === 'general' && (
-          <Box sx={{ display: 'flex', gap: 3, alignItems: 'flex-start', flexWrap: { xs: 'wrap', md: 'nowrap' } }}>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleSubmit("save");
+        }}
+      >
+        {section === "general" && (
+          <Box
+            sx={{
+              display: "flex",
+              gap: 3,
+              alignItems: "flex-start",
+              flexWrap: { xs: "wrap", md: "nowrap" },
+            }}
+          >
             <Box
               sx={{
-                width: { xs: '100%', md: 220 },
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
+                width: { xs: "100%", md: 220 },
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
                 gap: 2,
               }}
             >
               <Avatar
                 src={formData.avatar_url || undefined}
-                alt={formData.name || 'Cliente'}
+                alt={formData.name || "Cliente"}
                 sx={{ width: 150, height: 150 }}
               >
-                {(formData.name || 'C').charAt(0).toUpperCase()}
+                {(formData.name || "C").charAt(0).toUpperCase()}
               </Avatar>
               <Button
                 variant="outlined"
                 component="label"
                 disabled={isDisabled}
-                sx={{ width: '100%' }}
+                sx={{ width: "100%" }}
               >
                 Seleccionar avatar
                 <input
@@ -112,26 +124,52 @@ export default function ClientForm({
             </Box>
 
             <Box sx={{ flex: 1 }}>
-              <TextField fullWidth label="Nombre" name="name" margin="normal" value={formData.name || ''} onChange={handleChange} required disabled={isDisabled} />
-              <TextField fullWidth label="Email" name="email" margin="normal" value={formData.email || ''} onChange={handleChange} disabled={isDisabled} />
-              <TextField fullWidth label="Teléfono" name="phone_number" margin="normal" value={formData.phone_number || ''} onChange={handleChange} required disabled={isDisabled} />
+              <TextField
+                fullWidth
+                label="Nombre"
+                name="name"
+                margin="normal"
+                value={formData.name || ""}
+                onChange={handleChange}
+                required
+                disabled={isDisabled}
+              />
+              <TextField
+                fullWidth
+                label="Email"
+                name="email"
+                margin="normal"
+                value={formData.email || ""}
+                onChange={handleChange}
+                disabled={isDisabled}
+              />
+              <TextField
+                fullWidth
+                label="Teléfono"
+                name="phone_number"
+                margin="normal"
+                value={formData.phone_number || ""}
+                onChange={handleChange}
+                required
+                disabled={isDisabled}
+              />
             </Box>
           </Box>
         )}
 
-        {section === 'address' && (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        {section === "address" && (
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
             <Typography variant="subtitle2" color="text.secondary">
               Ubicación
             </Typography>
             <Autocomplete
               freeSolo
               options={postalCodeOptions}
-              value={formData.postal_code || ''}
-              inputValue={formData.postal_code || ''}
+              value={formData.postal_code || ""}
+              inputValue={formData.postal_code || ""}
               onInputChange={(_event, value) =>
                 handleChange({
-                  target: { name: 'postal_code', value },
+                  target: { name: "postal_code", value },
                 })
               }
               disabled={isDisabled}
@@ -148,27 +186,66 @@ export default function ClientForm({
 
             <Box
               sx={{
-                display: 'grid',
-                gridTemplateColumns: { xs: '1fr', md: 'repeat(3, minmax(0, 1fr))' },
+                display: "grid",
+                gridTemplateColumns: {
+                  xs: "1fr",
+                  md: "repeat(3, minmax(0, 1fr))",
+                },
                 gap: 2,
               }}
             >
-              <TextField select fullWidth label="País" name="country" value={formData.country || ''} onChange={handleChange} disabled={isDisabled}>
-                <MenuItem value=""><em>Selecciona un país</em></MenuItem>
+              <TextField
+                select
+                fullWidth
+                label="País"
+                name="country"
+                value={formData.country || ""}
+                onChange={handleChange}
+                disabled={isDisabled}
+              >
+                <MenuItem value="">
+                  <em>Selecciona un país</em>
+                </MenuItem>
                 {countries.map((country) => (
-                  <MenuItem key={country} value={country}>{country}</MenuItem>
+                  <MenuItem key={country} value={country}>
+                    {country}
+                  </MenuItem>
                 ))}
               </TextField>
-              <TextField select fullWidth label="Estado/Provincia" name="state" value={formData.state || ''} onChange={handleChange} disabled={isDisabled || !formData.country}>
-                <MenuItem value=""><em>Selecciona un estado</em></MenuItem>
+              <TextField
+                select
+                fullWidth
+                label="Estado/Provincia"
+                name="state"
+                value={formData.state || ""}
+                onChange={handleChange}
+                disabled={isDisabled || !formData.country}
+              >
+                <MenuItem value="">
+                  <em>Selecciona un estado</em>
+                </MenuItem>
                 {states.map((state) => (
-                  <MenuItem key={state} value={state}>{state}</MenuItem>
+                  <MenuItem key={state} value={state}>
+                    {state}
+                  </MenuItem>
                 ))}
               </TextField>
-              <TextField select fullWidth label="Ciudad" name="city" value={formData.city || ''} onChange={handleChange} disabled={isDisabled || !formData.state}>
-                <MenuItem value=""><em>Selecciona una ciudad</em></MenuItem>
+              <TextField
+                select
+                fullWidth
+                label="Ciudad"
+                name="city"
+                value={formData.city || ""}
+                onChange={handleChange}
+                disabled={isDisabled || !formData.state}
+              >
+                <MenuItem value="">
+                  <em>Selecciona una ciudad</em>
+                </MenuItem>
                 {cities.map((city) => (
-                  <MenuItem key={city} value={city}>{city}</MenuItem>
+                  <MenuItem key={city} value={city}>
+                    {city}
+                  </MenuItem>
                 ))}
               </TextField>
             </Box>
@@ -182,7 +259,7 @@ export default function ClientForm({
               fullWidth
               label="Dirección (calle)"
               name="address"
-              value={formData.address || ''}
+              value={formData.address || ""}
               onChange={handleChange}
               disabled={isDisabled}
               multiline
@@ -190,19 +267,22 @@ export default function ClientForm({
             />
             <Box
               sx={{
-                display: 'grid',
-                gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, minmax(0, 1fr))' },
+                display: "grid",
+                gridTemplateColumns: {
+                  xs: "1fr",
+                  sm: "repeat(3, minmax(0, 1fr))",
+                },
                 gap: 2,
               }}
             >
               <Autocomplete
                 freeSolo
                 options={coloniaOptions}
-                value={formData.suburb || ''}
-                inputValue={formData.suburb || ''}
+                value={formData.suburb || ""}
+                inputValue={formData.suburb || ""}
                 onInputChange={(_event, value) =>
                   handleChange({
-                    target: { name: 'suburb', value },
+                    target: { name: "suburb", value },
                   })
                 }
                 disabled={isDisabled}
@@ -216,17 +296,44 @@ export default function ClientForm({
                   />
                 )}
               />
-              <TextField fullWidth label="Número exterior" name="external_number" value={formData.external_number || ''} onChange={handleChange} disabled={isDisabled} />
-              <TextField fullWidth label="Número interior (opcional)" name="internal_number" value={formData.internal_number || ''} onChange={handleChange} disabled={isDisabled} />
+              <TextField
+                fullWidth
+                label="Número exterior"
+                name="external_number"
+                value={formData.external_number || ""}
+                onChange={handleChange}
+                disabled={isDisabled}
+              />
+              <TextField
+                fullWidth
+                label="Número interior (opcional)"
+                name="internal_number"
+                value={formData.internal_number || ""}
+                onChange={handleChange}
+                disabled={isDisabled}
+              />
             </Box>
           </Box>
         )}
 
-        {section === 'price-list' && (
-          <TextField select fullWidth label="Lista de Precios" name="price_list_id" margin="normal" value={formData.price_list_id || ''} onChange={handleChange} disabled={isDisabled}>
-            <MenuItem value=""><em>Ninguna</em></MenuItem>
+        {section === "price-list" && (
+          <TextField
+            select
+            fullWidth
+            label="Lista de Precios"
+            name="price_list_id"
+            margin="normal"
+            value={formData.price_list_id || ""}
+            onChange={handleChange}
+            disabled={isDisabled}
+          >
+            <MenuItem value="">
+              <em>Ninguna</em>
+            </MenuItem>
             {priceLists.map((list) => (
-              <MenuItem key={list.id} value={list.id}>{list.name}</MenuItem>
+              <MenuItem key={list.id} value={list.id}>
+                {list.name}
+              </MenuItem>
             ))}
           </TextField>
         )}

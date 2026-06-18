@@ -1,12 +1,20 @@
-import { useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
-import { Box, TextField, MenuItem, Button, Typography, IconButton, Paper } from '@mui/material';
-import { Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
-import FloatingModal from '../../../components/FloatingModal';
-import ModalTabPanel from '../../../components/ModalTabPanel';
-import ModalTabsNavigation from '../../../components/ModalTabsNavigation';
-import ModalToolbar from '../../../components/ModalToolbar';
-import { useProductForm } from '../hooks/useProductForm';
+import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  Box,
+  TextField,
+  MenuItem,
+  Button,
+  Typography,
+  IconButton,
+  Paper,
+} from "@mui/material";
+import { Delete as DeleteIcon, Add as AddIcon } from "@mui/icons-material";
+import FloatingModal from "../../../components/FloatingModal";
+import ModalTabPanel from "../../../components/ModalTabPanel";
+import ModalTabsNavigation from "../../../components/ModalTabsNavigation";
+import ModalToolbar from "../../../components/ModalToolbar";
+import { useProductForm } from "../hooks/useProductForm";
 
 interface ProductListItemRef {
   id: string | number;
@@ -39,9 +47,11 @@ export default function ProductFormModal({
   const [activeTab, setActiveTab] = useState(0);
   const isEditing = !!productId;
 
-  const handleOnSuccess = (action: 'save' | 'save-and-close' | 'save-and-new') => {
-    queryClient.invalidateQueries({ queryKey: ['products'] });
-    if (action === 'save-and-close') {
+  const handleOnSuccess = (
+    action: "save" | "save-and-close" | "save-and-new",
+  ) => {
+    queryClient.invalidateQueries({ queryKey: ["products"] });
+    if (action === "save-and-close") {
       onClose();
     }
   };
@@ -67,9 +77,9 @@ export default function ProductFormModal({
     <ModalToolbar
       isDisabled={formProps.isDisabled}
       onEditToggle={() => formProps.setIsDisabled(!formProps.isDisabled)}
-      onSave={() => formProps.handleSubmit('save')}
-      onSaveAndClose={() => formProps.handleSubmit('save-and-close')}
-      onSaveAndNew={() => formProps.handleSubmit('save-and-new')}
+      onSave={() => formProps.handleSubmit("save")}
+      onSaveAndClose={() => formProps.handleSubmit("save-and-close")}
+      onSaveAndNew={() => formProps.handleSubmit("save-and-new")}
       onNavigateUp={handleNavigateUp}
       onNavigateDown={handleNavigateDown}
       canNavigateUp={canNavigateUp}
@@ -80,20 +90,20 @@ export default function ProductFormModal({
   );
 
   const tabOptions = [
-    { value: 0, label: 'General' },
-    { value: 1, label: 'Prices List' },
+    { value: 0, label: "General" },
+    { value: 1, label: "Prices List" },
   ];
 
   return (
     <FloatingModal
       isOpen={isOpen}
       onClose={onClose}
-      title={title ?? (productId ? 'Editar Producto' : 'Crear Nuevo Producto')}
+      title={title ?? (productId ? "Editar Producto" : "Crear Nuevo Producto")}
       initialWidth={initialWidth}
       initialHeight={initialHeight}
       toolbar={toolbar}
       renderContent={() => (
-        <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+        <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
           {/* Tabs Menu */}
           <ModalTabsNavigation
             value={activeTab}
@@ -102,69 +112,79 @@ export default function ProductFormModal({
           />
 
           {/* Tab Content */}
-          <Box sx={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+          <Box
+            sx={{
+              flex: 1,
+              overflowY: "auto",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
             {/* General Tab */}
             <ModalTabPanel value={activeTab} index={0}>
               <Paper sx={{ p: 3 }}>
-                <form onSubmit={(e) => {
-                  e.preventDefault();
-                  formProps.handleSubmit('save');
-                }}>
-                  <TextField 
-                    fullWidth 
-                    label="SKU" 
-                    name="sku" 
-                    margin="normal" 
-                    value={formProps.formData.sku || ''} 
-                    onChange={formProps.handleChange} 
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    formProps.handleSubmit("save");
+                  }}
+                >
+                  <TextField
+                    fullWidth
+                    label="SKU"
+                    name="sku"
+                    margin="normal"
+                    value={formProps.formData.sku || ""}
+                    onChange={formProps.handleChange}
                     required
                     disabled={formProps.isDisabled}
                   />
-                  <TextField 
-                    fullWidth 
-                    label="Nombre" 
-                    name="name" 
-                    margin="normal" 
-                    value={formProps.formData.name || ''} 
-                    onChange={formProps.handleChange} 
+                  <TextField
+                    fullWidth
+                    label="Nombre"
+                    name="name"
+                    margin="normal"
+                    value={formProps.formData.name || ""}
+                    onChange={formProps.handleChange}
                     required
                     disabled={formProps.isDisabled}
                   />
-                  <TextField 
-                    fullWidth 
-                    label="Descripción" 
-                    name="description" 
-                    margin="normal" 
-                    value={formProps.formData.description || ''} 
+                  <TextField
+                    fullWidth
+                    label="Descripción"
+                    name="description"
+                    margin="normal"
+                    value={formProps.formData.description || ""}
                     onChange={formProps.handleChange}
                     disabled={formProps.isDisabled}
                   />
-                  <TextField 
-                    fullWidth 
-                    label="Stock" 
-                    name="stock" 
-                    type="number" 
-                    margin="normal" 
-                    value={formProps.formData.stock || ''} 
+                  <TextField
+                    fullWidth
+                    label="Stock"
+                    name="stock"
+                    type="number"
+                    margin="normal"
+                    value={formProps.formData.stock || ""}
                     onChange={formProps.handleChange}
                     disabled={formProps.isDisabled}
                   />
-                  <TextField 
-                    select 
-                    fullWidth 
-                    label="Proveedor" 
-                    name="supplier_id" 
-                    margin="normal" 
-                    value={formProps.formData.supplier_id || ''} 
-                    onChange={formProps.handleChange} 
+                  <TextField
+                    select
+                    fullWidth
+                    label="Proveedor"
+                    name="supplier_id"
+                    margin="normal"
+                    value={formProps.formData.supplier_id || ""}
+                    onChange={formProps.handleChange}
                     required
                     disabled={formProps.isDisabled}
                   >
                     {formProps.suppliers.map((s) => (
-                      <MenuItem key={s.id} value={s.id}>{s.name}</MenuItem>
+                      <MenuItem key={s.id} value={s.id}>
+                        {s.name}
+                      </MenuItem>
                     ))}
                   </TextField>
-
                 </form>
               </Paper>
             </ModalTabPanel>
@@ -173,11 +193,18 @@ export default function ProductFormModal({
             <ModalTabPanel value={activeTab} index={1}>
               <Paper sx={{ p: 3 }}>
                 <Box>
-                  <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Box
+                    sx={{
+                      mb: 3,
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
                     <Typography variant="h6">Asignar Precios</Typography>
                     {!formProps.isDisabled && (
-                      <Button 
-                        startIcon={<AddIcon />} 
+                      <Button
+                        startIcon={<AddIcon />}
                         onClick={formProps.addPriceField}
                         variant="contained"
                         size="small"
@@ -189,45 +216,74 @@ export default function ProductFormModal({
 
                   {formProps.prices.length === 0 ? (
                     <Typography variant="body2" color="text.secondary">
-                      No hay precios agregados. Haz clic en "Agregar Precio" para comenzar.
+                      No hay precios agregados. Haz clic en "Agregar Precio"
+                      para comenzar.
                     </Typography>
                   ) : (
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                    <Box
+                      sx={{ display: "flex", flexDirection: "column", gap: 3 }}
+                    >
                       {formProps.prices.map((p, index) => (
-                        <Paper key={p.id ?? p.clientRowId} variant="outlined" sx={{ p: 2 }}>
-                          <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
+                        <Paper
+                          key={p.id ?? p.clientRowId}
+                          variant="outlined"
+                          sx={{ p: 2 }}
+                        >
+                          <Box
+                            sx={{
+                              display: "flex",
+                              gap: 2,
+                              alignItems: "flex-start",
+                            }}
+                          >
                             <Box sx={{ flex: 1 }}>
-                              <TextField 
-                                select 
+                              <TextField
+                                select
                                 fullWidth
-                                label="Lista de Precio" 
-                                value={p.price_list_id} 
-                                onChange={(e) => formProps.updatePriceField(index, 'price_list_id', e.target.value)}
+                                label="Lista de Precio"
+                                value={p.price_list_id}
+                                onChange={(e) =>
+                                  formProps.updatePriceField(
+                                    index,
+                                    "price_list_id",
+                                    e.target.value,
+                                  )
+                                }
                                 margin="normal"
                                 required
                                 disabled={formProps.isDisabled}
                               >
                                 {formProps.priceLists.map((list) => (
-                                  <MenuItem key={list.id} value={list.id}>{list.name}</MenuItem>
+                                  <MenuItem key={list.id} value={list.id}>
+                                    {list.name}
+                                  </MenuItem>
                                 ))}
                               </TextField>
                             </Box>
                             <Box sx={{ flex: 0.5 }}>
-                              <TextField 
-                                type="number" 
+                              <TextField
+                                type="number"
                                 fullWidth
-                                label="Precio ($)" 
-                                value={p.price} 
-                                onChange={(e) => formProps.updatePriceField(index, 'price', e.target.value)}
+                                label="Precio ($)"
+                                value={p.price}
+                                onChange={(e) =>
+                                  formProps.updatePriceField(
+                                    index,
+                                    "price",
+                                    e.target.value,
+                                  )
+                                }
                                 margin="normal"
                                 required
                                 disabled={formProps.isDisabled}
                               />
                             </Box>
                             {!formProps.isDisabled && (
-                              <IconButton 
-                                color="error" 
-                                onClick={() => formProps.removePriceField(index)}
+                              <IconButton
+                                color="error"
+                                onClick={() =>
+                                  formProps.removePriceField(index)
+                                }
                                 sx={{ mt: 1 }}
                               >
                                 <DeleteIcon />
@@ -238,7 +294,6 @@ export default function ProductFormModal({
                       ))}
                     </Box>
                   )}
-
                 </Box>
               </Paper>
             </ModalTabPanel>

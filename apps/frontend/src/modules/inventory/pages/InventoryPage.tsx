@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Box,
   CircularProgress,
@@ -12,12 +12,12 @@ import {
   TableHead,
   TableRow,
   Typography,
-} from '@mui/material';
-import { Warehouse as WarehouseIcon } from '@mui/icons-material';
-import { fetchApi } from '../../../api';
-import ListPageToolbar from '../../../components/ListPageToolbar';
-import ResourcePageTitle from '../../../components/ResourcePageTitle';
-import PurchaseFormModal from '../components/PurchaseFormModal';
+} from "@mui/material";
+import { Warehouse as WarehouseIcon } from "@mui/icons-material";
+import { fetchApi } from "../../../api";
+import ListPageToolbar from "../../../components/ListPageToolbar";
+import ResourcePageTitle from "../../../components/ResourcePageTitle";
+import PurchaseFormModal from "../components/PurchaseFormModal";
 
 type ProductInventoryItem = {
   id: string;
@@ -53,24 +53,24 @@ type MovementItem = {
 };
 
 const formatDate = (value: string | null | undefined) => {
-  if (!value) return 'N/A';
+  if (!value) return "N/A";
   const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return 'N/A';
-  return parsed.toLocaleDateString('es-MX');
+  if (Number.isNaN(parsed.getTime())) return "N/A";
+  return parsed.toLocaleDateString("es-MX");
 };
 
 const formatCurrency = (value: number | string | null | undefined) => {
   const amount = Number(value);
-  if (!Number.isFinite(amount)) return 'N/A';
-  return amount.toLocaleString('es-MX', {
-    style: 'currency',
-    currency: 'MXN',
+  if (!Number.isFinite(amount)) return "N/A";
+  return amount.toLocaleString("es-MX", {
+    style: "currency",
+    currency: "MXN",
   });
 };
 
 const formatQuantity = (value: number | string | null | undefined) => {
   const amount = Number(value);
-  if (!Number.isFinite(amount)) return '0.000';
+  if (!Number.isFinite(amount)) return "0.000";
   return amount.toFixed(3);
 };
 
@@ -83,20 +83,22 @@ export default function InventoryPage() {
   const queryClient = useQueryClient();
 
   const inventoryQuery = useQuery({
-    queryKey: ['inventory', 'inventory'],
-    queryFn: () => fetchApi('/inventory'),
+    queryKey: ["inventory", "inventory"],
+    queryFn: () => fetchApi("/inventory"),
   });
   const purchasesQuery = useQuery({
-    queryKey: ['inventory', 'entries'],
-    queryFn: () => fetchApi('/purchases'),
+    queryKey: ["inventory", "entries"],
+    queryFn: () => fetchApi("/purchases"),
   });
   const movementsQuery = useQuery({
-    queryKey: ['inventory', 'movements'],
-    queryFn: () => fetchApi('/inventory/movements'),
+    queryKey: ["inventory", "movements"],
+    queryFn: () => fetchApi("/inventory/movements"),
   });
 
   const isLoading =
-    inventoryQuery.isLoading || purchasesQuery.isLoading || movementsQuery.isLoading;
+    inventoryQuery.isLoading ||
+    purchasesQuery.isLoading ||
+    movementsQuery.isLoading;
   const error =
     inventoryQuery.error ?? purchasesQuery.error ?? movementsQuery.error;
 
@@ -125,14 +127,14 @@ export default function InventoryPage() {
   const toolbarConfig =
     activeTab === 1
       ? {
-          createLabel: 'Registrar Compra',
+          createLabel: "Registrar Compra",
           onCreate: () => setIsPurchaseModalOpen(true),
         }
       : null;
 
   if (isLoading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+      <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
         <CircularProgress />
       </Box>
     );
@@ -147,7 +149,7 @@ export default function InventoryPage() {
   }
 
   return (
-    <Box sx={{ backgroundColor: 'background.paper' }}>
+    <Box sx={{ backgroundColor: "background.paper" }}>
       <ListPageToolbar config={toolbarConfig} />
       <ResourcePageTitle title="Inventario" icon={<WarehouseIcon />} />
 
@@ -162,7 +164,7 @@ export default function InventoryPage() {
       </Tabs>
 
       {activeTab === 0 && (
-        <TableContainer sx={{ maxHeight: 'calc(100vh - 180px)' }}>
+        <TableContainer sx={{ maxHeight: "calc(100vh - 180px)" }}>
           <Table stickyHeader>
             <TableHead>
               <TableRow>
@@ -182,9 +184,9 @@ export default function InventoryPage() {
               ) : (
                 inventory.map((item) => (
                   <TableRow key={item.id}>
-                    <TableCell>{item.name ?? 'N/A'}</TableCell>
-                    <TableCell>{item.supplier?.name ?? 'N/A'}</TableCell>
-                    <TableCell>{(item.unit ?? 'pz').toUpperCase()}</TableCell>
+                    <TableCell>{item.name ?? "N/A"}</TableCell>
+                    <TableCell>{item.supplier?.name ?? "N/A"}</TableCell>
+                    <TableCell>{(item.unit ?? "pz").toUpperCase()}</TableCell>
                     <TableCell>{formatQuantity(item.stock)}</TableCell>
                   </TableRow>
                 ))
@@ -195,7 +197,7 @@ export default function InventoryPage() {
       )}
 
       {activeTab === 1 && (
-        <TableContainer sx={{ maxHeight: 'calc(100vh - 180px)' }}>
+        <TableContainer sx={{ maxHeight: "calc(100vh - 180px)" }}>
           <Table stickyHeader>
             <TableHead>
               <TableRow>
@@ -216,9 +218,11 @@ export default function InventoryPage() {
                 purchases.map((purchase) => (
                   <TableRow key={purchase.id}>
                     <TableCell>{formatDate(purchase.purchase_date)}</TableCell>
-                    <TableCell>{purchase.folio ?? 'N/A'}</TableCell>
-                    <TableCell>{purchase.supplier?.name ?? 'N/A'}</TableCell>
-                    <TableCell>{formatCurrency(purchaseTotal(purchase.items))}</TableCell>
+                    <TableCell>{purchase.folio ?? "N/A"}</TableCell>
+                    <TableCell>{purchase.supplier?.name ?? "N/A"}</TableCell>
+                    <TableCell>
+                      {formatCurrency(purchaseTotal(purchase.items))}
+                    </TableCell>
                   </TableRow>
                 ))
               )}
@@ -228,7 +232,7 @@ export default function InventoryPage() {
       )}
 
       {activeTab === 2 && (
-        <TableContainer sx={{ maxHeight: 'calc(100vh - 180px)' }}>
+        <TableContainer sx={{ maxHeight: "calc(100vh - 180px)" }}>
           <Table stickyHeader>
             <TableHead>
               <TableRow>
@@ -253,15 +257,17 @@ export default function InventoryPage() {
                 movements.map((movement) => (
                   <TableRow key={movement.id}>
                     <TableCell>{formatDate(movement.created_at)}</TableCell>
-                    <TableCell>{movement.movement_type ?? 'N/A'}</TableCell>
-                    <TableCell>{movement.product?.name ?? 'N/A'}</TableCell>
+                    <TableCell>{movement.movement_type ?? "N/A"}</TableCell>
+                    <TableCell>{movement.product?.name ?? "N/A"}</TableCell>
                     <TableCell>
-                      {`${formatQuantity(movement.quantity)} ${(movement.product?.unit ?? '').toUpperCase()}`}
+                      {`${formatQuantity(movement.quantity)} ${(movement.product?.unit ?? "").toUpperCase()}`}
                     </TableCell>
-                    <TableCell>{formatQuantity(movement.previous_stock)}</TableCell>
+                    <TableCell>
+                      {formatQuantity(movement.previous_stock)}
+                    </TableCell>
                     <TableCell>{formatQuantity(movement.new_stock)}</TableCell>
-                    <TableCell>{movement.purchase?.folio ?? 'N/A'}</TableCell>
-                    <TableCell>{movement.reason ?? 'N/A'}</TableCell>
+                    <TableCell>{movement.purchase?.folio ?? "N/A"}</TableCell>
+                    <TableCell>{movement.reason ?? "N/A"}</TableCell>
                   </TableRow>
                 ))
               )}
@@ -274,9 +280,13 @@ export default function InventoryPage() {
         isOpen={isPurchaseModalOpen}
         onClose={() => setIsPurchaseModalOpen(false)}
         onSuccess={() => {
-          queryClient.invalidateQueries({ queryKey: ['inventory', 'inventory'] });
-          queryClient.invalidateQueries({ queryKey: ['inventory', 'entries'] });
-          queryClient.invalidateQueries({ queryKey: ['inventory', 'movements'] });
+          queryClient.invalidateQueries({
+            queryKey: ["inventory", "inventory"],
+          });
+          queryClient.invalidateQueries({ queryKey: ["inventory", "entries"] });
+          queryClient.invalidateQueries({
+            queryKey: ["inventory", "movements"],
+          });
         }}
       />
     </Box>

@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMemo, useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   Box,
   Button,
@@ -13,11 +13,11 @@ import {
   TableRow,
   TextField,
   Typography,
-} from '@mui/material';
-import { Add as AddIcon, Delete as DeleteIcon } from '@mui/icons-material';
-import FloatingModal from '../../../components/FloatingModal';
-import { fetchApi } from '../../../api';
-import { createClientRowId } from '../../../utils/clientRowId';
+} from "@mui/material";
+import { Add as AddIcon, Delete as DeleteIcon } from "@mui/icons-material";
+import FloatingModal from "../../../components/FloatingModal";
+import { fetchApi } from "../../../api";
+import { createClientRowId } from "../../../utils/clientRowId";
 
 type PurchaseItemRow = {
   clientRowId: string;
@@ -36,9 +36,9 @@ type ProductOption = {
 
 const createEmptyRow = (): PurchaseItemRow => ({
   clientRowId: createClientRowId(),
-  product_id: '',
-  quantity: '1',
-  unit_cost: '0',
+  product_id: "",
+  quantity: "1",
+  unit_cost: "0",
 });
 
 interface PurchaseFormModalProps {
@@ -52,22 +52,22 @@ export default function PurchaseFormModal({
   onClose,
   onSuccess,
 }: PurchaseFormModalProps) {
-  const [supplierId, setSupplierId] = useState('');
-  const [purchaseDate, setPurchaseDate] = useState(
-    () => new Date().toISOString().slice(0, 10),
+  const [supplierId, setSupplierId] = useState("");
+  const [purchaseDate, setPurchaseDate] = useState(() =>
+    new Date().toISOString().slice(0, 10),
   );
-  const [notes, setNotes] = useState('');
+  const [notes, setNotes] = useState("");
   const [items, setItems] = useState<PurchaseItemRow[]>([createEmptyRow()]);
   const [formError, setFormError] = useState<string | null>(null);
 
   const { data: suppliersData } = useQuery({
-    queryKey: ['suppliers'],
-    queryFn: () => fetchApi('/suppliers'),
+    queryKey: ["suppliers"],
+    queryFn: () => fetchApi("/suppliers"),
     enabled: isOpen,
   });
   const { data: productsData } = useQuery({
-    queryKey: ['products'],
-    queryFn: () => fetchApi('/products?limit=200&order_by=name&order=asc'),
+    queryKey: ["products"],
+    queryFn: () => fetchApi("/products?limit=200&order_by=name&order=asc"),
     enabled: isOpen,
   });
 
@@ -121,14 +121,14 @@ export default function PurchaseFormModal({
 
   const mutation = useMutation({
     mutationFn: (payload: unknown) =>
-      fetchApi('/purchases', {
-        method: 'POST',
+      fetchApi("/purchases", {
+        method: "POST",
         body: JSON.stringify(payload),
       }),
     onSuccess: () => {
-      setSupplierId('');
+      setSupplierId("");
       setPurchaseDate(new Date().toISOString().slice(0, 10));
-      setNotes('');
+      setNotes("");
       setItems([createEmptyRow()]);
       setFormError(null);
       onSuccess();
@@ -153,11 +153,11 @@ export default function PurchaseFormModal({
 
   const handleSave = () => {
     if (!supplierId) {
-      setFormError('Selecciona un proveedor.');
+      setFormError("Selecciona un proveedor.");
       return;
     }
     if (validItems.length === 0) {
-      setFormError('Agrega al menos un producto válido.');
+      setFormError("Agrega al menos un producto válido.");
       return;
     }
 
@@ -170,7 +170,7 @@ export default function PurchaseFormModal({
     });
   };
 
-  const canSave = supplierId.trim() !== '' && validItems.length > 0;
+  const canSave = supplierId.trim() !== "" && validItems.length > 0;
 
   return (
     <FloatingModal
@@ -180,8 +180,8 @@ export default function PurchaseFormModal({
       initialWidth={900}
       initialHeight={700}
       renderContent={() => (
-        <Box sx={{ p: 3, display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+        <Box sx={{ p: 3, display: "flex", flexDirection: "column", gap: 2 }}>
+          <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
             <TextField
               select
               label="Proveedor"
@@ -191,7 +191,7 @@ export default function PurchaseFormModal({
             >
               {suppliers.map((supplier) => (
                 <MenuItem key={supplier.id} value={supplier.id}>
-                  {supplier.name ?? 'Sin nombre'}
+                  {supplier.name ?? "Sin nombre"}
                 </MenuItem>
               ))}
             </TextField>
@@ -224,7 +224,10 @@ export default function PurchaseFormModal({
                     <IconButton
                       color="primary"
                       onClick={() =>
-                        setItems((currentItems) => [...currentItems, createEmptyRow()])
+                        setItems((currentItems) => [
+                          ...currentItems,
+                          createEmptyRow(),
+                        ])
                       }
                     >
                       <AddIcon />
@@ -250,12 +253,15 @@ export default function PurchaseFormModal({
                           size="small"
                           value={item.product_id}
                           onChange={(event) =>
-                            updateItem(index, 'product_id', event.target.value)
+                            updateItem(index, "product_id", event.target.value)
                           }
                         >
                           {products.map((productOption) => (
-                            <MenuItem key={productOption.id} value={productOption.id}>
-                              {`${productOption.folio ?? 'N/A'} - ${productOption.name ?? 'Sin nombre'} (${(productOption.unit ?? 'pz').toUpperCase()})`}
+                            <MenuItem
+                              key={productOption.id}
+                              value={productOption.id}
+                            >
+                              {`${productOption.folio ?? "N/A"} - ${productOption.name ?? "Sin nombre"} (${(productOption.unit ?? "pz").toUpperCase()})`}
                             </MenuItem>
                           ))}
                         </TextField>
@@ -268,7 +274,7 @@ export default function PurchaseFormModal({
                           onChange={(event) => {
                             const value = event.target.value;
                             if (!/^\d*([.]\d{0,3})?$/.test(value)) return;
-                            updateItem(index, 'quantity', value);
+                            updateItem(index, "quantity", value);
                           }}
                         />
                       </TableCell>
@@ -280,16 +286,16 @@ export default function PurchaseFormModal({
                           onChange={(event) => {
                             const value = event.target.value;
                             if (!/^\d*([.]\d{0,2})?$/.test(value)) return;
-                            updateItem(index, 'unit_cost', value);
+                            updateItem(index, "unit_cost", value);
                           }}
                         />
                       </TableCell>
                       <TableCell>
-                        {subtotal.toLocaleString('es-MX', {
-                          style: 'currency',
-                          currency: 'MXN',
+                        {subtotal.toLocaleString("es-MX", {
+                          style: "currency",
+                          currency: "MXN",
                         })}
-                        {product?.unit ? ` (${product.unit})` : ''}
+                        {product?.unit ? ` (${product.unit})` : ""}
                       </TableCell>
                       <TableCell align="right">
                         <IconButton
@@ -298,7 +304,9 @@ export default function PurchaseFormModal({
                             setItems((currentItems) =>
                               currentItems.length === 1
                                 ? [createEmptyRow()]
-                                : currentItems.filter((_, rowIndex) => rowIndex !== index),
+                                : currentItems.filter(
+                                    (_, rowIndex) => rowIndex !== index,
+                                  ),
                             )
                           }
                         >
@@ -312,15 +320,21 @@ export default function PurchaseFormModal({
             </Table>
           </Paper>
 
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
             <Typography variant="h6">
-              Total:{' '}
-              {total.toLocaleString('es-MX', {
-                style: 'currency',
-                currency: 'MXN',
+              Total:{" "}
+              {total.toLocaleString("es-MX", {
+                style: "currency",
+                currency: "MXN",
               })}
             </Typography>
-            <Box sx={{ display: 'flex', gap: 1 }}>
+            <Box sx={{ display: "flex", gap: 1 }}>
               <Button onClick={onClose}>Cancelar</Button>
               <Button
                 variant="contained"

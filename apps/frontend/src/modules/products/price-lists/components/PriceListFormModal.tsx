@@ -1,8 +1,8 @@
-import { Box, CircularProgress } from '@mui/material';
-import FloatingModal from '../../../../components/FloatingModal';
-import ModalToolbar from '../../../../components/ModalToolbar';
-import { usePriceListForm } from '../hooks/usePriceListForm';
-import PriceListForm from './PriceListForm';
+import { Box, CircularProgress } from "@mui/material";
+import FloatingModal from "../../../../components/FloatingModal";
+import ModalToolbar from "../../../../components/ModalToolbar";
+import { usePriceListForm } from "../hooks/usePriceListForm";
+import PriceListForm from "./PriceListForm";
 
 interface PriceListItemRef {
   id: string | number;
@@ -32,8 +32,10 @@ export default function PriceListFormModal({
 }: PriceListFormModalProps) {
   const isEditing = !!priceListId;
 
-  const handleOnSuccess = (action: 'save' | 'save-and-close' | 'save-and-new') => {
-    if (action === 'save-and-close') {
+  const handleOnSuccess = (
+    action: "save" | "save-and-close" | "save-and-new",
+  ) => {
+    if (action === "save-and-close") {
       onClose();
     }
   };
@@ -59,9 +61,9 @@ export default function PriceListFormModal({
     <ModalToolbar
       isDisabled={formProps.isDisabled}
       onEditToggle={() => formProps.setIsDisabled(!formProps.isDisabled)}
-      onSave={() => formProps.handleSubmit('save')}
-      onSaveAndClose={() => formProps.handleSubmit('save-and-close')}
-      onSaveAndNew={() => formProps.handleSubmit('save-and-new')}
+      onSave={() => formProps.handleSubmit("save")}
+      onSaveAndClose={() => formProps.handleSubmit("save-and-close")}
+      onSaveAndNew={() => formProps.handleSubmit("save-and-new")}
       onNavigateUp={handleNavigateUp}
       onNavigateDown={handleNavigateDown}
       canNavigateUp={canNavigateUp}
@@ -81,14 +83,11 @@ export default function PriceListFormModal({
       toolbar={toolbar}
       renderContent={() =>
         formProps.isLoading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+          <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
             <CircularProgress />
           </Box>
         ) : (
-          <PriceListForm
-            {...formProps}
-            isDisabled={formProps.isDisabled}
-          />
+          <PriceListForm {...formProps} isDisabled={formProps.isDisabled} />
         )
       }
     />

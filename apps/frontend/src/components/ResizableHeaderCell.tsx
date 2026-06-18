@@ -1,5 +1,5 @@
-import { Box, TableCell, TableSortLabel } from '@mui/material';
-import type { MouseEvent as ReactMouseEvent } from 'react';
+import { Box, TableCell, TableSortLabel } from "@mui/material";
+import type { MouseEvent as ReactMouseEvent } from "react";
 
 interface ResizableHeaderCellProps {
   label: string;
@@ -9,7 +9,7 @@ interface ResizableHeaderCellProps {
   onResetWidth: (columnKey: string) => void;
   sortable?: boolean;
   sortActive?: boolean;
-  sortDirection?: 'asc' | 'desc';
+  sortDirection?: "asc" | "desc";
   onSort?: (columnKey: string) => void;
 }
 
@@ -21,16 +21,16 @@ export default function ResizableHeaderCell({
   onResetWidth,
   sortable = false,
   sortActive = false,
-  sortDirection = 'asc',
+  sortDirection = "asc",
   onSort,
 }: ResizableHeaderCellProps) {
   return (
     <TableCell
       sx={{
         ...cellSx,
-        position: 'relative',
-        userSelect: 'none',
-        whiteSpace: 'nowrap',
+        position: "relative",
+        userSelect: "none",
+        whiteSpace: "nowrap",
       }}
     >
       {sortable ? (
@@ -40,15 +40,15 @@ export default function ResizableHeaderCell({
           onClick={() => onSort?.(columnKey)}
           sx={{
             pr: 1.5,
-            color: 'inherit',
-            '&.MuiTableSortLabel-root': {
-              color: 'inherit',
+            color: "inherit",
+            "&.MuiTableSortLabel-root": {
+              color: "inherit",
             },
-            '&.MuiTableSortLabel-root:hover': {
-              color: 'inherit',
+            "&.MuiTableSortLabel-root:hover": {
+              color: "inherit",
             },
-            '& .MuiTableSortLabel-icon': {
-              color: 'inherit !important',
+            "& .MuiTableSortLabel-icon": {
+              color: "inherit !important",
             },
           }}
         >
@@ -63,20 +63,20 @@ export default function ResizableHeaderCell({
         onMouseDown={(event) => onResizeStart(columnKey, event)}
         onDoubleClick={() => onResetWidth(columnKey)}
         sx={{
-          position: 'absolute',
+          position: "absolute",
           top: 0,
           right: 0,
-          width: '0.75rem',
-          height: '100%',
-          cursor: 'col-resize',
-          '&::after': {
+          width: "0.75rem",
+          height: "100%",
+          cursor: "col-resize",
+          "&::after": {
             content: '""',
-            position: 'absolute',
-            right: '0.25rem',
-            top: '20%',
-            bottom: '20%',
-            width: '1px',
-            backgroundColor: 'divider',
+            position: "absolute",
+            right: "0.25rem",
+            top: "20%",
+            bottom: "20%",
+            width: "1px",
+            backgroundColor: "divider",
           },
         }}
       />

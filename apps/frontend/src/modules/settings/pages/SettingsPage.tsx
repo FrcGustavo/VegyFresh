@@ -1,10 +1,20 @@
-import { Box, FormControl, InputLabel, MenuItem, Paper, Select, Typography } from '@mui/material';
-import { Button } from '@mui/material';
-import { useNavigate } from 'react-router';
+import {
+  Box,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Paper,
+  Select,
+  Typography,
+} from "@mui/material";
+import { Button } from "@mui/material";
+import { useNavigate } from "react-router";
 
 interface SettingsPageProps {
-  themePreference: 'light' | 'dark' | 'system';
-  onThemePreferenceChange: (themePreference: 'light' | 'dark' | 'system') => void;
+  themePreference: "light" | "dark" | "system";
+  onThemePreferenceChange: (
+    themePreference: "light" | "dark" | "system",
+  ) => void;
 }
 
 export default function SettingsPage({
@@ -27,7 +37,9 @@ export default function SettingsPage({
             value={themePreference}
             label="Tema"
             onChange={(event) =>
-              onThemePreferenceChange(event.target.value as 'light' | 'dark' | 'system')
+              onThemePreferenceChange(
+                event.target.value as "light" | "dark" | "system",
+              )
             }
           >
             <MenuItem value="light">Claro</MenuItem>
@@ -41,7 +53,7 @@ export default function SettingsPage({
         <Typography variant="subtitle1" gutterBottom>
           Organización
         </Typography>
-        <Button variant="contained" onClick={() => navigate('/organization')}>
+        <Button variant="contained" onClick={() => navigate("/organization")}>
           Editar organización
         </Button>
       </Paper>

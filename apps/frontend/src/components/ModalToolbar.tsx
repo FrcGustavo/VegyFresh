@@ -1,9 +1,9 @@
-import { Box, Button, IconButton, Tooltip } from '@mui/material';
+import { Box, Button, IconButton, Tooltip } from "@mui/material";
 import {
   Edit as EditIcon,
   ArrowUpward as ArrowUpIcon,
   ArrowDownward as ArrowDownIcon,
-} from '@mui/icons-material';
+} from "@mui/icons-material";
 
 interface ModalToolbarProps {
   isDisabled: boolean;
@@ -35,18 +35,18 @@ export default function ModalToolbar({
   return (
     <Box
       sx={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
         padding: 1,
-        backgroundColor: 'background.paper',
-        borderBottom: '1px solid',
-        borderColor: 'divider',
+        backgroundColor: "background.paper",
+        borderBottom: "1px solid",
+        borderColor: "divider",
         gap: 2,
       }}
     >
       {/* Save Actions */}
-      <Box sx={{ display: 'flex', gap: 1 }}>
+      <Box sx={{ display: "flex", gap: 1 }}>
         <Tooltip title="Guardar">
           <span>
             <Button
@@ -90,14 +90,14 @@ export default function ModalToolbar({
       </Box>
 
       {/* Edit Toggle and Navigation */}
-      <Box sx={{ display: 'flex', gap: 1 }}>
+      <Box sx={{ display: "flex", gap: 1 }}>
         {/* Edit Icon - only show when not creating new */}
         {isEditing && (
-          <Tooltip title={isDisabled ? 'Editar' : 'Cancelar edición'}>
+          <Tooltip title={isDisabled ? "Editar" : "Cancelar edición"}>
             <IconButton
               size="small"
               onClick={onEditToggle}
-              color={isDisabled ? 'default' : 'primary'}
+              color={isDisabled ? "default" : "primary"}
             >
               <EditIcon />
             </IconButton>

@@ -1,5 +1,5 @@
-import { Box } from '@mui/material';
-import type { ReactNode } from 'react';
+import { Box } from "@mui/material";
+import type { ReactNode } from "react";
 
 interface ModalTabPanelProps {
   value: number;
@@ -13,7 +13,7 @@ export default function ModalTabPanel({
   children,
 }: ModalTabPanelProps) {
   return (
-    <div hidden={value !== index} style={{ width: '100%', height: '100%' }}>
+    <div hidden={value !== index} style={{ width: "100%", height: "100%" }}>
       {value === index && <Box sx={{ p: 2 }}>{children}</Box>}
     </div>
   );

@@ -1,17 +1,12 @@
-import { useState, type FormEvent } from 'react';
-import {
-  Alert,
-  Box,
-  Paper,
-  Typography,
-} from '@mui/material';
-import { useNavigate } from 'react-router';
-import { useAuth } from '../../../auth/AuthContext';
+import { useState, type FormEvent } from "react";
+import { Alert, Box, Paper, Typography } from "@mui/material";
+import { useNavigate } from "react-router";
+import { useAuth } from "../../../auth/AuthContext";
 import {
   EMPTY_ORGANIZATION_FORM,
   OrganizationForm,
   type OrganizationFormData,
-} from '../../organizations/components/OrganizationForm';
+} from "../../organizations/components/OrganizationForm";
 
 export default function OrganizationSetupPage() {
   const navigate = useNavigate();
@@ -21,18 +16,18 @@ export default function OrganizationSetupPage() {
     EMPTY_ORGANIZATION_FORM,
   );
   const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   const handleChange = (name: keyof OrganizationFormData, value: string) => {
     setFormData((current) => ({
       ...current,
-      [name]: name === 'name' ? value : value.trim() ? value.trim() : null,
+      [name]: name === "name" ? value : value.trim() ? value.trim() : null,
     }));
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setError('');
+    setError("");
     setIsSaving(true);
 
     try {
@@ -50,12 +45,12 @@ export default function OrganizationSetupPage() {
         supplier_folio_prefix: formData.supplier_folio_prefix,
         purchase_folio_prefix: formData.purchase_folio_prefix,
       });
-      void navigate('/orders');
+      void navigate("/orders");
     } catch (saveError) {
       setError(
         saveError instanceof Error
           ? saveError.message
-          : 'No se pudo completar la organización',
+          : "No se pudo completar la organización",
       );
     } finally {
       setIsSaving(false);
@@ -72,7 +67,11 @@ export default function OrganizationSetupPage() {
       </Typography>
 
       <Paper sx={{ p: 3, maxWidth: 960 }}>
-        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
 
         <OrganizationForm
           value={formData}
@@ -81,7 +80,7 @@ export default function OrganizationSetupPage() {
           isSubmitting={isSaving}
           submitLabel="Guardar organización"
           secondaryActionLabel="Ir a login"
-          onSecondaryAction={() => void navigate('/login')}
+          onSecondaryAction={() => void navigate("/login")}
         />
       </Paper>
     </Box>

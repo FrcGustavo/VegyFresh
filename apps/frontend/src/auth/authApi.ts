@@ -1,4 +1,4 @@
-import { API_URL } from '../api';
+import { API_URL } from "../api";
 
 export interface AuthUser {
   id: string;
@@ -92,39 +92,43 @@ export class AuthApiError extends Error {
 
   constructor(message: string, status: number) {
     super(message);
-    this.name = 'AuthApiError';
+    this.name = "AuthApiError";
     this.status = status;
   }
 }
 
 async function postPublic<T>(path: string, body: unknown): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
 
   if (!res.ok) {
-    const err = await res.json().catch(() => ({})) as { message?: string };
-    throw new AuthApiError(err.message || 'Error de autenticación', res.status);
+    const err = (await res.json().catch(() => ({}))) as { message?: string };
+    throw new AuthApiError(err.message || "Error de autenticación", res.status);
   }
 
   return res.json() as Promise<T>;
 }
 
-async function postAuthenticated<T>(path: string, accessToken: string, body: unknown): Promise<T> {
+async function postAuthenticated<T>(
+  path: string,
+  accessToken: string,
+  body: unknown,
+): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       Authorization: `Bearer ${accessToken}`,
     },
     body: JSON.stringify(body),
   });
 
   if (!res.ok) {
-    const err = await res.json().catch(() => ({})) as { message?: string };
-    throw new AuthApiError(err.message || 'Error de autenticación', res.status);
+    const err = (await res.json().catch(() => ({}))) as { message?: string };
+    throw new AuthApiError(err.message || "Error de autenticación", res.status);
   }
 
   return res.json() as Promise<T>;
@@ -132,34 +136,48 @@ async function postAuthenticated<T>(path: string, accessToken: string, body: unk
 
 export const authApi = {
   login: (payload: LoginPayload) =>
-    postPublic<AuthSessionResponse>('/auth/login', payload),
+    postPublic<AuthSessionResponse>("/auth/login", payload),
 
   signup: (payload: SignupPayload) =>
-    postPublic<SignupResponse>('/auth/signup', payload),
+    postPublic<SignupResponse>("/auth/signup", payload),
 
   setupOrganization: (payload: SetupOrganizationPayload) =>
-    postPublic<AuthSessionResponse>('/auth/setup-organization', payload),
+    postPublic<AuthSessionResponse>("/auth/setup-organization", payload),
 
-  setupOrganizationAuth: (accessToken: string, payload: SetupOrganizationAuthPayload) =>
-    postAuthenticated<AuthSessionResponse>('/auth/setup-organization-auth', accessToken, payload),
+  setupOrganizationAuth: (
+    accessToken: string,
+    payload: SetupOrganizationAuthPayload,
+  ) =>
+    postAuthenticated<AuthSessionResponse>(
+      "/auth/setup-organization-auth",
+      accessToken,
+      payload,
+    ),
 
   refresh: (refreshToken: string) =>
-    postPublic<AuthRefreshResponse>('/auth/refresh', { refresh_token: refreshToken }),
+    postPublic<AuthRefreshResponse>("/auth/refresh", {
+      refresh_token: refreshToken,
+    }),
 
   me: (accessToken: string): Promise<AuthContextResponse> =>
     fetch(`${API_URL}/auth/me`, {
       headers: { Authorization: `Bearer ${accessToken}` },
     }).then(async (r) => {
       if (!r.ok) {
-        const err = await r.json().catch(() => ({})) as { message?: string };
-        throw new AuthApiError(err.message || 'Error de autenticación', r.status);
+        const err = (await r.json().catch(() => ({}))) as { message?: string };
+        throw new AuthApiError(
+          err.message || "Error de autenticación",
+          r.status,
+        );
       }
       return r.json() as Promise<AuthContextResponse>;
     }),
 
   logout: (accessToken: string): Promise<void> =>
     fetch(`${API_URL}/auth/logout`, {
-      method: 'POST',
+      method: "POST",
       headers: { Authorization: `Bearer ${accessToken}` },
-    }).then(() => undefined).catch(() => undefined),
+    })
+      .then(() => undefined)
+      .catch(() => undefined),
 };

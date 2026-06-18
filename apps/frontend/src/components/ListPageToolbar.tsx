@@ -6,14 +6,14 @@ import {
   MenuItem,
   Select,
   TextField,
-} from '@mui/material';
-import ListSearchField from './ListSearchField';
+} from "@mui/material";
+import ListSearchField from "./ListSearchField";
 
 export interface ListPageToolbarConfig {
-  createdFilter?: 'all' | 'today' | 'range';
+  createdFilter?: "all" | "today" | "range";
   createdFrom?: string;
   createdTo?: string;
-  onCreatedFilterChange?: (value: 'all' | 'today' | 'range') => void;
+  onCreatedFilterChange?: (value: "all" | "today" | "range") => void;
   onCreatedFromChange?: (value: string) => void;
   onCreatedToChange?: (value: string) => void;
   createLabel: string;
@@ -31,7 +31,16 @@ export default function ListPageToolbar({ config }: ListPageToolbarProps) {
   if (!config) return null;
 
   return (
-    <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap', py: 0.5, px: 1 }}>
+    <Box
+      sx={{
+        display: "flex",
+        gap: 2,
+        alignItems: "center",
+        flexWrap: "wrap",
+        py: 0.5,
+        px: 1,
+      }}
+    >
       <Button
         variant="contained"
         color="primary"
@@ -43,14 +52,16 @@ export default function ListPageToolbar({ config }: ListPageToolbarProps) {
       {config.onCreatedFilterChange && (
         <>
           <FormControl size="small" sx={{ minWidth: 180 }}>
-            <InputLabel id="toolbar-created-filter-label">Filtro fecha</InputLabel>
+            <InputLabel id="toolbar-created-filter-label">
+              Filtro fecha
+            </InputLabel>
             <Select
               labelId="toolbar-created-filter-label"
               label="Filtro fecha"
-              value={config.createdFilter ?? 'all'}
+              value={config.createdFilter ?? "all"}
               onChange={(event) =>
                 config.onCreatedFilterChange?.(
-                  event.target.value as 'all' | 'today' | 'range',
+                  event.target.value as "all" | "today" | "range",
                 )
               }
             >
@@ -59,17 +70,15 @@ export default function ListPageToolbar({ config }: ListPageToolbarProps) {
               <MenuItem value="range">Rango</MenuItem>
             </Select>
           </FormControl>
-          {config.createdFilter === 'range' && (
+          {config.createdFilter === "range" && (
             <>
               <TextField
                 size="small"
                 type="date"
                 label="Desde"
-                value={config.createdFrom ?? ''}
+                value={config.createdFrom ?? ""}
                 onChange={(event) =>
-                  config.onCreatedFromChange?.(
-                    event.target.value,
-                  )
+                  config.onCreatedFromChange?.(event.target.value)
                 }
                 slotProps={{ inputLabel: { shrink: true } }}
               />
@@ -77,11 +86,9 @@ export default function ListPageToolbar({ config }: ListPageToolbarProps) {
                 size="small"
                 type="date"
                 label="Hasta"
-                value={config.createdTo ?? ''}
+                value={config.createdTo ?? ""}
                 onChange={(event) =>
-                  config.onCreatedToChange?.(
-                    event.target.value,
-                  )
+                  config.onCreatedToChange?.(event.target.value)
                 }
                 slotProps={{ inputLabel: { shrink: true } }}
               />
@@ -91,8 +98,8 @@ export default function ListPageToolbar({ config }: ListPageToolbarProps) {
       )}
       {config.onSearchChange && (
         <ListSearchField
-          placeholder={config.searchPlaceholder ?? 'Buscar...'}
-          value={config.searchValue ?? ''}
+          placeholder={config.searchPlaceholder ?? "Buscar..."}
+          value={config.searchValue ?? ""}
           onChange={config.onSearchChange}
         />
       )}

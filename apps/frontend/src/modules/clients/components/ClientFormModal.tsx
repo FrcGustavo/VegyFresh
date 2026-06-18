@@ -1,11 +1,11 @@
-import { useState } from 'react';
-import { Box, CircularProgress } from '@mui/material';
-import FloatingModal from '../../../components/FloatingModal';
-import ModalTabPanel from '../../../components/ModalTabPanel';
-import ModalTabsNavigation from '../../../components/ModalTabsNavigation';
-import ModalToolbar from '../../../components/ModalToolbar';
-import { useClientForm } from '../hooks/useClientForm';
-import ClientForm from './ClientForm';
+import { useState } from "react";
+import { Box, CircularProgress } from "@mui/material";
+import FloatingModal from "../../../components/FloatingModal";
+import ModalTabPanel from "../../../components/ModalTabPanel";
+import ModalTabsNavigation from "../../../components/ModalTabsNavigation";
+import ModalToolbar from "../../../components/ModalToolbar";
+import { useClientForm } from "../hooks/useClientForm";
+import ClientForm from "./ClientForm";
 
 interface ClientListItemRef {
   id: string | number;
@@ -36,10 +36,12 @@ export default function ClientFormModal({
 }: ClientFormModalProps) {
   const isEditing = !!clientId;
   const [activeTab, setActiveTab] = useState(0);
-  
-  const handleOnSuccess = (action: 'save' | 'save-and-close' | 'save-and-new') => {
-    if (action === 'save-and-close' || action === 'save-and-new') {
-      if (action === 'save-and-new') {
+
+  const handleOnSuccess = (
+    action: "save" | "save-and-close" | "save-and-new",
+  ) => {
+    if (action === "save-and-close" || action === "save-and-new") {
+      if (action === "save-and-new") {
         // Reset for new entry
         onClose();
         setTimeout(() => {
@@ -73,9 +75,9 @@ export default function ClientFormModal({
     <ModalToolbar
       isDisabled={formProps.isDisabled}
       onEditToggle={() => formProps.setIsDisabled(!formProps.isDisabled)}
-      onSave={() => formProps.handleSubmit('save')}
-      onSaveAndClose={() => formProps.handleSubmit('save-and-close')}
-      onSaveAndNew={() => formProps.handleSubmit('save-and-new')}
+      onSave={() => formProps.handleSubmit("save")}
+      onSaveAndClose={() => formProps.handleSubmit("save-and-close")}
+      onSaveAndNew={() => formProps.handleSubmit("save-and-new")}
       onNavigateUp={handleNavigateUp}
       onNavigateDown={handleNavigateDown}
       canNavigateUp={canNavigateUp}
@@ -86,55 +88,64 @@ export default function ClientFormModal({
   );
 
   const tabOptions = [
-    { value: 0, label: 'General' },
-    { value: 1, label: 'Dirección' },
-    { value: 2, label: 'Lista de precios' },
+    { value: 0, label: "General" },
+    { value: 1, label: "Dirección" },
+    { value: 2, label: "Lista de precios" },
   ];
 
   return (
     <FloatingModal
       isOpen={isOpen}
       onClose={onClose}
-      title={title ?? (clientId ? 'Editar Cliente' : 'Crear Cliente')}
+      title={title ?? (clientId ? "Editar Cliente" : "Crear Cliente")}
       initialWidth={initialWidth}
       initialHeight={initialHeight}
       toolbar={toolbar}
       renderContent={() =>
         formProps.isLoading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+          <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
             <CircularProgress />
           </Box>
         ) : (
-          <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+          <Box
+            sx={{ display: "flex", flexDirection: "column", height: "100%" }}
+          >
             <ModalTabsNavigation
               value={activeTab}
               options={tabOptions}
               onChange={setActiveTab}
             />
 
-            <Box sx={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+            <Box
+              sx={{
+                flex: 1,
+                overflowY: "auto",
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
               <ModalTabPanel value={activeTab} index={0}>
-                  <ClientForm
-                    {...formProps}
-                    section="general"
-                    isDisabled={formProps.isDisabled}
-                  />
+                <ClientForm
+                  {...formProps}
+                  section="general"
+                  isDisabled={formProps.isDisabled}
+                />
               </ModalTabPanel>
 
               <ModalTabPanel value={activeTab} index={1}>
-                  <ClientForm
-                    {...formProps}
-                    section="address"
-                    isDisabled={formProps.isDisabled}
-                  />
+                <ClientForm
+                  {...formProps}
+                  section="address"
+                  isDisabled={formProps.isDisabled}
+                />
               </ModalTabPanel>
 
               <ModalTabPanel value={activeTab} index={2}>
-                  <ClientForm
-                    {...formProps}
-                    section="price-list"
-                    isDisabled={formProps.isDisabled}
-                  />
+                <ClientForm
+                  {...formProps}
+                  section="price-list"
+                  isDisabled={formProps.isDisabled}
+                />
               </ModalTabPanel>
             </Box>
           </Box>

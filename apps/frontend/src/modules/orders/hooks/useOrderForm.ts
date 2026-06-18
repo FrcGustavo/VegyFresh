@@ -1,10 +1,10 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router';
-import { fetchApi } from '../../../api';
-import { createClientRowId } from '../../../utils/clientRowId';
+import { useState, useEffect, useMemo, useRef } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router";
+import { fetchApi } from "../../../api";
+import { createClientRowId } from "../../../utils/clientRowId";
 
-type SaveAction = 'save' | 'save-and-close' | 'save-and-new';
+type SaveAction = "save" | "save-and-close" | "save-and-new";
 type OrderChangeEvent = { target: { name: string; value: string } };
 interface ProductPriceRef {
   product_id: string;
@@ -53,39 +53,46 @@ interface ExistingOrderItemRef {
   product?: ProductRef | null;
 }
 const EMPTY_FORM_DATA: OrderFormData = {
-  client_id: '',
-  user_id: '',
-  status: 'PENDING_REVIEW',
-  origin: 'WHATSAPP',
-  delivery_date: '',
-  order_folio: '',
-  created_at: '',
+  client_id: "",
+  user_id: "",
+  status: "PENDING_REVIEW",
+  origin: "WHATSAPP",
+  delivery_date: "",
+  order_folio: "",
+  created_at: "",
 };
 const createEmptyItem = (): OrderFormItem => ({
   clientRowId: createClientRowId(),
-  product_id: '',
+  product_id: "",
   quantity: 1,
   unit_price: 0,
-  folio: '',
-  name: '',
-  unit: '',
+  folio: "",
+  name: "",
+  unit: "",
   product: null as ProductRef | null,
 });
 
-export function useOrderForm(id?: string, onSuccess?: (action: SaveAction) => void) {
+export function useOrderForm(
+  id?: string,
+  onSuccess?: (action: SaveAction) => void,
+) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [formData, setFormData] = useState<OrderFormData>(EMPTY_FORM_DATA);
   const [items, setItems] = useState<OrderFormItem[]>([createEmptyItem()]);
   const [isDisabled, setIsDisabled] = useState(!!id);
-  const [clientLookup, setClientLookup] = useState({ folio: '', name: '' });
-  const lookupTimersRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const [clientLookup, setClientLookup] = useState({ folio: "", name: "" });
+  const lookupTimersRef = useRef<Record<string, ReturnType<typeof setTimeout>>>(
+    {},
+  );
   const lookupVersionRef = useRef<Record<string, number>>({});
-  const clientLookupTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const clientLookupTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
   const clientLookupVersionRef = useRef(0);
 
   const { data: existingOrder, isLoading: isLoadingOrder } = useQuery({
-    queryKey: ['orders', id],
+    queryKey: ["orders", id],
     queryFn: () => fetchApi(`/orders/${id}`),
     enabled: !!id,
   });
@@ -100,26 +107,28 @@ export function useOrderForm(id?: string, onSuccess?: (action: SaveAction) => vo
           origin: existingOrder.origin,
           delivery_date: existingOrder.delivery_date
             ? String(existingOrder.delivery_date).slice(0, 10)
-            : '',
-          order_folio: existingOrder.folio || '',
+            : "",
+          order_folio: existingOrder.folio || "",
           created_at: existingOrder.created_at
             ? String(existingOrder.created_at).slice(0, 10)
-            : '',
+            : "",
         });
       });
       if (existingOrder.items?.length) {
         queueMicrotask(() => {
-          setItems(existingOrder.items.map((item: ExistingOrderItemRef) => ({
-            id: item.id,
-            clientRowId: String(item.id ?? createClientRowId()),
-            product_id: item.product_id,
-            quantity: item.quantity,
-            unit_price: item.unit_price,
-            folio: item.product?.folio || '',
-            name: item.product?.name || '',
-            unit: item.product?.unit || '',
-            product: item.product ?? null,
-          })));
+          setItems(
+            existingOrder.items.map((item: ExistingOrderItemRef) => ({
+              id: item.id,
+              clientRowId: String(item.id ?? createClientRowId()),
+              product_id: item.product_id,
+              quantity: item.quantity,
+              unit_price: item.unit_price,
+              folio: item.product?.folio || "",
+              name: item.product?.name || "",
+              unit: item.product?.unit || "",
+              product: item.product ?? null,
+            })),
+          );
         });
       } else {
         queueMicrotask(() => {
@@ -134,15 +143,27 @@ export function useOrderForm(id?: string, onSuccess?: (action: SaveAction) => vo
     }
   }, [id, existingOrder]);
 
-  const { data: clientsData } = useQuery({ queryKey: ['clients'], queryFn: () => fetchApi('/clients') });
-  const { data: usersData } = useQuery({ queryKey: ['users'], queryFn: () => fetchApi('/users') });
+  const { data: clientsData } = useQuery({
+    queryKey: ["clients"],
+    queryFn: () => fetchApi("/clients"),
+  });
+  const { data: usersData } = useQuery({
+    queryKey: ["users"],
+    queryFn: () => fetchApi("/users"),
+  });
 
   const clients = useMemo(
-    () => (Array.isArray(clientsData) ? clientsData : (clientsData?.data || [])) as ClientRef[],
+    () =>
+      (Array.isArray(clientsData)
+        ? clientsData
+        : clientsData?.data || []) as ClientRef[],
     [clientsData],
   );
   const users = useMemo(
-    () => (Array.isArray(usersData) ? usersData : (usersData?.data || [])) as UserRef[],
+    () =>
+      (Array.isArray(usersData)
+        ? usersData
+        : usersData?.data || []) as UserRef[],
     [usersData],
   );
 
@@ -154,26 +175,38 @@ export function useOrderForm(id?: string, onSuccess?: (action: SaveAction) => vo
     }
   }, [users, formData.user_id]);
 
-  const selectedClient = useMemo(() => clients.find((c) => c.id === formData.client_id), [clients, formData.client_id]);
+  const selectedClient = useMemo(
+    () => clients.find((c) => c.id === formData.client_id),
+    [clients, formData.client_id],
+  );
 
   useEffect(() => {
     if (selectedClient) {
       setClientLookup({
-        folio: selectedClient.folio ?? '',
-        name: selectedClient.name ?? '',
+        folio: selectedClient.folio ?? "",
+        name: selectedClient.name ?? "",
       });
     }
   }, [selectedClient]);
 
-  useEffect(() => () => {
-    Object.values(lookupTimersRef.current).forEach((timer) => clearTimeout(timer));
-    if (clientLookupTimerRef.current) {
-      clearTimeout(clientLookupTimerRef.current);
-    }
-  }, []);
+  useEffect(
+    () => () => {
+      Object.values(lookupTimersRef.current).forEach((timer) =>
+        clearTimeout(timer),
+      );
+      if (clientLookupTimerRef.current) {
+        clearTimeout(clientLookupTimerRef.current);
+      }
+    },
+    [],
+  );
 
   const totalGeneral = useMemo(() => {
-    return items.reduce((sum, item) => sum + (Number(item.quantity || 0) * Number(item.unit_price || 0)), 0);
+    return items.reduce(
+      (sum, item) =>
+        sum + Number(item.quantity || 0) * Number(item.unit_price || 0),
+      0,
+    );
   }, [items]);
 
   const handleChange = (e: OrderChangeEvent) => {
@@ -181,10 +214,7 @@ export function useOrderForm(id?: string, onSuccess?: (action: SaveAction) => vo
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const updateClientLookup = (
-    field: 'folio' | 'name',
-    rawValue: string,
-  ) => {
+  const updateClientLookup = (field: "folio" | "name", rawValue: string) => {
     setClientLookup((prev) => ({ ...prev, [field]: rawValue }));
     const searchText = rawValue.trim();
 
@@ -193,7 +223,7 @@ export function useOrderForm(id?: string, onSuccess?: (action: SaveAction) => vo
     }
 
     if (!searchText) {
-      setFormData((prev) => ({ ...prev, client_id: '' }));
+      setFormData((prev) => ({ ...prev, client_id: "" }));
       return;
     }
 
@@ -204,17 +234,23 @@ export function useOrderForm(id?: string, onSuccess?: (action: SaveAction) => vo
       const response = await fetchApi(
         `/clients?search=${encodeURIComponent(searchText)}&limit=50&order_by=name&order=asc`,
       );
-      const clientsFromApi = (Array.isArray(response)
-        ? response
-        : (response?.data ?? [])) as ClientRef[];
+      const clientsFromApi = (
+        Array.isArray(response) ? response : (response?.data ?? [])
+      ) as ClientRef[];
       const normalizedSearch = searchText.toLowerCase();
       const clientMatch = clientsFromApi.find((client) => {
-        if (field === 'folio') {
+        if (field === "folio") {
           return (
-            String(client.folio ?? '').trim().toLowerCase() === normalizedSearch
+            String(client.folio ?? "")
+              .trim()
+              .toLowerCase() === normalizedSearch
           );
         }
-        return String(client.name ?? '').trim().toLowerCase() === normalizedSearch;
+        return (
+          String(client.name ?? "")
+            .trim()
+            .toLowerCase() === normalizedSearch
+        );
       });
 
       if (clientLookupVersionRef.current !== requestVersion) {
@@ -222,14 +258,14 @@ export function useOrderForm(id?: string, onSuccess?: (action: SaveAction) => vo
       }
 
       if (!clientMatch) {
-        setFormData((prev) => ({ ...prev, client_id: '' }));
+        setFormData((prev) => ({ ...prev, client_id: "" }));
         return;
       }
 
       setFormData((prev) => ({ ...prev, client_id: clientMatch.id }));
       setClientLookup({
-        folio: clientMatch.folio ?? '',
-        name: clientMatch.name ?? '',
+        folio: clientMatch.folio ?? "",
+        name: clientMatch.name ?? "",
       });
     }, 250);
   };
@@ -248,38 +284,44 @@ export function useOrderForm(id?: string, onSuccess?: (action: SaveAction) => vo
     setItems((prevItems) => prevItems.filter((_, i) => i !== index));
   };
 
-  const updateItemField = (index: number, field: string, value: string | number | ProductRef | null) => {
+  const updateItemField = (
+    index: number,
+    field: string,
+    value: string | number | ProductRef | null,
+  ) => {
     const rowKey = items[index]?.clientRowId;
 
     setItems((prevItems) => {
       const newItems = [...prevItems];
       if (!newItems[index]) return prevItems;
-      
-      if (field === 'product') {
+
+      if (field === "product") {
         newItems[index].product = (value as ProductRef | null) ?? null;
-      } else if (field === 'product_id') {
-        newItems[index].product_id = String(value ?? '');
-      } else if (field === 'quantity') {
+      } else if (field === "product_id") {
+        newItems[index].product_id = String(value ?? "");
+      } else if (field === "quantity") {
         newItems[index].quantity = value as string | number;
-      } else if (field === 'unit_price') {
+      } else if (field === "unit_price") {
         newItems[index].unit_price = value as string | number;
-      } else if (field === 'folio') {
-        newItems[index].folio = String(value ?? '');
-      } else if (field === 'name') {
-        newItems[index].name = String(value ?? '');
-      } else if (field === 'unit') {
-        newItems[index].unit = String(value ?? '');
+      } else if (field === "folio") {
+        newItems[index].folio = String(value ?? "");
+      } else if (field === "name") {
+        newItems[index].name = String(value ?? "");
+      } else if (field === "unit") {
+        newItems[index].unit = String(value ?? "");
       }
 
-      if (field === 'product' && value) {
+      if (field === "product" && value) {
         const selectedProduct = value as ProductRef;
         newItems[index].product_id = selectedProduct.id;
-        newItems[index].folio = selectedProduct.folio || '';
-        newItems[index].name = selectedProduct.name || '';
-        newItems[index].unit = selectedProduct.unit || '';
+        newItems[index].folio = selectedProduct.folio || "";
+        newItems[index].name = selectedProduct.name || "";
+        newItems[index].unit = selectedProduct.unit || "";
         const currentClient = clients.find((c) => c.id === formData.client_id);
         if (currentClient?.priceList?.productPrices) {
-          const priceObj = currentClient.priceList.productPrices.find((p) => p.product_id === selectedProduct.id);
+          const priceObj = currentClient.priceList.productPrices.find(
+            (p) => p.product_id === selectedProduct.id,
+          );
           if (priceObj) {
             newItems[index].unit_price = priceObj.price;
           } else {
@@ -290,26 +332,26 @@ export function useOrderForm(id?: string, onSuccess?: (action: SaveAction) => vo
         }
       }
 
-      if (field === 'folio') {
-        newItems[index].product_id = '';
+      if (field === "folio") {
+        newItems[index].product_id = "";
         newItems[index].product = null;
       }
 
-      if (field === 'name') {
-        newItems[index].product_id = '';
+      if (field === "name") {
+        newItems[index].product_id = "";
         newItems[index].product = null;
       }
 
       return newItems;
     });
 
-    if (field !== 'folio' && field !== 'name') {
+    if (field !== "folio" && field !== "name") {
       return;
     }
 
     if (!rowKey) return;
 
-    const searchText = String(value ?? '').trim();
+    const searchText = String(value ?? "").trim();
     if (lookupTimersRef.current[rowKey]) {
       clearTimeout(lookupTimersRef.current[rowKey]);
     }
@@ -322,14 +364,26 @@ export function useOrderForm(id?: string, onSuccess?: (action: SaveAction) => vo
     lookupVersionRef.current[rowKey] = requestVersion;
 
     lookupTimersRef.current[rowKey] = setTimeout(async () => {
-      const response = await fetchApi(`/products?search=${encodeURIComponent(searchText)}&limit=25&order_by=name&order=asc`);
-      const productsFromApi = (Array.isArray(response) ? response : (response?.data || [])) as ProductRef[];
+      const response = await fetchApi(
+        `/products?search=${encodeURIComponent(searchText)}&limit=25&order_by=name&order=asc`,
+      );
+      const productsFromApi = (
+        Array.isArray(response) ? response : response?.data || []
+      ) as ProductRef[];
       const normalizedSearch = searchText.toLowerCase();
       const productMatch = productsFromApi.find((product) => {
-        if (field === 'folio') {
-          return String(product.folio ?? '').trim().toLowerCase() === normalizedSearch;
+        if (field === "folio") {
+          return (
+            String(product.folio ?? "")
+              .trim()
+              .toLowerCase() === normalizedSearch
+          );
         }
-        return String(product.name ?? '').trim().toLowerCase() === normalizedSearch;
+        return (
+          String(product.name ?? "")
+            .trim()
+            .toLowerCase() === normalizedSearch
+        );
       });
 
       setItems((prevItems) => {
@@ -337,29 +391,33 @@ export function useOrderForm(id?: string, onSuccess?: (action: SaveAction) => vo
           return prevItems;
         }
 
-        const currentIndex = prevItems.findIndex((item) => item.clientRowId === rowKey);
+        const currentIndex = prevItems.findIndex(
+          (item) => item.clientRowId === rowKey,
+        );
         const currentItem = prevItems[currentIndex];
         if (!currentItem) {
           return prevItems;
         }
 
-        const currentValue = String(currentItem[field] ?? '').trim().toLowerCase();
+        const currentValue = String(currentItem[field] ?? "")
+          .trim()
+          .toLowerCase();
         if (currentValue !== normalizedSearch) {
           return prevItems;
         }
 
         const nextItems = [...prevItems];
         if (!productMatch) {
-          nextItems[currentIndex].product_id = '';
+          nextItems[currentIndex].product_id = "";
           nextItems[currentIndex].product = null;
           return nextItems;
         }
 
         nextItems[currentIndex].product_id = productMatch.id;
         nextItems[currentIndex].product = productMatch;
-        nextItems[currentIndex].folio = productMatch.folio || '';
-        nextItems[currentIndex].name = productMatch.name || '';
-        nextItems[currentIndex].unit = productMatch.unit || '';
+        nextItems[currentIndex].folio = productMatch.folio || "";
+        nextItems[currentIndex].name = productMatch.name || "";
+        nextItems[currentIndex].unit = productMatch.unit || "";
 
         if (selectedClient?.priceList?.productPrices) {
           const priceObj = selectedClient.priceList.productPrices.find(
@@ -382,23 +440,30 @@ export function useOrderForm(id?: string, onSuccess?: (action: SaveAction) => vo
       status: string;
       origin: string;
       delivery_date?: string;
-      items: Array<{ product_id: string; quantity: number; unit_price: number }>;
-    }) => fetchApi(id ? `/orders/${id}` : '/orders', {
-      method: id ? 'PATCH' : 'POST',
-      body: JSON.stringify(data)
-    }),
+      items: Array<{
+        product_id: string;
+        quantity: number;
+        unit_price: number;
+      }>;
+    }) =>
+      fetchApi(id ? `/orders/${id}` : "/orders", {
+        method: id ? "PATCH" : "POST",
+        body: JSON.stringify(data),
+      }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['orders'] });
-    }
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+    },
   });
 
-  const handleSubmit = (action: SaveAction = 'save') => {
+  const handleSubmit = (action: SaveAction = "save") => {
     if (!formData.client_id) {
-      alert('Debe seleccionar un cliente válido por folio o nombre.');
+      alert("Debe seleccionar un cliente válido por folio o nombre.");
       return;
     }
 
-    const validItems = items.filter((item) => String(item.product_id || '').trim() !== '');
+    const validItems = items.filter(
+      (item) => String(item.product_id || "").trim() !== "",
+    );
 
     if (validItems.length === 0) {
       alert("Debe agregar al menos un producto al pedido.");
@@ -406,7 +471,9 @@ export function useOrderForm(id?: string, onSuccess?: (action: SaveAction) => vo
     }
 
     setItems((prevItems) => {
-      const nextItems = prevItems.filter((item) => String(item.product_id || '').trim() !== '');
+      const nextItems = prevItems.filter(
+        (item) => String(item.product_id || "").trim() !== "",
+      );
       return nextItems.length > 0 ? nextItems : [createEmptyItem()];
     });
 
@@ -416,20 +483,20 @@ export function useOrderForm(id?: string, onSuccess?: (action: SaveAction) => vo
       status: formData.status,
       origin: formData.origin,
       delivery_date: formData.delivery_date || undefined,
-      items: validItems.map(i => ({
+      items: validItems.map((i) => ({
         product_id: i.product_id,
         quantity: Number(i.quantity),
-        unit_price: Number(i.unit_price)
-      }))
+        unit_price: Number(i.unit_price),
+      })),
     };
     mutation.mutate(payload, {
       onSuccess: () => {
         if (onSuccess) {
           onSuccess(action);
         } else {
-          navigate('/orders');
+          navigate("/orders");
         }
-      }
+      },
     });
   };
 
@@ -449,6 +516,6 @@ export function useOrderForm(id?: string, onSuccess?: (action: SaveAction) => vo
     handleSubmit,
     updateClientLookup,
     isDisabled,
-    setIsDisabled
+    setIsDisabled,
   };
 }

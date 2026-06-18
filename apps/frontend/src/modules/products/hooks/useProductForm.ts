@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router';
-import { fetchApi } from '../../../api';
-import { createClientRowId } from '../../../utils/clientRowId';
+import { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router";
+import { fetchApi } from "../../../api";
+import { createClientRowId } from "../../../utils/clientRowId";
 
-type SaveAction = 'save' | 'save-and-close' | 'save-and-new';
+type SaveAction = "save" | "save-and-close" | "save-and-new";
 type ProductChangeEvent = { target: { name: string; value: string } };
 interface ProductFormData {
   sku: string;
@@ -33,20 +33,23 @@ interface PriceListOption {
   name: string;
 }
 const EMPTY_PRODUCT_FORM: ProductFormData = {
-  sku: '',
-  name: '',
-  description: '',
+  sku: "",
+  name: "",
+  description: "",
   stock: 0,
-  supplier_id: '',
+  supplier_id: "",
 };
 
 const createEmptyPrice = (): ProductPrice => ({
   clientRowId: createClientRowId(),
-  price_list_id: '',
-  price: '',
+  price_list_id: "",
+  price: "",
 });
 
-export function useProductForm(id?: string, onSuccess?: (action: SaveAction) => void) {
+export function useProductForm(
+  id?: string,
+  onSuccess?: (action: SaveAction) => void,
+) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [formData, setFormData] = useState<ProductFormData>(EMPTY_PRODUCT_FORM);
@@ -54,7 +57,7 @@ export function useProductForm(id?: string, onSuccess?: (action: SaveAction) => 
   const [isDisabled, setIsDisabled] = useState(!!id);
 
   const { data: existingProduct, isLoading: isLoadingProduct } = useQuery({
-    queryKey: ['products', id],
+    queryKey: ["products", id],
     queryFn: () => fetchApi(`/products/${id}`),
     enabled: !!id,
   });
@@ -72,12 +75,14 @@ export function useProductForm(id?: string, onSuccess?: (action: SaveAction) => 
       });
       if (existingProduct.productPrices) {
         queueMicrotask(() => {
-          setPrices(existingProduct.productPrices.map((p: ExistingProductPrice) => ({
-            id: p.id,
-            clientRowId: String(p.id ?? createClientRowId()),
-            price_list_id: p.price_list_id,
-            price: p.price,
-          })));
+          setPrices(
+            existingProduct.productPrices.map((p: ExistingProductPrice) => ({
+              id: p.id,
+              clientRowId: String(p.id ?? createClientRowId()),
+              price_list_id: p.price_list_id,
+              price: p.price,
+            })),
+          );
         });
       }
     } else if (!id) {
@@ -88,15 +93,28 @@ export function useProductForm(id?: string, onSuccess?: (action: SaveAction) => 
     }
   }, [id, existingProduct]);
 
-  const { data: suppliersData } = useQuery({ queryKey: ['suppliers'], queryFn: () => fetchApi('/suppliers') });
-  const { data: priceListsData } = useQuery({ queryKey: ['price-lists'], queryFn: () => fetchApi('/price-lists') });
+  const { data: suppliersData } = useQuery({
+    queryKey: ["suppliers"],
+    queryFn: () => fetchApi("/suppliers"),
+  });
+  const { data: priceListsData } = useQuery({
+    queryKey: ["price-lists"],
+    queryFn: () => fetchApi("/price-lists"),
+  });
 
-  const suppliers = (Array.isArray(suppliersData) ? suppliersData : (suppliersData?.data || [])) as SupplierOption[];
-  const priceLists = (Array.isArray(priceListsData) ? priceListsData : (priceListsData?.data || [])) as PriceListOption[];
+  const suppliers = (
+    Array.isArray(suppliersData) ? suppliersData : suppliersData?.data || []
+  ) as SupplierOption[];
+  const priceLists = (
+    Array.isArray(priceListsData) ? priceListsData : priceListsData?.data || []
+  ) as PriceListOption[];
 
   const handleChange = (e: ProductChangeEvent) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: name === 'stock' ? Number(value) : value }));
+    setFormData((prev) => ({
+      ...prev,
+      [name]: name === "stock" ? Number(value) : value,
+    }));
   };
 
   const addPriceField = () => {
@@ -107,36 +125,41 @@ export function useProductForm(id?: string, onSuccess?: (action: SaveAction) => 
     setPrices((prevPrices) => prevPrices.filter((_, i) => i !== index));
   };
 
-  const updatePriceField = (index: number, field: string, value: string | number) => {
+  const updatePriceField = (
+    index: number,
+    field: string,
+    value: string | number,
+  ) => {
     const newPrices = [...prices];
-    if (field === 'price_list_id') {
+    if (field === "price_list_id") {
       newPrices[index].price_list_id = String(value);
-    } else if (field === 'price') {
+    } else if (field === "price") {
       newPrices[index].price = value;
     }
     setPrices(newPrices);
   };
 
   const mutation = useMutation({
-    mutationFn: (data: ProductFormData & { prices: ProductPrice[] }) => fetchApi(id ? `/products/${id}` : '/products', {
-      method: id ? 'PATCH' : 'POST',
-      body: JSON.stringify(data)
-    }),
+    mutationFn: (data: ProductFormData & { prices: ProductPrice[] }) =>
+      fetchApi(id ? `/products/${id}` : "/products", {
+        method: id ? "PATCH" : "POST",
+        body: JSON.stringify(data),
+      }),
     onSuccess: async () => {
-      queryClient.invalidateQueries({ queryKey: ['products'] });
-    }
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+    },
   });
 
-  const handleSubmit = (action: SaveAction = 'save') => {
+  const handleSubmit = (action: SaveAction = "save") => {
     const payload = { ...formData, prices };
     mutation.mutate(payload, {
       onSuccess: () => {
         if (onSuccess) {
           onSuccess(action);
         } else {
-          navigate('/products');
+          navigate("/products");
         }
-      }
+      },
     });
   };
 
@@ -153,6 +176,6 @@ export function useProductForm(id?: string, onSuccess?: (action: SaveAction) => 
     updatePriceField,
     handleSubmit,
     isDisabled,
-    setIsDisabled
+    setIsDisabled,
   };
 }

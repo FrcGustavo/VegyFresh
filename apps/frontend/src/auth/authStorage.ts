@@ -1,5 +1,5 @@
-const ACCESS_TOKEN_KEY = 'vf_access_token';
-const REFRESH_TOKEN_KEY = 'vf_refresh_token';
+const ACCESS_TOKEN_KEY = "vf_access_token";
+const REFRESH_TOKEN_KEY = "vf_refresh_token";
 
 export const authStorage = {
   getAccessToken: (): string | null => localStorage.getItem(ACCESS_TOKEN_KEY),

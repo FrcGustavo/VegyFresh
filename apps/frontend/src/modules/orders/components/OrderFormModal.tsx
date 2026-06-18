@@ -1,8 +1,8 @@
-import { Box, CircularProgress } from '@mui/material';
-import FloatingModal from '../../../components/FloatingModal';
-import ModalToolbar from '../../../components/ModalToolbar';
-import { useOrderForm } from '../hooks/useOrderForm';
-import OrderForm from './OrderForm';
+import { Box, CircularProgress } from "@mui/material";
+import FloatingModal from "../../../components/FloatingModal";
+import ModalToolbar from "../../../components/ModalToolbar";
+import { useOrderForm } from "../hooks/useOrderForm";
+import OrderForm from "./OrderForm";
 
 interface OrderListItemRef {
   id: string | number;
@@ -32,8 +32,10 @@ export default function OrderFormModal({
 }: OrderFormModalProps) {
   const isEditing = !!orderId;
 
-  const handleOnSuccess = (action: 'save' | 'save-and-close' | 'save-and-new') => {
-    if (action === 'save-and-close') {
+  const handleOnSuccess = (
+    action: "save" | "save-and-close" | "save-and-new",
+  ) => {
+    if (action === "save-and-close") {
       onClose();
     }
   };
@@ -59,9 +61,9 @@ export default function OrderFormModal({
     <ModalToolbar
       isDisabled={formProps.isDisabled}
       onEditToggle={() => formProps.setIsDisabled(!formProps.isDisabled)}
-      onSave={() => formProps.handleSubmit('save')}
-      onSaveAndClose={() => formProps.handleSubmit('save-and-close')}
-      onSaveAndNew={() => formProps.handleSubmit('save-and-new')}
+      onSave={() => formProps.handleSubmit("save")}
+      onSaveAndClose={() => formProps.handleSubmit("save-and-close")}
+      onSaveAndNew={() => formProps.handleSubmit("save-and-new")}
       onNavigateUp={handleNavigateUp}
       onNavigateDown={handleNavigateDown}
       canNavigateUp={canNavigateUp}
@@ -75,20 +77,17 @@ export default function OrderFormModal({
     <FloatingModal
       isOpen={isOpen}
       onClose={onClose}
-      title={'Pedido'}
+      title={"Pedido"}
       initialWidth={initialWidth}
       initialHeight={initialHeight}
       toolbar={toolbar}
       renderContent={() =>
         formProps.isLoading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+          <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
             <CircularProgress />
           </Box>
         ) : (
-          <OrderForm
-            {...formProps}
-            isDisabled={formProps.isDisabled}
-          />
+          <OrderForm {...formProps} isDisabled={formProps.isDisabled} />
         )
       }
     />
