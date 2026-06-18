@@ -25,14 +25,17 @@ Create a local env file when the API is not running on the default local URL:
 VITE_API_URL=http://localhost:3000
 ```
 
-`VITE_API_URL` controls the base URL used by `src/api.ts`. When omitted, local development falls back to `http://localhost:3000`.
+`VITE_API_URL` controls the base URL used by `src/api/index.ts`. When omitted, local development falls back to `http://localhost:3000`.
+
+`VITE_API_URL_JSON` must contain the complete OpenAPI document URL used by the type generator, for example `https://example.com/api/docs-json`.
 
 ## Project Notes
 
 - Feature code lives in `src/modules`.
 - Shared UI primitives live in `src/components`.
 - Shared hooks live in `src/hooks`.
-- API calls should go through `src/api.ts`; new feature APIs should opt into typed `fetchApi<T>()` responses.
+- API calls should go through `src/api/index.ts`. Typed resource clients live in `src/api/resources.ts`.
+- Regenerate the OpenAPI contract types from `VITE_API_URL_JSON` with `pnpm --filter frontend generate:api-types`.
 - Server state is managed with TanStack Query.
 - Material UI theme setup lives in `src/App.tsx`.
 

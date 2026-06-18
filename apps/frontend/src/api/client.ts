@@ -1,4 +1,4 @@
-export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+export const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 export interface ApiErrorPayload {
   message?: string;
@@ -13,11 +13,13 @@ const parseJson = async <T>(response: Response): Promise<T | null> => {
   try {
     return JSON.parse(text) as T;
   } catch {
-    throw new Error('Respuesta inválida del servidor');
+    throw new Error("Respuesta inválida del servidor");
   }
 };
 
-const parseErrorPayload = async (response: Response): Promise<ApiErrorPayload | null> => {
+const parseErrorPayload = async (
+  response: Response,
+): Promise<ApiErrorPayload | null> => {
   try {
     return await parseJson<ApiErrorPayload>(response);
   } catch {
@@ -35,10 +37,10 @@ let _refreshQueue: Array<(result: RefreshQueueResult) => void> = [];
 
 const getErrorStatus = (error: unknown): number | null => {
   if (
-    typeof error === 'object' &&
+    typeof error === "object" &&
     error !== null &&
-    'status' in error &&
-    typeof (error as { status?: unknown }).status === 'number'
+    "status" in error &&
+    typeof (error as { status?: unknown }).status === "number"
   ) {
     return (error as { status: number }).status;
   }
@@ -48,13 +50,13 @@ const getErrorStatus = (error: unknown): number | null => {
 
 async function attemptTokenRefresh(): Promise<string | null> {
   // Lazy imports to avoid circular dependency issues at module init
-  const { authStorage } = await import('./auth/authStorage');
-  const { authApi } = await import('./auth/authApi');
+  const { authStorage } = await import("../auth/authStorage");
+  const { authApi } = await import("../auth/authApi");
 
   const refreshToken = authStorage.getRefreshToken();
   if (!refreshToken) {
     authStorage.clearTokens();
-    window.dispatchEvent(new CustomEvent('auth:logout'));
+    window.dispatchEvent(new CustomEvent("auth:logout"));
     return null;
   }
 
@@ -66,7 +68,7 @@ async function attemptTokenRefresh(): Promise<string | null> {
     const status = getErrorStatus(error);
     if (status === 401 || status === 403) {
       authStorage.clearTokens();
-      window.dispatchEvent(new CustomEvent('auth:logout'));
+      window.dispatchEvent(new CustomEvent("auth:logout"));
       return null;
     }
 
@@ -93,12 +95,12 @@ function buildHeaders(
   // Omitting it on bodyless requests (e.g. GET) is intentional and more correct;
   // FormData/URLSearchParams/Blob must not have Content-Type forced so the browser
   // can set the appropriate type (with boundary for multipart).
-  if (shouldSetJsonContentType && !headers.has('Content-Type')) {
-    headers.set('Content-Type', 'application/json');
+  if (shouldSetJsonContentType && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
   }
 
-  if (accessToken && (forceAuthorization || !headers.has('Authorization'))) {
-    headers.set('Authorization', `Bearer ${accessToken}`);
+  if (accessToken && (forceAuthorization || !headers.has("Authorization"))) {
+    headers.set("Authorization", `Bearer ${accessToken}`);
   }
 
   return headers;
@@ -106,8 +108,11 @@ function buildHeaders(
 
 // Default keeps legacy call sites working while new API services can opt into typed responses.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function fetchApi<T = any>(endpoint: string, options?: RequestInit): Promise<T | null> {
-  const { authStorage } = await import('./auth/authStorage');
+export async function fetchApi<T = any>(
+  endpoint: string,
+  options?: RequestInit,
+): Promise<T | null> {
+  const { authStorage } = await import("../auth/authStorage");
   const accessToken = authStorage.getAccessToken();
 
   const response = await fetch(`${API_URL}${endpoint}`, {
@@ -136,7 +141,7 @@ export async function fetchApi<T = any>(endpoint: string, options?: RequestInit)
         refreshError =
           error instanceof Error
             ? error
-            : new Error('No fue posible refrescar la sesión');
+            : new Error("No fue posible refrescar la sesión");
       } finally {
         _refreshQueue.forEach((cb) =>
           cb({ token: newToken, error: refreshError }),
@@ -151,7 +156,7 @@ export async function fetchApi<T = any>(endpoint: string, options?: RequestInit)
     }
 
     if (!newToken) {
-      throw new Error('Sesión expirada. Por favor inicia sesión nuevamente.');
+      throw new Error("Sesión expirada. Por favor inicia sesión nuevamente.");
     }
 
     // Retry original request with new token
@@ -162,7 +167,7 @@ export async function fetchApi<T = any>(endpoint: string, options?: RequestInit)
 
     if (!retryResponse.ok) {
       const error = await parseErrorPayload(retryResponse);
-      throw new Error(error?.message || 'Error en la petición');
+      throw new Error(error?.message || "Error en la petición");
     }
 
     if (retryResponse.status === 204) return null;
@@ -171,7 +176,7 @@ export async function fetchApi<T = any>(endpoint: string, options?: RequestInit)
 
   if (!response.ok) {
     const error = await parseErrorPayload(response);
-    throw new Error(error?.message || 'Error en la petición');
+    throw new Error(error?.message || "Error en la petición");
   }
 
   // For DELETE requests or empty responses
