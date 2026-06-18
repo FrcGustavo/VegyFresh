@@ -1,13 +1,13 @@
-import { CssBaseline, ThemeProvider, createTheme } from '@mui/material';
-import { QueryClientProvider } from '@tanstack/react-query';
-import type { ReactNode } from 'react';
-import { PortalSessionProvider } from '../features/auth/hooks/usePortalSession';
-import { queryClient } from './queryClient';
+import { CssBaseline, ThemeProvider, createTheme } from "@mui/material";
+import { QueryClientProvider } from "@tanstack/react-query";
+import type { ReactNode } from "react";
+import { PortalSessionProvider } from "../features/auth/hooks/usePortalSession";
+import { queryClient } from "./queryClient";
 
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#2e7d32',
+      main: "#2e7d32",
     },
   },
 });

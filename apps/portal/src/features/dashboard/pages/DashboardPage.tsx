@@ -1,6 +1,6 @@
-import { Card, CardContent, Grid, Typography } from '@mui/material';
-import { usePortalSession } from '../../auth/hooks/usePortalSession';
-import { PageHeader } from '../../../shared/components/PageHeader';
+import { Card, CardContent, Grid, Typography } from "@mui/material";
+import { usePortalSession } from "../../auth/hooks/usePortalSession";
+import { PageHeader } from "../../../shared/components/PageHeader";
 
 export function DashboardPage() {
   const session = usePortalSession();
@@ -8,17 +8,17 @@ export function DashboardPage() {
   return (
     <>
       <PageHeader
-        title={`Welcome, ${session.client?.name ?? 'Client'}`}
+        title={`Welcome, ${session.client?.name ?? "Client"}`}
         subtitle="Customer portal dashboard"
       />
       <Grid container spacing={2}>
         {[
-          'Active orders',
-          'Pending review',
-          'Approved',
-          'Delivered',
-          'Recent spend',
-          'Next delivery',
+          "Active orders",
+          "Pending review",
+          "Approved",
+          "Delivered",
+          "Recent spend",
+          "Next delivery",
         ].map((title) => (
           <Grid key={title} size={{ xs: 12, sm: 6, md: 4 }}>
             <Card>

@@ -1,6 +1,6 @@
-import { AppBar, Box, Button, Stack, Toolbar, Typography } from '@mui/material';
-import { Link, Outlet, useNavigate } from 'react-router';
-import { usePortalSession } from '../features/auth/hooks/usePortalSession';
+import { AppBar, Box, Button, Stack, Toolbar, Typography } from "@mui/material";
+import { Link, Outlet, useNavigate } from "react-router";
+import { usePortalSession } from "../features/auth/hooks/usePortalSession";
 
 export function PortalLayout() {
   const navigate = useNavigate();
@@ -9,7 +9,7 @@ export function PortalLayout() {
   return (
     <Box>
       <AppBar position="sticky">
-        <Toolbar sx={{ display: 'flex', justifyContent: 'space-between' }}>
+        <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
           <Typography variant="h6">VegyFresh Customer Portal</Typography>
           <Stack direction="row" spacing={1}>
             <Button color="inherit" component={Link} to="/portal/dashboard">
@@ -22,7 +22,7 @@ export function PortalLayout() {
               color="inherit"
               onClick={async () => {
                 await session.logout();
-                navigate('/login', { replace: true });
+                navigate("/login", { replace: true });
               }}
             >
               Logout

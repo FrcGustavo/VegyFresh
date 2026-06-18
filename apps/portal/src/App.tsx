@@ -1,4 +1,4 @@
-import { AppRoot } from './app/App';
+import { AppRoot } from "./app/App";
 
 function App() {
   return <AppRoot />;

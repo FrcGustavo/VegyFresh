@@ -1,4 +1,4 @@
-import { Alert, Box } from '@mui/material';
+import { Alert, Box } from "@mui/material";
 
 export function ErrorState({ message }: { message: string }) {
   return (

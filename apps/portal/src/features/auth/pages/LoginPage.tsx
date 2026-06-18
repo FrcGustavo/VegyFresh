@@ -1,10 +1,10 @@
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, Button, Stack, TextField, Typography } from '@mui/material';
-import { useForm } from 'react-hook-form';
-import { Navigate, useNavigate } from 'react-router';
-import { useLoginMutation } from '../hooks/useLoginMutation';
-import { usePortalSession } from '../hooks/usePortalSession';
-import { loginSchema, type LoginSchemaInput } from '../schemas/loginSchema';
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Alert, Button, Stack, TextField, Typography } from "@mui/material";
+import { useForm } from "react-hook-form";
+import { Navigate, useNavigate } from "react-router";
+import { useLoginMutation } from "../hooks/useLoginMutation";
+import { usePortalSession } from "../hooks/usePortalSession";
+import { loginSchema, type LoginSchemaInput } from "../schemas/loginSchema";
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -12,7 +12,7 @@ export function LoginPage() {
   const loginMutation = useLoginMutation();
   const form = useForm<LoginSchemaInput>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { email: '', password: '' },
+    defaultValues: { email: "", password: "" },
   });
 
   if (session.isAuthenticated) {
@@ -25,7 +25,7 @@ export function LoginPage() {
       spacing={2}
       onSubmit={form.handleSubmit(async (values) => {
         await loginMutation.mutateAsync(values);
-        navigate('/portal/dashboard', { replace: true });
+        navigate("/portal/dashboard", { replace: true });
       })}
     >
       <Typography variant="h5">Portal Login</Typography>
@@ -35,18 +35,22 @@ export function LoginPage() {
       <TextField
         label="Email"
         type="email"
-        {...form.register('email')}
+        {...form.register("email")}
         error={Boolean(form.formState.errors.email)}
         helperText={form.formState.errors.email?.message}
       />
       <TextField
         label="Password"
         type="password"
-        {...form.register('password')}
+        {...form.register("password")}
         error={Boolean(form.formState.errors.password)}
         helperText={form.formState.errors.password?.message}
       />
-      <Button type="submit" variant="contained" disabled={loginMutation.isPending}>
+      <Button
+        type="submit"
+        variant="contained"
+        disabled={loginMutation.isPending}
+      >
         Sign in
       </Button>
     </Stack>

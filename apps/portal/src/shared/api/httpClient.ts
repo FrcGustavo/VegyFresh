@@ -1,7 +1,7 @@
-import { API_URL } from '../../config/env';
+import { API_URL } from "../../config/env";
 
-const ACCESS_TOKEN_KEY = 'portal-access-token';
-const REFRESH_TOKEN_KEY = 'portal-refresh-token';
+const ACCESS_TOKEN_KEY = "portal-access-token";
+const REFRESH_TOKEN_KEY = "portal-refresh-token";
 
 export function getAccessToken() {
   return localStorage.getItem(ACCESS_TOKEN_KEY);
@@ -35,13 +35,13 @@ export async function requestApi<T>(
   options?: RequestInit,
 ): Promise<T> {
   const headers = new Headers(options?.headers);
-  if (options?.body && !headers.has('Content-Type')) {
-    headers.set('Content-Type', 'application/json');
+  if (options?.body && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
   }
 
   const accessToken = getAccessToken();
-  if (accessToken && !headers.has('Authorization')) {
-    headers.set('Authorization', `Bearer ${accessToken}`);
+  if (accessToken && !headers.has("Authorization")) {
+    headers.set("Authorization", `Bearer ${accessToken}`);
   }
 
   const response = await fetch(`${API_URL}${path}`, {
@@ -53,7 +53,7 @@ export async function requestApi<T>(
   const payload = text ? (JSON.parse(text) as { message?: string }) : null;
 
   if (!response.ok) {
-    throw new HttpError(payload?.message ?? 'Request failed', response.status);
+    throw new HttpError(payload?.message ?? "Request failed", response.status);
   }
 
   return (payload ?? null) as T;

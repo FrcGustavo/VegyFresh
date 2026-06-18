@@ -1,11 +1,20 @@
-import { Alert, Paper, Stack, Table, TableBody, TableCell, TableHead, TableRow } from '@mui/material';
-import { useParams } from 'react-router';
-import { useOrderDetail } from '../hooks/useOrderDetail';
-import { PageHeader } from '../../../shared/components/PageHeader';
-import { LoadingState } from '../../../shared/components/LoadingState';
+import {
+  Alert,
+  Paper,
+  Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+} from "@mui/material";
+import { useParams } from "react-router";
+import { useOrderDetail } from "../hooks/useOrderDetail";
+import { PageHeader } from "../../../shared/components/PageHeader";
+import { LoadingState } from "../../../shared/components/LoadingState";
 
 export function OrderDetailPage() {
-  const { orderId = '' } = useParams();
+  const { orderId = "" } = useParams();
   const orderQuery = useOrderDetail(orderId);
 
   if (orderQuery.isLoading) {
@@ -23,7 +32,10 @@ export function OrderDetailPage() {
 
   return (
     <Stack spacing={2}>
-      <PageHeader title={`Order ${order.folio}`} subtitle={`Status: ${order.status}`} />
+      <PageHeader
+        title={`Order ${order.folio}`}
+        subtitle={`Status: ${order.status}`}
+      />
       <Paper variant="outlined">
         <Table size="small">
           <TableHead>

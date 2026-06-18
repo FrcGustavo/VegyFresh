@@ -1,7 +1,7 @@
-import { Navigate } from 'react-router';
-import type { ReactNode } from 'react';
-import { usePortalSession } from '../../features/auth/hooks/usePortalSession';
-import { LoadingState } from './LoadingState';
+import { Navigate } from "react-router";
+import type { ReactNode } from "react";
+import { usePortalSession } from "../../features/auth/hooks/usePortalSession";
+import { LoadingState } from "./LoadingState";
 
 export function ProtectedRoute({ children }: { children: ReactNode }) {
   const session = usePortalSession();

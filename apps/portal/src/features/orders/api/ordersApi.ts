@@ -1,5 +1,5 @@
-import { requestApi } from '../../../shared/api/httpClient';
-import type { PortalOrder } from '../types/order.types';
+import { requestApi } from "../../../shared/api/httpClient";
+import type { PortalOrder } from "../types/order.types";
 
 export const ordersApi = {
   list: (params: URLSearchParams) =>

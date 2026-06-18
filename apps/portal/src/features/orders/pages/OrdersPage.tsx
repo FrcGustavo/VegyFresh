@@ -8,11 +8,11 @@ import {
   TableCell,
   TableHead,
   TableRow,
-} from '@mui/material';
-import { Link } from 'react-router';
-import { useOrders } from '../hooks/useOrders';
-import { PageHeader } from '../../../shared/components/PageHeader';
-import { LoadingState } from '../../../shared/components/LoadingState';
+} from "@mui/material";
+import { Link } from "react-router";
+import { useOrders } from "../hooks/useOrders";
+import { PageHeader } from "../../../shared/components/PageHeader";
+import { LoadingState } from "../../../shared/components/LoadingState";
 
 export function OrdersPage() {
   const query = useOrders();
@@ -27,7 +27,10 @@ export function OrdersPage() {
 
   return (
     <Stack spacing={2}>
-      <PageHeader title="Orders" subtitle="Your current and historical orders" />
+      <PageHeader
+        title="Orders"
+        subtitle="Your current and historical orders"
+      />
       <Paper variant="outlined">
         <Table size="small">
           <TableHead>
@@ -48,13 +51,13 @@ export function OrdersPage() {
                 </TableCell>
                 <TableCell>
                   {order.delivery_date
-                    ? new Date(order.delivery_date).toLocaleDateString('es-MX')
-                    : '-'}
+                    ? new Date(order.delivery_date).toLocaleDateString("es-MX")
+                    : "-"}
                 </TableCell>
                 <TableCell align="right">
-                  {Number(order.total_amount).toLocaleString('es-MX', {
-                    style: 'currency',
-                    currency: 'MXN',
+                  {Number(order.total_amount).toLocaleString("es-MX", {
+                    style: "currency",
+                    currency: "MXN",
                   })}
                 </TableCell>
                 <TableCell align="right">

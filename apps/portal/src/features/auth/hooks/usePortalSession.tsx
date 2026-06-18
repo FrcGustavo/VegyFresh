@@ -5,16 +5,20 @@ import {
   useMemo,
   useState,
   type ReactNode,
-} from 'react';
-import { authApi, type LoginPayload, type SetupPasswordPayload } from '../api/authApi';
+} from "react";
+import {
+  authApi,
+  type LoginPayload,
+  type SetupPasswordPayload,
+} from "../api/authApi";
 import {
   clearTokens,
   getAccessToken,
   getRefreshToken,
   setTokens,
   HttpError,
-} from '../../../shared/api/httpClient';
-import type { PortalClientProfile } from '../types/auth.types';
+} from "../../../shared/api/httpClient";
+import type { PortalClientProfile } from "../types/auth.types";
 
 type PortalSessionContextValue = {
   client: PortalClientProfile | null;
@@ -25,7 +29,9 @@ type PortalSessionContextValue = {
   logout: () => Promise<void>;
 };
 
-const PortalSessionContext = createContext<PortalSessionContextValue | null>(null);
+const PortalSessionContext = createContext<PortalSessionContextValue | null>(
+  null,
+);
 
 export function PortalSessionProvider({ children }: { children: ReactNode }) {
   const [client, setClient] = useState<PortalClientProfile | null>(null);
@@ -96,7 +102,9 @@ export function PortalSessionProvider({ children }: { children: ReactNode }) {
 export function usePortalSession() {
   const context = useContext(PortalSessionContext);
   if (!context) {
-    throw new Error('usePortalSession must be used inside PortalSessionProvider');
+    throw new Error(
+      "usePortalSession must be used inside PortalSessionProvider",
+    );
   }
   return context;
 }
