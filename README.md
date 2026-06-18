@@ -1,159 +1,113 @@
-# Turborepo starter
+# VegyFresh Monorepo
 
-This Turborepo starter is maintained by the Turborepo core team.
+VegyFresh is a Turborepo-based monorepo with:
+- **Backend API** (NestJS + TypeORM + PostgreSQL)
+- **Admin web app** (React + Vite + MUI)
+- **Customer portal** (React + Vite + MUI)
 
-## Using this example
+## Workspace structure
 
-Run the following command:
+- `apps/backend` — main API (`/api/v1`) with Swagger docs at `/api/docs`
+- `apps/frontend` — internal/admin application
+- `apps/portal` — customer portal application
+- `scripts/seed-api` — database/API seed script
 
-```sh
-npx create-turbo@latest
+## Backend modules (current)
+
+Main modules in `apps/backend/src/app.module.ts`:
+- Auth, Organizations, Users, Roles
+- Catalog (products, price lists, product prices)
+- Clients, Suppliers, Orders
+- **Inventory** and **Purchase** (separated modules)
+- Portal (customer auth + portal orders)
+- AI + WhatsApp integrations
+
+## Auth and session flow (current)
+
+- JWT access + refresh tokens for admin and portal.
+- Admin auth endpoints under `/auth` include:
+  - `POST /auth/signup`
+  - `POST /auth/login`
+  - `GET /auth/me`
+  - `POST /auth/refresh`
+  - `POST /auth/logout`
+- Portal auth endpoints under `/portal/auth` include:
+  - `POST /portal/auth/login`
+  - `POST /portal/auth/refresh`
+  - `GET /portal/auth/me`
+  - `POST /portal/auth/logout`
+- Frontend session restore uses tokens in localStorage and bootstraps user context with `/auth/me`.
+- If an authenticated user visits `/login`, frontend redirects to `/orders`.
+
+## Requirements
+
+- Node.js `>=20.19.0`
+- pnpm `10.11.0` (via Corepack)
+- PostgreSQL
+
+## Quick start
+
+1. Install dependencies:
+
+```bash
+corepack enable
+corepack prepare pnpm@10.11.0 --activate
+pnpm install
 ```
 
-## What's inside?
+2. Configure backend environment:
 
-This Turborepo includes the following packages/apps:
-
-### Apps and Packages
-
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo build
+```bash
+cp apps/backend/.env.example apps/backend/.env
 ```
 
-Without global `turbo`, use your package manager:
+3. (Optional) configure frontend/portal `VITE_API_URL` to your backend base URL (including `/api/v1`).
 
-```sh
-cd my-turborepo
-npx turbo build
-npm dlx turbo build
-npm exec turbo build
+4. Run all apps in dev mode:
+
+```bash
+pnpm dev
 ```
 
-You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+## Common commands
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+From repository root:
 
-```sh
-turbo build --filter=docs
+```bash
+pnpm dev
+pnpm build
+pnpm lint
+pnpm check-types
 ```
 
-Without global `turbo`:
+Targeted commands:
 
-```sh
-npx turbo build --filter=docs
-npm exec turbo build --filter=docs
-npm exec turbo build --filter=docs
+```bash
+pnpm --filter backend dev
+pnpm --filter backend build
+pnpm --filter backend test
+
+pnpm --filter frontend dev
+pnpm --filter frontend build
+pnpm --filter frontend test
+
+pnpm --filter portal dev
+pnpm --filter portal build
+pnpm --filter portal test
 ```
 
-### Develop
+Run seed script:
 
-To develop all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo dev
+```bash
+pnpm seed:api
 ```
 
-Without global `turbo`, use your package manager:
+## API docs
 
-```sh
-cd my-turborepo
-npx turbo dev
-npm exec turbo dev
-npm exec turbo dev
-```
+When backend is running:
+- Swagger UI: `http://localhost:3000/api/docs`
+- OpenAPI JSON: `http://localhost:3000/api/docs-json`
 
-You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+## Docker (backend)
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo dev --filter=web
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo dev --filter=web
-npm exec turbo dev --filter=web
-npm exec turbo dev --filter=web
-```
-
-### Remote Caching
-
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo login
-```
-
-Without global `turbo`, use your package manager:
-
-```sh
-cd my-turborepo
-npx turbo login
-npm exec turbo login
-npm exec turbo login
-```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo link
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo link
-npm exec turbo link
-npm exec turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
+Build and run backend container using `Dockerfile.backend`. It compiles/deploys the backend app and starts `dist/main` with `PORT=80`.
