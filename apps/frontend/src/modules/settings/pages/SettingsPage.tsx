@@ -9,19 +9,19 @@ import {
 } from "@mui/material";
 import { Button } from "@mui/material";
 import { useNavigate } from "react-router";
+import {
+  useThemePreferenceStore,
+  type ThemePreference,
+} from "../../../theme/useThemePreferenceStore";
 
-interface SettingsPageProps {
-  themePreference: "light" | "dark" | "system";
-  onThemePreferenceChange: (
-    themePreference: "light" | "dark" | "system",
-  ) => void;
-}
-
-export default function SettingsPage({
-  themePreference,
-  onThemePreferenceChange,
-}: SettingsPageProps) {
+export default function SettingsPage() {
   const navigate = useNavigate();
+  const themePreference = useThemePreferenceStore(
+    (state) => state.themePreference,
+  );
+  const setThemePreference = useThemePreferenceStore(
+    (state) => state.setThemePreference,
+  );
 
   return (
     <Box sx={{ p: 2 }}>
@@ -37,9 +37,7 @@ export default function SettingsPage({
             value={themePreference}
             label="Tema"
             onChange={(event) =>
-              onThemePreferenceChange(
-                event.target.value as "light" | "dark" | "system",
-              )
+              setThemePreference(event.target.value as ThemePreference)
             }
           >
             <MenuItem value="light">Claro</MenuItem>
