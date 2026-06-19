@@ -206,7 +206,7 @@ export class AuthService {
       where: {
         id: sessionId,
         user_id: user.sub,
-        organization_id: user.org_id,
+        organization_id: user.org_id || IsNull(),
         revoked_at: IsNull(),
       },
       relations: { organization: true },
@@ -228,15 +228,19 @@ export class AuthService {
     }
 
     const dbUser = await this.usersRepository.findOne({
-      where: {
-        id: user.sub,
-        organization_id: session.organization_id,
-      },
-      relations: { role: true },
+      where: { id: user.sub },
+      relations: { role: true, organization: true },
     });
     if (!dbUser || !dbUser.role) {
       throw new UnauthorizedException('User is not active in organization');
     }
+
+    if (user.org_id && dbUser.organization_id !== session.organization_id) {
+      throw new UnauthorizedException('User is not active in organization');
+    }
+
+    const nextOrganizationId =
+      dbUser.organization?.id ?? dbUser.organization_id ?? '';
 
     session.revoked_at = new Date();
     await this.authSessionsRepository.save(session);
@@ -244,7 +248,7 @@ export class AuthService {
     return this.generateTokens({
       sub: user.sub,
       email: user.email,
-      org_id: session.organization_id,
+      org_id: nextOrganizationId,
       role: dbUser.role.name,
       permissions: extractRolePermissions(dbUser.role.permissions),
       session_id: '',
@@ -257,7 +261,7 @@ export class AuthService {
       {
         id: sessionId,
         user_id: user.sub,
-        organization_id: user.org_id,
+        organization_id: user.org_id || IsNull(),
         revoked_at: IsNull(),
       },
       { revoked_at: new Date() },
@@ -315,21 +319,18 @@ export class AuthService {
       this.bcryptSaltRounds,
     );
 
-    // Only create session if organization is assigned (org_id is not empty)
-    if (payload.org_id) {
-      const session = authSessionsRepository.create({
-        id: sessionId,
-        user_id: payload.sub,
-        organization_id: payload.org_id,
-        refresh_token_hash: refreshTokenHash,
-        expires_at: this.addMilliseconds(
-          Date.now(),
-          this.parseDuration(refreshTtl),
-        ),
-        revoked_at: null,
-      });
-      await authSessionsRepository.save(session);
-    }
+    const session = authSessionsRepository.create({
+      id: sessionId,
+      user_id: payload.sub,
+      organization_id: payload.org_id || null,
+      refresh_token_hash: refreshTokenHash,
+      expires_at: this.addMilliseconds(
+        Date.now(),
+        this.parseDuration(refreshTtl),
+      ),
+      revoked_at: null,
+    });
+    await authSessionsRepository.save(session);
 
     return {
       access_token: accessToken,

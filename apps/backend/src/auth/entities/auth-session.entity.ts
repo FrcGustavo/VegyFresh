@@ -23,12 +23,12 @@ export class AuthSession {
   @JoinColumn({ name: 'user_id' })
   user!: User;
 
-  @Column({ type: 'uuid' })
-  organization_id!: string;
+  @Column({ type: 'uuid', nullable: true })
+  organization_id!: string | null;
 
-  @ManyToOne(() => Organization, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Organization, { onDelete: 'CASCADE', nullable: true })
   @JoinColumn({ name: 'organization_id' })
-  organization!: Organization;
+  organization!: Organization | null;
 
   @Column({ type: 'text' })
   refresh_token_hash!: string;

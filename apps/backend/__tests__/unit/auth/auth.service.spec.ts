@@ -31,7 +31,7 @@ type RoleRecord = {
 type AuthSessionRecord = {
   id: string;
   user_id: string;
-  organization_id: string;
+  organization_id: string | null;
   refresh_token_hash: string;
   expires_at: Date;
   revoked_at: Date | null;
@@ -54,6 +54,7 @@ type RolesServiceMock = {
   getOwnerRole: jest.Mock<Promise<RoleRecord>, []>;
 };
 type AuthSessionsRepositoryMock = {
+  create: jest.Mock<AuthSessionRecord, [Partial<AuthSessionRecord>]>;
   findOne: jest.Mock<Promise<AuthSessionRecord | null>, [unknown]>;
   save: jest.Mock<Promise<AuthSessionRecord>, [AuthSessionRecord]>;
   update: jest.Mock<Promise<SaveResult>, [unknown, unknown]>;
@@ -90,6 +91,7 @@ describe('AuthService security flows', () => {
       getOwnerRole: jest.fn<Promise<RoleRecord>, []>(),
     };
     authSessionsRepository = {
+      create: jest.fn((session) => session as AuthSessionRecord),
       findOne: jest.fn<Promise<AuthSessionRecord | null>, [unknown]>(),
       save: jest.fn<Promise<AuthSessionRecord>, [AuthSessionRecord]>(),
       update: jest.fn<Promise<SaveResult>, [unknown, unknown]>(),
@@ -297,6 +299,132 @@ describe('AuthService security flows', () => {
         org_id: 'org-1',
         role: 'admin',
       }),
+    );
+  });
+
+  it('refresh upgrades an org-less token after organization setup', async () => {
+    const refreshToken = 'signed-org-less-refresh-token';
+    const refreshHash = await bcrypt.hash(refreshToken, 10);
+
+    authSessionsRepository.findOne.mockResolvedValue({
+      id: 'org-less-session',
+      user_id: 'user-1',
+      organization_id: null,
+      refresh_token_hash: refreshHash,
+      expires_at: new Date(Date.now() + 10_000),
+      revoked_at: null,
+    });
+    usersRepository.findOne.mockResolvedValue({
+      id: 'user-1',
+      email: 'owner@vegyfresh.com',
+      organization_id: 'org-1',
+      organization: {
+        id: 'org-1',
+        name: 'Organization 1',
+        folio: 'ORG0001',
+      },
+      role: {
+        id: 'role-owner',
+        name: 'owner',
+        permissions: [{ action: '*', resource: '*' }],
+      },
+    });
+    const generateTokensSpy = jest
+      .spyOn(service as never, 'generateTokens' as never)
+      .mockResolvedValue({
+        access_token: 'new-access',
+        refresh_token: 'new-refresh',
+      } as never);
+
+    const result = await service.refreshToken(
+      {
+        sub: 'user-1',
+        email: 'owner@vegyfresh.com',
+        org_id: '',
+        role: 'owner',
+        permissions: ['*'],
+        session_id: 'org-less-session',
+      },
+      refreshToken,
+    );
+
+    expect(result).toEqual({
+      access_token: 'new-access',
+      refresh_token: 'new-refresh',
+    });
+    expect(authSessionsRepository.findOne).toHaveBeenCalledWith({
+      where: {
+        id: 'org-less-session',
+        user_id: 'user-1',
+        organization_id: IsNull(),
+        revoked_at: IsNull(),
+      },
+      relations: { organization: true },
+    });
+    expect(authSessionsRepository.save).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 'org-less-session',
+      }),
+    );
+    expect(
+      authSessionsRepository.save.mock.calls[0][0].revoked_at,
+    ).toBeInstanceOf(Date);
+    expect(generateTokensSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sub: 'user-1',
+        org_id: 'org-1',
+        role: 'owner',
+      }),
+    );
+  });
+
+  it('refresh rotates an org-less token before organization setup', async () => {
+    const refreshToken = 'org-less-refresh-token';
+    const refreshHash = await bcrypt.hash(refreshToken, 10);
+
+    authSessionsRepository.findOne.mockResolvedValue({
+      id: 'org-less-session',
+      user_id: 'user-1',
+      organization_id: null,
+      refresh_token_hash: refreshHash,
+      expires_at: new Date(Date.now() + 10_000),
+      revoked_at: null,
+    });
+    usersRepository.findOne.mockResolvedValue({
+      id: 'user-1',
+      email: 'owner@vegyfresh.com',
+      organization_id: undefined,
+      role: {
+        id: 'role-owner',
+        name: 'owner',
+        permissions: [{ action: '*', resource: '*' }],
+      },
+    });
+    const generateTokensSpy = jest
+      .spyOn(service as never, 'generateTokens' as never)
+      .mockResolvedValue({
+        access_token: 'new-access',
+        refresh_token: 'new-refresh',
+      } as never);
+
+    const result = await service.refreshToken(
+      {
+        sub: 'user-1',
+        email: 'owner@vegyfresh.com',
+        org_id: '',
+        role: 'owner',
+        permissions: ['*'],
+        session_id: 'org-less-session',
+      },
+      refreshToken,
+    );
+
+    expect(result).toEqual({
+      access_token: 'new-access',
+      refresh_token: 'new-refresh',
+    });
+    expect(generateTokensSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ org_id: '' }),
     );
   });
 

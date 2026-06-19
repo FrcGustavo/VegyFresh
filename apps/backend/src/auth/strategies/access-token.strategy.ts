@@ -31,23 +31,6 @@ export class AccessTokenStrategy extends PassportStrategy(
   }
 
   async validate(payload: AuthenticatedUser): Promise<AuthenticatedUser> {
-    // For org-less tokens (signup state), allow minimal validation
-    if (!payload.org_id) {
-      const user = await this.usersRepository.findOne({
-        where: { id: payload.sub },
-        relations: { role: true },
-      });
-      if (!user || !user.role) {
-        throw new UnauthorizedException('User not found or missing role');
-      }
-      return {
-        ...payload,
-        role: user.role.name,
-        permissions: extractRolePermissions(user.role.permissions),
-      };
-    }
-
-    // For org-scoped tokens, validate session and organization
     const sessionId = payload.session_id ?? payload.sid;
     if (!sessionId) {
       throw new UnauthorizedException('Token missing session identifier');
@@ -57,7 +40,7 @@ export class AccessTokenStrategy extends PassportStrategy(
       where: {
         id: sessionId,
         user_id: payload.sub,
-        organization_id: payload.org_id,
+        organization_id: payload.org_id || IsNull(),
         revoked_at: IsNull(),
       },
       relations: { user: { role: true, organization: true } },
@@ -69,20 +52,20 @@ export class AccessTokenStrategy extends PassportStrategy(
     const user = await this.usersRepository.findOne({
       where: {
         id: payload.sub,
-        organization_id: payload.org_id,
+        organization_id: payload.org_id || IsNull(),
       },
       relations: {
         role: true,
         organization: true,
       },
     });
-    if (!user || !user.role || !user.organization) {
+    if (!user || !user.role || (payload.org_id && !user.organization)) {
       throw new UnauthorizedException('User is not active in organization');
     }
 
     return {
       ...payload,
-      org_id: user.organization.id,
+      org_id: user.organization?.id ?? '',
       role: user.role.name,
       permissions: extractRolePermissions(user.role.permissions),
     };

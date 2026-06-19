@@ -4,12 +4,11 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, IsNull, Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
 import { Organization } from './entities/organization.entity';
 import { User } from '../users/entities/user.entity';
-import { AuthSession } from '../auth/entities/auth-session.entity';
 import { FoliosService } from '../folios/folios.service';
 
 const DEFAULT_ORGANIZATION_FOLIO_PREFIXES = {
@@ -19,6 +18,7 @@ const DEFAULT_ORGANIZATION_FOLIO_PREFIXES = {
   client_folio_prefix: 'C',
   supplier_folio_prefix: 'P',
   purchase_folio_prefix: 'C',
+  user_folio_prefix: 'U',
 } as const;
 
 @Injectable()
@@ -26,7 +26,6 @@ export class OrganizationsService {
   constructor(
     @InjectRepository(Organization)
     private readonly organizationsRepository: Repository<Organization>,
-    @InjectRepository(User)
     private readonly foliosService: FoliosService,
     private readonly dataSource: DataSource,
   ) {}
@@ -35,15 +34,24 @@ export class OrganizationsService {
     return this.dataSource.transaction(async (manager) => {
       const organizationsRepository = manager.getRepository(Organization);
       const usersRepository = manager.getRepository(User);
-      const authSessionsRepository = manager.getRepository(AuthSession);
-      const user = await usersRepository.findOne({ where: { id: userId } });
+      const user = await usersRepository.findOne({
+        where: { id: userId },
+        lock: { mode: 'pessimistic_write' },
+      });
 
-      if (user?.organization_id) {
+      if (!user) {
+        throw new NotFoundException(`User with id ${userId} not found`);
+      }
+
+      if (user.organization_id) {
         throw new ForbiddenException(
           'User already belongs to an organization and cannot create a new one',
         );
       }
 
+      await manager.query('SELECT pg_advisory_xact_lock(hashtext($1))', [
+        'organizations:folio',
+      ]);
       const folio = await this.foliosService.generateFolio('organizations');
       const organization = organizationsRepository.create({
         folio,
@@ -71,6 +79,9 @@ export class OrganizationsService {
         purchase_folio_prefix:
           createOrganizationDto.purchase_folio_prefix ??
           DEFAULT_ORGANIZATION_FOLIO_PREFIXES.purchase_folio_prefix,
+        user_folio_prefix:
+          createOrganizationDto.user_folio_prefix ??
+          DEFAULT_ORGANIZATION_FOLIO_PREFIXES.user_folio_prefix,
       });
 
       const savedOrganization =
@@ -81,11 +92,6 @@ export class OrganizationsService {
         {
           organization_id: savedOrganization.id,
         },
-      );
-
-      await authSessionsRepository.update(
-        { user_id: userId, revoked_at: IsNull() },
-        { organization_id: savedOrganization.id },
       );
 
       return savedOrganization;
