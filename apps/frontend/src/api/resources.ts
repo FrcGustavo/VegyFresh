@@ -71,9 +71,12 @@ function createCrudApi<
   UpdateInput,
   ListQuery extends object,
 >(path: string) {
-  const getAll = (query?: ListQuery) =>
-    requireBody(fetchApi<CollectionResponse<Resource>>(withQuery(path, query)));
-  const get = (id: string) => requireBody(fetchApi<Resource>(`${path}/${id}`));
+  const getAll = (query?: ListQuery, options?: RequestInit) =>
+    requireBody(
+      fetchApi<CollectionResponse<Resource>>(withQuery(path, query), options),
+    );
+  const get = (id: string, options?: RequestInit) =>
+    requireBody(fetchApi<Resource>(`${path}/${id}`, options));
   const remove = async (id: string): Promise<void> => {
     await fetchApi(`${path}/${id}`, { method: "DELETE" });
   };
@@ -156,8 +159,8 @@ export const organizationsApi = {
         body: JSON.stringify(input),
       }),
     ),
-  get: (id: string) =>
-    requireBody(fetchApi<Organization>(`/organizations/${id}`)),
+  get: (id: string, options?: RequestInit) =>
+    requireBody(fetchApi<Organization>(`/organizations/${id}`, options)),
   update: (id: string, input: UpdateOrganizationInput) =>
     requireBody(
       fetchApi<Organization>(`/organizations/${id}`, {
@@ -168,9 +171,12 @@ export const organizationsApi = {
 };
 
 export const inventoryApi = {
-  get: () => requireBody(fetchApi<Product[]>("/inventory")),
-  getMovements: () =>
-    requireBody(fetchApi<InventoryMovement[]>("/inventory/movements")),
+  get: (options?: RequestInit) =>
+    requireBody(fetchApi<Product[]>("/inventory", options)),
+  getMovements: (options?: RequestInit) =>
+    requireBody(
+      fetchApi<InventoryMovement[]>("/inventory/movements", options),
+    ),
   createAdjustment: (input: CreateInventoryAdjustmentInput) =>
     requireBody(
       fetchApi<InventoryMovement>("/inventory/adjustments", {
@@ -181,8 +187,10 @@ export const inventoryApi = {
 };
 
 export const purchasesApi = {
-  list: () => requireBody(fetchApi<Purchase[]>("/purchases")),
-  get: (id: string) => requireBody(fetchApi<Purchase>(`/purchases/${id}`)),
+  list: (options?: RequestInit) =>
+    requireBody(fetchApi<Purchase[]>("/purchases", options)),
+  get: (id: string, options?: RequestInit) =>
+    requireBody(fetchApi<Purchase>(`/purchases/${id}`, options)),
   create: (input: CreatePurchaseInput) =>
     requireBody(
       fetchApi<Purchase>("/purchases", {
