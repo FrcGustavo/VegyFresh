@@ -1,7 +1,11 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
-import { fetchApi } from "../../../api";
+import {
+  clientsMutationOptions,
+  clientsQueryOptions,
+  priceListsQueryOptions,
+} from "../../../api";
 import { validateImageFile } from "../../../utils/imageValidation";
 import {
   findLocationByPostalCode,
@@ -60,8 +64,7 @@ export function useClientForm(
   const [isDisabled, setIsDisabled] = useState(!!id);
 
   const { data: existingClient, isLoading } = useQuery({
-    queryKey: ["clients", id],
-    queryFn: () => fetchApi(`/clients/${id}`),
+    ...clientsQueryOptions.detail(id ?? ""),
     enabled: !!id,
   });
 
@@ -93,10 +96,7 @@ export function useClientForm(
     }
   }, [id, existingClient]);
 
-  const { data: priceListsData } = useQuery({
-    queryKey: ["price-lists"],
-    queryFn: () => fetchApi("/price-lists"),
-  });
+  const { data: priceListsData } = useQuery(priceListsQueryOptions.list());
   const priceLists = (
     Array.isArray(priceListsData) ? priceListsData : priceListsData?.data || []
   ) as PriceListOption[];
@@ -156,19 +156,15 @@ export function useClientForm(
     reader.readAsDataURL(file);
   };
 
-  const mutation = useMutation({
-    mutationFn: (data: ClientFormData) =>
-      fetchApi(id ? `/clients/${id}` : "/clients", {
-        method: id ? "PATCH" : "POST",
-        body: JSON.stringify(data),
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["clients"] });
-    },
-  });
+  const createMutation = useMutation(
+    clientsMutationOptions.create(queryClient),
+  );
+  const updateMutation = useMutation(
+    clientsMutationOptions.update(queryClient),
+  );
 
   const handleSubmit = (action: SaveAction = "save") => {
-    mutation.mutate(formData, {
+    const options = {
       onSuccess: () => {
         if (onSuccess) {
           onSuccess(action);
@@ -176,7 +172,13 @@ export function useClientForm(
           navigate("/clients");
         }
       },
-    });
+    };
+
+    if (id) {
+      updateMutation.mutate({ id, input: formData }, options);
+    } else {
+      createMutation.mutate(formData, options);
+    }
   };
 
   const countries = getCountries();
@@ -207,7 +209,7 @@ export function useClientForm(
     postalCodeOptions,
     coloniaOptions,
     isLoading,
-    isSaving: mutation.isPending,
+    isSaving: createMutation.isPending || updateMutation.isPending,
     handleChange,
     handleAvatarFileChange,
     handleSubmit,

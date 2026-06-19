@@ -6,7 +6,13 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+} from "react-router";
 import {
   Box,
   CircularProgress,
@@ -46,9 +52,6 @@ const SettingsPage = lazy(
 );
 const LoginPage = lazy(() => import("./modules/auth/pages/LoginPage"));
 const SignupPage = lazy(() => import("./modules/auth/pages/SignupPage"));
-const OrganizationSetupPage = lazy(
-  () => import("./modules/auth/pages/OrganizationSetupPage"),
-);
 
 type ThemePreference = "light" | "dark" | "system";
 
@@ -73,6 +76,7 @@ const getStoredThemePreference = (): ThemePreference => {
 
 const createAppTheme = (mode: "light" | "dark") =>
   createTheme({
+    palette: { mode },
     // palette: {
     //   mode,
     //   primary: {
@@ -322,29 +326,8 @@ function RouteFallback() {
 
 /** Redirects unauthenticated users to /login. Shows a spinner while auth initialises. */
 function ProtectedRoute({ children }: { children: ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth();
-
-  if (isLoading) {
-    return (
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          minHeight: "100vh",
-        }}
-      >
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
-}
-
-/** Allows only authenticated users without organization to access org setup. */
-function OrganizationSetupRoute({ children }: { children: ReactNode }) {
   const { isAuthenticated, isLoading, organization } = useAuth();
+  const location = useLocation();
 
   if (isLoading) {
     return (
@@ -365,11 +348,21 @@ function OrganizationSetupRoute({ children }: { children: ReactNode }) {
     return <Navigate to="/login" replace />;
   }
 
-  if (organization) {
-    return <Navigate to="/orders" replace />;
+  if (!organization && location.pathname !== "/organization") {
+    return <Navigate to="/organization" replace />;
   }
 
   return <>{children}</>;
+}
+
+function OrganizationRoute({ children }: { children: ReactNode }) {
+  const { organization, role } = useAuth();
+
+  if (!organization || canAccessOrganizationResource(role)) {
+    return <>{children}</>;
+  }
+
+  return <Navigate to="/orders" replace />;
 }
 
 function RoleProtectedRoute({
@@ -418,14 +411,6 @@ function App() {
               <Route path="/login" element={<LoginPage />} />
               <Route path="/signup" element={<SignupPage />} />
               <Route
-                path="/organization-setup"
-                element={
-                  <OrganizationSetupRoute>
-                    <OrganizationSetupPage />
-                  </OrganizationSetupRoute>
-                }
-              />
-              <Route
                 path="/"
                 element={
                   <ProtectedRoute>
@@ -451,11 +436,9 @@ function App() {
                 <Route
                   path="organization"
                   element={
-                    <RoleProtectedRoute
-                      canAccess={canAccessOrganizationResource}
-                    >
+                    <OrganizationRoute>
                       <OrganizationPage />
-                    </RoleProtectedRoute>
+                    </OrganizationRoute>
                   }
                 />
                 <Route

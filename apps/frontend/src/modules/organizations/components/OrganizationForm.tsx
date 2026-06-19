@@ -1,11 +1,21 @@
 import { Box, Button, TextField, Typography } from "@mui/material";
 import type { FormEventHandler } from "react";
-import type {
-  OrganizationDto,
-  UpdateOrganizationPayload,
-} from "../organizationApi";
+import type { Organization } from "../../../api";
 
-export type OrganizationFormData = UpdateOrganizationPayload;
+export interface OrganizationFormData {
+  name: string;
+  logo_url: string | null;
+  legal_name: string | null;
+  email: string | null;
+  phone_number: string | null;
+  address: string | null;
+  product_folio_prefix: string | null;
+  price_list_folio_prefix: string | null;
+  order_folio_prefix: string | null;
+  client_folio_prefix: string | null;
+  supplier_folio_prefix: string | null;
+  purchase_folio_prefix: string | null;
+}
 
 export const EMPTY_ORGANIZATION_FORM: OrganizationFormData = {
   name: "",
@@ -23,7 +33,7 @@ export const EMPTY_ORGANIZATION_FORM: OrganizationFormData = {
 };
 
 export const organizationToFormData = (
-  organization: OrganizationDto,
+  organization: Organization,
 ): OrganizationFormData => ({
   name: organization.name ?? "",
   logo_url: organization.logo_url ?? null,

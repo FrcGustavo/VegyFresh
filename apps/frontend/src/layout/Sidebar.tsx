@@ -54,9 +54,13 @@ const menuItems = [
 export default function Sidebar() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { role } = useAuth();
+  const { role, organization } = useAuth();
 
   const visibleMenuItems = menuItems.filter((item) => {
+    if (!organization) {
+      return item.path === "/organization";
+    }
+
     if (!item.canAccess) {
       return true;
     }

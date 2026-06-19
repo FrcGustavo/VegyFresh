@@ -26,6 +26,8 @@ import type {
   ProductListQuery,
   ProductPrice,
   Purchase,
+  Role,
+  CreateRoleInput,
   Supplier,
   SupplierListQuery,
   UpdateClientInput,
@@ -115,6 +117,18 @@ export const usersApi = createCrudApi<
   UpdateUserInput,
   UserListQuery
 >("/users");
+
+export const rolesApi = {
+  getAll: (options?: RequestInit) =>
+    requireBody(fetchApi<CollectionResponse<Role>>("/roles", options)),
+  create: (input: CreateRoleInput) =>
+    requireBody(
+      fetchApi<Role>("/roles", {
+        method: "POST",
+        body: JSON.stringify(input),
+      }),
+    ),
+};
 
 export const suppliersApi = createCrudApi<
   Supplier,

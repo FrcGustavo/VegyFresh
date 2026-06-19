@@ -12,7 +12,6 @@ import {
   type AuthRole,
   type AuthUser,
   type LoginPayload,
-  type SetupOrganizationAuthPayload,
   type SignupResponse,
   type SignupPayload,
 } from "./authApi";
@@ -28,9 +27,6 @@ interface AuthState {
 interface AuthContextValue extends AuthState {
   login: (payload: LoginPayload) => ReturnType<typeof authApi.login>;
   signup: (payload: SignupPayload) => Promise<SignupResponse>;
-  completeOrganization: (
-    payload: SetupOrganizationAuthPayload,
-  ) => Promise<void>;
   refreshSession: () => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -224,25 +220,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return response;
   };
 
-  const completeOrganization = async (
-    payload: SetupOrganizationAuthPayload,
-  ): Promise<void> => {
-    const accessToken = authStorage.getAccessToken();
-    if (!accessToken) {
-      throw new Error("No hay sesión activa para completar la organización");
-    }
-    const response = await authApi.setupOrganizationAuth(accessToken, payload);
-    // Update tokens with org-scoped ones
-    authStorage.setTokens(response.access_token, response.refresh_token);
-    setState({
-      user: response.user,
-      organization: response.organization,
-      role: response.role,
-      isAuthenticated: true,
-      isLoading: false,
-    });
-  };
-
   const logout = async (): Promise<void> => {
     const accessToken = authStorage.getAccessToken();
     if (accessToken) {
@@ -265,7 +242,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         ...state,
         login,
         signup,
-        completeOrganization,
         refreshSession,
         logout,
       }}

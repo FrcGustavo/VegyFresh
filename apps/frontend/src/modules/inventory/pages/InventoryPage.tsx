@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import {
   Box,
   CircularProgress,
@@ -14,7 +14,10 @@ import {
   Typography,
 } from "@mui/material";
 import { Warehouse as WarehouseIcon } from "@mui/icons-material";
-import { fetchApi } from "../../../api";
+import {
+  inventoryQueryOptions,
+  purchasesQueryOptions,
+} from "../../../api";
 import ListPageToolbar from "../../../components/ListPageToolbar";
 import ResourcePageTitle from "../../../components/ResourcePageTitle";
 import PurchaseFormModal from "../components/PurchaseFormModal";
@@ -80,20 +83,9 @@ const purchaseTotal = (items: PurchaseLineItem[] | null | undefined) =>
 export default function InventoryPage() {
   const [activeTab, setActiveTab] = useState(0);
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
-  const queryClient = useQueryClient();
-
-  const inventoryQuery = useQuery({
-    queryKey: ["inventory", "inventory"],
-    queryFn: () => fetchApi("/inventory"),
-  });
-  const purchasesQuery = useQuery({
-    queryKey: ["inventory", "entries"],
-    queryFn: () => fetchApi("/purchases"),
-  });
-  const movementsQuery = useQuery({
-    queryKey: ["inventory", "movements"],
-    queryFn: () => fetchApi("/inventory/movements"),
-  });
+  const inventoryQuery = useQuery(inventoryQueryOptions.stock());
+  const purchasesQuery = useQuery(purchasesQueryOptions.list());
+  const movementsQuery = useQuery(inventoryQueryOptions.movements());
 
   const isLoading =
     inventoryQuery.isLoading ||
@@ -103,24 +95,15 @@ export default function InventoryPage() {
     inventoryQuery.error ?? purchasesQuery.error ?? movementsQuery.error;
 
   const inventory = useMemo(
-    () =>
-      (Array.isArray(inventoryQuery.data)
-        ? inventoryQuery.data
-        : (inventoryQuery.data?.data ?? [])) as ProductInventoryItem[],
+    () => (inventoryQuery.data ?? []) as ProductInventoryItem[],
     [inventoryQuery.data],
   );
   const purchases = useMemo(
-    () =>
-      (Array.isArray(purchasesQuery.data)
-        ? purchasesQuery.data
-        : (purchasesQuery.data?.data ?? [])) as PurchaseItem[],
+    () => (purchasesQuery.data ?? []) as PurchaseItem[],
     [purchasesQuery.data],
   );
   const movements = useMemo(
-    () =>
-      (Array.isArray(movementsQuery.data)
-        ? movementsQuery.data
-        : (movementsQuery.data?.data ?? [])) as MovementItem[],
+    () => (movementsQuery.data ?? []) as MovementItem[],
     [movementsQuery.data],
   );
 
@@ -279,15 +262,7 @@ export default function InventoryPage() {
       <PurchaseFormModal
         isOpen={isPurchaseModalOpen}
         onClose={() => setIsPurchaseModalOpen(false)}
-        onSuccess={() => {
-          queryClient.invalidateQueries({
-            queryKey: ["inventory", "inventory"],
-          });
-          queryClient.invalidateQueries({ queryKey: ["inventory", "entries"] });
-          queryClient.invalidateQueries({
-            queryKey: ["inventory", "movements"],
-          });
-        }}
+        onSuccess={() => undefined}
       />
     </Box>
   );

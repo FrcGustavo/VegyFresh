@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Box,
   Button,
@@ -16,7 +16,11 @@ import {
 } from "@mui/material";
 import { Add as AddIcon, Delete as DeleteIcon } from "@mui/icons-material";
 import FloatingModal from "../../../components/FloatingModal";
-import { fetchApi } from "../../../api";
+import {
+  productsQueryOptions,
+  purchasesMutationOptions,
+  suppliersQueryOptions,
+} from "../../../api";
 import { createClientRowId } from "../../../utils/clientRowId";
 
 type PurchaseItemRow = {
@@ -52,6 +56,7 @@ export default function PurchaseFormModal({
   onClose,
   onSuccess,
 }: PurchaseFormModalProps) {
+  const queryClient = useQueryClient();
   const [supplierId, setSupplierId] = useState("");
   const [purchaseDate, setPurchaseDate] = useState(() =>
     new Date().toISOString().slice(0, 10),
@@ -61,13 +66,15 @@ export default function PurchaseFormModal({
   const [formError, setFormError] = useState<string | null>(null);
 
   const { data: suppliersData } = useQuery({
-    queryKey: ["suppliers"],
-    queryFn: () => fetchApi("/suppliers"),
+    ...suppliersQueryOptions.list(),
     enabled: isOpen,
   });
   const { data: productsData } = useQuery({
-    queryKey: ["products"],
-    queryFn: () => fetchApi("/products?limit=200&order_by=name&order=asc"),
+    ...productsQueryOptions.list({
+      limit: "200",
+      order_by: "name",
+      order: "asc",
+    }),
     enabled: isOpen,
   });
 
@@ -119,13 +126,9 @@ export default function PurchaseFormModal({
     [validItems],
   );
 
-  const mutation = useMutation({
-    mutationFn: (payload: unknown) =>
-      fetchApi("/purchases", {
-        method: "POST",
-        body: JSON.stringify(payload),
-      }),
-    onSuccess: () => {
+  const mutation = useMutation(purchasesMutationOptions.create(queryClient));
+
+  const handleMutationSuccess = () => {
       setSupplierId("");
       setPurchaseDate(new Date().toISOString().slice(0, 10));
       setNotes("");
@@ -133,11 +136,7 @@ export default function PurchaseFormModal({
       setFormError(null);
       onSuccess();
       onClose();
-    },
-    onError: (error) => {
-      setFormError((error as Error).message);
-    },
-  });
+  };
 
   const updateItem = (
     rowIndex: number,
@@ -162,12 +161,18 @@ export default function PurchaseFormModal({
     }
 
     setFormError(null);
-    mutation.mutate({
-      supplier_id: supplierId,
-      purchase_date: `${purchaseDate}T00:00:00.000Z`,
-      notes: notes.trim() || null,
-      items: validItems,
-    });
+    mutation.mutate(
+      {
+        supplier_id: supplierId,
+        purchase_date: `${purchaseDate}T00:00:00.000Z`,
+        notes: notes.trim() || null,
+        items: validItems,
+      },
+      {
+        onSuccess: handleMutationSuccess,
+        onError: (error) => setFormError(error.message),
+      },
+    );
   };
 
   const canSave = supplierId.trim() !== "" && validItems.length > 0;

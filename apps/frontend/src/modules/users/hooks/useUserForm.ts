@@ -1,7 +1,12 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
-import { fetchApi } from "../../../api";
+import {
+  rolesMutationOptions,
+  rolesQueryOptions,
+  usersMutationOptions,
+  usersQueryOptions,
+} from "../../../api";
 import { validateImageFile } from "../../../utils/imageValidation";
 
 type SaveAction = "save" | "save-and-close" | "save-and-new";
@@ -36,8 +41,7 @@ export function useUserForm(
   const [isDisabled, setIsDisabled] = useState(!!id);
 
   const { data: existingUser, isLoading } = useQuery({
-    queryKey: ["users", id],
-    queryFn: () => fetchApi(`/users/${id}`),
+    ...usersQueryOptions.detail(id ?? ""),
     enabled: !!id,
   });
 
@@ -61,10 +65,7 @@ export function useUserForm(
     }
   }, [id, existingUser]);
 
-  const { data: rolesData } = useQuery({
-    queryKey: ["roles"],
-    queryFn: () => fetchApi("/roles"),
-  });
+  const { data: rolesData } = useQuery(rolesQueryOptions.list());
   const roles = (
     Array.isArray(rolesData) ? rolesData : rolesData?.data || []
   ) as RoleOption[];
@@ -92,42 +93,14 @@ export function useUserForm(
     reader.readAsDataURL(file);
   };
 
-  const createAdminRoleMutation = useMutation({
-    mutationFn: () =>
-      fetchApi("/roles", {
-        method: "POST",
-        body: JSON.stringify({ name: "Admin", permissions: [] }),
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["roles"] });
-    },
-  });
-
-  const mutation = useMutation({
-    mutationFn: (data: UserFormData) => {
-      const payload: Partial<UserFormData> = {
-        name: data.name,
-        email: data.email,
-        role_id: data.role_id,
-        avatar_url: data.avatar_url || undefined,
-      };
-
-      if (!id || data.password) {
-        payload.password = data.password;
-      }
-
-      return fetchApi(id ? `/users/${id}` : "/users", {
-        method: id ? "PATCH" : "POST",
-        body: JSON.stringify(payload),
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-    },
-  });
+  const createAdminRoleMutation = useMutation(
+    rolesMutationOptions.create(queryClient),
+  );
+  const createMutation = useMutation(usersMutationOptions.create(queryClient));
+  const updateMutation = useMutation(usersMutationOptions.update(queryClient));
 
   const handleSubmit = (action: SaveAction = "save") => {
-    mutation.mutate(formData, {
+    const options = {
       onSuccess: () => {
         if (onSuccess) {
           onSuccess(action);
@@ -135,7 +108,31 @@ export function useUserForm(
           navigate("/users");
         }
       },
-    });
+    };
+    const commonInput = {
+      name: formData.name,
+      email: formData.email,
+      role_id: formData.role_id,
+      avatar_url: formData.avatar_url || undefined,
+    };
+
+    if (id) {
+      updateMutation.mutate(
+        {
+          id,
+          input: {
+            ...commonInput,
+            ...(formData.password ? { password: formData.password } : {}),
+          },
+        },
+        options,
+      );
+    } else {
+      createMutation.mutate(
+        { ...commonInput, password: formData.password },
+        options,
+      );
+    }
   };
 
   return {
@@ -144,12 +141,13 @@ export function useUserForm(
     roles,
     isEditing: !!id,
     isLoading,
-    isSaving: mutation.isPending,
+    isSaving: createMutation.isPending || updateMutation.isPending,
     isCreatingRole: createAdminRoleMutation.isPending,
     handleChange,
     handleAvatarFileChange,
     handleSubmit,
-    createAdminRole: () => createAdminRoleMutation.mutate(),
+    createAdminRole: () =>
+      createAdminRoleMutation.mutate({ name: "Admin", permissions: [] }),
     isDisabled,
     setIsDisabled,
   };

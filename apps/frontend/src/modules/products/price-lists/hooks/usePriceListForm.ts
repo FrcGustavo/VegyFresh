@@ -1,7 +1,11 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
-import { fetchApi } from "../../../../api";
+import {
+  priceListEditorMutationOptions,
+  priceListsQueryOptions,
+  productsQueryOptions,
+} from "../../../../api";
 import { createClientRowId } from "../../../../utils/clientRowId";
 
 type SaveAction = "save" | "save-and-close" | "save-and-new";
@@ -41,17 +45,13 @@ export function usePriceListForm(
   );
   const [isDisabled, setIsDisabled] = useState(!!id);
 
-  const { data: productsData } = useQuery({
-    queryKey: ["products"],
-    queryFn: () => fetchApi("/products"),
-  });
+  const { data: productsData } = useQuery(productsQueryOptions.list());
   const products = (
     Array.isArray(productsData) ? productsData : productsData?.data || []
   ) as ProductOption[];
 
   const { data: existingPriceList, isLoading } = useQuery({
-    queryKey: ["price-lists", id],
-    queryFn: () => fetchApi(`/price-lists/${id}`),
+    ...priceListsQueryOptions.detail(id ?? ""),
     enabled: !!id,
   });
 
@@ -61,9 +61,10 @@ export function usePriceListForm(
         setName(existingPriceList.name);
       });
       if (existingPriceList.productPrices) {
+        const productPrices = existingPriceList.productPrices;
         queueMicrotask(() => {
           setProductsList(
-            existingPriceList.productPrices.map((pp: ExistingProductPrice) => ({
+            productPrices.map((pp: ExistingProductPrice) => ({
               clientRowId: String(pp.id ?? createClientRowId()),
               product_id: pp.product_id,
               name: pp.product?.name || "",
@@ -81,40 +82,9 @@ export function usePriceListForm(
     }
   }, [id, existingPriceList]);
 
-  const mutation = useMutation({
-    mutationFn: async () => {
-      const priceList = id
-        ? await fetchApi(`/price-lists/${id}`, {
-            method: "PATCH",
-            body: JSON.stringify({ name }),
-          })
-        : await fetchApi("/price-lists", {
-            method: "POST",
-            body: JSON.stringify({ name }),
-          });
-
-      const listId = id || priceList.id;
-
-      for (const p of productsList) {
-        const price = Number(p.price);
-        if (p.product_id && price > 0) {
-          await fetchApi("/product-prices", {
-            method: "POST",
-            body: JSON.stringify({
-              price_list_id: listId,
-              product_id: p.product_id,
-              price,
-            }),
-          });
-        }
-      }
-      return priceList;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["price-lists"] });
-      queryClient.invalidateQueries({ queryKey: ["product-prices"] });
-    },
-  });
+  const mutation = useMutation(
+    priceListEditorMutationOptions.save(queryClient),
+  );
 
   const addProductField = () =>
     setProductsList((prevProducts) => [
@@ -145,15 +115,27 @@ export function usePriceListForm(
   };
 
   const handleSubmit = (action: SaveAction = "save") => {
-    mutation.mutate(undefined, {
-      onSuccess: () => {
-        if (onSuccess) {
-          onSuccess(action);
-        } else {
-          navigate("/price-lists");
-        }
+    mutation.mutate(
+      {
+        id,
+        name,
+        products: productsList
+          .map((product) => ({
+            product_id: product.product_id,
+            price: Number(product.price),
+          }))
+          .filter((product) => product.product_id && product.price > 0),
       },
-    });
+      {
+        onSuccess: () => {
+          if (onSuccess) {
+            onSuccess(action);
+          } else {
+            navigate("/price-lists");
+          }
+        },
+      },
+    );
   };
 
   return {

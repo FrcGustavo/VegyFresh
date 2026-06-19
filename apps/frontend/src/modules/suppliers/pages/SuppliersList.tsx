@@ -12,7 +12,7 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { LocalShipping } from "@mui/icons-material";
-import { fetchApi } from "../../../api";
+import { suppliersQueryOptions } from "../../../api";
 import { useDebouncedValue } from "../../../hooks/useDebouncedValue";
 import { useResizableColumns } from "../../../hooks/useResizableColumns";
 import SupplierFormModal from "../components/SupplierFormModal";
@@ -51,32 +51,12 @@ export default function SuppliersList() {
     hasNextPage,
     isFetchingNextPage,
   } = useInfiniteQuery({
-    queryKey: ["suppliers", debouncedQuery, sortBy, sortOrder],
-    initialPageParam: 0,
-    queryFn: ({ pageParam }) => {
-      const params = new URLSearchParams({
-        limit: String(PAGE_SIZE),
-        offset: String(pageParam),
-        order_by: sortBy,
-        order: sortOrder,
-      });
-
-      if (debouncedQuery.trim()) {
-        params.set("search", debouncedQuery.trim());
-      }
-
-      return fetchApi(`/suppliers?${params.toString()}`);
-    },
-    getNextPageParam: (lastPage, allPages) => {
-      const lastItems = Array.isArray(lastPage)
-        ? lastPage
-        : (lastPage?.data ?? []);
-      if (lastItems.length < PAGE_SIZE) {
-        return undefined;
-      }
-
-      return allPages.length * PAGE_SIZE;
-    },
+    ...suppliersQueryOptions.infiniteList({
+      limit: String(PAGE_SIZE),
+      order_by: sortBy,
+      order: sortOrder,
+      search: debouncedQuery.trim() || undefined,
+    }),
     placeholderData: (previousData) => previousData,
   });
 

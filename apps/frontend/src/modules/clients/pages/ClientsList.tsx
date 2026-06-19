@@ -12,7 +12,7 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { People } from "@mui/icons-material";
-import { fetchApi } from "../../../api";
+import { clientsQueryOptions } from "../../../api";
 import { useDebouncedValue } from "../../../hooks/useDebouncedValue";
 import { useResizableColumns } from "../../../hooks/useResizableColumns";
 import ClientFormModal from "../components/ClientFormModal";
@@ -49,32 +49,12 @@ export default function ClientsList() {
     hasNextPage,
     isFetchingNextPage,
   } = useInfiniteQuery({
-    queryKey: ["clients", debouncedQuery, sortBy, sortOrder],
-    initialPageParam: 0,
-    queryFn: ({ pageParam }) => {
-      const params = new URLSearchParams({
-        limit: String(PAGE_SIZE),
-        offset: String(pageParam),
-        order_by: sortBy,
-        order: sortOrder,
-      });
-
-      if (debouncedQuery.trim()) {
-        params.set("search", debouncedQuery.trim());
-      }
-
-      return fetchApi(`/clients?${params.toString()}`);
-    },
-    getNextPageParam: (lastPage, allPages) => {
-      const lastItems = Array.isArray(lastPage)
-        ? lastPage
-        : (lastPage?.data ?? []);
-      if (lastItems.length < PAGE_SIZE) {
-        return undefined;
-      }
-
-      return allPages.length * PAGE_SIZE;
-    },
+    ...clientsQueryOptions.infiniteList({
+      limit: String(PAGE_SIZE),
+      order_by: sortBy,
+      order: sortOrder,
+      search: debouncedQuery.trim() || undefined,
+    }),
     placeholderData: (previousData) => previousData,
   });
 

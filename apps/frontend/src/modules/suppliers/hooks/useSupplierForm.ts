@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
-import { fetchApi } from "../../../api";
+import {
+  suppliersMutationOptions,
+  suppliersQueryOptions,
+} from "../../../api";
 import { validateImageFile } from "../../../utils/imageValidation";
 
 type SaveAction = "save" | "save-and-close" | "save-and-new";
@@ -31,8 +34,7 @@ export function useSupplierForm(
   const [isDisabled, setIsDisabled] = useState(!!id);
 
   const { data: existingSupplier, isLoading } = useQuery({
-    queryKey: ["suppliers", id],
-    queryFn: () => fetchApi(`/suppliers/${id}`),
+    ...suppliersQueryOptions.detail(id ?? ""),
     enabled: !!id,
   });
 
@@ -78,19 +80,15 @@ export function useSupplierForm(
     reader.readAsDataURL(file);
   };
 
-  const mutation = useMutation({
-    mutationFn: (data: SupplierFormData) =>
-      fetchApi(id ? `/suppliers/${id}` : "/suppliers", {
-        method: id ? "PATCH" : "POST",
-        body: JSON.stringify(data),
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["suppliers"] });
-    },
-  });
+  const createMutation = useMutation(
+    suppliersMutationOptions.create(queryClient),
+  );
+  const updateMutation = useMutation(
+    suppliersMutationOptions.update(queryClient),
+  );
 
   const handleSubmit = (action: SaveAction = "save") => {
-    mutation.mutate(formData, {
+    const options = {
       onSuccess: () => {
         if (onSuccess) {
           onSuccess(action);
@@ -98,14 +96,20 @@ export function useSupplierForm(
           navigate("/suppliers");
         }
       },
-    });
+    };
+
+    if (id) {
+      updateMutation.mutate({ id, input: formData }, options);
+    } else {
+      createMutation.mutate(formData, options);
+    }
   };
 
   return {
     formData,
     logoFileError,
     isLoading,
-    isSaving: mutation.isPending,
+    isSaving: createMutation.isPending || updateMutation.isPending,
     handleChange,
     handleLogoFileChange,
     handleSubmit,

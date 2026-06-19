@@ -12,7 +12,7 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { ShoppingCart } from "@mui/icons-material";
-import { fetchApi } from "../../../api";
+import { ordersQueryOptions } from "../../../api";
 import { useResizableColumns } from "../../../hooks/useResizableColumns";
 import OrderFormModal from "../components/OrderFormModal";
 import ResizableHeaderCell from "../../../components/ResizableHeaderCell";
@@ -81,47 +81,18 @@ export default function OrdersList() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useInfiniteQuery({
-    queryKey: [
-      "orders",
-      sortBy,
-      sortOrder,
-      createdFilter,
-      createdFrom,
-      createdTo,
-    ],
-    initialPageParam: 0,
-    queryFn: ({ pageParam }) => {
-      const params = new URLSearchParams({
-        limit: String(PAGE_SIZE),
-        offset: String(pageParam),
-        order_by: sortBy,
-        order: sortOrder,
-        created_filter: createdFilter,
-      });
-
-      if (createdFilter === "range") {
-        if (createdFrom) {
-          params.set("created_from", createdFrom);
-        }
-        if (createdTo) {
-          params.set("created_to", createdTo);
-        }
-      }
-
-      return fetchApi(`/orders?${params.toString()}`);
-    },
-    getNextPageParam: (lastPage, allPages) => {
-      const lastItems = Array.isArray(lastPage)
-        ? lastPage
-        : lastPage?.data || [];
-      if (lastItems.length < PAGE_SIZE) {
-        return undefined;
-      }
-
-      return allPages.length * PAGE_SIZE;
-    },
-  });
+  } = useInfiniteQuery(
+    ordersQueryOptions.infiniteList({
+      limit: PAGE_SIZE,
+      order_by: sortBy,
+      order: sortOrder,
+      created_filter: createdFilter,
+      created_from:
+        createdFilter === "range" ? createdFrom || undefined : undefined,
+      created_to:
+        createdFilter === "range" ? createdTo || undefined : undefined,
+    }),
+  );
 
   if (isLoading)
     return (

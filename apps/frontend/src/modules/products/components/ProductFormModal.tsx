@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 import {
   Box,
   TextField,
@@ -43,14 +42,12 @@ export default function ProductFormModal({
   currentIndex = 0,
   onNavigate,
 }: ProductFormModalProps) {
-  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState(0);
   const isEditing = !!productId;
 
   const handleOnSuccess = (
     action: "save" | "save-and-close" | "save-and-new",
   ) => {
-    queryClient.invalidateQueries({ queryKey: ["products"] });
     if (action === "save-and-close") {
       onClose();
     }
@@ -168,6 +165,19 @@ export default function ProductFormModal({
                     onChange={formProps.handleChange}
                     disabled={formProps.isDisabled}
                   />
+                  <TextField
+                    select
+                    fullWidth
+                    label="Unidad"
+                    name="unit"
+                    margin="normal"
+                    value={formProps.formData.unit}
+                    onChange={formProps.handleChange}
+                    disabled={formProps.isDisabled}
+                  >
+                    <MenuItem value="pz">Pieza</MenuItem>
+                    <MenuItem value="kg">Kilogramo</MenuItem>
+                  </TextField>
                   <TextField
                     select
                     fullWidth

@@ -1,7 +1,14 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
-import { fetchApi } from "../../../api";
+import {
+  clientsQueryOptions,
+  ordersMutationOptions,
+  ordersQueryOptions,
+  productsQueryOptions,
+  usersQueryOptions,
+  type CreateOrderInput,
+} from "../../../api";
 import { createClientRowId } from "../../../utils/clientRowId";
 
 type SaveAction = "save" | "save-and-close" | "save-and-new";
@@ -92,8 +99,7 @@ export function useOrderForm(
   const clientLookupVersionRef = useRef(0);
 
   const { data: existingOrder, isLoading: isLoadingOrder } = useQuery({
-    queryKey: ["orders", id],
-    queryFn: () => fetchApi(`/orders/${id}`),
+    ...ordersQueryOptions.detail(id ?? ""),
     enabled: !!id,
   });
 
@@ -115,9 +121,10 @@ export function useOrderForm(
         });
       });
       if (existingOrder.items?.length) {
+        const orderItems = existingOrder.items;
         queueMicrotask(() => {
           setItems(
-            existingOrder.items.map((item: ExistingOrderItemRef) => ({
+            orderItems.map((item: ExistingOrderItemRef) => ({
               id: item.id,
               clientRowId: String(item.id ?? createClientRowId()),
               product_id: item.product_id,
@@ -143,14 +150,8 @@ export function useOrderForm(
     }
   }, [id, existingOrder]);
 
-  const { data: clientsData } = useQuery({
-    queryKey: ["clients"],
-    queryFn: () => fetchApi("/clients"),
-  });
-  const { data: usersData } = useQuery({
-    queryKey: ["users"],
-    queryFn: () => fetchApi("/users"),
-  });
+  const { data: clientsData } = useQuery(clientsQueryOptions.list());
+  const { data: usersData } = useQuery(usersQueryOptions.list());
 
   const clients = useMemo(
     () =>
@@ -182,9 +183,11 @@ export function useOrderForm(
 
   useEffect(() => {
     if (selectedClient) {
-      setClientLookup({
-        folio: selectedClient.folio ?? "",
-        name: selectedClient.name ?? "",
+      queueMicrotask(() => {
+        setClientLookup({
+          folio: selectedClient.folio ?? "",
+          name: selectedClient.name ?? "",
+        });
       });
     }
   }, [selectedClient]);
@@ -231,8 +234,13 @@ export function useOrderForm(
     clientLookupVersionRef.current = requestVersion;
 
     clientLookupTimerRef.current = setTimeout(async () => {
-      const response = await fetchApi(
-        `/clients?search=${encodeURIComponent(searchText)}&limit=50&order_by=name&order=asc`,
+      const response = await queryClient.fetchQuery(
+        clientsQueryOptions.list({
+          search: searchText,
+          limit: "50",
+          order_by: "name",
+          order: "asc",
+        }),
       );
       const clientsFromApi = (
         Array.isArray(response) ? response : (response?.data ?? [])
@@ -364,8 +372,13 @@ export function useOrderForm(
     lookupVersionRef.current[rowKey] = requestVersion;
 
     lookupTimersRef.current[rowKey] = setTimeout(async () => {
-      const response = await fetchApi(
-        `/products?search=${encodeURIComponent(searchText)}&limit=25&order_by=name&order=asc`,
+      const response = await queryClient.fetchQuery(
+        productsQueryOptions.list({
+          search: searchText,
+          limit: "25",
+          order_by: "name",
+          order: "asc",
+        }),
       );
       const productsFromApi = (
         Array.isArray(response) ? response : response?.data || []
@@ -433,27 +446,8 @@ export function useOrderForm(
     }, 300);
   };
 
-  const mutation = useMutation({
-    mutationFn: (data: {
-      client_id: string;
-      user_id: string;
-      status: string;
-      origin: string;
-      delivery_date?: string;
-      items: Array<{
-        product_id: string;
-        quantity: number;
-        unit_price: number;
-      }>;
-    }) =>
-      fetchApi(id ? `/orders/${id}` : "/orders", {
-        method: id ? "PATCH" : "POST",
-        body: JSON.stringify(data),
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["orders"] });
-    },
-  });
+  const createMutation = useMutation(ordersMutationOptions.create(queryClient));
+  const updateMutation = useMutation(ordersMutationOptions.update(queryClient));
 
   const handleSubmit = (action: SaveAction = "save") => {
     if (!formData.client_id) {
@@ -488,8 +482,8 @@ export function useOrderForm(
         quantity: Number(i.quantity),
         unit_price: Number(i.unit_price),
       })),
-    };
-    mutation.mutate(payload, {
+    } as CreateOrderInput;
+    const options = {
       onSuccess: () => {
         if (onSuccess) {
           onSuccess(action);
@@ -497,7 +491,13 @@ export function useOrderForm(
           navigate("/orders");
         }
       },
-    });
+    };
+
+    if (id) {
+      updateMutation.mutate({ id, input: payload }, options);
+    } else {
+      createMutation.mutate(payload, options);
+    }
   };
 
   return {
@@ -508,7 +508,7 @@ export function useOrderForm(
     users,
     totalGeneral,
     isLoading: isLoadingOrder,
-    isSaving: mutation.isPending,
+    isSaving: createMutation.isPending || updateMutation.isPending,
     handleChange,
     addItemField,
     removeItemField,

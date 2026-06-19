@@ -33,7 +33,7 @@ export default function SignupPage() {
         email,
         password,
       });
-      void navigate("/organization-setup");
+      void navigate("/organization");
     } catch (err) {
       setError((err as Error).message || "Error al crear la cuenta");
     } finally {

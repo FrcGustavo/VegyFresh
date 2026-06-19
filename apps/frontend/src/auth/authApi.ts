@@ -50,21 +50,6 @@ export interface SetupOrganizationPayload {
   purchase_folio_prefix?: string | null;
 }
 
-export interface SetupOrganizationAuthPayload {
-  name: string;
-  logo_url?: string | null;
-  legal_name?: string | null;
-  organization_email?: string | null;
-  phone_number?: string | null;
-  address?: string | null;
-  product_folio_prefix?: string | null;
-  price_list_folio_prefix?: string | null;
-  order_folio_prefix?: string | null;
-  client_folio_prefix?: string | null;
-  supplier_folio_prefix?: string | null;
-  purchase_folio_prefix?: string | null;
-}
-
 export interface AuthRefreshResponse {
   access_token: string;
   refresh_token: string;
@@ -112,28 +97,6 @@ async function postPublic<T>(path: string, body: unknown): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-async function postAuthenticated<T>(
-  path: string,
-  accessToken: string,
-  body: unknown,
-): Promise<T> {
-  const res = await fetch(`${API_URL}${path}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${accessToken}`,
-    },
-    body: JSON.stringify(body),
-  });
-
-  if (!res.ok) {
-    const err = (await res.json().catch(() => ({}))) as { message?: string };
-    throw new AuthApiError(err.message || "Error de autenticación", res.status);
-  }
-
-  return res.json() as Promise<T>;
-}
-
 export const authApi = {
   login: (payload: LoginPayload) =>
     postPublic<AuthSessionResponse>("/auth/login", payload),
@@ -143,16 +106,6 @@ export const authApi = {
 
   setupOrganization: (payload: SetupOrganizationPayload) =>
     postPublic<AuthSessionResponse>("/auth/setup-organization", payload),
-
-  setupOrganizationAuth: (
-    accessToken: string,
-    payload: SetupOrganizationAuthPayload,
-  ) =>
-    postAuthenticated<AuthSessionResponse>(
-      "/auth/setup-organization-auth",
-      accessToken,
-      payload,
-    ),
 
   refresh: (refreshToken: string) =>
     postPublic<AuthRefreshResponse>("/auth/refresh", {

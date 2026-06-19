@@ -1,8 +1,14 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Alert, Box, CircularProgress, Paper, Typography } from "@mui/material";
 import { useNavigate } from "react-router";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../../../auth/AuthContext";
-import { organizationApi } from "../../organizations/organizationApi";
+import { authStorage } from "../../../auth/authStorage";
+import { authApi } from "../../../auth/authApi";
+import {
+  organizationsMutationOptions,
+  organizationsQueryOptions,
+} from "../../../api";
 import {
   EMPTY_ORGANIZATION_FORM,
   OrganizationForm,
@@ -12,44 +18,35 @@ import {
 
 export default function OrganizationPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { organization, refreshSession } = useAuth();
   const organizationId = organization?.id ?? "";
 
   const [formData, setFormData] = useState<OrganizationFormData>(
     EMPTY_ORGANIZATION_FORM,
   );
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const organizationQuery = useQuery({
+    ...organizationsQueryOptions.detail(organizationId),
+    enabled: Boolean(organizationId),
+  });
+  const createMutation = useMutation(
+    organizationsMutationOptions.create(queryClient),
+  );
+  const updateMutation = useMutation(
+    organizationsMutationOptions.update(queryClient),
+  );
 
   useEffect(() => {
-    const loadOrganization = async () => {
-      if (!organizationId) {
-        setIsLoading(false);
-        return;
-      }
+    if (organizationQuery.data) {
+      queueMicrotask(() => {
+        setFormData(organizationToFormData(organizationQuery.data));
+      });
+    }
+  }, [organizationQuery.data]);
 
-      try {
-        const currentOrganization =
-          await organizationApi.getById(organizationId);
-        if (!currentOrganization) {
-          throw new Error("No se pudo cargar la organización");
-        }
-        setFormData(organizationToFormData(currentOrganization));
-      } catch (loadError) {
-        setError(
-          loadError instanceof Error
-            ? loadError.message
-            : "No se pudo cargar la organización",
-        );
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    void loadOrganization();
-  }, [organizationId]);
+  const displayedError = error || organizationQuery.error?.message || "";
 
   const handleChange = (name: keyof OrganizationFormData, value: string) => {
     setFormData((current) => ({
@@ -58,51 +55,66 @@ export default function OrganizationPage() {
     }));
   };
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError("");
     setSuccess("");
-    setIsSaving(true);
+    const payload = {
+      name: formData.name.trim(),
+      logo_url: formData.logo_url,
+      legal_name: formData.legal_name,
+      email: formData.email,
+      phone_number: formData.phone_number,
+      address: formData.address,
+      product_folio_prefix: formData.product_folio_prefix,
+      price_list_folio_prefix: formData.price_list_folio_prefix,
+      order_folio_prefix: formData.order_folio_prefix,
+      client_folio_prefix: formData.client_folio_prefix,
+      supplier_folio_prefix: formData.supplier_folio_prefix,
+      purchase_folio_prefix: formData.purchase_folio_prefix,
+    };
 
-    try {
-      const payload = {
-        name: formData.name.trim(),
-        logo_url: formData.logo_url,
-        legal_name: formData.legal_name,
-        email: formData.email,
-        phone_number: formData.phone_number,
-        address: formData.address,
-        product_folio_prefix: formData.product_folio_prefix,
-        price_list_folio_prefix: formData.price_list_folio_prefix,
-        order_folio_prefix: formData.order_folio_prefix,
-        client_folio_prefix: formData.client_folio_prefix,
-        supplier_folio_prefix: formData.supplier_folio_prefix,
-        purchase_folio_prefix: formData.purchase_folio_prefix,
-      };
+    if (!organizationId) {
+      createMutation.mutate(payload, {
+        onSuccess: async () => {
+          try {
+            const refreshToken = authStorage.getRefreshToken();
+            if (!refreshToken) {
+              throw new Error("No hay refresh token para actualizar la sesión");
+            }
 
-      if (!organizationId) {
-        throw new Error("No se pudo resolver la organización actual");
-      }
-      const updated = await organizationApi.update(organizationId, payload);
-      if (!updated) {
-        throw new Error("No se pudo actualizar la organización");
-      }
-      setFormData(organizationToFormData(updated));
-      await refreshSession();
-      setSuccess("Organización actualizada");
-      void navigate("/orders");
-    } catch (saveError) {
-      setError(
-        saveError instanceof Error
-          ? saveError.message
-          : "No se pudo actualizar la organización",
-      );
-    } finally {
-      setIsSaving(false);
+            const tokens = await authApi.refresh(refreshToken);
+            authStorage.setTokens(tokens.access_token, tokens.refresh_token);
+            await refreshSession();
+            void navigate("/orders");
+          } catch (refreshError) {
+            setError(
+              refreshError instanceof Error
+                ? refreshError.message
+                : "No se pudo actualizar la sesión",
+            );
+          }
+        },
+        onError: (createError) => setError(createError.message),
+      });
+      return;
     }
+
+    updateMutation.mutate(
+      { id: organizationId, input: payload },
+      {
+        onSuccess: async (updated) => {
+          setFormData(organizationToFormData(updated));
+          await refreshSession();
+          setSuccess("Organización actualizada");
+          void navigate("/orders");
+        },
+        onError: (saveError) => setError(saveError.message),
+      },
+    );
   };
 
-  if (isLoading) {
+  if (organizationQuery.isLoading) {
     return (
       <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
         <CircularProgress />
@@ -113,16 +125,18 @@ export default function OrganizationPage() {
   return (
     <Box sx={{ p: 2 }}>
       <Typography variant="h5" gutterBottom>
-        Organización
+        {organizationId ? "Organización" : "Configurar organización"}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        Edita los datos visibles de tu organización y los prefijos de folio.
+        {organizationId
+          ? "Edita los datos visibles de tu organización y los prefijos de folio."
+          : "Completa los datos para activar tu cuenta."}
       </Typography>
 
       <Paper sx={{ p: 3, maxWidth: 960 }}>
-        {error && (
+        {displayedError && (
           <Alert severity="error" sx={{ mb: 2 }}>
-            {error}
+            {displayedError}
           </Alert>
         )}
         {success && (
@@ -135,10 +149,14 @@ export default function OrganizationPage() {
           value={formData}
           onChange={handleChange}
           onSubmit={handleSubmit}
-          isSubmitting={isSaving}
-          submitLabel="Guardar cambios"
-          secondaryActionLabel="Volver"
-          onSecondaryAction={() => void navigate("/settings")}
+          isSubmitting={createMutation.isPending || updateMutation.isPending}
+          submitLabel={
+            organizationId ? "Guardar cambios" : "Guardar organización"
+          }
+          secondaryActionLabel={organizationId ? "Volver" : undefined}
+          onSecondaryAction={
+            organizationId ? () => void navigate("/settings") : undefined
+          }
         />
       </Paper>
     </Box>

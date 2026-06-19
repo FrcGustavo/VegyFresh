@@ -1,7 +1,12 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
-import { fetchApi } from "../../../api";
+import {
+  priceListsQueryOptions,
+  productsMutationOptions,
+  productsQueryOptions,
+  suppliersQueryOptions,
+} from "../../../api";
 import { createClientRowId } from "../../../utils/clientRowId";
 
 type SaveAction = "save" | "save-and-close" | "save-and-new";
@@ -12,6 +17,7 @@ interface ProductFormData {
   description: string;
   stock: number;
   supplier_id: string;
+  unit: "kg" | "pz";
 }
 interface ProductPrice {
   id?: string | number;
@@ -38,6 +44,7 @@ const EMPTY_PRODUCT_FORM: ProductFormData = {
   description: "",
   stock: 0,
   supplier_id: "",
+  unit: "pz",
 };
 
 const createEmptyPrice = (): ProductPrice => ({
@@ -57,8 +64,7 @@ export function useProductForm(
   const [isDisabled, setIsDisabled] = useState(!!id);
 
   const { data: existingProduct, isLoading: isLoadingProduct } = useQuery({
-    queryKey: ["products", id],
-    queryFn: () => fetchApi(`/products/${id}`),
+    ...productsQueryOptions.detail(id ?? ""),
     enabled: !!id,
   });
 
@@ -68,15 +74,17 @@ export function useProductForm(
         setFormData({
           sku: existingProduct.sku,
           name: existingProduct.name,
-          description: existingProduct.description,
+          description: existingProduct.description || "",
           stock: existingProduct.stock,
           supplier_id: existingProduct.supplier_id,
+          unit: existingProduct.unit,
         });
       });
       if (existingProduct.productPrices) {
+        const productPrices = existingProduct.productPrices;
         queueMicrotask(() => {
           setPrices(
-            existingProduct.productPrices.map((p: ExistingProductPrice) => ({
+            productPrices.map((p: ExistingProductPrice) => ({
               id: p.id,
               clientRowId: String(p.id ?? createClientRowId()),
               price_list_id: p.price_list_id,
@@ -93,14 +101,8 @@ export function useProductForm(
     }
   }, [id, existingProduct]);
 
-  const { data: suppliersData } = useQuery({
-    queryKey: ["suppliers"],
-    queryFn: () => fetchApi("/suppliers"),
-  });
-  const { data: priceListsData } = useQuery({
-    queryKey: ["price-lists"],
-    queryFn: () => fetchApi("/price-lists"),
-  });
+  const { data: suppliersData } = useQuery(suppliersQueryOptions.list());
+  const { data: priceListsData } = useQuery(priceListsQueryOptions.list());
 
   const suppliers = (
     Array.isArray(suppliersData) ? suppliersData : suppliersData?.data || []
@@ -139,20 +141,16 @@ export function useProductForm(
     setPrices(newPrices);
   };
 
-  const mutation = useMutation({
-    mutationFn: (data: ProductFormData & { prices: ProductPrice[] }) =>
-      fetchApi(id ? `/products/${id}` : "/products", {
-        method: id ? "PATCH" : "POST",
-        body: JSON.stringify(data),
-      }),
-    onSuccess: async () => {
-      queryClient.invalidateQueries({ queryKey: ["products"] });
-    },
-  });
+  const createMutation = useMutation(
+    productsMutationOptions.create(queryClient),
+  );
+  const updateMutation = useMutation(
+    productsMutationOptions.update(queryClient),
+  );
 
   const handleSubmit = (action: SaveAction = "save") => {
     const payload = { ...formData, prices };
-    mutation.mutate(payload, {
+    const options = {
       onSuccess: () => {
         if (onSuccess) {
           onSuccess(action);
@@ -160,7 +158,13 @@ export function useProductForm(
           navigate("/products");
         }
       },
-    });
+    };
+
+    if (id) {
+      updateMutation.mutate({ id, input: payload }, options);
+    } else {
+      createMutation.mutate(payload, options);
+    }
   };
 
   return {
@@ -169,7 +173,7 @@ export function useProductForm(
     suppliers,
     priceLists,
     isLoading: isLoadingProduct,
-    isSaving: mutation.isPending,
+    isSaving: createMutation.isPending || updateMutation.isPending,
     handleChange,
     addPriceField,
     removePriceField,

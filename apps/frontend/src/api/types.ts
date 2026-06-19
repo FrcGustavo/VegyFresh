@@ -96,6 +96,17 @@ export interface User {
   created_at: string;
 }
 
+export interface Role {
+  id: string;
+  name: string;
+  permissions: string[];
+}
+
+export interface CreateRoleInput {
+  name: string;
+  permissions: string[];
+}
+
 export interface Supplier {
   id: string;
   folio: string;

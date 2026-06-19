@@ -15,6 +15,7 @@ import {
   productPricesApi,
   productsApi,
   purchasesApi,
+  rolesApi,
   suppliersApi,
   usersApi,
   whatsappApi,
@@ -24,6 +25,7 @@ import type {
   CreateAiInput,
   CreateInventoryAdjustmentInput,
   CreatePurchaseInput,
+  CreateRoleInput,
   CreateWhatsappInput,
   OrderListQuery,
   PriceListListQuery,
@@ -43,8 +45,12 @@ type CrudApi<Resource, CreateInput, UpdateInput, ListQuery extends object> = {
   remove: (id: string) => Promise<void>;
 };
 
-type InfiniteListQuery<ListQuery> = Omit<ListQuery, "offset"> & {
-  limit: string;
+type QueryLimit<ListQuery> = ListQuery extends { limit?: infer Limit }
+  ? NonNullable<Limit>
+  : string | number;
+
+type InfiniteListQuery<ListQuery> = Omit<ListQuery, "offset" | "limit"> & {
+  limit: QueryLimit<ListQuery>;
 };
 
 const getPageItems = <Resource>(
@@ -83,7 +89,7 @@ function createCrudQueryOptions<
           api.getAll(
             {
               ...query,
-              offset: String(pageParam),
+              offset: pageParam,
             } as ListQuery,
             { signal },
           ),
@@ -187,6 +193,25 @@ export const clientsQueryOptions = clientsReactQuery.queries;
 export const clientsMutationOptions = clientsReactQuery.mutations;
 export const usersQueryOptions = usersReactQuery.queries;
 export const usersMutationOptions = usersReactQuery.mutations;
+
+export const rolesQueryOptions = {
+  keys: { all: ["roles"] as const },
+  list: () =>
+    queryOptions({
+      queryKey: rolesQueryOptions.keys.all,
+      queryFn: ({ signal }) => rolesApi.getAll({ signal }),
+    }),
+};
+
+export const rolesMutationOptions = {
+  create: (queryClient: QueryClient) =>
+    mutationOptions({
+      mutationKey: ["roles", "create"],
+      mutationFn: (input: CreateRoleInput) => rolesApi.create(input),
+      onSuccess: () =>
+        queryClient.invalidateQueries({ queryKey: rolesQueryOptions.keys.all }),
+    }),
+};
 export const suppliersQueryOptions = suppliersReactQuery.queries;
 export const suppliersMutationOptions = suppliersReactQuery.mutations;
 export const ordersQueryOptions = ordersReactQuery.queries;
@@ -197,6 +222,50 @@ export const priceListsQueryOptions = priceListsReactQuery.queries;
 export const priceListsMutationOptions = priceListsReactQuery.mutations;
 export const productPricesQueryOptions = productPricesReactQuery.queries;
 export const productPricesMutationOptions = productPricesReactQuery.mutations;
+
+export const priceListEditorMutationOptions = {
+  save: (queryClient: QueryClient) =>
+    mutationOptions({
+      mutationKey: ["price-lists", "save-with-products"],
+      mutationFn: async ({
+        id,
+        name,
+        products,
+      }: {
+        id?: string;
+        name: string;
+        products: Array<{ product_id: string; price: number }>;
+      }) => {
+        const priceList = id
+          ? await priceListsApi.update(id, { name })
+          : await priceListsApi.create({ name });
+
+        await Promise.all(
+          products.map((product) =>
+            productPricesApi.create({
+              price_list_id: priceList.id,
+              product_id: product.product_id,
+              price: product.price,
+            }),
+          ),
+        );
+
+        return priceList;
+      },
+      onSuccess: () =>
+        Promise.all([
+          queryClient.invalidateQueries({
+            queryKey: priceListsQueryOptions.keys.all,
+          }),
+          queryClient.invalidateQueries({
+            queryKey: productPricesQueryOptions.keys.all,
+          }),
+          queryClient.invalidateQueries({
+            queryKey: productsQueryOptions.keys.all,
+          }),
+        ]).then(() => undefined),
+    }),
+};
 
 export const organizationsQueryOptions = {
   keys: {
