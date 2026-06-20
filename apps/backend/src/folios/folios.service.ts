@@ -70,7 +70,7 @@ export class FoliosService {
       case 'suppliers':
         return this.getCount('Supplier', organization);
       case 'inventory_entries':
-        return this.getCount('InventoryEntry', organization);
+        return this.getCount('Purchase', organization);
       case 'users':
         return this.getCount('User', organization);
       default:

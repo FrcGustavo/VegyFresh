@@ -50,4 +50,17 @@ describe('FoliosService', () => {
       service.generateFolio('products', 'missing-org'),
     ).rejects.toBeInstanceOf(NotFoundException);
   });
+
+  it('counts purchases using the registered Purchase entity', async () => {
+    findOneMock.mockResolvedValue({
+      id: 'org-id',
+      purchase_folio_prefix: 'C',
+    });
+    countMock.mockResolvedValue(4);
+
+    await expect(
+      service.generateFolio('inventory_entries', 'org-id'),
+    ).resolves.toBe('C0005');
+    expect(getRepositoryMock).toHaveBeenCalledWith('Purchase');
+  });
 });
