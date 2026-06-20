@@ -2,10 +2,6 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ProductUnit } from '../entities/product.entity';
 
 export class CreateProductDto {
-  /** Stock keeping unit unique within the organization. */
-  @ApiProperty({ example: 'TOM-001' })
-  sku!: string;
-
   /** Product's display name. */
   @ApiProperty({ example: 'Tomate perita' })
   name!: string;

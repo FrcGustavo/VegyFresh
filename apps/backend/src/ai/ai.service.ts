@@ -55,8 +55,8 @@ export class AiService {
     }
 
     const prompt = `You are an order assistant for a produce business. The user message may be in Spanish.
-The available products catalog is provided in the context as a JSON array with fields: id, name, sku.
-Your job is to match what the user is requesting to products in the catalog by name or sku (fuzzy match is ok).
+The available products catalog is provided in the context as a JSON array with fields: id, name, folio.
+Your job is to match what the user is requesting to products in the catalog by name or folio (fuzzy match is ok).
 
 Respond with ONLY a JSON object with these keys:
 - intent: "CREATE_ORDER" if the user wants to order products, otherwise "GENERAL_QUERY"
@@ -108,8 +108,8 @@ Respond with ONLY a JSON object with these keys:
     }
 
     const prompt = `You are an order assistant for a produce business. The user message may be in Spanish.
-The available products catalog is provided in the context as a JSON array with fields: id, name, sku.
-Match what the user requests to products by name or sku (fuzzy match is ok).
+The available products catalog is provided in the context as a JSON array with fields: id, name, folio.
+Match what the user requests to products by name or folio (fuzzy match is ok).
 
 Respond with ONLY a raw JSON object (no markdown, no code fences) with these keys:
 - intent: "CREATE_ORDER" if the user wants to order products, otherwise "GENERAL_QUERY"

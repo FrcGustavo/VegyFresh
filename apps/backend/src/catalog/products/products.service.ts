@@ -12,7 +12,6 @@ type ProductOrderField =
   | 'name'
   | 'folio'
   | 'unit'
-  | 'sku'
   | 'stock'
   | 'createdAt'
   | 'updatedAt';
@@ -152,7 +151,6 @@ export class ProductsService {
       'name',
       'folio',
       'unit',
-      'sku',
       'stock',
       'createdAt',
       'updatedAt',

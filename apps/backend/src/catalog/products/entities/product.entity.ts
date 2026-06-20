@@ -24,14 +24,10 @@ export enum ProductUnit {
 
 @Entity('products')
 @Unique('UQ_products_org_folio', ['organization_id', 'folio'])
-@Unique('UQ_products_org_sku', ['organization_id', 'sku'])
 export class Product {
   @PrimaryColumn({ type: 'uuid' })
   @Generated('uuid')
   id!: string;
-
-  @Column({ type: 'varchar', length: 100 })
-  sku!: string;
 
   @Column({ type: 'varchar', length: 40 })
   folio!: string;

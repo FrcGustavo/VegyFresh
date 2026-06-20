@@ -111,7 +111,7 @@ export class WhatsappService {
     const catalog = products.map((p) => ({
       id: p.id,
       name: p.name,
-      sku: p.sku,
+      folio: p.folio,
     }));
 
     const interpretation = await this.aiService.interpretMessage(text, {
