@@ -3,5 +3,6 @@ apps/*/node_modules
 apps/*/dist
 .git
 .env
+!apps/frontend/.env
 coverage
 .DS_Store

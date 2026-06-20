@@ -25,7 +25,10 @@ Copy the example for local development:
 cp apps/frontend/.env.example apps/frontend/.env.local
 ```
 
-`VITE_API_URL` must include the backend prefix `/api/v1`. When omitted, local development falls back to `http://localhost:3000/api/v1`.
+`VITE_API_URL` must be an absolute HTTP(S) URL and include the backend prefix
+`/api/v1`. Development falls back to `http://localhost:3000/api/v1` when it is
+omitted, but production builds require it. During compilation, Vite writes the
+literal value to `dist/config.js`.
 
 Vite supports a file per mode when a developer needs explicit environment profiles:
 
@@ -37,13 +40,18 @@ Vite supports a file per mode when a developer needs explicit environment profil
 
 Run a staging build with `pnpm --filter frontend build --mode staging`. Do not commit credentials in these files.
 
-The Docker image resolves the URL at container startup instead of baking it into the JavaScript bundle. Configure `API_URL` for each deployment:
+Docker can read `apps/frontend/.env` during the build. The URL can also be
+provided explicitly as a build argument:
 
 ```bash
-docker run -e API_URL=https://api.example.com/api/v1 vegyfresh-frontend
+docker build \
+  --build-arg VITE_API_URL=https://api.example.com/api/v1 \
+  -f Dockerfile.frontend \
+  -t vegyfresh-frontend .
 ```
 
-Runtime `API_URL` has priority over build-time `VITE_API_URL`, so the same image can be promoted through development, staging, and production. `VITE_API_URL` remains supported as a runtime alias for compatibility.
+The generated `config.js` is included unchanged in the Nginx image, so each
+backend URL requires its own frontend build.
 
 `API_SCHEMA_URL` (or the compatible `VITE_API_URL_JSON`) must contain the complete OpenAPI document URL used by the type generator, for example `https://example.com/api/docs-json`.
 
