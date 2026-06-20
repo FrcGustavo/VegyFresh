@@ -1,30 +1,6 @@
 import { Box, TextField, MenuItem, Alert, Button, Avatar } from "@mui/material";
-
-type UserChangeEvent = { target: { name: string; value: string } };
-interface UserFormData {
-  name: string;
-  email: string;
-  password: string;
-  role_id: string;
-  avatar_url: string;
-}
-interface RoleOption {
-  id: string;
-  name: string;
-}
-
-interface UserFormProps {
-  formData: UserFormData;
-  avatarFileError?: string;
-  roles: RoleOption[];
-  isEditing: boolean;
-  isCreatingRole: boolean;
-  handleChange: (e: UserChangeEvent) => void;
-  handleAvatarFileChange: (file: File) => void;
-  handleSubmit: (action: "save" | "save-and-close" | "save-and-new") => void;
-  createAdminRole: () => void;
-  isDisabled?: boolean;
-}
+import { userFormStyles } from "./UserForm.styles";
+import type { UserFormProps } from "./UserForm.types";
 
 export default function UserForm({
   formData,
@@ -39,34 +15,19 @@ export default function UserForm({
   isDisabled = false,
 }: UserFormProps) {
   return (
-    <Box sx={{ p: 3, maxWidth: 900 }}>
+    <Box sx={userFormStyles.root}>
       <form
         onSubmit={(e) => {
           e.preventDefault();
           handleSubmit("save");
         }}
       >
-        <Box
-          sx={{
-            display: "flex",
-            gap: 3,
-            alignItems: "flex-start",
-            flexWrap: { xs: "wrap", md: "nowrap" },
-          }}
-        >
-          <Box
-            sx={{
-              width: { xs: "100%", md: 220 },
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: 2,
-            }}
-          >
+        <Box sx={userFormStyles.layout}>
+          <Box sx={userFormStyles.avatarColumn}>
             <Avatar
               src={formData.avatar_url || undefined}
               alt={formData.name || "Usuario"}
-              sx={{ width: 150, height: 150 }}
+              sx={userFormStyles.avatar}
             >
               {(formData.name || "U").charAt(0).toUpperCase()}
             </Avatar>
@@ -74,7 +35,7 @@ export default function UserForm({
               variant="outlined"
               component="label"
               disabled={isDisabled}
-              sx={{ width: "100%" }}
+              sx={userFormStyles.avatarButton}
             >
               Seleccionar avatar
               <input
@@ -90,13 +51,13 @@ export default function UserForm({
               />
             </Button>
             {avatarFileError && (
-              <Alert severity="error" sx={{ width: "100%" }}>
+              <Alert severity="error" sx={userFormStyles.avatarError}>
                 {avatarFileError}
               </Alert>
             )}
           </Box>
 
-          <Box sx={{ flex: 1, minWidth: 320 }}>
+          <Box sx={userFormStyles.fieldsColumn}>
             <TextField
               fullWidth
               label="Nombre"
@@ -151,7 +112,7 @@ export default function UserForm({
               ))}
             </TextField>
             {roles.length === 0 && (
-              <Alert severity="warning" sx={{ mt: 2 }}>
+              <Alert severity="warning" sx={userFormStyles.noRolesAlert}>
                 No existen roles.
                 <Button
                   size="small"

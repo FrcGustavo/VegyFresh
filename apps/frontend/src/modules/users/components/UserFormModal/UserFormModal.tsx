@@ -1,24 +1,10 @@
 import { Box, CircularProgress } from "@mui/material";
-import FloatingModal from "../../../components/FloatingModal";
-import ModalToolbar from "../../../components/ModalToolbar";
-import { useUserForm } from "../hooks/useUserForm";
-import UserForm from "./UserForm";
-
-interface UserListItemRef {
-  id: string | number;
-}
-
-interface UserFormModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  userId?: string;
-  title?: string;
-  initialWidth?: number;
-  initialHeight?: number;
-  list?: UserListItemRef[];
-  currentIndex?: number;
-  onNavigate?: (newIndex: number) => void;
-}
+import FloatingModal from "../../../../components/FloatingModal";
+import ModalToolbar from "../../../../components/ModalToolbar";
+import { useUserForm } from "../../hooks/useUserForm";
+import UserForm from "../UserForm";
+import { userFormModalStyles } from "./UserFormModal.styles";
+import type { UserFormModalProps } from "./UserFormModal.types";
 
 export default function UserFormModal({
   isOpen,
@@ -84,7 +70,7 @@ export default function UserFormModal({
       toolbar={toolbar}
       renderContent={() =>
         formProps.isLoading ? (
-          <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+          <Box sx={userFormModalStyles.loadingContainer}>
             <CircularProgress />
           </Box>
         ) : (
