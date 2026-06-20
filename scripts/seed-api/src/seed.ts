@@ -1,49 +1,19 @@
-type Role = {
-  id: string;
-  name: string;
-};
-
-type PriceList = {
-  id: string;
-  name: string;
-};
-
-type Supplier = {
-  id: string;
-  name: string;
-};
-
-type Product = {
-  id: string;
-  sku: string;
-  name: string;
-};
-
-type ProductPrice = {
-  id: string;
-  product_id: string;
-  price_list_id: string;
-  price: number;
-};
-
-type Client = {
-  id: string;
-  phone_number: string;
-  name: string;
-};
-
-type User = {
-  id: string;
-  email: string;
-  name: string;
-};
-
-type Order = {
-  id: string;
-};
+import {
+  createApiClient,
+  createFetchTransport,
+  getCollectionItems,
+  type ApiClient,
+  type Client,
+  type Order,
+  type PriceList,
+  type Product,
+  type ProductPrice,
+  type Role,
+  type Supplier,
+  type User,
+} from "@vegyfresh/api-client";
 
 type ProductSeed = {
-  sku: string;
   name: string;
   description: string;
   stock: number;
@@ -62,66 +32,6 @@ type ClientSeed = {
   email: string;
 };
 
-type HttpMethod = "GET" | "POST";
-
-class ApiClient {
-  constructor(
-    private readonly baseUrl: string,
-    private readonly bearerToken?: string,
-  ) {}
-
-  async get<T>(path: string): Promise<T> {
-    return this.request<T>("GET", path);
-  }
-
-  async post<T>(path: string, body: unknown): Promise<T> {
-    return this.request<T>("POST", path, body);
-  }
-
-  private async request<T>(
-    method: HttpMethod,
-    path: string,
-    body?: unknown,
-  ): Promise<T> {
-    const headers: Record<string, string> = {
-      Accept: "application/json",
-    };
-
-    if (body !== undefined) {
-      headers["Content-Type"] = "application/json";
-    }
-
-    if (this.bearerToken) {
-      headers.Authorization = `Bearer ${this.bearerToken}`;
-    }
-
-    const response = await fetch(`${this.baseUrl}${path}`, {
-      method,
-      headers,
-      body: body !== undefined ? JSON.stringify(body) : undefined,
-    });
-
-    const raw = await response.text();
-    const parsed = raw.length > 0 ? tryParseJson(raw) : undefined;
-
-    if (!response.ok) {
-      throw new Error(
-        `HTTP ${response.status} ${response.statusText} on ${method} ${path}\n${raw}`,
-      );
-    }
-
-    return parsed as T;
-  }
-}
-
-function tryParseJson(raw: string): unknown {
-  try {
-    return JSON.parse(raw);
-  } catch {
-    return raw;
-  }
-}
-
 function normalizeBaseUrl(baseUrl: string): string {
   return baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
 }
@@ -134,6 +44,8 @@ const TARGET_SUPPLIERS = 25;
 const TARGET_PRODUCTS = 100;
 const TARGET_CLIENTS = 20;
 const TARGET_ORDERS = 50;
+const ALL_ITEMS_QUERY = { limit: "500" } as const;
+const ALL_ORDERS_QUERY = { limit: 500 } as const;
 
 function pad(value: number): string {
   return value.toString().padStart(3, "0");
@@ -161,7 +73,6 @@ function createClientSeeds(count: number): ClientSeed[] {
 }
 
 function buildProductsForCategory(
-  categoryCode: string,
   categoryName: string,
   itemNames: string[],
   startPrice: number,
@@ -172,7 +83,6 @@ function buildProductsForCategory(
     const wholesalePrice = Math.round(retailPrice * 0.88);
 
     return {
-      sku: `${categoryCode}-${pad(position)}`,
       name: itemName,
       description: `${itemName} - categoria ${categoryName}`,
       stock: 80 + (index % 12) * 15,
@@ -299,11 +209,11 @@ function createProductSeeds(): ProductSeed[] {
   ];
 
   const all = [
-    ...buildProductsForCategory("VER", "verduras", verduras, 900),
-    ...buildProductsForCategory("FRU", "frutas", frutas, 1200),
-    ...buildProductsForCategory("HER", "hierbas", hierbas, 700),
-    ...buildProductsForCategory("LEG", "legumbres", legumbres, 1500),
-    ...buildProductsForCategory("CER", "cereales", cereales, 1300),
+    ...buildProductsForCategory("verduras", verduras, 900),
+    ...buildProductsForCategory("frutas", frutas, 1200),
+    ...buildProductsForCategory("hierbas", hierbas, 700),
+    ...buildProductsForCategory("legumbres", legumbres, 1500),
+    ...buildProductsForCategory("cereales", cereales, 1300),
   ];
 
   return all.slice(0, TARGET_PRODUCTS);
@@ -314,22 +224,24 @@ async function ensureRole(
   name: string,
   permissions: Record<string, unknown>[],
 ): Promise<Role> {
-  const existing = await api.get<Role[]>("/roles");
+  const existing = getCollectionItems(await api.roles.getAll());
   const found = existing.find((role) => role.name === name);
   if (found) return found;
 
-  return api.post<Role>("/roles", { name, permissions });
+  return api.roles.create({ name, permissions });
 }
 
 async function ensurePriceList(
   api: ApiClient,
   name: string,
 ): Promise<PriceList> {
-  const existing = await api.get<PriceList[]>("/price-lists");
+  const existing = getCollectionItems(
+    await api.priceLists.getAll(ALL_ITEMS_QUERY),
+  );
   const found = existing.find((priceList) => priceList.name === name);
   if (found) return found;
 
-  return api.post<PriceList>("/price-lists", { name });
+  return api.priceLists.create({ name });
 }
 
 async function ensureSupplier(
@@ -337,35 +249,38 @@ async function ensureSupplier(
   name: string,
   contactInfo: string,
 ): Promise<Supplier> {
-  const existing = await api.get<Supplier[]>("/suppliers");
+  const existing = getCollectionItems(
+    await api.suppliers.getAll(ALL_ITEMS_QUERY),
+  );
   const found = existing.find((supplier) => supplier.name === name);
   if (found) return found;
 
-  return api.post<Supplier>("/suppliers", {
+  return api.suppliers.create({
     name,
-    contact_info: contactInfo,
+    email: contactInfo,
   });
 }
 
 async function ensureProduct(
   api: ApiClient,
   input: {
-    sku: string;
     name: string;
     supplierId: string;
     stock: number;
     description?: string;
   },
 ): Promise<Product> {
-  const existing = await api.get<Product[]>("/products");
-  const found = existing.find((product) => product.sku === input.sku);
+  const existing = getCollectionItems(
+    await api.products.getAll(ALL_ITEMS_QUERY),
+  );
+  const found = existing.find((product) => product.name === input.name);
   if (found) return found;
 
-  return api.post<Product>("/products", {
-    sku: input.sku,
+  return api.products.create({
     name: input.name,
     supplier_id: input.supplierId,
     stock: input.stock,
+    unit: "pz",
     description: input.description ?? null,
     images: [],
   });
@@ -375,7 +290,7 @@ async function ensureProductPrice(
   api: ApiClient,
   input: { productId: string; priceListId: string; price: number },
 ): Promise<ProductPrice> {
-  const existing = await api.get<ProductPrice[]>("/product-prices");
+  const existing = getCollectionItems(await api.productPrices.getAll());
   const found = existing.find(
     (productPrice) =>
       productPrice.product_id === input.productId &&
@@ -384,7 +299,7 @@ async function ensureProductPrice(
 
   if (found) return found;
 
-  return api.post<ProductPrice>("/product-prices", {
+  return api.productPrices.create({
     product_id: input.productId,
     price_list_id: input.priceListId,
     price: input.price,
@@ -400,13 +315,15 @@ async function ensureClient(
     priceListId: string;
   },
 ): Promise<Client> {
-  const existing = await api.get<Client[]>("/clients");
+  const existing = getCollectionItems(
+    await api.clients.getAll(ALL_ITEMS_QUERY),
+  );
   const found = existing.find(
     (client) => client.phone_number === input.phoneNumber,
   );
   if (found) return found;
 
-  return api.post<Client>("/clients", {
+  return api.clients.create({
     name: input.name,
     phone_number: input.phoneNumber,
     email: input.email,
@@ -416,16 +333,18 @@ async function ensureClient(
 
 async function ensureUser(
   api: ApiClient,
-  input: { name: string; email: string; passwordHash: string; roleId: string },
+  input: { name: string; email: string; password: string; roleId: string },
 ): Promise<User> {
-  const existing = await api.get<User[]>("/users");
+  const existing = getCollectionItems(
+    await api.users.getAll(ALL_ITEMS_QUERY),
+  );
   const found = existing.find((user) => user.email === input.email);
   if (found) return found;
 
-  return api.post<User>("/users", {
+  return api.users.create({
     name: input.name,
     email: input.email,
-    password_hash: input.passwordHash,
+    password: input.password,
     role_id: input.roleId,
   });
 }
@@ -436,7 +355,9 @@ async function run(): Promise<void> {
   );
   const token = process.env.SEED_API_BEARER_TOKEN;
 
-  const api = new ApiClient(baseUrl, token);
+  const api = createApiClient({
+    request: createFetchTransport({ baseUrl, token }),
+  });
 
   console.log(`[seed] Target API: ${baseUrl}`);
 
@@ -454,7 +375,9 @@ async function run(): Promise<void> {
   for (const supplierSeed of supplierSeeds) {
     await ensureSupplier(api, supplierSeed.name, supplierSeed.contactInfo);
   }
-  const suppliers = await api.get<Supplier[]>("/suppliers");
+  const suppliers = getCollectionItems(
+    await api.suppliers.getAll(ALL_ITEMS_QUERY),
+  );
   const targetSuppliers = supplierSeeds
     .map((seed) => suppliers.find((supplier) => supplier.name === seed.name))
     .filter((supplier): supplier is Supplier => supplier !== undefined);
@@ -472,7 +395,6 @@ async function run(): Promise<void> {
     const supplier = targetSuppliers[index % targetSuppliers.length];
 
     await ensureProduct(api, {
-      sku: productSeed.sku,
       name: productSeed.name,
       supplierId: supplier.id,
       stock: productSeed.stock,
@@ -480,9 +402,11 @@ async function run(): Promise<void> {
     });
   }
 
-  const products = await api.get<Product[]>("/products");
+  const products = getCollectionItems(
+    await api.products.getAll(ALL_ITEMS_QUERY),
+  );
   const targetProducts = productSeeds
-    .map((seed) => products.find((product) => product.sku === seed.sku))
+    .map((seed) => products.find((product) => product.name === seed.name))
     .filter((product): product is Product => product !== undefined);
 
   if (targetProducts.length === 0) {
@@ -494,7 +418,7 @@ async function run(): Promise<void> {
   logStep("Asegurando precios para lista minorista y mayorista");
   for (const productSeed of productSeeds) {
     const product = targetProducts.find(
-      (existingProduct) => existingProduct.sku === productSeed.sku,
+      (existingProduct) => existingProduct.name === productSeed.name,
     );
 
     if (!product) {
@@ -514,7 +438,7 @@ async function run(): Promise<void> {
     });
   }
 
-  const productPrices = await api.get<ProductPrice[]>("/product-prices");
+  const productPrices = getCollectionItems(await api.productPrices.getAll());
 
   logStep(`Asegurando ${TARGET_CLIENTS} clientes`);
   const clientSeeds = createClientSeeds(TARGET_CLIENTS);
@@ -529,7 +453,9 @@ async function run(): Promise<void> {
     });
   }
 
-  const clients = await api.get<Client[]>("/clients");
+  const clients = getCollectionItems(
+    await api.clients.getAll(ALL_ITEMS_QUERY),
+  );
   const targetClients = clientSeeds
     .map((seed) =>
       clients.find((client) => client.phone_number === seed.phoneNumber),
@@ -544,12 +470,14 @@ async function run(): Promise<void> {
   const adminUser = await ensureUser(api, {
     name: "Administrador VegyFresh",
     email: "admin@vegyfresh.local",
-    passwordHash: "seed_admin_password_hash_change_me",
+    password: "seed_admin_password_change_me",
     roleId: adminRole.id,
   });
 
   logStep(`Asegurando al menos ${TARGET_ORDERS} pedidos`);
-  const existingOrders = await api.get<Order[]>("/orders");
+  const existingOrders = getCollectionItems(
+    await api.orders.getAll(ALL_ORDERS_QUERY),
+  );
   const missingOrders = Math.max(0, TARGET_ORDERS - existingOrders.length);
 
   for (let index = 0; index < missingOrders; index += 1) {
@@ -563,7 +491,7 @@ async function run(): Promise<void> {
           value.price_list_id === mayorista.id,
       )?.price ?? 1000;
 
-    await api.post<Order>("/orders", {
+    await api.orders.create({
       client_id: client.id,
       user_id: adminUser.id,
       origin: "MANUAL",
@@ -578,7 +506,9 @@ async function run(): Promise<void> {
     });
   }
 
-  const orders = await api.get<Order[]>("/orders");
+  const orders = getCollectionItems(
+    await api.orders.getAll(ALL_ORDERS_QUERY),
+  );
 
   console.log("\n[seed] Seed completado con exito");
   console.log("[seed] Resumen final:");

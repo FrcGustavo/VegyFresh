@@ -2,10 +2,14 @@
   "name": "@vegyfresh/seed-api",
   "private": true,
   "type": "module",
+  "dependencies": {
+    "@vegyfresh/api-client": "workspace:*"
+  },
   "scripts": {
     "seed": "tsx src/seed.ts"
   },
   "devDependencies": {
+    "@types/node": "24.12.4",
     "tsx": "^4.20.6",
     "typescript": "^5.9.2"
   }
