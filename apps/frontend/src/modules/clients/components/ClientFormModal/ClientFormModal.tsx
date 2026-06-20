@@ -1,27 +1,13 @@
 import { useState } from "react";
 import { Box, CircularProgress } from "@mui/material";
-import FloatingModal from "../../../components/FloatingModal";
-import ModalTabPanel from "../../../components/ModalTabPanel";
-import ModalTabsNavigation from "../../../components/ModalTabsNavigation";
-import ModalToolbar from "../../../components/ModalToolbar";
-import { useClientForm } from "../hooks/useClientForm";
-import ClientForm from "./ClientForm";
-
-interface ClientListItemRef {
-  id: string | number;
-}
-
-interface ClientFormModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  clientId?: string;
-  title?: string;
-  initialWidth?: number;
-  initialHeight?: number;
-  list?: ClientListItemRef[];
-  currentIndex?: number;
-  onNavigate?: (newIndex: number) => void;
-}
+import FloatingModal from "../../../../components/FloatingModal";
+import ModalTabPanel from "../../../../components/ModalTabPanel";
+import ModalTabsNavigation from "../../../../components/ModalTabsNavigation";
+import ModalToolbar from "../../../../components/ModalToolbar";
+import { useClientForm } from "../../hooks/useClientForm";
+import ClientForm from "../ClientForm";
+import { clientFormModalStyles } from "./ClientFormModal.styles";
+import type { ClientFormModalProps } from "./ClientFormModal.types";
 
 export default function ClientFormModal({
   isOpen,
@@ -42,11 +28,9 @@ export default function ClientFormModal({
   ) => {
     if (action === "save-and-close" || action === "save-and-new") {
       if (action === "save-and-new") {
-        // Reset for new entry
         onClose();
         setTimeout(() => {
-          // Reopen with empty clientId for new form
-          // This would require a parent component to handle
+          // Reopen handled by parent
         }, 100);
       } else {
         onClose();
@@ -103,27 +87,18 @@ export default function ClientFormModal({
       toolbar={toolbar}
       renderContent={() =>
         formProps.isLoading ? (
-          <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+          <Box sx={clientFormModalStyles.loadingContainer}>
             <CircularProgress />
           </Box>
         ) : (
-          <Box
-            sx={{ display: "flex", flexDirection: "column", height: "100%" }}
-          >
+          <Box sx={clientFormModalStyles.contentRoot}>
             <ModalTabsNavigation
               value={activeTab}
               options={tabOptions}
               onChange={setActiveTab}
             />
 
-            <Box
-              sx={{
-                flex: 1,
-                overflowY: "auto",
-                display: "flex",
-                flexDirection: "column",
-              }}
-            >
+            <Box sx={clientFormModalStyles.tabContent}>
               <ModalTabPanel value={activeTab} index={0}>
                 <ClientForm
                   {...formProps}

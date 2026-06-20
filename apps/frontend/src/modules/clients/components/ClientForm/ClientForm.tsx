@@ -8,46 +8,8 @@ import {
   Divider,
   Typography,
 } from "@mui/material";
-
-type ClientFormSection = "general" | "address" | "price-list";
-type ClientChangeEvent = { target: { name: string; value: string } };
-
-interface ClientFormData {
-  name: string;
-  phone_number: string;
-  email: string;
-  country: string;
-  state: string;
-  city: string;
-  postal_code: string;
-  address: string;
-  suburb: string;
-  external_number: string;
-  internal_number: string;
-  avatar_url: string;
-  price_list_id: string;
-}
-
-interface PriceListOption {
-  id: string;
-  name: string;
-}
-
-interface ClientFormProps {
-  formData: ClientFormData;
-  priceLists: PriceListOption[];
-  avatarFileError?: string;
-  countries: string[];
-  states: string[];
-  cities: string[];
-  postalCodeOptions: string[];
-  coloniaOptions: string[];
-  handleChange: (e: ClientChangeEvent) => void;
-  handleAvatarFileChange: (file: File) => void;
-  handleSubmit: (action: "save" | "save-and-close" | "save-and-new") => void;
-  section: ClientFormSection;
-  isDisabled?: boolean;
-}
+import { clientFormStyles } from "./ClientForm.styles";
+import type { ClientFormProps } from "./ClientForm.types";
 
 export default function ClientForm({
   formData,
@@ -65,7 +27,7 @@ export default function ClientForm({
   isDisabled = false,
 }: ClientFormProps) {
   return (
-    <Box>
+    <Box sx={clientFormStyles.root}>
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -73,27 +35,12 @@ export default function ClientForm({
         }}
       >
         {section === "general" && (
-          <Box
-            sx={{
-              display: "flex",
-              gap: 3,
-              alignItems: "flex-start",
-              flexWrap: { xs: "wrap", md: "nowrap" },
-            }}
-          >
-            <Box
-              sx={{
-                width: { xs: "100%", md: 220 },
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                gap: 2,
-              }}
-            >
+          <Box sx={clientFormStyles.generalLayout}>
+            <Box sx={clientFormStyles.avatarColumn}>
               <Avatar
                 src={formData.avatar_url || undefined}
                 alt={formData.name || "Cliente"}
-                sx={{ width: 150, height: 150 }}
+                sx={clientFormStyles.avatar}
               >
                 {(formData.name || "C").charAt(0).toUpperCase()}
               </Avatar>
@@ -101,7 +48,7 @@ export default function ClientForm({
                 variant="outlined"
                 component="label"
                 disabled={isDisabled}
-                sx={{ width: "100%" }}
+                sx={clientFormStyles.avatarButton}
               >
                 Seleccionar avatar
                 <input
@@ -123,7 +70,7 @@ export default function ClientForm({
               )}
             </Box>
 
-            <Box sx={{ flex: 1 }}>
+            <Box sx={clientFormStyles.generalFields}>
               <TextField
                 fullWidth
                 label="Nombre"
@@ -158,7 +105,7 @@ export default function ClientForm({
         )}
 
         {section === "address" && (
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          <Box sx={clientFormStyles.addressSection}>
             <Typography variant="subtitle2" color="text.secondary">
               Ubicación
             </Typography>
@@ -184,16 +131,7 @@ export default function ClientForm({
               )}
             />
 
-            <Box
-              sx={{
-                display: "grid",
-                gridTemplateColumns: {
-                  xs: "1fr",
-                  md: "repeat(3, minmax(0, 1fr))",
-                },
-                gap: 2,
-              }}
-            >
+            <Box sx={clientFormStyles.locationGrid}>
               <TextField
                 select
                 fullWidth
@@ -265,16 +203,7 @@ export default function ClientForm({
               multiline
               minRows={2}
             />
-            <Box
-              sx={{
-                display: "grid",
-                gridTemplateColumns: {
-                  xs: "1fr",
-                  sm: "repeat(3, minmax(0, 1fr))",
-                },
-                gap: 2,
-              }}
-            >
+            <Box sx={clientFormStyles.addressGrid}>
               <Autocomplete
                 freeSolo
                 options={coloniaOptions}
