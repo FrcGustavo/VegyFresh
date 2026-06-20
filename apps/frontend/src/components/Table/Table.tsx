@@ -17,7 +17,7 @@ import {
 } from "./Table.hooks";
 import type { TableProps } from "./Table.types";
 
-export function Table<T extends Record<string, any>>({
+export function Table<T extends object>({
   columns,
   data,
   keyExtractor,

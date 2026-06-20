@@ -1,6 +1,4 @@
 import {
-  createContext,
-  useContext,
   useEffect,
   useState,
   type ReactNode,
@@ -8,30 +6,11 @@ import {
 import { authStorage } from "./authStorage";
 import {
   authApi,
-  type AuthOrganization,
-  type AuthRole,
-  type AuthUser,
   type LoginPayload,
-  type SignupResponse,
   type SignupPayload,
 } from "./authApi";
-
-interface AuthState {
-  user: AuthUser | null;
-  organization: AuthOrganization | null;
-  role: AuthRole | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-}
-
-interface AuthContextValue extends AuthState {
-  login: (payload: LoginPayload) => ReturnType<typeof authApi.login>;
-  signup: (payload: SignupPayload) => Promise<SignupResponse>;
-  refreshSession: () => Promise<void>;
-  logout: () => Promise<void>;
-}
-
-const AuthContext = createContext<AuthContextValue | null>(null);
+import { AuthContext } from "./auth-context.store";
+import type { AuthState } from "./auth-context.store";
 
 const isAuthRejected = (error: unknown): boolean => {
   if (
@@ -46,12 +25,6 @@ const isAuthRejected = (error: unknown): boolean => {
 
   return false;
 };
-
-export function useAuth(): AuthContextValue {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be used inside AuthProvider");
-  return ctx;
-}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>({

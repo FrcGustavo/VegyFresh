@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Alert, Box, CircularProgress, Paper, Typography } from "@mui/material";
 import { useNavigate } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "../../../auth/AuthContext";
+import { useAuth } from "../../../auth/useAuth";
 import { authStorage } from "../../../auth/authStorage";
 import { authApi } from "../../../auth/authApi";
 import {
@@ -10,11 +10,13 @@ import {
   organizationsQueryOptions,
 } from "../../../api";
 import {
-  EMPTY_ORGANIZATION_FORM,
   OrganizationForm,
   type OrganizationFormData,
-  organizationToFormData,
 } from "../../organizations/components/OrganizationForm";
+import {
+  EMPTY_ORGANIZATION_FORM,
+  organizationToFormData,
+} from "../../organizations/components/OrganizationForm.utils";
 
 export default function OrganizationPage() {
   const navigate = useNavigate();

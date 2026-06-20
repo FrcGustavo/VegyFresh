@@ -2,7 +2,7 @@ import { Box, AppBar, Toolbar, IconButton, Tooltip, Chip } from "@mui/material";
 import { Logout } from "@mui/icons-material";
 import { Outlet, useNavigate } from "react-router";
 import Sidebar from "./Sidebar";
-import { useAuth } from "../auth/AuthContext";
+import { useAuth } from "../auth/useAuth";
 
 export default function MainLayout() {
   const { user, logout } = useAuth();

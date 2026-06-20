@@ -1,7 +1,7 @@
 import { Box, CircularProgress } from "@mui/material";
 import type { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router";
-import { useAuth } from "../auth/AuthContext";
+import { useAuth } from "../auth/useAuth";
 import { canAccessOrganizationResource } from "../auth/authorization";
 import type { AuthRole } from "../auth/authApi";
 

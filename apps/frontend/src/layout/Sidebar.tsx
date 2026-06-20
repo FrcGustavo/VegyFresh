@@ -21,7 +21,7 @@ import {
   Warehouse,
 } from "@mui/icons-material";
 import { useNavigate, useLocation } from "react-router";
-import { useAuth } from "../auth/AuthContext";
+import { useAuth } from "../auth/useAuth";
 import {
   canAccessUsersResource,
   canAccessOrganizationResource,

@@ -1,3 +1,5 @@
+import type { SxProps, Theme } from "@mui/material/styles";
+
 export type SortOrder = "asc" | "desc";
 
 export interface ColumnConfig {
@@ -8,7 +10,7 @@ export interface ColumnConfig {
   sortable?: boolean;
 }
 
-export interface TableProps<T extends Record<string, any>> {
+export interface TableProps<T extends object> {
   columns: readonly ColumnConfig[];
   data: T[];
   keyExtractor: (item: T) => string | number;
@@ -35,5 +37,5 @@ export interface TableHeaderCellProps {
   onResizeStart?: (columnKey: string, startX: number) => void;
   onResetWidth?: (columnKey: string) => void;
   columnKey: string;
-  cellSx?: any;
+  cellSx?: SxProps<Theme>;
 }

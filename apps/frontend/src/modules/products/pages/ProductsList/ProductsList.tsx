@@ -5,6 +5,7 @@ import { Box, Typography, CircularProgress } from "@mui/material";
 import { productsQueryOptions } from "../../../../api";
 import { useDebouncedValue } from "../../../../hooks/useDebouncedValue";
 import { Table } from "../../../../components/Table";
+import type { ColumnConfig } from "../../../../components/Table";
 import ProductFormModal from "../../components/ProductFormModal";
 import ResourcePageTitle from "../../../../components/ResourcePageTitle";
 import ListPageToolbar from "../../../../components/ListPageToolbar";
@@ -133,7 +134,7 @@ function ProductsTableView({
     return () => observer.disconnect();
   }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
-  const renderCell = (column: any, item: ProductListItem) => {
+  const renderCell = (column: ColumnConfig, item: ProductListItem) => {
     switch (column.key) {
       case "folio":
         return item.folio || "N/A";

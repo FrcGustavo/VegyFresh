@@ -2,6 +2,7 @@ import { useCallback, useState } from "react";
 import type { SortByField, SortOrder } from "./PriceListsList.types";
 
 export const usePriceListsTableState = () => {
+  type NavigableItem = { id?: string | number };
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalPriceListId, setModalPriceListId] = useState<
     string | undefined
@@ -23,7 +24,7 @@ export const usePriceListsTableState = () => {
   }, []);
 
   const handleNavigateItem = useCallback(
-    (newIndex: number, items: any[]) => {
+    (newIndex: number, items: NavigableItem[]) => {
       if (newIndex >= 0 && newIndex < items.length) {
         const newItem = items[newIndex];
         setModalPriceListId(String(newItem.id));
