@@ -3,6 +3,11 @@ export const tableStyles = {
     maxHeight: "calc(100vh - 116px)",
     overflow: "auto",
   },
+  loadingContainer: {
+    display: "flex",
+    justifyContent: "center",
+    py: 4,
+  },
   table: {
     border: "1px solid",
     borderColor: "divider",
@@ -28,6 +33,16 @@ export const tableStyles = {
     border: "1px solid",
     borderColor: "divider",
   },
+  columnCell: (width: number, minWidth: number) => ({
+    border: "1px solid",
+    borderColor: "divider",
+    width,
+    minWidth,
+  }),
+  headerCell: (width: number, minWidth: number) => ({
+    width,
+    minWidth,
+  }),
   emptyCell: {
     textAlign: "center",
     padding: "2rem",

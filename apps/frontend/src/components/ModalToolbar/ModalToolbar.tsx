@@ -4,20 +4,8 @@ import {
   ArrowUpward as ArrowUpIcon,
   ArrowDownward as ArrowDownIcon,
 } from "@mui/icons-material";
-
-interface ModalToolbarProps {
-  isDisabled: boolean;
-  onEditToggle: () => void;
-  onSave: () => void;
-  onSaveAndClose: () => void;
-  onSaveAndNew: () => void;
-  onNavigateUp?: () => void;
-  onNavigateDown?: () => void;
-  canNavigateUp?: boolean;
-  canNavigateDown?: boolean;
-  isSaving?: boolean;
-  isEditing?: boolean;
-}
+import { modalToolbarStyles } from "./ModalToolbar.styles";
+import type { ModalToolbarProps } from "./ModalToolbar.types";
 
 export default function ModalToolbar({
   isDisabled,
@@ -34,19 +22,10 @@ export default function ModalToolbar({
 }: ModalToolbarProps) {
   return (
     <Box
-      sx={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        padding: 1,
-        backgroundColor: "background.paper",
-        borderBottom: "1px solid",
-        borderColor: "divider",
-        gap: 2,
-      }}
+      sx={modalToolbarStyles.container}
     >
       {/* Save Actions */}
-      <Box sx={{ display: "flex", gap: 1 }}>
+      <Box sx={modalToolbarStyles.actionGroup}>
         <Tooltip title="Guardar">
           <span>
             <Button
@@ -90,7 +69,7 @@ export default function ModalToolbar({
       </Box>
 
       {/* Edit Toggle and Navigation */}
-      <Box sx={{ display: "flex", gap: 1 }}>
+      <Box sx={modalToolbarStyles.navigationGroup}>
         {/* Edit Icon - only show when not creating new */}
         {isEditing && (
           <Tooltip title={isDisabled ? "Editar" : "Cancelar edición"}>

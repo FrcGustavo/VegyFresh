@@ -1,0 +1,46 @@
+export const floatingModalStyles = {
+  modal: (
+    isMinimized: boolean,
+    isDragging: boolean,
+    position: { x: number; y: number },
+    initialWidth: number,
+    initialHeight: number,
+  ) => ({
+    position: "fixed",
+    left: `${position.x}px`,
+    top: `${position.y}px`,
+    width: isMinimized ? 300 : `${initialWidth}px`,
+    height: isMinimized ? "auto" : `${initialHeight}px`,
+    zIndex: 1300,
+    display: "flex",
+    flexDirection: "column",
+    minHeight: 0,
+    overflow: "hidden",
+    boxShadow: 6,
+    userSelect: isDragging ? "none" : "auto",
+    transition: isDragging ? "none" : "all 0.2s",
+  }),
+  header: (isDragging: boolean) => ({
+    padding: "0.5rem 1rem",
+    backgroundColor: "primary.main",
+    color: "white",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    cursor: isDragging ? "grabbing" : "grab",
+    userSelect: "none",
+  }),
+  title: {
+    m: 0,
+    fontSize: "1rem",
+    fontWeight: 600,
+  },
+  actionButton: {
+    color: "white",
+  },
+  content: {
+    flex: 1,
+    minHeight: 0,
+    overflowY: "auto",
+  },
+};

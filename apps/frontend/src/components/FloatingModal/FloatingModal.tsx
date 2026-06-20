@@ -1,4 +1,3 @@
-import type { ReactNode } from "react";
 import { useEffect, useId, useRef, useState } from "react";
 import { Paper, Box, IconButton, Tooltip } from "@mui/material";
 import {
@@ -6,19 +5,8 @@ import {
   Minimize as MinimizeIcon,
   Maximize as MaximizeIcon,
 } from "@mui/icons-material";
-
-interface FloatingModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  title: string;
-  children?: ReactNode;
-  renderContent?: () => ReactNode;
-  toolbar?: ReactNode;
-  initialWidth?: number;
-  initialHeight?: number;
-  initialX?: number;
-  initialY?: number;
-}
+import { floatingModalStyles } from "./FloatingModal.styles";
+import type { FloatingModalProps } from "./FloatingModal.types";
 
 export default function FloatingModal({
   isOpen,
@@ -92,41 +80,24 @@ export default function FloatingModal({
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
       onKeyDown={handleKeyDown}
-      sx={{
-        position: "fixed",
-        left: `${position.x}px`,
-        top: `${position.y}px`,
-        width: isMinimized ? 300 : `${initialWidth}px`,
-        height: isMinimized ? "auto" : `${initialHeight}px`,
-        zIndex: 1300,
-        display: "flex",
-        flexDirection: "column",
-        minHeight: 0,
-        overflow: "hidden",
-        boxShadow: 6,
-        userSelect: isDragging ? "none" : "auto",
-        transition: isDragging ? "none" : "all 0.2s",
-      }}
+      sx={floatingModalStyles.modal(
+        isMinimized,
+        isDragging,
+        position,
+        initialWidth,
+        initialHeight,
+      )}
     >
       {/* Header - Draggable */}
       <Box
         data-testid="floating-modal-header"
         onMouseDown={handleMouseDown}
-        sx={{
-          padding: "0.5rem 1rem",
-          backgroundColor: "primary.main",
-          color: "white",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          cursor: isDragging ? "grabbing" : "grab",
-          userSelect: "none",
-        }}
+        sx={floatingModalStyles.header(isDragging)}
       >
         <Box
           component="h2"
           id={titleId}
-          sx={{ m: 0, fontSize: "1rem", fontWeight: 600 }}
+          sx={floatingModalStyles.title}
         >
           {title}
         </Box>
@@ -136,7 +107,7 @@ export default function FloatingModal({
               aria-label={isMinimized ? "Maximizar" : "Minimizar"}
               size="small"
               onClick={() => setIsMinimized(!isMinimized)}
-              sx={{ color: "white" }}
+              sx={floatingModalStyles.actionButton}
             >
               {isMinimized ? (
                 <MaximizeIcon fontSize="small" />
@@ -150,7 +121,7 @@ export default function FloatingModal({
               aria-label="Cerrar"
               size="small"
               onClick={onClose}
-              sx={{ color: "white" }}
+              sx={floatingModalStyles.actionButton}
             >
               <CloseIcon fontSize="small" />
             </IconButton>
@@ -163,7 +134,7 @@ export default function FloatingModal({
 
       {/* Content */}
       {!isMinimized && (
-        <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
+        <Box sx={floatingModalStyles.content}>
           {renderContent ? renderContent() : children}
         </Box>
       )}

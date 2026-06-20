@@ -83,16 +83,14 @@ export function Table<T extends Record<string, any>>({
 
   if (isLoading) {
     return (
-      <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+      <Box sx={tableStyles.loadingContainer}>
         <CircularProgress />
       </Box>
     );
   }
 
   return (
-    <TableContainer
-      sx={{ ...tableStyles.container, maxHeight: containerMaxHeight }}
-    >
+    <TableContainer sx={{ ...tableStyles.container, maxHeight: containerMaxHeight }}>
       <MuiTable sx={tableStyles.table}>
         <TableHead sx={tableStyles.tableHead}>
           <TableRow>
@@ -101,10 +99,10 @@ export function Table<T extends Record<string, any>>({
                 key={column.key}
                 label={column.label}
                 columnKey={column.key}
-                cellSx={{
-                  width: resizeState.getColumnWidth(column.key),
-                  minWidth: column.minWidth,
-                }}
+                cellSx={tableStyles.headerCell(
+                  resizeState.getColumnWidth(column.key),
+                  column.minWidth,
+                )}
                 onResizeStart={handleResizeStart}
                 onResetWidth={handleResetWidth}
                 sortable={column.sortable}
@@ -137,11 +135,10 @@ export function Table<T extends Record<string, any>>({
                   {columns.map((column) => (
                     <TableCell
                       key={`${rowId}-${column.key}`}
-                      sx={{
-                        ...tableStyles.tableCell,
-                        width: resizeState.getColumnWidth(column.key),
-                        minWidth: column.minWidth,
-                      }}
+                      sx={tableStyles.columnCell(
+                        resizeState.getColumnWidth(column.key),
+                        column.minWidth,
+                      )}
                     >
                       {renderCell(column, item)}
                     </TableCell>

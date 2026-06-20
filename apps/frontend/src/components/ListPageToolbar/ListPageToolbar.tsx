@@ -7,39 +7,16 @@ import {
   Select,
   TextField,
 } from "@mui/material";
-import ListSearchField from "./ListSearchField";
-
-export interface ListPageToolbarConfig {
-  createdFilter?: "all" | "today" | "range";
-  createdFrom?: string;
-  createdTo?: string;
-  onCreatedFilterChange?: (value: "all" | "today" | "range") => void;
-  onCreatedFromChange?: (value: string) => void;
-  onCreatedToChange?: (value: string) => void;
-  createLabel: string;
-  searchPlaceholder?: string;
-  searchValue?: string;
-  onSearchChange?: (value: string) => void;
-  onCreate: () => void;
-}
-
-interface ListPageToolbarProps {
-  config: ListPageToolbarConfig | null;
-}
+import ListSearchField from "../ListSearchField";
+import { listPageToolbarStyles } from "./ListPageToolbar.styles";
+import type { ListPageToolbarProps } from "./ListPageToolbar.types";
 
 export default function ListPageToolbar({ config }: ListPageToolbarProps) {
   if (!config) return null;
 
   return (
     <Box
-      sx={{
-        display: "flex",
-        gap: 2,
-        alignItems: "center",
-        flexWrap: "wrap",
-        py: 0.5,
-        px: 1,
-      }}
+      sx={listPageToolbarStyles.container}
     >
       <Button
         variant="contained"
@@ -51,7 +28,7 @@ export default function ListPageToolbar({ config }: ListPageToolbarProps) {
       </Button>
       {config.onCreatedFilterChange && (
         <>
-          <FormControl size="small" sx={{ minWidth: 180 }}>
+          <FormControl size="small" sx={listPageToolbarStyles.createdFilterControl}>
             <InputLabel id="toolbar-created-filter-label">
               Filtro fecha
             </InputLabel>

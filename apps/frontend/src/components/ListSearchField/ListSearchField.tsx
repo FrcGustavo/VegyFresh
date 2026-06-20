@@ -1,12 +1,7 @@
 import SearchIcon from "@mui/icons-material/Search";
 import { InputAdornment, TextField } from "@mui/material";
-
-interface ListSearchFieldProps {
-  placeholder: string;
-  value: string;
-  onChange: (value: string) => void;
-  minWidth?: number;
-}
+import { listSearchFieldStyles } from "./ListSearchField.styles";
+import type { ListSearchFieldProps } from "./ListSearchField.types";
 
 export default function ListSearchField({
   placeholder,
@@ -29,7 +24,7 @@ export default function ListSearchField({
           ),
         },
       }}
-      sx={{ minWidth, margin: 0 }}
+      sx={listSearchFieldStyles.field(minWidth)}
     />
   );
 }
