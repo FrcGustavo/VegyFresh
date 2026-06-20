@@ -9,7 +9,7 @@ export interface ColumnConfig {
 }
 
 export interface TableProps<T extends Record<string, any>> {
-  columns: ColumnConfig[];
+  columns: readonly ColumnConfig[];
   data: T[];
   keyExtractor: (item: T) => string | number;
   isLoading?: boolean;

@@ -6,7 +6,7 @@ interface ResizeState {
 
 export const useTableResizableColumns = (
   storageKey: string,
-  columns: Array<{ key: string; defaultWidth: number }>,
+  columns: ReadonlyArray<{ key: string; defaultWidth: number }>,
 ) => {
   const [columnWidths, setColumnWidths] = useState<ResizeState>(() => {
     if (typeof window === "undefined") {

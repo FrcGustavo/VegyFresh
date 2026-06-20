@@ -25,7 +25,6 @@ export const tableStyles = {
     },
   },
   tableCell: {
-    padding: "0 !important",
     border: "1px solid",
     borderColor: "divider",
   },
