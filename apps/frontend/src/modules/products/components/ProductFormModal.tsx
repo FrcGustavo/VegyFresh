@@ -1,5 +1,6 @@
 import { useState } from "react";
 import {
+  Alert,
   Box,
   TextField,
   MenuItem,
@@ -43,17 +44,31 @@ export default function ProductFormModal({
   onNavigate,
 }: ProductFormModalProps) {
   const [activeTab, setActiveTab] = useState(0);
-  const isEditing = !!productId;
+  const [createdProductId, setCreatedProductId] = useState<string>();
+  const effectiveProductId = productId ?? createdProductId;
+  const isEditing = !!effectiveProductId;
+
+  const handleClose = () => {
+    setCreatedProductId(undefined);
+    setActiveTab(0);
+    onClose();
+  };
 
   const handleOnSuccess = (
     action: "save" | "save-and-close" | "save-and-new",
+    product: { id: string },
   ) => {
     if (action === "save-and-close") {
-      onClose();
+      handleClose();
+    } else if (action === "save-and-new") {
+      setCreatedProductId(undefined);
+      setActiveTab(0);
+    } else if (!productId) {
+      setCreatedProductId(product.id);
     }
   };
 
-  const formProps = useProductForm(productId, handleOnSuccess);
+  const formProps = useProductForm(effectiveProductId, handleOnSuccess);
 
   const canNavigateUp = isEditing && currentIndex > 0;
   const canNavigateDown = isEditing && currentIndex < list.length - 1;
@@ -88,14 +103,19 @@ export default function ProductFormModal({
 
   const tabOptions = [
     { value: 0, label: "General" },
-    { value: 1, label: "Prices List" },
+    { value: 1, label: "Listas de precios" },
   ];
 
   return (
     <FloatingModal
       isOpen={isOpen}
-      onClose={onClose}
-      title={title ?? (productId ? "Editar Producto" : "Crear Nuevo Producto")}
+      onClose={handleClose}
+      title={
+        createdProductId
+          ? "Editar producto"
+          : (title ??
+            (effectiveProductId ? "Editar producto" : "Crear nuevo producto"))
+      }
       initialWidth={initialWidth}
       initialHeight={initialHeight}
       toolbar={toolbar}
@@ -117,6 +137,12 @@ export default function ProductFormModal({
               flexDirection: "column",
             }}
           >
+            {formProps.formError && (
+              <Alert severity="error" sx={{ m: 2, mb: 0 }}>
+                {formProps.formError}
+              </Alert>
+            )}
+
             {/* General Tab */}
             <ModalTabPanel value={activeTab} index={0}>
               <Paper sx={{ p: 3 }}>
@@ -126,16 +152,6 @@ export default function ProductFormModal({
                     formProps.handleSubmit("save");
                   }}
                 >
-                  <TextField
-                    fullWidth
-                    label="SKU"
-                    name="sku"
-                    margin="normal"
-                    value={formProps.formData.sku || ""}
-                    onChange={formProps.handleChange}
-                    required
-                    disabled={formProps.isDisabled}
-                  />
                   <TextField
                     fullWidth
                     label="Nombre"
@@ -161,9 +177,10 @@ export default function ProductFormModal({
                     name="stock"
                     type="number"
                     margin="normal"
-                    value={formProps.formData.stock || ""}
+                    value={formProps.formData.stock}
                     onChange={formProps.handleChange}
                     disabled={formProps.isDisabled}
+                    slotProps={{ htmlInput: { min: 0, step: 0.001 } }}
                   />
                   <TextField
                     select
@@ -195,6 +212,63 @@ export default function ProductFormModal({
                       </MenuItem>
                     ))}
                   </TextField>
+
+                  <Box sx={{ mt: 3 }}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        mb: 1,
+                      }}
+                    >
+                      <Typography variant="h6">Imágenes</Typography>
+                      {!formProps.isDisabled && (
+                        <Button
+                          startIcon={<AddIcon />}
+                          onClick={formProps.addImageField}
+                          size="small"
+                        >
+                          Agregar imagen
+                        </Button>
+                      )}
+                    </Box>
+                    {formProps.formData.images.length === 0 ? (
+                      <Typography variant="body2" color="text.secondary">
+                        No hay imágenes agregadas.
+                      </Typography>
+                    ) : (
+                      formProps.formData.images.map((image, index) => (
+                        <Box
+                          key={index}
+                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                        >
+                          <TextField
+                            fullWidth
+                            label={`URL de imagen ${index + 1}`}
+                            value={image}
+                            onChange={(event) =>
+                              formProps.updateImageField(
+                                index,
+                                event.target.value,
+                              )
+                            }
+                            margin="normal"
+                            disabled={formProps.isDisabled}
+                          />
+                          {!formProps.isDisabled && (
+                            <IconButton
+                              aria-label={`Eliminar imagen ${index + 1}`}
+                              color="error"
+                              onClick={() => formProps.removeImageField(index)}
+                            >
+                              <DeleteIcon />
+                            </IconButton>
+                          )}
+                        </Box>
+                      ))
+                    )}
+                  </Box>
                 </form>
               </Paper>
             </ModalTabPanel>
@@ -211,7 +285,7 @@ export default function ProductFormModal({
                       alignItems: "center",
                     }}
                   >
-                    <Typography variant="h6">Asignar Precios</Typography>
+                    <Typography variant="h6">Precios asignados</Typography>
                     {!formProps.isDisabled && (
                       <Button
                         startIcon={<AddIcon />}
@@ -219,15 +293,14 @@ export default function ProductFormModal({
                         variant="contained"
                         size="small"
                       >
-                        Agregar Precio
+                        Asignar precio
                       </Button>
                     )}
                   </Box>
 
                   {formProps.prices.length === 0 ? (
                     <Typography variant="body2" color="text.secondary">
-                      No hay precios agregados. Haz clic en "Agregar Precio"
-                      para comenzar.
+                      Este producto no tiene precios asignados.
                     </Typography>
                   ) : (
                     <Box
@@ -250,7 +323,7 @@ export default function ProductFormModal({
                               <TextField
                                 select
                                 fullWidth
-                                label="Lista de Precio"
+                                label="Lista de precios"
                                 value={p.price_list_id}
                                 onChange={(e) =>
                                   formProps.updatePriceField(
@@ -286,6 +359,7 @@ export default function ProductFormModal({
                                 margin="normal"
                                 required
                                 disabled={formProps.isDisabled}
+                                slotProps={{ htmlInput: { min: 0, step: 0.01 } }}
                               />
                             </Box>
                             {!formProps.isDisabled && (

@@ -6,6 +6,7 @@ import {
 } from "@tanstack/react-query";
 
 import {
+  apiClient,
   aiApi,
   clientsApi,
   inventoryApi,
@@ -223,35 +224,35 @@ export const priceListsMutationOptions = priceListsReactQuery.mutations;
 export const productPricesQueryOptions = productPricesReactQuery.queries;
 export const productPricesMutationOptions = productPricesReactQuery.mutations;
 
+export const productEditorMutationOptions = {
+  save: (queryClient: QueryClient) =>
+    mutationOptions({
+      mutationKey: ["products", "save-with-prices"],
+      mutationFn: apiClient.workflows.saveProductWithPrices,
+      onSuccess: (_product, { id }) =>
+        Promise.all([
+          queryClient.invalidateQueries({
+            queryKey: productsQueryOptions.keys.all,
+          }),
+          queryClient.invalidateQueries({
+            queryKey: productPricesQueryOptions.keys.all,
+          }),
+          ...(id
+            ? [
+                queryClient.invalidateQueries({
+                  queryKey: productsQueryOptions.keys.detail(id),
+                }),
+              ]
+            : []),
+        ]).then(() => undefined),
+    }),
+};
+
 export const priceListEditorMutationOptions = {
   save: (queryClient: QueryClient) =>
     mutationOptions({
       mutationKey: ["price-lists", "save-with-products"],
-      mutationFn: async ({
-        id,
-        name,
-        products,
-      }: {
-        id?: string;
-        name: string;
-        products: Array<{ product_id: string; price: number }>;
-      }) => {
-        const priceList = id
-          ? await priceListsApi.update(id, { name })
-          : await priceListsApi.create({ name });
-
-        await Promise.all(
-          products.map((product) =>
-            productPricesApi.create({
-              price_list_id: priceList.id,
-              product_id: product.product_id,
-              price: product.price,
-            }),
-          ),
-        );
-
-        return priceList;
-      },
+      mutationFn: apiClient.workflows.savePriceListWithProducts,
       onSuccess: () =>
         Promise.all([
           queryClient.invalidateQueries({

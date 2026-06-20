@@ -11,7 +11,6 @@ import { Delete as DeleteIcon, Add as AddIcon } from "@mui/icons-material";
 
 type ProductChangeEvent = { target: { name: string; value: string } };
 interface ProductFormData {
-  sku: string;
   name: string;
   description: string;
   stock: number | string;
@@ -75,16 +74,6 @@ export default function ProductForm({
             handleSubmit("save");
           }}
         >
-          <TextField
-            fullWidth
-            label="SKU"
-            name="sku"
-            margin="normal"
-            value={formData.sku || ""}
-            onChange={handleChange}
-            required
-            disabled={isDisabled}
-          />
           <TextField
             fullWidth
             label="Nombre"
