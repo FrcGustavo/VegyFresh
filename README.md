@@ -1,6 +1,7 @@
 # VegyFresh Monorepo
 
 VegyFresh is a Turborepo-based monorepo with:
+
 - **Backend API** (NestJS + TypeORM + PostgreSQL)
 - **Admin web app** (React + Vite + MUI)
 - **Customer portal** (React + Vite + MUI)
@@ -15,6 +16,7 @@ VegyFresh is a Turborepo-based monorepo with:
 ## Backend modules (current)
 
 Main modules in `apps/backend/src/app.module.ts`:
+
 - Auth, Organizations, Users, Roles
 - Catalog (products, price lists, product prices)
 - Clients, Suppliers, Orders
@@ -61,7 +63,7 @@ pnpm install
 cp apps/backend/.env.example apps/backend/.env
 ```
 
-3. (Optional) configure frontend/portal `VITE_API_URL` to your backend base URL (including `/api/v1`).
+3. Configure each web application URL to the backend, including `/api/v1`. The admin frontend defaults to `http://localhost:3000/api/v1` and supports `VITE_API_URL` during local/Vite builds.
 
 4. Run all apps in dev mode:
 
@@ -102,9 +104,24 @@ Run seed script:
 pnpm seed:api
 ```
 
+The seed defaults to `http://localhost:3000/api/v1`. Target another environment explicitly:
+
+```bash
+SEED_API_BASE_URL=https://api.staging.example.com/api/v1 \
+SEED_API_BEARER_TOKEN=<token> \
+pnpm seed:api
+```
+
+For the frontend Docker image, set `API_URL` at container runtime. This allows one image to be promoted between development, staging, and production:
+
+```bash
+docker run -e API_URL=https://api.example.com/api/v1 vegyfresh-frontend
+```
+
 ## API docs
 
 When backend is running:
+
 - Swagger UI: `http://localhost:3000/api/docs`
 - OpenAPI JSON: `http://localhost:3000/api/docs-json`
 

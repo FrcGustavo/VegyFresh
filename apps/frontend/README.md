@@ -19,15 +19,33 @@ If pnpm needs to fetch packages in a restricted environment, the local binaries 
 
 ## Environment
 
-Create a local env file when the API is not running on the default local URL:
+Copy the example for local development:
 
 ```bash
-VITE_API_URL=http://localhost:3000
+cp apps/frontend/.env.example apps/frontend/.env.local
 ```
 
-`VITE_API_URL` controls the base URL used by `src/api/index.ts`. When omitted, local development falls back to `http://localhost:3000`.
+`VITE_API_URL` must include the backend prefix `/api/v1`. When omitted, local development falls back to `http://localhost:3000/api/v1`.
 
-`VITE_API_URL_JSON` must contain the complete OpenAPI document URL used by the type generator, for example `https://example.com/api/docs-json`.
+Vite supports a file per mode when a developer needs explicit environment profiles:
+
+```text
+.env.development
+.env.staging
+.env.production
+```
+
+Run a staging build with `pnpm --filter frontend build --mode staging`. Do not commit credentials in these files.
+
+The Docker image resolves the URL at container startup instead of baking it into the JavaScript bundle. Configure `API_URL` for each deployment:
+
+```bash
+docker run -e API_URL=https://api.example.com/api/v1 vegyfresh-frontend
+```
+
+Runtime `API_URL` has priority over build-time `VITE_API_URL`, so the same image can be promoted through development, staging, and production. `VITE_API_URL` remains supported as a runtime alias for compatibility.
+
+`API_SCHEMA_URL` (or the compatible `VITE_API_URL_JSON`) must contain the complete OpenAPI document URL used by the type generator, for example `https://example.com/api/docs-json`.
 
 ## Project Notes
 

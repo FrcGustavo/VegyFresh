@@ -335,9 +335,7 @@ async function ensureUser(
   api: ApiClient,
   input: { name: string; email: string; password: string; roleId: string },
 ): Promise<User> {
-  const existing = getCollectionItems(
-    await api.users.getAll(ALL_ITEMS_QUERY),
-  );
+  const existing = getCollectionItems(await api.users.getAll(ALL_ITEMS_QUERY));
   const found = existing.find((user) => user.email === input.email);
   if (found) return found;
 
@@ -351,7 +349,7 @@ async function ensureUser(
 
 async function run(): Promise<void> {
   const baseUrl = normalizeBaseUrl(
-    process.env.SEED_API_BASE_URL ?? "http://localhost:3000",
+    process.env.SEED_API_BASE_URL ?? "http://localhost:3000/api/v1",
   );
   const token = process.env.SEED_API_BEARER_TOKEN;
 
@@ -453,9 +451,7 @@ async function run(): Promise<void> {
     });
   }
 
-  const clients = getCollectionItems(
-    await api.clients.getAll(ALL_ITEMS_QUERY),
-  );
+  const clients = getCollectionItems(await api.clients.getAll(ALL_ITEMS_QUERY));
   const targetClients = clientSeeds
     .map((seed) =>
       clients.find((client) => client.phone_number === seed.phoneNumber),
@@ -506,9 +502,7 @@ async function run(): Promise<void> {
     });
   }
 
-  const orders = getCollectionItems(
-    await api.orders.getAll(ALL_ORDERS_QUERY),
-  );
+  const orders = getCollectionItems(await api.orders.getAll(ALL_ORDERS_QUERY));
 
   console.log("\n[seed] Seed completado con exito");
   console.log("[seed] Resumen final:");
