@@ -10,7 +10,7 @@
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",
-    "seed:api": "pnpm --filter scripts/seed-api run seed"
+    "seed:api": "pnpm --filter @vegyfresh/seed-api run seed"
   },
   "devDependencies": {
     "prettier": "^3.7.4",

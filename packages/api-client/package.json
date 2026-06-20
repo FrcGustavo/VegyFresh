@@ -1,0 +1,22 @@
+{
+  "name": "@vegyfresh/api-client",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./schema": "./src/generated/schema.ts"
+  },
+  "scripts": {
+    "build": "tsc --noEmit",
+    "check-types": "tsc --noEmit",
+    "generate:api-types": "node ./scripts/generate-api-types.mjs",
+    "test": "node --import tsx --test src/__tests__/*.test.ts"
+  },
+  "devDependencies": {
+    "@types/node": "24.12.4",
+    "openapi-typescript": "7.13.0",
+    "tsx": "4.20.6",
+    "typescript": "5.9.2"
+  }
+}
