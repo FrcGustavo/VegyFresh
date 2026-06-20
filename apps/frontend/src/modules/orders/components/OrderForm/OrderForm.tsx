@@ -10,44 +10,8 @@ import {
   TableRow,
   TableContainer,
 } from "@mui/material";
-
-type OrderChangeEvent = { target: { name: string; value: string } };
-interface OrderFormData {
-  client_id: string;
-  user_id: string;
-  status: string;
-  origin: string;
-  delivery_date: string;
-  order_folio: string;
-  created_at: string;
-}
-interface OrderFormItem {
-  id?: string | number;
-  clientRowId: string;
-  product_id: string;
-  quantity: number | string;
-  unit_price: number | string;
-  folio: string;
-  name: string;
-  unit: string;
-}
-
-interface OrderFormProps {
-  formData: OrderFormData;
-  items: OrderFormItem[];
-  clientLookup: { folio: string; name: string };
-  totalGeneral: number;
-  handleChange: (e: OrderChangeEvent) => void;
-  updateClientLookup: (field: "folio" | "name", value: string) => void;
-  addItemField: () => void;
-  updateItemField: (
-    index: number,
-    field: string,
-    value: string | number | null,
-  ) => void;
-  handleSubmit: (action: "save" | "save-and-close" | "save-and-new") => void;
-  isDisabled?: boolean;
-}
+import { orderFormStyles } from "./OrderForm.styles";
+import type { OrderFormProps } from "./OrderForm.types";
 
 export default function OrderForm({
   formData,
@@ -75,22 +39,6 @@ export default function OrderForm({
   };
 
   const totalProducts = items.length;
-  const cellSx = {
-    "&.MuiTableCell-root": {
-      padding: "0 !important",
-      border: "1px solid",
-      borderColor: "divider",
-    },
-  };
-  const cellInputSx = {
-    margin: 0,
-    "& .MuiInputBase-input": { p: 0 },
-    "& .MuiInput-underline:before": { borderBottom: "none" },
-    "& .MuiInput-underline:after": { borderBottom: "none" },
-    "& .MuiInput-underline:hover:not(.Mui-disabled):before": {
-      borderBottom: "none",
-    },
-  };
 
   const focusCell = (row: number, col: number) => {
     const target = document.querySelector<HTMLInputElement>(
@@ -135,23 +83,16 @@ export default function OrderForm({
   const isDecimalInput = (value: string) => /^\d*([.]\d{0,2})?$/.test(value);
 
   return (
-    <Box sx={{ p: 3, height: "100%" }}>
+    <Box sx={orderFormStyles.root}>
       <form
         onSubmit={(e) => {
           e.preventDefault();
           handleSubmit("save");
         }}
-        style={{ height: "100%", display: "flex", flexDirection: "column" }}
+        style={orderFormStyles.form}
       >
-        <Box
-          sx={{
-            display: "grid",
-            gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
-            columnGap: 2,
-            mb: 3,
-          }}
-        >
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+        <Box sx={orderFormStyles.headerGrid}>
+          <Box sx={orderFormStyles.columnStack}>
             <TextField
               fullWidth
               label="Client folio"
@@ -169,14 +110,8 @@ export default function OrderForm({
             />
           </Box>
 
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-            <Box
-              sx={{
-                display: "grid",
-                gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
-                gap: 2,
-              }}
-            >
+          <Box sx={orderFormStyles.columnStack}>
+            <Box sx={orderFormStyles.datesGrid}>
               <TextField
                 fullWidth
                 label="Created date"
@@ -207,49 +142,27 @@ export default function OrderForm({
           </Box>
         </Box>
 
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            minHeight: 0,
-            flex: 1,
-          }}
-        >
-          <TableContainer
-            sx={{ mb: 2, minHeight: 0, flex: 1, overflow: "auto" }}
-          >
-            <Table
-              stickyHeader
-              sx={{
-                border: "1px solid",
-                borderColor: "divider",
-              }}
-            >
-              <TableHead
-                sx={{
-                  bgcolor: "primary.dark",
-                  "& .MuiTableCell-root": {
-                    color: "primary.contrastText",
-                    fontWeight: 600,
-                    bgcolor: "primary.dark",
-                  },
-                }}
-              >
+        <Box sx={orderFormStyles.tableSection}>
+          <TableContainer sx={orderFormStyles.tableContainer}>
+            <Table stickyHeader sx={orderFormStyles.table}>
+              <TableHead sx={orderFormStyles.tableHead}>
                 <TableRow>
-                  <TableCell sx={{ ...cellSx, width: "10%" }}>
+                  <TableCell sx={orderFormStyles.headerCell("10%")}>
                     Articulo
                   </TableCell>
-                  <TableCell sx={{ ...cellSx, width: "47.5%" }}>
+                  <TableCell sx={orderFormStyles.headerCell("47.5%")}>
                     Nombre
                   </TableCell>
-                  <TableCell sx={{ ...cellSx, width: "7.5%" }}>U.M.</TableCell>
-                  <TableCell sx={{ ...cellSx, width: "10%" }}>
+                  <TableCell sx={orderFormStyles.headerCell("7.5%")}>
+                    U.M.
+                  </TableCell>
+                  <TableCell sx={orderFormStyles.headerCell("10%")}>
                     Unidades
                   </TableCell>
-                  <TableCell sx={{ ...cellSx, width: "12.5%" }}>
+                  <TableCell sx={orderFormStyles.headerCell("12.5%")}>
                     Precio
                   </TableCell>
-                  <TableCell sx={{ ...cellSx, width: "12.5%" }}>
+                  <TableCell sx={orderFormStyles.headerCell("12.5%")}>
                     Importe
                   </TableCell>
                 </TableRow>
@@ -257,7 +170,7 @@ export default function OrderForm({
               <TableBody>
                 {items.map((item, index) => (
                   <TableRow key={item.id ?? item.clientRowId}>
-                    <TableCell sx={cellSx}>
+                    <TableCell sx={orderFormStyles.cell}>
                       <TextField
                         fullWidth
                         type="text"
@@ -270,14 +183,14 @@ export default function OrderForm({
                         onKeyDown={(e) => handleArrowNavigation(e, index, 0)}
                         required
                         disabled={isDisabled}
-                        sx={cellInputSx}
+                        sx={orderFormStyles.cellInput}
                         slotProps={{
                           htmlInput: { "data-row": index, "data-col": 0 },
                           input: { disableUnderline: true },
                         }}
                       />
                     </TableCell>
-                    <TableCell sx={cellSx}>
+                    <TableCell sx={orderFormStyles.cell}>
                       <TextField
                         fullWidth
                         type="text"
@@ -290,14 +203,14 @@ export default function OrderForm({
                         onKeyDown={(e) => handleArrowNavigation(e, index, 1)}
                         required
                         disabled={isDisabled}
-                        sx={cellInputSx}
+                        sx={orderFormStyles.cellInput}
                         slotProps={{
                           htmlInput: { "data-row": index, "data-col": 1 },
                           input: { disableUnderline: true },
                         }}
                       />
                     </TableCell>
-                    <TableCell sx={cellSx}>
+                    <TableCell sx={orderFormStyles.cell}>
                       <TextField
                         fullWidth
                         type="text"
@@ -310,14 +223,14 @@ export default function OrderForm({
                         onKeyDown={(e) => handleArrowNavigation(e, index, 2)}
                         required
                         disabled={isDisabled}
-                        sx={cellInputSx}
+                        sx={orderFormStyles.cellInput}
                         slotProps={{
                           htmlInput: { "data-row": index, "data-col": 2 },
                           input: { disableUnderline: true },
                         }}
                       />
                     </TableCell>
-                    <TableCell sx={cellSx}>
+                    <TableCell sx={orderFormStyles.cell}>
                       <TextField
                         fullWidth
                         type="number"
@@ -338,10 +251,10 @@ export default function OrderForm({
                         }}
                         required
                         disabled={isDisabled}
-                        sx={cellInputSx}
+                        sx={orderFormStyles.cellInput}
                       />
                     </TableCell>
-                    <TableCell sx={cellSx}>
+                    <TableCell sx={orderFormStyles.cell}>
                       <TextField
                         fullWidth
                         type="number"
@@ -366,14 +279,14 @@ export default function OrderForm({
                         }}
                         required
                         disabled={isDisabled}
-                        sx={cellInputSx}
+                        sx={orderFormStyles.cellInput}
                         slotProps={{
                           htmlInput: { "data-row": index, "data-col": 4 },
                           input: { disableUnderline: true },
                         }}
                       />
                     </TableCell>
-                    <TableCell sx={cellSx}>
+                    <TableCell sx={orderFormStyles.cell}>
                       <TextField
                         fullWidth
                         variant="standard"
@@ -381,7 +294,7 @@ export default function OrderForm({
                           Number(item.quantity) * Number(item.unit_price),
                         )}
                         disabled
-                        sx={cellInputSx}
+                        sx={orderFormStyles.cellInput}
                         slotProps={{
                           input: { disableUnderline: true, readOnly: true },
                         }}
@@ -394,21 +307,7 @@ export default function OrderForm({
           </TableContainer>
         </Box>
 
-        <Box
-          sx={{
-            mt: "auto",
-            pt: 2,
-            borderTop: "1px solid",
-            borderColor: "divider",
-            position: "sticky",
-            bottom: 0,
-            bgcolor: "background.paper",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 2,
-          }}
-        >
+        <Box sx={orderFormStyles.summaryBar}>
           <Typography variant="subtitle1">{totalProducts} Articulos</Typography>
           <Typography variant="subtitle1" color="primary">
             {formatCurrency(totalGeneral)}

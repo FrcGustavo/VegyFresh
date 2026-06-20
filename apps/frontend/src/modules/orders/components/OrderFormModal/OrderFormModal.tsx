@@ -1,24 +1,10 @@
 import { Box, CircularProgress } from "@mui/material";
-import FloatingModal from "../../../components/FloatingModal";
-import ModalToolbar from "../../../components/ModalToolbar";
-import { useOrderForm } from "../hooks/useOrderForm";
-import OrderForm from "./OrderForm";
-
-interface OrderListItemRef {
-  id: string | number;
-}
-
-interface OrderFormModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  orderId?: string;
-  title?: string;
-  initialWidth?: number;
-  initialHeight?: number;
-  list?: OrderListItemRef[];
-  currentIndex?: number;
-  onNavigate?: (newIndex: number) => void;
-}
+import FloatingModal from "../../../../components/FloatingModal";
+import ModalToolbar from "../../../../components/ModalToolbar";
+import { useOrderForm } from "../../hooks/useOrderForm";
+import OrderForm from "../OrderForm";
+import { orderFormModalStyles } from "./OrderFormModal.styles";
+import type { OrderFormModalProps } from "./OrderFormModal.types";
 
 export default function OrderFormModal({
   isOpen,
@@ -77,13 +63,13 @@ export default function OrderFormModal({
     <FloatingModal
       isOpen={isOpen}
       onClose={onClose}
-      title={"Pedido"}
+      title="Pedido"
       initialWidth={initialWidth}
       initialHeight={initialHeight}
       toolbar={toolbar}
       renderContent={() =>
         formProps.isLoading ? (
-          <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+          <Box sx={orderFormModalStyles.loadingContainer}>
             <CircularProgress />
           </Box>
         ) : (
