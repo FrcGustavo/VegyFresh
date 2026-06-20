@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useState } from "react";
 import {
   Alert,
   Box,
@@ -10,7 +10,9 @@ import {
   Typography,
 } from "@mui/material";
 import { Link, useNavigate } from "react-router";
-import { useAuth } from "../../../auth/useAuth";
+import { useAuth } from "../../../../auth/useAuth";
+import { signupPageStyles } from "./SignupPage.styles";
+import type { SignupSubmitHandler } from "./SignupPage.types";
 
 export default function SignupPage() {
   const { signup } = useAuth();
@@ -22,8 +24,8 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleSignup = async (e: FormEvent) => {
-    e.preventDefault();
+  const handleSignup: SignupSubmitHandler = async (event) => {
+    event.preventDefault();
     setError("");
     setLoading(true);
 
@@ -42,30 +44,26 @@ export default function SignupPage() {
   };
 
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        bgcolor: "background.default",
-      }}
-    >
-      <Card sx={{ width: "100%", maxWidth: 560, p: 2 }} elevation={3}>
+    <Box sx={signupPageStyles.page}>
+      <Card sx={signupPageStyles.card} elevation={3}>
         <CardContent>
           <Typography
             variant="h5"
-            sx={{ fontWeight: 700, mb: 0.5 }}
+            sx={signupPageStyles.brandTitle}
             color="primary"
           >
             VegyFresh
           </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={signupPageStyles.subtitle}
+          >
             Crea tu usuario para comenzar.
           </Typography>
 
           {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
+            <Alert severity="error" sx={signupPageStyles.errorAlert}>
               {error}
             </Alert>
           )}
@@ -76,7 +74,7 @@ export default function SignupPage() {
               void handleSignup(event);
             }}
           >
-            <Typography variant="subtitle2" sx={{ mb: 1 }}>
+            <Typography variant="subtitle2" sx={signupPageStyles.sectionTitle}>
               Datos del usuario
             </Typography>
             <TextField
@@ -112,7 +110,7 @@ export default function SignupPage() {
               fullWidth
               size="large"
               disabled={loading}
-              sx={{ mt: 2, mb: 1 }}
+              sx={signupPageStyles.submitButton}
             >
               {loading ? (
                 <CircularProgress size={20} color="inherit" />
@@ -122,9 +120,9 @@ export default function SignupPage() {
             </Button>
           </Box>
 
-          <Typography variant="body2" sx={{ textAlign: "center", mt: 1 }}>
+          <Typography variant="body2" sx={signupPageStyles.footerText}>
             ¿Ya tienes cuenta?{" "}
-            <Link to="/login" style={{ color: "inherit", fontWeight: 600 }}>
+            <Link to="/login" style={signupPageStyles.footerLink}>
               Iniciar sesión
             </Link>
           </Typography>

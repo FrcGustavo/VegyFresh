@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useState } from "react";
 import {
   Box,
   Button,
@@ -10,7 +10,9 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { Link, useNavigate } from "react-router";
-import { useAuth } from "../../../auth/useAuth";
+import { useAuth } from "../../../../auth/useAuth";
+import { loginPageStyles } from "./LoginPage.styles";
+import type { LoginSubmitHandler } from "./LoginPage.types";
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -21,8 +23,8 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
+  const handleSubmit: LoginSubmitHandler = async (event) => {
+    event.preventDefault();
     setError("");
     setLoading(true);
 
@@ -37,38 +39,34 @@ export default function LoginPage() {
   };
 
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        bgcolor: "background.default",
-      }}
-    >
-      <Card sx={{ width: "100%", maxWidth: 400, p: 2 }} elevation={3}>
+    <Box sx={loginPageStyles.page}>
+      <Card sx={loginPageStyles.card} elevation={3}>
         <CardContent>
           <Typography
             variant="h5"
-            sx={{ fontWeight: 700, mb: 0.5 }}
+            sx={loginPageStyles.brandTitle}
             color="primary"
           >
             VegyFresh
           </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={loginPageStyles.subtitle}
+          >
             Inicia sesión para continuar
           </Typography>
 
           {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
+            <Alert severity="error" sx={loginPageStyles.errorAlert}>
               {error}
             </Alert>
           )}
 
           <Box
             component="form"
-            onSubmit={(e) => {
-              void handleSubmit(e);
+            onSubmit={(event) => {
+              void handleSubmit(event);
             }}
           >
             <TextField
@@ -78,7 +76,7 @@ export default function LoginPage() {
               required
               autoComplete="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(event) => setEmail(event.target.value)}
             />
             <TextField
               label="Contraseña"
@@ -87,7 +85,7 @@ export default function LoginPage() {
               required
               autoComplete="current-password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(event) => setPassword(event.target.value)}
             />
 
             <Button
@@ -96,7 +94,7 @@ export default function LoginPage() {
               fullWidth
               size="large"
               disabled={loading}
-              sx={{ mt: 2, mb: 1 }}
+              sx={loginPageStyles.submitButton}
             >
               {loading ? (
                 <CircularProgress size={20} color="inherit" />
@@ -106,9 +104,9 @@ export default function LoginPage() {
             </Button>
           </Box>
 
-          <Typography variant="body2" sx={{ textAlign: "center", mt: 1 }}>
+          <Typography variant="body2" sx={loginPageStyles.footerText}>
             ¿No tienes cuenta?{" "}
-            <Link to="/signup" style={{ color: "inherit", fontWeight: 600 }}>
+            <Link to="/signup" style={loginPageStyles.footerLink}>
               Registrarse
             </Link>
           </Typography>
