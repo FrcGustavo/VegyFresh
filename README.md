@@ -112,6 +112,11 @@ SEED_API_BEARER_TOKEN=<token> \
 pnpm seed:api
 ```
 
+El seed genera 200 productos, 5 usuarios, 50 clientes, 50 proveedores, 5 listas
+con 1,000 precios, 200 compras y 200 pedidos. Es idempotente y requiere un token
+con permisos de usuarios, catálogo, inventario y pedidos. Consulta la
+configuración avanzada en `scripts/seed-api/README.md`.
+
 For the frontend Docker image, set `API_URL` at container runtime. This allows one image to be promoted between development, staging, and production:
 
 ```bash
