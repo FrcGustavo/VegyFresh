@@ -9,6 +9,7 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
 COPY apps/backend/package.json apps/backend/package.json
 COPY apps/frontend/package.json apps/frontend/package.json
 COPY apps/portal/package.json apps/portal/package.json
+COPY packages/api-client/package.json packages/api-client/package.json
 
 RUN pnpm install --frozen-lockfile
 
