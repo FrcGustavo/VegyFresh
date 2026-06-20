@@ -2,12 +2,12 @@ import { Box, CircularProgress, Typography } from "@mui/material";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { AdminPanelSettings } from "@mui/icons-material";
-import { usersQueryOptions } from "../../../api";
-import { useDebouncedValue } from "../../../hooks/useDebouncedValue";
-import { Table } from "../../../components/Table";
-import UserFormModal from "../components/UserFormModal";
-import ResourcePageTitle from "../../../components/ResourcePageTitle";
-import ListPageToolbar from "../../../components/ListPageToolbar";
+import { usersQueryOptions } from "../../../../api";
+import { useDebouncedValue } from "../../../../hooks/useDebouncedValue";
+import { Table } from "../../../../components/Table";
+import UserFormModal from "../../components/UserFormModal";
+import ResourcePageTitle from "../../../../components/ResourcePageTitle";
+import ListPageToolbar from "../../../../components/ListPageToolbar";
 import {
   useUsersSort,
   useUsersTableState,
@@ -50,8 +50,8 @@ export default function UsersList() {
       </Typography>
     );
 
-  const list = (data?.pages ?? []).flatMap((page) =>
-    Array.isArray(page) ? page : (page?.data ?? []),
+  const list: UserListItem[] = (data?.pages ?? []).flatMap((page) =>
+    Array.isArray(page) ? page : ((page as { data?: UserListItem[] })?.data ?? []),
   );
 
   return (
@@ -152,17 +152,17 @@ function UsersTable({
       <Table
         columns={USER_COLUMNS}
         data={list}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item: UserListItem) => item.id}
         sortBy={sortBy}
         sortOrder={sortOrder}
         onSort={onSort}
         selectedRowId={selectedRowId}
         onRowSelect={handleSelectRow}
-        onRowDoubleClick={(id) => {
+        onRowDoubleClick={(id: string) => {
           handleSelectRow(String(id));
           handleOpenModal(String(id));
         }}
-        renderCell={(column, item) => {
+        renderCell={(column, item: UserListItem) => {
           if (column.key === "folio") return item.folio ?? "N/A";
           if (column.key === "name") return item.name ?? "N/A";
           return item.email ?? "N/A";

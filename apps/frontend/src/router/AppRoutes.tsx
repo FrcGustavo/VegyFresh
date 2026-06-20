@@ -12,7 +12,7 @@ import {
 const OrdersList = lazy(() => import("../modules/orders/pages/OrdersList"));
 const ProductsList = lazy(() => import("../modules/products/pages/ProductsList"));
 const PriceListsList = lazy(
-  () => import("../modules/products/price-lists/pages/PriceListsList"),
+  () => import("../modules/products/pages/PriceListsList"),
 );
 const ClientsList = lazy(() => import("../modules/clients/pages/ClientsList"));
 const SuppliersList = lazy(

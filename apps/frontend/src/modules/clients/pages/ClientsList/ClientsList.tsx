@@ -2,12 +2,12 @@ import { Box, CircularProgress, Typography } from "@mui/material";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { People } from "@mui/icons-material";
-import { clientsQueryOptions } from "../../../api";
-import { useDebouncedValue } from "../../../hooks/useDebouncedValue";
-import { Table } from "../../../components/Table";
-import ClientFormModal from "../components/ClientFormModal";
-import ResourcePageTitle from "../../../components/ResourcePageTitle";
-import ListPageToolbar from "../../../components/ListPageToolbar";
+import { clientsQueryOptions } from "../../../../api";
+import { useDebouncedValue } from "../../../../hooks/useDebouncedValue";
+import { Table } from "../../../../components/Table";
+import ClientFormModal from "../../components/ClientFormModal";
+import ResourcePageTitle from "../../../../components/ResourcePageTitle";
+import ListPageToolbar from "../../../../components/ListPageToolbar";
 import {
   useClientsSort,
   useClientsTableState,
@@ -50,8 +50,8 @@ export default function ClientsList() {
       </Typography>
     );
 
-  const list = (data?.pages ?? []).flatMap((page) =>
-    Array.isArray(page) ? page : (page?.data ?? []),
+  const list: ClientListItem[] = (data?.pages ?? []).flatMap((page) =>
+    Array.isArray(page) ? page : ((page as { data?: ClientListItem[] })?.data ?? []),
   );
 
   return (
@@ -150,17 +150,17 @@ function ClientsTable({
       <Table
         columns={CLIENT_COLUMNS}
         data={list}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item: ClientListItem) => item.id}
         sortBy={sortBy}
         sortOrder={sortOrder}
         onSort={onSort}
         selectedRowId={selectedRowId}
         onRowSelect={handleSelectRow}
-        onRowDoubleClick={(id) => {
+        onRowDoubleClick={(id: string) => {
           handleSelectRow(String(id));
           handleOpenModal(String(id));
         }}
-        renderCell={(column, item) => {
+        renderCell={(column, item: ClientListItem) => {
           if (column.key === "folio") return item.folio ?? "N/A";
           if (column.key === "name") return item.name ?? "N/A";
           return item.phone_number ?? "N/A";
