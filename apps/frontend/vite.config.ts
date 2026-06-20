@@ -8,7 +8,7 @@ function normalizeApiUrl(value: string | undefined): string {
   const apiUrl = value?.trim().replace(/\/+$/, "");
 
   if (!apiUrl) {
-    throw new Error("VITE_API_URL es requerido para compilar el frontend");
+    return "/api/v1";
   }
 
   const parsedUrl = new URL(apiUrl);
@@ -43,10 +43,7 @@ function runtimeConfigPlugin(apiUrl: string): Plugin {
 // https://vite.dev/config/
 export default defineConfig(({ command, mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
-  const apiUrl =
-    command === "build"
-      ? normalizeApiUrl(process.env.VITE_API_URL || env.VITE_API_URL)
-      : undefined;
+  const apiUrl = command === "build" ? normalizeApiUrl(env.VITE_API_URL) : undefined;
 
   return {
     plugins: [
