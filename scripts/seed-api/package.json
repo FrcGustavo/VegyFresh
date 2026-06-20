@@ -6,7 +6,10 @@
     "@vegyfresh/api-client": "workspace:*"
   },
   "scripts": {
-    "seed": "tsx src/seed.ts"
+    "seed": "tsx src/main.ts",
+    "build": "tsc --noEmit",
+    "check-types": "tsc --noEmit",
+    "test": "node --import tsx --test src/tests/*.test.ts"
   },
   "devDependencies": {
     "@types/node": "24.12.4",
