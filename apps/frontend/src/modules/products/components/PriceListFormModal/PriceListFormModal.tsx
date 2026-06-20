@@ -1,24 +1,10 @@
 import { Box, CircularProgress } from "@mui/material";
-import FloatingModal from "../../../components/FloatingModal";
-import ModalToolbar from "../../../components/ModalToolbar";
-import { usePriceListForm } from "../hooks/usePriceListForm";
-import PriceListForm from "./PriceListForm";
-
-interface PriceListItemRef {
-  id: string | number;
-}
-
-interface PriceListFormModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  priceListId?: string;
-  title?: string;
-  initialWidth?: number;
-  initialHeight?: number;
-  list?: PriceListItemRef[];
-  currentIndex?: number;
-  onNavigate?: (newIndex: number) => void;
-}
+import FloatingModal from "../../../../components/FloatingModal";
+import ModalToolbar from "../../../../components/ModalToolbar";
+import { usePriceListForm } from "../../hooks/usePriceListForm";
+import PriceListForm from "../PriceListForm";
+import { priceListFormModalStyles } from "./PriceListFormModal.styles";
+import type { PriceListFormModalProps } from "./PriceListFormModal.types";
 
 export default function PriceListFormModal({
   isOpen,
@@ -83,7 +69,7 @@ export default function PriceListFormModal({
       toolbar={toolbar}
       renderContent={() =>
         formProps.isLoading ? (
-          <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+          <Box sx={priceListFormModalStyles.loadingContainer}>
             <CircularProgress />
           </Box>
         ) : (

@@ -10,27 +10,13 @@ import {
   Paper,
 } from "@mui/material";
 import { Delete as DeleteIcon, Add as AddIcon } from "@mui/icons-material";
-import FloatingModal from "../../../components/FloatingModal";
-import ModalTabPanel from "../../../components/ModalTabPanel";
-import ModalTabsNavigation from "../../../components/ModalTabsNavigation";
-import ModalToolbar from "../../../components/ModalToolbar";
-import { useProductForm } from "../hooks/useProductForm";
-
-interface ProductListItemRef {
-  id: string | number;
-}
-
-interface ProductFormModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  productId?: string;
-  title?: string;
-  initialWidth?: number;
-  initialHeight?: number;
-  list?: ProductListItemRef[];
-  currentIndex?: number;
-  onNavigate?: (newIndex: number) => void;
-}
+import FloatingModal from "../../../../components/FloatingModal";
+import ModalTabPanel from "../../../../components/ModalTabPanel";
+import ModalTabsNavigation from "../../../../components/ModalTabsNavigation";
+import ModalToolbar from "../../../../components/ModalToolbar";
+import { useProductForm } from "../../hooks/useProductForm";
+import { productFormModalStyles } from "./ProductFormModal.styles";
+import type { ProductFormModalProps } from "./ProductFormModal.types";
 
 export default function ProductFormModal({
   isOpen,
@@ -120,32 +106,22 @@ export default function ProductFormModal({
       initialHeight={initialHeight}
       toolbar={toolbar}
       renderContent={() => (
-        <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
-          {/* Tabs Menu */}
+        <Box sx={productFormModalStyles.contentRoot}>
           <ModalTabsNavigation
             value={activeTab}
             options={tabOptions}
             onChange={setActiveTab}
           />
 
-          {/* Tab Content */}
-          <Box
-            sx={{
-              flex: 1,
-              overflowY: "auto",
-              display: "flex",
-              flexDirection: "column",
-            }}
-          >
+          <Box sx={productFormModalStyles.tabContentWrapper}>
             {formProps.formError && (
-              <Alert severity="error" sx={{ m: 2, mb: 0 }}>
+              <Alert severity="error" sx={productFormModalStyles.formErrorAlert}>
                 {formProps.formError}
               </Alert>
             )}
 
-            {/* General Tab */}
             <ModalTabPanel value={activeTab} index={0}>
-              <Paper sx={{ p: 3 }}>
+              <Paper sx={productFormModalStyles.paper}>
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
@@ -213,15 +189,8 @@ export default function ProductFormModal({
                     ))}
                   </TextField>
 
-                  <Box sx={{ mt: 3 }}>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        mb: 1,
-                      }}
-                    >
+                  <Box sx={productFormModalStyles.imagesSection}>
+                    <Box sx={productFormModalStyles.imagesHeader}>
                       <Typography variant="h6">Imágenes</Typography>
                       {!formProps.isDisabled && (
                         <Button
@@ -239,10 +208,7 @@ export default function ProductFormModal({
                       </Typography>
                     ) : (
                       formProps.formData.images.map((image, index) => (
-                        <Box
-                          key={index}
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
+                        <Box key={index} sx={productFormModalStyles.imageRow}>
                           <TextField
                             fullWidth
                             label={`URL de imagen ${index + 1}`}
@@ -273,18 +239,10 @@ export default function ProductFormModal({
               </Paper>
             </ModalTabPanel>
 
-            {/* Prices List Tab */}
             <ModalTabPanel value={activeTab} index={1}>
-              <Paper sx={{ p: 3 }}>
+              <Paper sx={productFormModalStyles.paper}>
                 <Box>
-                  <Box
-                    sx={{
-                      mb: 3,
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                    }}
-                  >
+                  <Box sx={productFormModalStyles.pricesHeader}>
                     <Typography variant="h6">Precios asignados</Typography>
                     {!formProps.isDisabled && (
                       <Button
@@ -303,23 +261,15 @@ export default function ProductFormModal({
                       Este producto no tiene precios asignados.
                     </Typography>
                   ) : (
-                    <Box
-                      sx={{ display: "flex", flexDirection: "column", gap: 3 }}
-                    >
+                    <Box sx={productFormModalStyles.pricesList}>
                       {formProps.prices.map((p, index) => (
                         <Paper
                           key={p.id ?? p.clientRowId}
                           variant="outlined"
-                          sx={{ p: 2 }}
+                          sx={productFormModalStyles.priceItemPaper}
                         >
-                          <Box
-                            sx={{
-                              display: "flex",
-                              gap: 2,
-                              alignItems: "flex-start",
-                            }}
-                          >
-                            <Box sx={{ flex: 1 }}>
+                          <Box sx={productFormModalStyles.priceItemRow}>
+                            <Box sx={productFormModalStyles.priceListColumn}>
                               <TextField
                                 select
                                 fullWidth
@@ -343,7 +293,7 @@ export default function ProductFormModal({
                                 ))}
                               </TextField>
                             </Box>
-                            <Box sx={{ flex: 0.5 }}>
+                            <Box sx={productFormModalStyles.priceValueColumn}>
                               <TextField
                                 type="number"
                                 fullWidth
@@ -365,10 +315,8 @@ export default function ProductFormModal({
                             {!formProps.isDisabled && (
                               <IconButton
                                 color="error"
-                                onClick={() =>
-                                  formProps.removePriceField(index)
-                                }
-                                sx={{ mt: 1 }}
+                                onClick={() => formProps.removePriceField(index)}
+                                sx={productFormModalStyles.priceDeleteButton}
                               >
                                 <DeleteIcon />
                               </IconButton>

@@ -8,46 +8,8 @@ import {
   Button,
 } from "@mui/material";
 import { Delete as DeleteIcon, Add as AddIcon } from "@mui/icons-material";
-
-type ProductChangeEvent = { target: { name: string; value: string } };
-interface ProductFormData {
-  name: string;
-  description: string;
-  stock: number | string;
-  supplier_id: string;
-}
-interface ProductPrice {
-  id?: string | number;
-  clientRowId: string;
-  price_list_id: string;
-  price: number | string;
-}
-interface SupplierOption {
-  id: string;
-  name: string;
-}
-interface PriceListOption {
-  id: string;
-  name: string;
-}
-
-interface ProductFormProps {
-  formData: ProductFormData;
-  prices: ProductPrice[];
-  suppliers: SupplierOption[];
-  priceLists: PriceListOption[];
-  handleChange: (e: ProductChangeEvent) => void;
-  addPriceField: () => void;
-  removePriceField: (index: number) => void;
-  updatePriceField: (
-    index: number,
-    field: string,
-    value: string | number,
-  ) => void;
-  handleSubmit: (action: "save" | "save-and-close" | "save-and-new") => void;
-  title: string;
-  isDisabled?: boolean;
-}
+import { productFormStyles } from "./ProductForm.styles";
+import type { ProductFormProps } from "./ProductForm.types";
 
 export default function ProductForm({
   formData,
@@ -63,11 +25,11 @@ export default function ProductForm({
   isDisabled = false,
 }: ProductFormProps) {
   return (
-    <Box>
+    <Box sx={productFormStyles.root}>
       <Typography variant="h4" gutterBottom>
         {title}
       </Typography>
-      <Paper sx={{ p: 3, maxWidth: 600 }}>
+      <Paper sx={productFormStyles.paper}>
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -121,14 +83,11 @@ export default function ProductForm({
             ))}
           </TextField>
 
-          <Typography variant="h6" sx={{ mt: 3, mb: 1 }}>
+          <Typography variant="h6" sx={productFormStyles.pricesTitle}>
             Precios
           </Typography>
           {prices.map((p, index) => (
-            <Box
-              key={p.id ?? p.clientRowId}
-              sx={{ display: "flex", gap: 2, mb: 2, alignItems: "center" }}
-            >
+            <Box key={p.id ?? p.clientRowId} sx={productFormStyles.priceRow}>
               <TextField
                 select
                 label="Lista de Precio"
@@ -136,7 +95,7 @@ export default function ProductForm({
                 onChange={(e) =>
                   updatePriceField(index, "price_list_id", e.target.value)
                 }
-                sx={{ flex: 1 }}
+                sx={productFormStyles.priceListField}
                 required
                 disabled={isDisabled}
               >
@@ -153,7 +112,7 @@ export default function ProductForm({
                 onChange={(e) =>
                   updatePriceField(index, "price", e.target.value)
                 }
-                sx={{ width: 150 }}
+                sx={productFormStyles.priceField}
                 required
                 disabled={isDisabled}
               />

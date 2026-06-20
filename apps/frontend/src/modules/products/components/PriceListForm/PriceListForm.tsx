@@ -11,27 +11,8 @@ import {
   IconButton,
 } from "@mui/material";
 import { Delete as DeleteIcon } from "@mui/icons-material";
-
-interface PriceListFormProps {
-  name: string;
-  setName: (name: string) => void;
-  productsList: Array<{
-    clientRowId: string;
-    product_id: string;
-    name?: string;
-    price: number | string;
-    id?: string;
-  }>;
-  addProductField: () => void;
-  updateProductField: (
-    index: number,
-    field: string,
-    value: string | number,
-  ) => void;
-  removeProductField: (index: number) => void;
-  handleSubmit: (action: "save" | "save-and-close" | "save-and-new") => void;
-  isDisabled?: boolean;
-}
+import { priceListFormStyles } from "./PriceListForm.styles";
+import type { PriceListFormProps } from "./PriceListForm.types";
 
 export default function PriceListForm({
   name,
@@ -46,22 +27,6 @@ export default function PriceListForm({
   const EDITABLE_COLUMNS = 2;
 
   const isDecimalInput = (value: string) => /^\d*([.]\d{0,2})?$/.test(value);
-  const cellSx = {
-    "&.MuiTableCell-root": {
-      padding: "0 !important",
-      border: "1px solid",
-      borderColor: "divider",
-    },
-  };
-  const cellInputSx = {
-    margin: 0,
-    "& .MuiInputBase-input": { p: 0 },
-    "& .MuiInput-underline:before": { borderBottom: "none" },
-    "& .MuiInput-underline:after": { borderBottom: "none" },
-    "& .MuiInput-underline:hover:not(.Mui-disabled):before": {
-      borderBottom: "none",
-    },
-  };
 
   const focusCell = (row: number, col: number) => {
     const target = document.querySelector<HTMLInputElement>(
@@ -99,16 +64,17 @@ export default function PriceListForm({
       focusCell(row, col + 1);
     }
   };
+
   return (
-    <Box sx={{ p: 3, height: "100%" }}>
+    <Box sx={priceListFormStyles.root}>
       <form
         onSubmit={(e) => {
           e.preventDefault();
           handleSubmit("save");
         }}
-        style={{ height: "100%", display: "flex", flexDirection: "column" }}
+        style={priceListFormStyles.form}
       >
-        <Box sx={{ mb: 3 }}>
+        <Box sx={priceListFormStyles.nameFieldContainer}>
           <TextField
             fullWidth
             label="Nombre de la Lista"
@@ -119,42 +85,18 @@ export default function PriceListForm({
           />
         </Box>
 
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            minHeight: 0,
-            flex: 1,
-          }}
-        >
-          <TableContainer
-            sx={{ mb: 2, minHeight: 0, flex: 1, overflow: "auto" }}
-          >
-            <Table
-              stickyHeader
-              sx={{
-                border: "1px solid",
-                borderColor: "divider",
-              }}
-            >
-              <TableHead
-                sx={{
-                  bgcolor: "primary.dark",
-                  "& .MuiTableCell-root": {
-                    color: "primary.contrastText",
-                    fontWeight: 600,
-                    bgcolor: "primary.dark",
-                  },
-                }}
-              >
+        <Box sx={priceListFormStyles.tableSection}>
+          <TableContainer sx={priceListFormStyles.tableContainer}>
+            <Table stickyHeader sx={priceListFormStyles.table}>
+              <TableHead sx={priceListFormStyles.tableHead}>
                 <TableRow>
-                  <TableCell sx={{ ...cellSx, width: "65%" }}>
+                  <TableCell sx={priceListFormStyles.headerCell("65%")}>
                     Producto
                   </TableCell>
-                  <TableCell sx={{ ...cellSx, width: "25%" }}>
+                  <TableCell sx={priceListFormStyles.headerCell("25%")}>
                     Precio Asignado
                   </TableCell>
-                  <TableCell sx={{ ...cellSx, width: "10%" }}>
+                  <TableCell sx={priceListFormStyles.headerCell("10%")}>
                     Acciones
                   </TableCell>
                 </TableRow>
@@ -162,7 +104,7 @@ export default function PriceListForm({
               <TableBody>
                 {productsList.map((item, index) => (
                   <TableRow key={item.id ?? item.clientRowId}>
-                    <TableCell sx={cellSx}>
+                    <TableCell sx={priceListFormStyles.cell}>
                       <TextField
                         fullWidth
                         type="text"
@@ -174,14 +116,14 @@ export default function PriceListForm({
                         onKeyDown={(e) => handleArrowNavigation(e, index, 0)}
                         required
                         disabled={isDisabled}
-                        sx={cellInputSx}
+                        sx={priceListFormStyles.cellInput}
                         slotProps={{
                           htmlInput: { "data-row": index, "data-col": 0 },
                           input: { disableUnderline: true },
                         }}
                       />
                     </TableCell>
-                    <TableCell sx={cellSx}>
+                    <TableCell sx={priceListFormStyles.cell}>
                       <TextField
                         fullWidth
                         type="number"
@@ -206,7 +148,7 @@ export default function PriceListForm({
                         }}
                         required
                         disabled={isDisabled}
-                        sx={cellInputSx}
+                        sx={priceListFormStyles.cellInput}
                         slotProps={{
                           htmlInput: {
                             step: "0.01",
@@ -218,13 +160,18 @@ export default function PriceListForm({
                         }}
                       />
                     </TableCell>
-                    <TableCell sx={{ ...cellSx, textAlign: "center" }}>
+                    <TableCell
+                      sx={{
+                        ...priceListFormStyles.cell,
+                        ...priceListFormStyles.actionCell,
+                      }}
+                    >
                       {!isDisabled && (
                         <IconButton
                           size="small"
                           color="error"
                           onClick={() => removeProductField(index)}
-                          sx={{ m: 0, p: 1 }}
+                          sx={priceListFormStyles.deleteActionButton}
                         >
                           <DeleteIcon fontSize="small" />
                         </IconButton>
