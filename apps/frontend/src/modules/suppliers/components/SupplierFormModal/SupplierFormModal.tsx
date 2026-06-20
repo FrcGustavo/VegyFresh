@@ -1,24 +1,10 @@
 import { Box, CircularProgress } from "@mui/material";
-import FloatingModal from "../../../components/FloatingModal";
-import ModalToolbar from "../../../components/ModalToolbar";
-import { useSupplierForm } from "../hooks/useSupplierForm";
-import SupplierForm from "./SupplierForm";
-
-interface SupplierListItemRef {
-  id: string | number;
-}
-
-interface SupplierFormModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  supplierId?: string;
-  title?: string;
-  initialWidth?: number;
-  initialHeight?: number;
-  list?: SupplierListItemRef[];
-  currentIndex?: number;
-  onNavigate?: (newIndex: number) => void;
-}
+import FloatingModal from "../../../../components/FloatingModal";
+import ModalToolbar from "../../../../components/ModalToolbar";
+import { useSupplierForm } from "../../hooks/useSupplierForm";
+import SupplierForm from "../SupplierForm";
+import { supplierFormModalStyles } from "./SupplierFormModal.styles";
+import type { SupplierFormModalProps } from "./SupplierFormModal.types";
 
 export default function SupplierFormModal({
   isOpen,
@@ -77,13 +63,13 @@ export default function SupplierFormModal({
     <FloatingModal
       isOpen={isOpen}
       onClose={onClose}
-      title={"Proveedor"}
+      title="Proveedor"
       initialWidth={initialWidth}
       initialHeight={initialHeight}
       toolbar={toolbar}
       renderContent={() =>
         formProps.isLoading ? (
-          <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+          <Box sx={supplierFormModalStyles.loadingContainer}>
             <CircularProgress />
           </Box>
         ) : (

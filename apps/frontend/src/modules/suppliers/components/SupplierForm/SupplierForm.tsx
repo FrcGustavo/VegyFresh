@@ -1,21 +1,6 @@
 import { Avatar, Box, Button, TextField, Typography } from "@mui/material";
-
-type SupplierChangeEvent = { target: { name: string; value: string } };
-interface SupplierFormData {
-  name: string;
-  email: string;
-  phone_number: string;
-  logo_url: string;
-}
-
-interface SupplierFormProps {
-  formData: SupplierFormData;
-  logoFileError?: string;
-  handleChange: (e: SupplierChangeEvent) => void;
-  handleLogoFileChange: (file: File) => void;
-  handleSubmit: (action: "save" | "save-and-close" | "save-and-new") => void;
-  isDisabled?: boolean;
-}
+import { supplierFormStyles } from "./SupplierForm.styles";
+import type { SupplierFormProps } from "./SupplierForm.types";
 
 export default function SupplierForm({
   formData,
@@ -26,34 +11,19 @@ export default function SupplierForm({
   isDisabled = false,
 }: SupplierFormProps) {
   return (
-    <Box sx={{ p: 3, maxWidth: 900 }}>
+    <Box sx={supplierFormStyles.root}>
       <form
         onSubmit={(e) => {
           e.preventDefault();
           handleSubmit("save");
         }}
       >
-        <Box
-          sx={{
-            display: "flex",
-            gap: 3,
-            alignItems: "flex-start",
-            flexWrap: { xs: "wrap", md: "nowrap" },
-          }}
-        >
-          <Box
-            sx={{
-              width: { xs: "100%", md: 220 },
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: 2,
-            }}
-          >
+        <Box sx={supplierFormStyles.layout}>
+          <Box sx={supplierFormStyles.logoColumn}>
             <Avatar
               src={formData.logo_url || undefined}
               alt={formData.name || "Proveedor"}
-              sx={{ width: 150, height: 150 }}
+              sx={supplierFormStyles.logoAvatar}
             >
               {(formData.name || "P").charAt(0).toUpperCase()}
             </Avatar>
@@ -61,7 +31,7 @@ export default function SupplierForm({
               variant="outlined"
               component="label"
               disabled={isDisabled}
-              sx={{ width: "100%" }}
+              sx={supplierFormStyles.logoButton}
             >
               Seleccionar logo
               <input
@@ -83,7 +53,7 @@ export default function SupplierForm({
             )}
           </Box>
 
-          <Box sx={{ flex: 1, minWidth: 320 }}>
+          <Box sx={supplierFormStyles.fieldsColumn}>
             <TextField
               fullWidth
               label="Nombre"
