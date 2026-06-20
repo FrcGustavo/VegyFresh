@@ -1,6 +1,6 @@
 import { Box, CircularProgress } from "@mui/material";
-import FloatingModal from "../../../../components/FloatingModal";
-import ModalToolbar from "../../../../components/ModalToolbar";
+import FloatingModal from "../../../components/FloatingModal";
+import ModalToolbar from "../../../components/ModalToolbar";
 import { usePriceListForm } from "../hooks/usePriceListForm";
 import PriceListForm from "./PriceListForm";
 

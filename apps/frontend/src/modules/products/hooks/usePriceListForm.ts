@@ -5,8 +5,8 @@ import {
   priceListEditorMutationOptions,
   priceListsQueryOptions,
   productsQueryOptions,
-} from "../../../../api";
-import { createClientRowId } from "../../../../utils/clientRowId";
+} from "../../../api";
+import { createClientRowId } from "../../../utils/clientRowId";
 
 type SaveAction = "save" | "save-and-close" | "save-and-new";
 interface PriceListProductRow {

@@ -1,0 +1,8 @@
+export type SortByField = "folio" | "name";
+export type SortOrder = "asc" | "desc";
+
+export interface PriceListItem {
+  id: string | number;
+  folio?: string | null;
+  name?: string | null;
+}
