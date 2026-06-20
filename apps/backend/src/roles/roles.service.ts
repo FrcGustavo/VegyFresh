@@ -49,6 +49,10 @@ export class RolesService implements OnModuleInit {
     }
   }
 
+  findAll() {
+    return this.rolesRepository.find({ order: { name: 'ASC' } });
+  }
+
   async ensureRole(name: string, permissions: RolePermission[]) {
     const existingRole = await this.rolesRepository.findOneBy({ name });
     if (existingRole) {
