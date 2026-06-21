@@ -253,7 +253,7 @@ export const priceListEditorMutationOptions = {
     mutationOptions({
       mutationKey: ["price-lists", "save-with-products"],
       mutationFn: apiClient.workflows.savePriceListWithProducts,
-      onSuccess: () =>
+      onSuccess: (_priceList, { id }) =>
         Promise.all([
           queryClient.invalidateQueries({
             queryKey: priceListsQueryOptions.keys.all,
@@ -264,6 +264,13 @@ export const priceListEditorMutationOptions = {
           queryClient.invalidateQueries({
             queryKey: productsQueryOptions.keys.all,
           }),
+          ...(id
+            ? [
+                queryClient.invalidateQueries({
+                  queryKey: priceListsQueryOptions.keys.detail(id),
+                }),
+              ]
+            : []),
         ]).then(() => undefined),
     }),
 };

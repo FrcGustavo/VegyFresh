@@ -1,14 +1,15 @@
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
 import {
   priceListEditorMutationOptions,
   priceListsQueryOptions,
   productsQueryOptions,
+  type PriceList,
 } from "../../../api";
 import { createClientRowId } from "../../../utils/clientRowId";
 
-type SaveAction = "save" | "save-and-close" | "save-and-new";
+export type SaveAction = "save" | "save-and-close" | "save-and-new";
 interface PriceListProductRow {
   clientRowId: string;
   product_id: string;
@@ -30,25 +31,39 @@ interface ExistingProductPrice {
 const createEmptyProductRow = (): PriceListProductRow => ({
   clientRowId: createClientRowId(),
   product_id: "",
-  price: 0,
+  price: "",
 });
+
+const isEmptyProductRow = (row: PriceListProductRow) =>
+  !row.product_id && row.price === "";
+
+const deduplicateEmptyRows = (rows: PriceListProductRow[]) => {
+  const emptyRows = rows.filter(isEmptyProductRow);
+  return emptyRows.length <= 1
+    ? rows
+    : [...rows.filter((row) => !isEmptyProductRow(row)), emptyRows.at(-1)!];
+};
 
 export function usePriceListForm(
   id?: string,
-  onSuccess?: (action: SaveAction) => void,
+  onSuccess?: (action: SaveAction, priceList: PriceList) => void,
 ) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [name, setName] = useState("");
-  const [productsList, setProductsList] = useState<PriceListProductRow[]>(
-    id ? [] : [createEmptyProductRow()],
-  );
+  const [productsList, setProductsList] = useState<PriceListProductRow[]>([
+    createEmptyProductRow(),
+  ]);
   const [isDisabled, setIsDisabled] = useState(!!id);
+  const [formError, setFormError] = useState<string | null>(null);
 
-  const { data: productsData } = useQuery(productsQueryOptions.list());
-  const products = (
-    Array.isArray(productsData) ? productsData : productsData?.data || []
-  ) as ProductOption[];
+  const { data: productsData } = useQuery(
+    productsQueryOptions.list({
+      limit: "200",
+      order_by: "name",
+      order: "asc",
+    }),
+  );
 
   const { data: existingPriceList, isLoading } = useQuery({
     ...priceListsQueryOptions.detail(id ?? ""),
@@ -57,96 +72,183 @@ export function usePriceListForm(
 
   useEffect(() => {
     if (existingPriceList) {
+      const productPrices = existingPriceList.productPrices ?? [];
       queueMicrotask(() => {
         setName(existingPriceList.name);
-      });
-      if (existingPriceList.productPrices) {
-        const productPrices = existingPriceList.productPrices;
-        queueMicrotask(() => {
-          setProductsList(
-            productPrices.map((pp: ExistingProductPrice) => ({
+        setProductsList(
+          [
+            ...productPrices.map((pp: ExistingProductPrice) => ({
               clientRowId: String(pp.id ?? createClientRowId()),
               product_id: pp.product_id,
               name: pp.product?.name || "",
-              price: pp.price,
+              price: Number(pp.price),
               id: pp.id,
             })),
-          );
-        });
-      }
+            createEmptyProductRow(),
+          ],
+        );
+        setFormError(null);
+        setIsDisabled(true);
+      });
     } else if (!id) {
       queueMicrotask(() => {
         setName("");
         setProductsList([createEmptyProductRow()]);
+        setFormError(null);
+        setIsDisabled(false);
       });
     }
   }, [id, existingPriceList]);
+
+  const products = useMemo(() => {
+    const availableProducts = (Array.isArray(productsData)
+      ? productsData
+      : (productsData?.data ?? [])) as ProductOption[];
+    const assignedProducts = (existingPriceList?.productPrices ?? [])
+      .map((item) => item.product)
+      .flatMap((item) => (item ? [{ id: item.id, name: item.name }] : []));
+
+    return Array.from(
+      new Map(
+        [...availableProducts, ...assignedProducts].map((item) => [
+          item.id,
+          item,
+        ]),
+      ).values(),
+    );
+  }, [existingPriceList, productsData]);
 
   const mutation = useMutation(
     priceListEditorMutationOptions.save(queryClient),
   );
 
-  const addProductField = () =>
-    setProductsList((prevProducts) => [
-      ...prevProducts,
-      createEmptyProductRow(),
-    ]);
+  const addProductField = () => {
+    setProductsList((current) =>
+      current.some(isEmptyProductRow)
+        ? current
+        : [...current, createEmptyProductRow()],
+    );
+  };
+
+  const handleNameChange = (value: string) => {
+    setName(value);
+    setFormError(null);
+  };
 
   const updateProductField = (
     index: number,
     field: string,
     value: string | number,
   ) => {
-    const newList = [...productsList];
-    if (field === "product_id") {
-      newList[index].product_id = String(value);
-    } else if (field === "name") {
-      newList[index].name = String(value);
-    } else if (field === "price") {
-      newList[index].price = value;
-    }
-    setProductsList(newList);
+    setProductsList((current) =>
+      deduplicateEmptyRows(
+        current.map((item, rowIndex) =>
+          rowIndex === index ? { ...item, [field]: value } : item,
+        ),
+      ),
+    );
+    setFormError(null);
+  };
+
+  const selectProduct = (index: number, product: ProductOption | null) => {
+    setProductsList((current) =>
+      deduplicateEmptyRows(
+        current.map((item, rowIndex) =>
+          rowIndex === index
+            ? {
+                ...item,
+                product_id: product?.id ?? "",
+                name: product?.name ?? "",
+              }
+            : item,
+        ),
+      ),
+    );
+    setFormError(null);
   };
 
   const removeProductField = (index: number) => {
-    setProductsList((prevProducts) =>
-      prevProducts.filter((_, i) => i !== index),
-    );
+    setProductsList((current) => {
+      const remaining = current.filter((_, rowIndex) => rowIndex !== index);
+      return remaining.some(isEmptyProductRow)
+        ? remaining
+        : [...remaining, createEmptyProductRow()];
+    });
+    setFormError(null);
   };
 
   const handleSubmit = (action: SaveAction = "save") => {
+    if (!name.trim()) {
+      setFormError("Completa el nombre de la lista de precios.");
+      return;
+    }
+
+    const assignedProducts = productsList.filter(
+      (product) => product.product_id || product.price !== "",
+    );
+
+    if (
+      assignedProducts.some(
+        (product) =>
+          !product.product_id ||
+          product.price === "" ||
+          !Number.isFinite(Number(product.price)) ||
+          Number(product.price) < 0,
+      )
+    ) {
+      setFormError("Completa el producto y un precio válido en cada fila.");
+      return;
+    }
+
+    const selectedProducts = assignedProducts.map(
+      (product) => product.product_id,
+    );
+    if (new Set(selectedProducts).size !== selectedProducts.length) {
+      setFormError("Cada producto solo puede asignarse una vez.");
+      return;
+    }
+
+    setFormError(null);
     mutation.mutate(
       {
         id,
-        name,
-        products: productsList
-          .map((product) => ({
-            product_id: product.product_id,
-            price: Number(product.price),
-          }))
-          .filter((product) => product.product_id && product.price > 0),
+        name: name.trim(),
+        products: assignedProducts.map((product) => ({
+          product_id: product.product_id,
+          price: Number(product.price),
+        })),
       },
       {
-        onSuccess: () => {
+        onSuccess: (priceList) => {
+          if (action === "save-and-new") {
+            setName("");
+            setProductsList([createEmptyProductRow()]);
+          } else {
+            setIsDisabled(true);
+          }
+
           if (onSuccess) {
-            onSuccess(action);
+            onSuccess(action, priceList);
           } else {
             navigate("/price-lists");
           }
         },
+        onError: (error) => setFormError(error.message),
       },
     );
   };
 
   return {
     name,
-    setName,
+    setName: handleNameChange,
     productsList,
     products,
     isLoading,
     isSaving: mutation.isPending,
+    formError,
     addProductField,
     updateProductField,
+    selectProduct,
     removeProductField,
     handleSubmit,
     isDisabled,

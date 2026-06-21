@@ -1,4 +1,5 @@
-import { Box, CircularProgress } from "@mui/material";
+import { useState } from "react";
+import { Alert, Box, CircularProgress } from "@mui/material";
 import FloatingModal from "../../../../components/FloatingModal";
 import ModalToolbar from "../../../../components/ModalToolbar";
 import { usePriceListForm } from "../../hooks/usePriceListForm";
@@ -10,23 +11,36 @@ export default function PriceListFormModal({
   isOpen,
   onClose,
   priceListId,
+  title,
   initialWidth = 900,
   initialHeight = 740,
   list = [],
   currentIndex = 0,
   onNavigate,
 }: PriceListFormModalProps) {
-  const isEditing = !!priceListId;
+  const [createdPriceListId, setCreatedPriceListId] = useState<string>();
+  const effectivePriceListId = priceListId ?? createdPriceListId;
+  const isEditing = !!effectivePriceListId;
+
+  const handleClose = () => {
+    setCreatedPriceListId(undefined);
+    onClose();
+  };
 
   const handleOnSuccess = (
     action: "save" | "save-and-close" | "save-and-new",
+    priceList: { id: string },
   ) => {
     if (action === "save-and-close") {
-      onClose();
+      handleClose();
+    } else if (action === "save-and-new") {
+      setCreatedPriceListId(undefined);
+    } else if (!priceListId) {
+      setCreatedPriceListId(priceList.id);
     }
   };
 
-  const formProps = usePriceListForm(priceListId, handleOnSuccess);
+  const formProps = usePriceListForm(effectivePriceListId, handleOnSuccess);
 
   const canNavigateUp = isEditing && currentIndex > 0;
   const canNavigateDown = isEditing && currentIndex < list.length - 1;
@@ -62,8 +76,15 @@ export default function PriceListFormModal({
   return (
     <FloatingModal
       isOpen={isOpen}
-      onClose={onClose}
-      title="Lista de Precios"
+      onClose={handleClose}
+      title={
+        createdPriceListId
+          ? "Editar Lista de Precios"
+          : (title ??
+            (effectivePriceListId
+              ? "Editar Lista de Precios"
+              : "Crear Lista de Precios"))
+      }
       initialWidth={initialWidth}
       initialHeight={initialHeight}
       toolbar={toolbar}
@@ -73,7 +94,12 @@ export default function PriceListFormModal({
             <CircularProgress />
           </Box>
         ) : (
-          <PriceListForm {...formProps} isDisabled={formProps.isDisabled} />
+          <>
+            {formProps.formError && (
+              <Alert severity="error">{formProps.formError}</Alert>
+            )}
+            <PriceListForm {...formProps} isDisabled={formProps.isDisabled} />
+          </>
         )
       }
     />
