@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Box, CircularProgress } from "@mui/material";
+import { Alert, Box, CircularProgress } from "@mui/material";
 import FloatingModal from "../../../../components/FloatingModal";
 import ModalTabPanel from "../../../../components/ModalTabPanel";
 import ModalTabsNavigation from "../../../../components/ModalTabsNavigation";
@@ -20,25 +20,37 @@ export default function ClientFormModal({
   currentIndex = 0,
   onNavigate,
 }: ClientFormModalProps) {
-  const isEditing = !!clientId;
   const [activeTab, setActiveTab] = useState(0);
+  const [createdClientId, setCreatedClientId] = useState<string>();
+  const [isCreatingNew, setIsCreatingNew] = useState(false);
+  const effectiveClientId =
+    createdClientId ?? (isCreatingNew ? undefined : clientId);
+  const isEditing = !!effectiveClientId;
+
+  const handleClose = () => {
+    setCreatedClientId(undefined);
+    setIsCreatingNew(false);
+    setActiveTab(0);
+    onClose();
+  };
 
   const handleOnSuccess = (
     action: "save" | "save-and-close" | "save-and-new",
+    client: { id: string },
   ) => {
-    if (action === "save-and-close" || action === "save-and-new") {
-      if (action === "save-and-new") {
-        onClose();
-        setTimeout(() => {
-          // Reopen handled by parent
-        }, 100);
-      } else {
-        onClose();
-      }
+    if (action === "save-and-close") {
+      handleClose();
+    } else if (action === "save-and-new") {
+      setCreatedClientId(undefined);
+      setIsCreatingNew(true);
+      setActiveTab(0);
+    } else if (!clientId || isCreatingNew) {
+      setCreatedClientId(client.id);
+      setIsCreatingNew(false);
     }
   };
 
-  const formProps = useClientForm(clientId, handleOnSuccess);
+  const formProps = useClientForm(effectiveClientId, handleOnSuccess);
 
   const canNavigateUp = isEditing && currentIndex > 0;
   const canNavigateDown = isEditing && currentIndex < list.length - 1;
@@ -80,8 +92,15 @@ export default function ClientFormModal({
   return (
     <FloatingModal
       isOpen={isOpen}
-      onClose={onClose}
-      title={title ?? (clientId ? "Editar Cliente" : "Crear Cliente")}
+      onClose={handleClose}
+      title={
+        isCreatingNew
+          ? "Crear Cliente"
+          : createdClientId
+            ? "Editar Cliente"
+            : (title ??
+              (effectiveClientId ? "Editar Cliente" : "Crear Cliente"))
+      }
       initialWidth={initialWidth}
       initialHeight={initialHeight}
       toolbar={toolbar}
@@ -99,6 +118,9 @@ export default function ClientFormModal({
             />
 
             <Box sx={clientFormModalStyles.tabContent}>
+              {formProps.formError && (
+                <Alert severity="error">{formProps.formError}</Alert>
+              )}
               <ModalTabPanel value={activeTab} index={0}>
                 <ClientForm
                   {...formProps}

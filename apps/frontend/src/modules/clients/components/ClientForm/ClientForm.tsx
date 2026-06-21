@@ -84,6 +84,7 @@ export default function ClientForm({
               <TextField
                 fullWidth
                 label="Email"
+                type="email"
                 name="email"
                 margin="normal"
                 value={formData.email || ""}
@@ -93,6 +94,7 @@ export default function ClientForm({
               <TextField
                 fullWidth
                 label="Teléfono"
+                type="tel"
                 name="phone_number"
                 margin="normal"
                 value={formData.phone_number || ""}

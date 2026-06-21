@@ -5,6 +5,7 @@ import {
   clientsMutationOptions,
   clientsQueryOptions,
   priceListsQueryOptions,
+  type Client,
 } from "../../../api";
 import { validateImageFile } from "../../../utils/imageValidation";
 import {
@@ -16,7 +17,7 @@ import {
   getStatesByCountry,
 } from "../constants/locationCatalog";
 
-type SaveAction = "save" | "save-and-close" | "save-and-new";
+export type SaveAction = "save" | "save-and-close" | "save-and-new";
 type ClientChangeEvent = { target: { name: string; value: string } };
 interface ClientFormData {
   name: string;
@@ -55,12 +56,13 @@ const EMPTY_CLIENT_FORM: ClientFormData = {
 
 export function useClientForm(
   id?: string,
-  onSuccess?: (action: SaveAction) => void,
+  onSuccess?: (action: SaveAction, client: Client) => void,
 ) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [formData, setFormData] = useState<ClientFormData>(EMPTY_CLIENT_FORM);
   const [avatarFileError, setAvatarFileError] = useState("");
+  const [formError, setFormError] = useState<string | null>(null);
   const [isDisabled, setIsDisabled] = useState(!!id);
 
   const { data: existingClient, isLoading } = useQuery({
@@ -87,16 +89,26 @@ export function useClientForm(
           price_list_id: existingClient.price_list_id || "",
         });
         setAvatarFileError("");
+        setFormError(null);
+        setIsDisabled(true);
       });
     } else if (!id) {
       queueMicrotask(() => {
         setFormData(EMPTY_CLIENT_FORM);
         setAvatarFileError("");
+        setFormError(null);
+        setIsDisabled(false);
       });
     }
   }, [id, existingClient]);
 
-  const { data: priceListsData } = useQuery(priceListsQueryOptions.list());
+  const { data: priceListsData } = useQuery(
+    priceListsQueryOptions.list({
+      limit: "200",
+      order_by: "name",
+      order: "asc",
+    }),
+  );
   const priceLists = (
     Array.isArray(priceListsData) ? priceListsData : priceListsData?.data || []
   ) as PriceListOption[];
@@ -136,6 +148,7 @@ export function useClientForm(
 
       return next;
     });
+    setFormError(null);
   };
 
   const handleAvatarFileChange = (file: File) => {
@@ -146,6 +159,7 @@ export function useClientForm(
     }
 
     setAvatarFileError("");
+    setFormError(null);
     const reader = new FileReader();
     reader.onload = () => {
       const result = reader.result;
@@ -164,20 +178,51 @@ export function useClientForm(
   );
 
   const handleSubmit = (action: SaveAction = "save") => {
+    if (!formData.name.trim() || !formData.phone_number.trim()) {
+      setFormError("Completa el nombre y el teléfono del cliente.");
+      return;
+    }
+
+    const nullable = (value: string) => value.trim() || null;
+    const input = {
+      name: formData.name.trim(),
+      phone_number: formData.phone_number.trim(),
+      email: nullable(formData.email),
+      country: nullable(formData.country),
+      state: nullable(formData.state),
+      city: nullable(formData.city),
+      postal_code: nullable(formData.postal_code),
+      address: nullable(formData.address),
+      suburb: nullable(formData.suburb),
+      external_number: nullable(formData.external_number),
+      internal_number: nullable(formData.internal_number),
+      avatar_url: nullable(formData.avatar_url),
+      price_list_id: nullable(formData.price_list_id),
+    };
+
+    setFormError(null);
     const options = {
-      onSuccess: () => {
+      onSuccess: (client: Client) => {
+        if (action === "save-and-new") {
+          setFormData(EMPTY_CLIENT_FORM);
+          setAvatarFileError("");
+        } else {
+          setIsDisabled(true);
+        }
+
         if (onSuccess) {
-          onSuccess(action);
+          onSuccess(action, client);
         } else {
           navigate("/clients");
         }
       },
+      onError: (error: Error) => setFormError(error.message),
     };
 
     if (id) {
-      updateMutation.mutate({ id, input: formData }, options);
+      updateMutation.mutate({ id, input }, options);
     } else {
-      createMutation.mutate(formData, options);
+      createMutation.mutate(input, options);
     }
   };
 
@@ -203,6 +248,7 @@ export function useClientForm(
     formData,
     priceLists,
     avatarFileError,
+    formError,
     countries,
     states,
     cities,
