@@ -8,10 +8,11 @@ import {
   productsQueryOptions,
   usersQueryOptions,
   type CreateOrderInput,
+  type Order,
 } from "../../../api";
 import { createClientRowId } from "../../../utils/clientRowId";
 
-type SaveAction = "save" | "save-and-close" | "save-and-new";
+export type SaveAction = "save" | "save-and-close" | "save-and-new";
 type OrderChangeEvent = { target: { name: string; value: string } };
 interface ProductPriceRef {
   product_id: string;
@@ -79,15 +80,26 @@ const createEmptyItem = (): OrderFormItem => ({
   product: null as ProductRef | null,
 });
 
+const isEmptyItem = (item: OrderFormItem) =>
+  !item.product_id && !item.folio.trim() && !item.name.trim();
+
+const deduplicateEmptyItems = (items: OrderFormItem[]) => {
+  const emptyItems = items.filter(isEmptyItem);
+  return emptyItems.length <= 1
+    ? items
+    : [...items.filter((item) => !isEmptyItem(item)), emptyItems.at(-1)!];
+};
+
 export function useOrderForm(
   id?: string,
-  onSuccess?: (action: SaveAction) => void,
+  onSuccess?: (action: SaveAction, order: Order) => void,
 ) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [formData, setFormData] = useState<OrderFormData>(EMPTY_FORM_DATA);
   const [items, setItems] = useState<OrderFormItem[]>([createEmptyItem()]);
   const [isDisabled, setIsDisabled] = useState(!!id);
+  const [formError, setFormError] = useState<string | null>(null);
   const [clientLookup, setClientLookup] = useState({ folio: "", name: "" });
   const lookupTimersRef = useRef<Record<string, ReturnType<typeof setTimeout>>>(
     {},
@@ -119,22 +131,31 @@ export function useOrderForm(
             ? String(existingOrder.created_at).slice(0, 10)
             : "",
         });
+        setClientLookup({
+          folio: existingOrder.client?.folio ?? "",
+          name: existingOrder.client?.name ?? "",
+        });
+        setFormError(null);
+        setIsDisabled(true);
       });
       if (existingOrder.items?.length) {
         const orderItems = existingOrder.items;
         queueMicrotask(() => {
           setItems(
-            orderItems.map((item: ExistingOrderItemRef) => ({
-              id: item.id,
-              clientRowId: String(item.id ?? createClientRowId()),
-              product_id: item.product_id,
-              quantity: item.quantity,
-              unit_price: item.unit_price,
-              folio: item.product?.folio || "",
-              name: item.product?.name || "",
-              unit: item.product?.unit || "",
-              product: item.product ?? null,
-            })),
+            [
+              ...orderItems.map((item: ExistingOrderItemRef) => ({
+                id: item.id,
+                clientRowId: String(item.id ?? createClientRowId()),
+                product_id: item.product_id,
+                quantity: item.quantity,
+                unit_price: item.unit_price,
+                folio: item.product?.folio || "",
+                name: item.product?.name || "",
+                unit: item.product?.unit || "",
+                product: item.product ?? null,
+              })),
+              createEmptyItem(),
+            ],
           );
         });
       } else {
@@ -146,6 +167,9 @@ export function useOrderForm(
       queueMicrotask(() => {
         setFormData(EMPTY_FORM_DATA);
         setItems([createEmptyItem()]);
+        setClientLookup({ folio: "", name: "" });
+        setFormError(null);
+        setIsDisabled(false);
       });
     }
   }, [id, existingOrder]);
@@ -215,10 +239,12 @@ export function useOrderForm(
   const handleChange = (e: OrderChangeEvent) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormError(null);
   };
 
   const updateClientLookup = (field: "folio" | "name", rawValue: string) => {
     setClientLookup((prev) => ({ ...prev, [field]: rawValue }));
+    setFormError(null);
     const searchText = rawValue.trim();
 
     if (clientLookupTimerRef.current) {
@@ -279,7 +305,12 @@ export function useOrderForm(
   };
 
   const addItemField = () => {
-    setItems((prevItems) => [...prevItems, createEmptyItem()]);
+    setItems((prevItems) =>
+      prevItems.some(isEmptyItem)
+        ? prevItems
+        : [...prevItems, createEmptyItem()],
+    );
+    setFormError(null);
   };
 
   const removeItemField = (index: number) => {
@@ -289,7 +320,13 @@ export function useOrderForm(
       delete lookupTimersRef.current[rowKey];
       delete lookupVersionRef.current[rowKey];
     }
-    setItems((prevItems) => prevItems.filter((_, i) => i !== index));
+    setItems((prevItems) => {
+      const remaining = prevItems.filter((_, i) => i !== index);
+      return remaining.some(isEmptyItem)
+        ? remaining
+        : [...remaining, createEmptyItem()];
+    });
+    setFormError(null);
   };
 
   const updateItemField = (
@@ -298,6 +335,7 @@ export function useOrderForm(
     value: string | number | ProductRef | null,
   ) => {
     const rowKey = items[index]?.clientRowId;
+    setFormError(null);
 
     setItems((prevItems) => {
       const newItems = [...prevItems];
@@ -350,7 +388,7 @@ export function useOrderForm(
         newItems[index].product = null;
       }
 
-      return newItems;
+      return deduplicateEmptyItems(newItems);
     });
 
     if (field !== "folio" && field !== "name") {
@@ -423,7 +461,7 @@ export function useOrderForm(
         if (!productMatch) {
           nextItems[currentIndex].product_id = "";
           nextItems[currentIndex].product = null;
-          return nextItems;
+          return deduplicateEmptyItems(nextItems);
         }
 
         nextItems[currentIndex].product_id = productMatch.id;
@@ -441,7 +479,7 @@ export function useOrderForm(
           nextItems[currentIndex].unit_price = 0;
         }
 
-        return nextItems;
+        return deduplicateEmptyItems(nextItems);
       });
     }, 300);
   };
@@ -451,7 +489,12 @@ export function useOrderForm(
 
   const handleSubmit = (action: SaveAction = "save") => {
     if (!formData.client_id) {
-      alert("Debe seleccionar un cliente válido por folio o nombre.");
+      setFormError("Selecciona un cliente válido por folio o nombre.");
+      return;
+    }
+
+    if (!formData.user_id) {
+      setFormError("Selecciona un usuario responsable del pedido.");
       return;
     }
 
@@ -460,16 +503,24 @@ export function useOrderForm(
     );
 
     if (validItems.length === 0) {
-      alert("Debe agregar al menos un producto al pedido.");
+      setFormError("Agrega al menos un producto al pedido.");
       return;
     }
 
-    setItems((prevItems) => {
-      const nextItems = prevItems.filter(
-        (item) => String(item.product_id || "").trim() !== "",
+    if (
+      validItems.some(
+        (item) =>
+          !Number.isFinite(Number(item.quantity)) ||
+          Number(item.quantity) <= 0 ||
+          !Number.isFinite(Number(item.unit_price)) ||
+          Number(item.unit_price) < 0,
+      )
+    ) {
+      setFormError(
+        "Cada partida debe tener una cantidad mayor que cero y un precio válido.",
       );
-      return nextItems.length > 0 ? nextItems : [createEmptyItem()];
-    });
+      return;
+    }
 
     const payload = {
       client_id: formData.client_id,
@@ -484,13 +535,22 @@ export function useOrderForm(
       })),
     } as CreateOrderInput;
     const options = {
-      onSuccess: () => {
+      onSuccess: (order: Order) => {
+        if (action === "save-and-new") {
+          setFormData(EMPTY_FORM_DATA);
+          setItems([createEmptyItem()]);
+          setClientLookup({ folio: "", name: "" });
+        } else {
+          setIsDisabled(true);
+        }
+
         if (onSuccess) {
-          onSuccess(action);
+          onSuccess(action, order);
         } else {
           navigate("/orders");
         }
       },
+      onError: (error: Error) => setFormError(error.message),
     };
 
     if (id) {
@@ -509,6 +569,7 @@ export function useOrderForm(
     totalGeneral,
     isLoading: isLoadingOrder,
     isSaving: createMutation.isPending || updateMutation.isPending,
+    formError,
     handleChange,
     addItemField,
     removeItemField,

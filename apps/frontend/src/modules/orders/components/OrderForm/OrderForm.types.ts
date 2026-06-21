@@ -29,6 +29,7 @@ export interface OrderFormProps {
   handleChange: (e: OrderChangeEvent) => void;
   updateClientLookup: (field: "folio" | "name", value: string) => void;
   addItemField: () => void;
+  removeItemField: (index: number) => void;
   updateItemField: (
     index: number,
     field: string,

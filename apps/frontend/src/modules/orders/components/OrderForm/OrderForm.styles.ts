@@ -68,6 +68,13 @@ export const orderFormStyles = {
       borderBottom: "none",
     },
   },
+  actionCell: {
+    textAlign: "center",
+  },
+  deleteActionButton: {
+    m: 0,
+    p: 1,
+  },
   summaryBar: {
     mt: "auto",
     pt: 2,

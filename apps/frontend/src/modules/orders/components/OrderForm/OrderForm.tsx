@@ -9,7 +9,9 @@ import {
   TableHead,
   TableRow,
   TableContainer,
+  IconButton,
 } from "@mui/material";
+import { Delete as DeleteIcon } from "@mui/icons-material";
 import { orderFormStyles } from "./OrderForm.styles";
 import type { OrderFormProps } from "./OrderForm.types";
 
@@ -21,6 +23,7 @@ export default function OrderForm({
   handleChange,
   updateClientLookup,
   addItemField,
+  removeItemField,
   updateItemField,
   handleSubmit,
   isDisabled = false,
@@ -38,7 +41,7 @@ export default function OrderForm({
     });
   };
 
-  const totalProducts = items.length;
+  const totalProducts = items.filter((item) => item.product_id).length;
 
   const focusCell = (row: number, col: number) => {
     const target = document.querySelector<HTMLInputElement>(
@@ -150,7 +153,7 @@ export default function OrderForm({
                   <TableCell sx={orderFormStyles.headerCell("10%")}>
                     Articulo
                   </TableCell>
-                  <TableCell sx={orderFormStyles.headerCell("47.5%")}>
+                  <TableCell sx={orderFormStyles.headerCell("40%")}>
                     Nombre
                   </TableCell>
                   <TableCell sx={orderFormStyles.headerCell("7.5%")}>
@@ -164,6 +167,9 @@ export default function OrderForm({
                   </TableCell>
                   <TableCell sx={orderFormStyles.headerCell("12.5%")}>
                     Importe
+                  </TableCell>
+                  <TableCell sx={orderFormStyles.headerCell("7.5%")}>
+                    Acciones
                   </TableCell>
                 </TableRow>
               </TableHead>
@@ -181,7 +187,7 @@ export default function OrderForm({
                           updateItemField(index, "folio", e.target.value);
                         }}
                         onKeyDown={(e) => handleArrowNavigation(e, index, 0)}
-                        required
+                        required={Boolean(item.name || item.product_id)}
                         disabled={isDisabled}
                         sx={orderFormStyles.cellInput}
                         slotProps={{
@@ -201,7 +207,7 @@ export default function OrderForm({
                           updateItemField(index, "name", e.target.value);
                         }}
                         onKeyDown={(e) => handleArrowNavigation(e, index, 1)}
-                        required
+                        required={Boolean(item.folio || item.product_id)}
                         disabled={isDisabled}
                         sx={orderFormStyles.cellInput}
                         slotProps={{
@@ -221,7 +227,7 @@ export default function OrderForm({
                           updateItemField(index, "unit", e.target.value);
                         }}
                         onKeyDown={(e) => handleArrowNavigation(e, index, 2)}
-                        required
+                        required={Boolean(item.product_id)}
                         disabled={isDisabled}
                         sx={orderFormStyles.cellInput}
                         slotProps={{
@@ -249,7 +255,7 @@ export default function OrderForm({
                           },
                           input: { disableUnderline: true },
                         }}
-                        required
+                        required={Boolean(item.product_id)}
                         disabled={isDisabled}
                         sx={orderFormStyles.cellInput}
                       />
@@ -268,16 +274,24 @@ export default function OrderForm({
                           handleArrowNavigation(e, index, 4);
                           const isLastRow = index === items.length - 1;
                           const hasProduct = Boolean(item.product_id);
+                          const hasValidQuantity =
+                            Number.isFinite(Number(item.quantity)) &&
+                            Number(item.quantity) > 0;
+                          const hasValidPrice =
+                            Number.isFinite(Number(item.unit_price)) &&
+                            Number(item.unit_price) >= 0;
                           if (
                             e.key === "Tab" &&
                             !e.shiftKey &&
                             isLastRow &&
-                            hasProduct
+                            hasProduct &&
+                            hasValidQuantity &&
+                            hasValidPrice
                           ) {
                             addItemField();
                           }
                         }}
-                        required
+                        required={Boolean(item.product_id)}
                         disabled={isDisabled}
                         sx={orderFormStyles.cellInput}
                         slotProps={{
@@ -299,6 +313,24 @@ export default function OrderForm({
                           input: { disableUnderline: true, readOnly: true },
                         }}
                       />
+                    </TableCell>
+                    <TableCell
+                      sx={{
+                        ...orderFormStyles.cell,
+                        ...orderFormStyles.actionCell,
+                      }}
+                    >
+                      {!isDisabled && (
+                        <IconButton
+                          size="small"
+                          color="error"
+                          aria-label={`Eliminar partida ${index + 1}`}
+                          onClick={() => removeItemField(index)}
+                          sx={orderFormStyles.deleteActionButton}
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}

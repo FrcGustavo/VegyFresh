@@ -1,4 +1,5 @@
-import { Box, CircularProgress } from "@mui/material";
+import { useState } from "react";
+import { Alert, Box, CircularProgress } from "@mui/material";
 import FloatingModal from "../../../../components/FloatingModal";
 import ModalToolbar from "../../../../components/ModalToolbar";
 import { useOrderForm } from "../../hooks/useOrderForm";
@@ -10,23 +11,41 @@ export default function OrderFormModal({
   isOpen,
   onClose,
   orderId,
+  title,
   initialWidth = 700,
   initialHeight = 750,
   list = [],
   currentIndex = 0,
   onNavigate,
 }: OrderFormModalProps) {
-  const isEditing = !!orderId;
+  const [createdOrderId, setCreatedOrderId] = useState<string>();
+  const [isCreatingNew, setIsCreatingNew] = useState(false);
+  const effectiveOrderId =
+    createdOrderId ?? (isCreatingNew ? undefined : orderId);
+  const isEditing = !!effectiveOrderId;
+
+  const handleClose = () => {
+    setCreatedOrderId(undefined);
+    setIsCreatingNew(false);
+    onClose();
+  };
 
   const handleOnSuccess = (
     action: "save" | "save-and-close" | "save-and-new",
+    order: { id: string },
   ) => {
     if (action === "save-and-close") {
-      onClose();
+      handleClose();
+    } else if (action === "save-and-new") {
+      setCreatedOrderId(undefined);
+      setIsCreatingNew(true);
+    } else if (!orderId || isCreatingNew) {
+      setCreatedOrderId(order.id);
+      setIsCreatingNew(false);
     }
   };
 
-  const formProps = useOrderForm(orderId, handleOnSuccess);
+  const formProps = useOrderForm(effectiveOrderId, handleOnSuccess);
 
   const canNavigateUp = isEditing && currentIndex > 0;
   const canNavigateDown = isEditing && currentIndex < list.length - 1;
@@ -62,8 +81,15 @@ export default function OrderFormModal({
   return (
     <FloatingModal
       isOpen={isOpen}
-      onClose={onClose}
-      title="Pedido"
+      onClose={handleClose}
+      title={
+        isCreatingNew
+          ? "Crear Pedido"
+          : createdOrderId
+            ? "Editar Pedido"
+            : (title ??
+              (effectiveOrderId ? "Editar Pedido" : "Crear Pedido"))
+      }
       initialWidth={initialWidth}
       initialHeight={initialHeight}
       toolbar={toolbar}
@@ -73,7 +99,12 @@ export default function OrderFormModal({
             <CircularProgress />
           </Box>
         ) : (
-          <OrderForm {...formProps} isDisabled={formProps.isDisabled} />
+          <>
+            {formProps.formError && (
+              <Alert severity="error">{formProps.formError}</Alert>
+            )}
+            <OrderForm {...formProps} isDisabled={formProps.isDisabled} />
+          </>
         )
       }
     />
