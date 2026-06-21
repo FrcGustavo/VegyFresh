@@ -19,6 +19,7 @@ import {
   LocalOffer,
   Settings,
   Warehouse,
+  Store,
 } from "@mui/icons-material";
 import { useNavigate, useLocation } from "react-router";
 import { useAuth } from "../auth/useAuth";
@@ -44,7 +45,7 @@ const menuItems = [
   },
   {
     text: "Organización",
-    icon: <Settings />,
+    icon: <Store />,
     path: "/organization",
     canAccess: canAccessOrganizationResource,
   },
