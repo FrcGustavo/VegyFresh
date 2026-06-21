@@ -1,4 +1,5 @@
-import { Box, CircularProgress } from "@mui/material";
+import { useState } from "react";
+import { Alert, Box, CircularProgress } from "@mui/material";
 import FloatingModal from "../../../../components/FloatingModal";
 import ModalToolbar from "../../../../components/ModalToolbar";
 import { useUserForm } from "../../hooks/useUserForm";
@@ -17,17 +18,34 @@ export default function UserFormModal({
   currentIndex = 0,
   onNavigate,
 }: UserFormModalProps) {
-  const isEditing = !!userId;
+  const [createdUserId, setCreatedUserId] = useState<string>();
+  const [isCreatingNew, setIsCreatingNew] = useState(false);
+  const effectiveUserId =
+    createdUserId ?? (isCreatingNew ? undefined : userId);
+  const isEditing = !!effectiveUserId;
+
+  const handleClose = () => {
+    setCreatedUserId(undefined);
+    setIsCreatingNew(false);
+    onClose();
+  };
 
   const handleOnSuccess = (
     action: "save" | "save-and-close" | "save-and-new",
+    user: { id: string },
   ) => {
     if (action === "save-and-close") {
-      onClose();
+      handleClose();
+    } else if (action === "save-and-new") {
+      setCreatedUserId(undefined);
+      setIsCreatingNew(true);
+    } else if (!userId || isCreatingNew) {
+      setCreatedUserId(user.id);
+      setIsCreatingNew(false);
     }
   };
 
-  const formProps = useUserForm(userId, handleOnSuccess);
+  const formProps = useUserForm(effectiveUserId, handleOnSuccess);
 
   const canNavigateUp = isEditing && currentIndex > 0;
   const canNavigateDown = isEditing && currentIndex < list.length - 1;
@@ -63,8 +81,15 @@ export default function UserFormModal({
   return (
     <FloatingModal
       isOpen={isOpen}
-      onClose={onClose}
-      title={title ?? "Usuario"}
+      onClose={handleClose}
+      title={
+        isCreatingNew
+          ? "Crear Usuario"
+          : createdUserId
+            ? "Editar Usuario"
+            : (title ??
+              (effectiveUserId ? "Editar Usuario" : "Crear Usuario"))
+      }
       initialWidth={initialWidth}
       initialHeight={initialHeight}
       toolbar={toolbar}
@@ -74,7 +99,12 @@ export default function UserFormModal({
             <CircularProgress />
           </Box>
         ) : (
-          <UserForm {...formProps} isDisabled={formProps.isDisabled} />
+          <>
+            {formProps.formError && (
+              <Alert severity="error">{formProps.formError}</Alert>
+            )}
+            <UserForm {...formProps} isDisabled={formProps.isDisabled} />
+          </>
         )
       }
     />

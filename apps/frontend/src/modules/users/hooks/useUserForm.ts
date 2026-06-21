@@ -6,10 +6,11 @@ import {
   rolesQueryOptions,
   usersMutationOptions,
   usersQueryOptions,
+  type User,
 } from "../../../api";
 import { validateImageFile } from "../../../utils/imageValidation";
 
-type SaveAction = "save" | "save-and-close" | "save-and-new";
+export type SaveAction = "save" | "save-and-close" | "save-and-new";
 type UserChangeEvent = { target: { name: string; value: string } };
 interface UserFormData {
   name: string;
@@ -32,12 +33,13 @@ const EMPTY_USER_FORM: UserFormData = {
 
 export function useUserForm(
   id?: string,
-  onSuccess?: (action: SaveAction) => void,
+  onSuccess?: (action: SaveAction, user: User) => void,
 ) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [formData, setFormData] = useState<UserFormData>(EMPTY_USER_FORM);
   const [avatarFileError, setAvatarFileError] = useState("");
+  const [formError, setFormError] = useState<string | null>(null);
   const [isDisabled, setIsDisabled] = useState(!!id);
 
   const { data: existingUser, isLoading } = useQuery({
@@ -56,11 +58,15 @@ export function useUserForm(
           avatar_url: existingUser.avatar_url || "",
         });
         setAvatarFileError("");
+        setFormError(null);
+        setIsDisabled(true);
       });
     } else if (!id) {
       queueMicrotask(() => {
         setFormData(EMPTY_USER_FORM);
         setAvatarFileError("");
+        setFormError(null);
+        setIsDisabled(false);
       });
     }
   }, [id, existingUser]);
@@ -73,6 +79,7 @@ export function useUserForm(
   const handleChange = (e: UserChangeEvent) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormError(null);
   };
 
   const handleAvatarFileChange = (file: File) => {
@@ -83,6 +90,7 @@ export function useUserForm(
     }
 
     setAvatarFileError("");
+    setFormError(null);
     const reader = new FileReader();
     reader.onload = () => {
       const result = reader.result;
@@ -100,20 +108,43 @@ export function useUserForm(
   const updateMutation = useMutation(usersMutationOptions.update(queryClient));
 
   const handleSubmit = (action: SaveAction = "save") => {
+    if (
+      !formData.name.trim() ||
+      !formData.email.trim() ||
+      !formData.role_id
+    ) {
+      setFormError("Completa el nombre, email y rol del usuario.");
+      return;
+    }
+
+    if (!id && formData.password.length < 12) {
+      setFormError("La contraseña debe tener al menos 12 caracteres.");
+      return;
+    }
+
+    setFormError(null);
     const options = {
-      onSuccess: () => {
+      onSuccess: (user: User) => {
+        if (action === "save-and-new") {
+          setFormData(EMPTY_USER_FORM);
+          setAvatarFileError("");
+        } else {
+          setIsDisabled(true);
+        }
+
         if (onSuccess) {
-          onSuccess(action);
+          onSuccess(action, user);
         } else {
           navigate("/users");
         }
       },
+      onError: (error: Error) => setFormError(error.message),
     };
     const commonInput = {
-      name: formData.name,
-      email: formData.email,
+      name: formData.name.trim(),
+      email: formData.email.trim(),
       role_id: formData.role_id,
-      avatar_url: formData.avatar_url || undefined,
+      avatar_url: formData.avatar_url.trim() || null,
     };
 
     if (id) {
@@ -138,6 +169,7 @@ export function useUserForm(
   return {
     formData,
     avatarFileError,
+    formError,
     roles,
     isEditing: !!id,
     isLoading,

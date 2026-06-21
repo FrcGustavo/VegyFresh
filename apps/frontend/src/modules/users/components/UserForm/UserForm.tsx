@@ -71,6 +71,7 @@ export default function UserForm({
             <TextField
               fullWidth
               label="Email"
+              type="email"
               name="email"
               margin="normal"
               value={formData.email || ""}
