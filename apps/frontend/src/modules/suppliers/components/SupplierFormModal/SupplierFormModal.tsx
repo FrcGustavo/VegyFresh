@@ -1,4 +1,5 @@
-import { Box, CircularProgress } from "@mui/material";
+import { useState } from "react";
+import { Alert, Box, CircularProgress } from "@mui/material";
 import FloatingModal from "../../../../components/FloatingModal";
 import ModalToolbar from "../../../../components/ModalToolbar";
 import { useSupplierForm } from "../../hooks/useSupplierForm";
@@ -10,23 +11,41 @@ export default function SupplierFormModal({
   isOpen,
   onClose,
   supplierId,
+  title,
   initialWidth = 760,
   initialHeight = 640,
   list = [],
   currentIndex = 0,
   onNavigate,
 }: SupplierFormModalProps) {
-  const isEditing = !!supplierId;
+  const [createdSupplierId, setCreatedSupplierId] = useState<string>();
+  const [isCreatingNew, setIsCreatingNew] = useState(false);
+  const effectiveSupplierId =
+    createdSupplierId ?? (isCreatingNew ? undefined : supplierId);
+  const isEditing = !!effectiveSupplierId;
+
+  const handleClose = () => {
+    setCreatedSupplierId(undefined);
+    setIsCreatingNew(false);
+    onClose();
+  };
 
   const handleOnSuccess = (
     action: "save" | "save-and-close" | "save-and-new",
+    supplier: { id: string },
   ) => {
     if (action === "save-and-close") {
-      onClose();
+      handleClose();
+    } else if (action === "save-and-new") {
+      setCreatedSupplierId(undefined);
+      setIsCreatingNew(true);
+    } else if (!supplierId || isCreatingNew) {
+      setCreatedSupplierId(supplier.id);
+      setIsCreatingNew(false);
     }
   };
 
-  const formProps = useSupplierForm(supplierId, handleOnSuccess);
+  const formProps = useSupplierForm(effectiveSupplierId, handleOnSuccess);
 
   const canNavigateUp = isEditing && currentIndex > 0;
   const canNavigateDown = isEditing && currentIndex < list.length - 1;
@@ -62,8 +81,15 @@ export default function SupplierFormModal({
   return (
     <FloatingModal
       isOpen={isOpen}
-      onClose={onClose}
-      title="Proveedor"
+      onClose={handleClose}
+      title={
+        isCreatingNew
+          ? "Crear Proveedor"
+          : createdSupplierId
+            ? "Editar Proveedor"
+            : (title ??
+              (effectiveSupplierId ? "Editar Proveedor" : "Crear Proveedor"))
+      }
       initialWidth={initialWidth}
       initialHeight={initialHeight}
       toolbar={toolbar}
@@ -73,7 +99,12 @@ export default function SupplierFormModal({
             <CircularProgress />
           </Box>
         ) : (
-          <SupplierForm {...formProps} isDisabled={formProps.isDisabled} />
+          <>
+            {formProps.formError && (
+              <Alert severity="error">{formProps.formError}</Alert>
+            )}
+            <SupplierForm {...formProps} isDisabled={formProps.isDisabled} />
+          </>
         )
       }
     />
