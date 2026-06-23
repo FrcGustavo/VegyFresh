@@ -10,7 +10,12 @@ import {
 } from "./RouteGuards";
 
 const OrdersList = lazy(() => import("../modules/orders/pages/OrdersList"));
-const ProductsList = lazy(() => import("../modules/products/pages/ProductsList"));
+const ProductsList = lazy(
+  () => import("../modules/products/pages/ProductsList"),
+);
+const PurchasesList = lazy(
+  () => import("../modules/purchases/pages/PurchasesList"),
+);
 const PriceListsList = lazy(
   () => import("../modules/products/pages/PriceListsList"),
 );
@@ -47,6 +52,7 @@ export function AppRoutes() {
         <Route index element={<HomeRedirect />} />
         <Route path="orders" element={<OrdersList />} />
         <Route path="products" element={<ProductsList />} />
+        <Route path="purchases" element={<PurchasesList />} />
         <Route path="price-lists" element={<PriceListsList />} />
         <Route path="clients" element={<ClientsList />} />
         <Route path="suppliers" element={<SuppliersList />} />
@@ -67,10 +73,7 @@ export function AppRoutes() {
             </OrganizationRoute>
           }
         />
-        <Route
-          path="settings"
-          element={<SettingsPage />}
-        />
+        <Route path="settings" element={<SettingsPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

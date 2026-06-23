@@ -14,9 +14,7 @@ describe("integración de productos con React Query", () => {
     const options = productEditorMutationOptions.save(queryClient);
     const onSuccess = options.onSuccess as unknown as (
       product: Product,
-      variables: Parameters<
-        typeof productEditorMutationOptions.save
-      >[0],
+      variables: Parameters<typeof productEditorMutationOptions.save>[0],
     ) => Promise<void>;
 
     await onSuccess(

@@ -31,7 +31,7 @@ export const useProductsTableState = () => {
         setSelectedRowId(String(newItem.id ?? ""));
       }
     },
-    []
+    [],
   );
 
   return {
@@ -47,7 +47,7 @@ export const useProductsTableState = () => {
 
 export const useProductsSort = (
   initialField: SortByField = "folio",
-  initialOrder: SortOrder = "asc"
+  initialOrder: SortOrder = "asc",
 ) => {
   const [sortBy, setSortBy] = useState<SortByField>(initialField);
   const [sortOrder, setSortOrder] = useState<SortOrder>(initialOrder);
@@ -60,9 +60,7 @@ export const useProductsSort = (
     setSortBy((prev) => {
       const newSortBy = columnKey as SortByField;
       if (prev === newSortBy) {
-        setSortOrder((prevOrder) =>
-          prevOrder === "asc" ? "desc" : "asc"
-        );
+        setSortOrder((prevOrder) => (prevOrder === "asc" ? "desc" : "asc"));
         return prev;
       }
 

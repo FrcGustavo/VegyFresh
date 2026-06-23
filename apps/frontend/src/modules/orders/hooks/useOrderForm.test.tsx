@@ -110,10 +110,9 @@ describe("useOrderForm", () => {
 
   it("crea un pedido con partidas válidas", async () => {
     const onSuccess = vi.fn();
-    const { result } = renderHook(
-      () => useOrderForm(undefined, onSuccess),
-      { wrapper: Wrapper },
-    );
+    const { result } = renderHook(() => useOrderForm(undefined, onSuccess), {
+      wrapper: Wrapper,
+    });
     await waitFor(() => expect(result.current.formData.user_id).toBe("user-1"));
     act(() => {
       result.current.handleChange({
@@ -130,9 +129,7 @@ describe("useOrderForm", () => {
         expect.objectContaining({
           client_id: "client-1",
           user_id: "user-1",
-          items: [
-            { product_id: "product-1", quantity: 2, unit_price: 15.5 },
-          ],
+          items: [{ product_id: "product-1", quantity: 2, unit_price: 15.5 }],
         }),
         expect.any(Object),
       );

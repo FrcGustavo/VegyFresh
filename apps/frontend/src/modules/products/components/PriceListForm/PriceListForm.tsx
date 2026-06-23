@@ -1,6 +1,7 @@
 import type { KeyboardEvent } from "react";
 import {
   Box,
+  Autocomplete,
   TextField,
   Table,
   TableBody,
@@ -18,8 +19,10 @@ export default function PriceListForm({
   name,
   setName,
   productsList,
+  products,
   addProductField,
   updateProductField,
+  selectProduct,
   removeProductField,
   handleSubmit,
   isDisabled = false,
@@ -105,22 +108,48 @@ export default function PriceListForm({
                 {productsList.map((item, index) => (
                   <TableRow key={item.id ?? item.clientRowId}>
                     <TableCell sx={priceListFormStyles.cell}>
-                      <TextField
-                        fullWidth
-                        type="text"
-                        variant="standard"
-                        value={item.name || ""}
-                        onChange={(e) =>
-                          updateProductField(index, "name", e.target.value)
+                      <Autocomplete
+                        options={products}
+                        value={
+                          products.find(
+                            (product) => product.id === item.product_id,
+                          ) ?? null
                         }
-                        onKeyDown={(e) => handleArrowNavigation(e, index, 0)}
-                        required
-                        disabled={isDisabled}
-                        sx={priceListFormStyles.cellInput}
-                        slotProps={{
-                          htmlInput: { "data-row": index, "data-col": 0 },
-                          input: { disableUnderline: true },
+                        getOptionLabel={(option) => option.name}
+                        isOptionEqualToValue={(option, value) =>
+                          option.id === value.id
+                        }
+                        onChange={(_event, product) => {
+                          selectProduct(index, product);
                         }}
+                        getOptionDisabled={(option) =>
+                          productsList.some(
+                            (row, rowIndex) =>
+                              rowIndex !== index &&
+                              row.product_id === option.id,
+                          )
+                        }
+                        disabled={isDisabled}
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            fullWidth
+                            variant="standard"
+                            required={item.price !== ""}
+                            sx={priceListFormStyles.cellInput}
+                            slotProps={{
+                              htmlInput: {
+                                ...params.slotProps.htmlInput,
+                                "data-row": index,
+                                "data-col": 0,
+                              },
+                              input: {
+                                ...params.slotProps.input,
+                                disableUnderline: true,
+                              },
+                            }}
+                          />
+                        )}
                       />
                     </TableCell>
                     <TableCell sx={priceListFormStyles.cell}>
@@ -137,16 +166,21 @@ export default function PriceListForm({
                           handleArrowNavigation(e, index, 1);
                           const isLastRow = index === productsList.length - 1;
                           const hasProduct = Boolean(item.product_id);
+                          const hasValidPrice =
+                            item.price !== "" &&
+                            Number.isFinite(Number(item.price)) &&
+                            Number(item.price) >= 0;
                           if (
                             e.key === "Tab" &&
                             !e.shiftKey &&
                             isLastRow &&
-                            hasProduct
+                            hasProduct &&
+                            hasValidPrice
                           ) {
                             addProductField();
                           }
                         }}
-                        required
+                        required={Boolean(item.product_id)}
                         disabled={isDisabled}
                         sx={priceListFormStyles.cellInput}
                         slotProps={{

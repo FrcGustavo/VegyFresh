@@ -1,8 +1,10 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
+  Patch,
   Post,
   ValidationPipe,
 } from '@nestjs/common';
@@ -18,6 +20,7 @@ import { CurrentOrganization } from '../auth/decorators/current-organization.dec
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../auth/types/authenticated-user.type';
 import { CreatePurchaseDto } from './dto/create-purchase.dto';
+import { UpdatePurchaseDto } from './dto/update-purchase.dto';
 import { PurchaseService } from './purchase.service';
 
 @ApiTags('purchase')
@@ -128,5 +131,78 @@ export class PurchaseController {
   @ApiParam({ name: 'id', description: 'Purchase ID' })
   find(@Param('id') id: string, @CurrentOrganization() organizationId: string) {
     return this.purchaseService.findOne(id, organizationId);
+  }
+
+  @Patch(':id')
+  @ApiBearerAuth()
+  @Permissions('inventory:manage')
+  @ApiResponse({
+    status: 200,
+    description: 'Purchase updated and stock adjusted',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Validation error',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - missing or invalid token',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - insufficient permissions',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Purchase not found',
+  })
+  @ApiOperation({ summary: 'Update a purchase and adjust stock' })
+  @ApiParam({ name: 'id', description: 'Purchase ID' })
+  update(
+    @Param('id') id: string,
+    @Body(new ValidationPipe({ transform: true }))
+    updatePurchaseDto: UpdatePurchaseDto,
+    @CurrentOrganization() organizationId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.purchaseService.update(
+      id,
+      updatePurchaseDto,
+      organizationId,
+      user.sub,
+    );
+  }
+
+  @Delete(':id')
+  @ApiBearerAuth()
+  @Permissions('inventory:manage')
+  @ApiResponse({
+    status: 200,
+    description: 'Purchase deleted and stock reversed',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Validation error',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - missing or invalid token',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - insufficient permissions',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Purchase not found',
+  })
+  @ApiOperation({ summary: 'Delete a purchase and reverse stock' })
+  @ApiParam({ name: 'id', description: 'Purchase ID' })
+  remove(
+    @Param('id') id: string,
+    @CurrentOrganization() organizationId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.purchaseService.remove(id, organizationId, user.sub);
   }
 }

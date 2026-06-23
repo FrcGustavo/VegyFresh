@@ -56,10 +56,9 @@ describe("useClientForm", () => {
 
   it("normaliza campos opcionales al crear", async () => {
     const onSuccess = vi.fn();
-    const { result } = renderHook(
-      () => useClientForm(undefined, onSuccess),
-      { wrapper: Wrapper },
-    );
+    const { result } = renderHook(() => useClientForm(undefined, onSuccess), {
+      wrapper: Wrapper,
+    });
     act(() => {
       result.current.handleChange({
         target: { name: "name", value: "  Cliente Uno  " },

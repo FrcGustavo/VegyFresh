@@ -141,22 +141,20 @@ export function useOrderForm(
       if (existingOrder.items?.length) {
         const orderItems = existingOrder.items;
         queueMicrotask(() => {
-          setItems(
-            [
-              ...orderItems.map((item: ExistingOrderItemRef) => ({
-                id: item.id,
-                clientRowId: String(item.id ?? createClientRowId()),
-                product_id: item.product_id,
-                quantity: item.quantity,
-                unit_price: item.unit_price,
-                folio: item.product?.folio || "",
-                name: item.product?.name || "",
-                unit: item.product?.unit || "",
-                product: item.product ?? null,
-              })),
-              createEmptyItem(),
-            ],
-          );
+          setItems([
+            ...orderItems.map((item: ExistingOrderItemRef) => ({
+              id: item.id,
+              clientRowId: String(item.id ?? createClientRowId()),
+              product_id: item.product_id,
+              quantity: item.quantity,
+              unit_price: item.unit_price,
+              folio: item.product?.folio || "",
+              name: item.product?.name || "",
+              unit: item.product?.unit || "",
+              product: item.product ?? null,
+            })),
+            createEmptyItem(),
+          ]);
         });
       } else {
         queueMicrotask(() => {

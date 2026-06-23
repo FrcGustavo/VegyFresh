@@ -1,14 +1,6 @@
-import {
-  useEffect,
-  useState,
-  type ReactNode,
-} from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { authStorage } from "./authStorage";
-import {
-  authApi,
-  type LoginPayload,
-  type SignupPayload,
-} from "./authApi";
+import { authApi, type LoginPayload, type SignupPayload } from "./authApi";
 import { AuthContext } from "./auth-context.store";
 import type { AuthState } from "./auth-context.store";
 

@@ -15,9 +15,7 @@ export default function ListPageToolbar({ config }: ListPageToolbarProps) {
   if (!config) return null;
 
   return (
-    <Box
-      sx={listPageToolbarStyles.container}
-    >
+    <Box sx={listPageToolbarStyles.container}>
       <Button
         variant="contained"
         color="primary"
@@ -28,7 +26,10 @@ export default function ListPageToolbar({ config }: ListPageToolbarProps) {
       </Button>
       {config.onCreatedFilterChange && (
         <>
-          <FormControl size="small" sx={listPageToolbarStyles.createdFilterControl}>
+          <FormControl
+            size="small"
+            sx={listPageToolbarStyles.createdFilterControl}
+          >
             <InputLabel id="toolbar-created-filter-label">
               Filtro fecha
             </InputLabel>

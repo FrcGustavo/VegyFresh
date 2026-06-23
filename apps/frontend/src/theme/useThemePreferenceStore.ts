@@ -22,8 +22,9 @@ export const useThemePreferenceStore = create<ThemePreferenceStore>()(
     {
       name: THEME_PREFERENCE_STORAGE_KEY,
       merge: (persisted, current) => {
-        const persistedThemePreference = (persisted as Partial<ThemePreferenceStore>)
-          ?.themePreference;
+        const persistedThemePreference = (
+          persisted as Partial<ThemePreferenceStore>
+        )?.themePreference;
 
         return {
           ...current,

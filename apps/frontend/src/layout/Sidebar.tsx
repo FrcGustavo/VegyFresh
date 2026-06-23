@@ -17,6 +17,7 @@ import {
   LocalShipping,
   AdminPanelSettings,
   LocalOffer,
+  ReceiptLong,
   Settings,
   Warehouse,
   Store,
@@ -36,6 +37,7 @@ const menuItems = [
   { text: "Listas de Precios", icon: <LocalOffer />, path: "/price-lists" },
   { text: "Clientes", icon: <People />, path: "/clients" },
   { text: "Proveedores", icon: <LocalShipping />, path: "/suppliers" },
+  { text: "Compras", icon: <ReceiptLong />, path: "/purchases" },
   { text: "Inventario", icon: <Warehouse />, path: "/inventory" },
   {
     text: "Usuarios y Roles",

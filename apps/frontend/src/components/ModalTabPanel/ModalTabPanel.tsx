@@ -9,7 +9,9 @@ export default function ModalTabPanel({
 }: ModalTabPanelProps) {
   return (
     <div hidden={value !== index} style={modalTabPanelStyles.wrapper}>
-      {value === index && <Box sx={modalTabPanelStyles.content}>{children}</Box>}
+      {value === index && (
+        <Box sx={modalTabPanelStyles.content}>{children}</Box>
+      )}
     </div>
   );
 }

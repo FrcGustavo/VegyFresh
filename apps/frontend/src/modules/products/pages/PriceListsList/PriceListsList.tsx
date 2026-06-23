@@ -8,10 +8,20 @@ import { Table } from "../../../../components/Table";
 import PriceListFormModal from "../../components/PriceListFormModal";
 import ResourcePageTitle from "../../../../components/ResourcePageTitle";
 import ListPageToolbar from "../../../../components/ListPageToolbar";
-import { usePriceListsTableState, usePriceListsSort } from "./PriceListsList.hooks";
+import {
+  usePriceListsTableState,
+  usePriceListsSort,
+} from "./PriceListsList.hooks";
 import { priceListsListStyles } from "./PriceListsList.styles";
-import { PRICE_LIST_COLUMNS, PRICE_LISTS_PAGE_SIZE } from "./PriceListsList.constants";
-import type { PriceListItem, SortByField, SortOrder } from "./PriceListsList.types";
+import {
+  PRICE_LIST_COLUMNS,
+  PRICE_LISTS_PAGE_SIZE,
+} from "./PriceListsList.constants";
+import type {
+  PriceListItem,
+  SortByField,
+  SortOrder,
+} from "./PriceListsList.types";
 
 export default function PriceListsList() {
   const [query, setQuery] = useState("");

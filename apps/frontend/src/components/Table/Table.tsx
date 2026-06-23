@@ -11,10 +11,7 @@ import {
 import type { MouseEvent as ReactMouseEvent } from "react";
 import ResizableHeaderCell from "../ResizableHeaderCell";
 import { tableStyles } from "./Table.styles";
-import {
-  useTableResizableColumns,
-  useTableSelection,
-} from "./Table.hooks";
+import { useTableResizableColumns, useTableSelection } from "./Table.hooks";
 import type { TableProps } from "./Table.types";
 
 export function Table<T extends object>({
@@ -90,7 +87,9 @@ export function Table<T extends object>({
   }
 
   return (
-    <TableContainer sx={{ ...tableStyles.container, maxHeight: containerMaxHeight }}>
+    <TableContainer
+      sx={{ ...tableStyles.container, maxHeight: containerMaxHeight }}
+    >
       <MuiTable sx={tableStyles.table}>
         <TableHead sx={tableStyles.tableHead}>
           <TableRow>

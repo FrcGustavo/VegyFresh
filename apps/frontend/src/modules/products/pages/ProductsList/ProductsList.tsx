@@ -12,7 +12,11 @@ import ListPageToolbar from "../../../../components/ListPageToolbar";
 import { useProductsTableState, useProductsSort } from "./ProductsList.hooks";
 import { productsListStyles } from "./ProductsList.styles";
 import { PRODUCT_COLUMNS, PRODUCTS_PAGE_SIZE } from "./ProductsList.constants";
-import type { ProductListItem, SortByField, SortOrder } from "./ProductsList.types";
+import type {
+  ProductListItem,
+  SortByField,
+  SortOrder,
+} from "./ProductsList.types";
 
 export default function ProductsList() {
   const [query, setQuery] = useState("");

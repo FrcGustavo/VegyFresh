@@ -32,6 +32,7 @@ import type {
   PriceListListQuery,
   ProductListQuery,
   SupplierListQuery,
+  UpdatePurchaseInput,
   UserListQuery,
 } from "./types";
 
@@ -63,7 +64,10 @@ function createCrudQueryOptions<
   CreateInput,
   UpdateInput,
   ListQuery extends object,
->(resource: string, api: CrudApi<Resource, CreateInput, UpdateInput, ListQuery>) {
+>(
+  resource: string,
+  api: CrudApi<Resource, CreateInput, UpdateInput, ListQuery>,
+) {
   const keys = {
     all: [resource] as const,
     lists: () => [resource, "list"] as const,
@@ -117,8 +121,7 @@ function createCrudQueryOptions<
       mutationOptions({
         mutationKey: [resource, "create"],
         mutationFn: api.create,
-        onSuccess: () =>
-          queryClient.invalidateQueries({ queryKey: keys.all }),
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: keys.all }),
       }),
     update: (queryClient: QueryClient) =>
       mutationOptions({
@@ -253,7 +256,7 @@ export const priceListEditorMutationOptions = {
     mutationOptions({
       mutationKey: ["price-lists", "save-with-products"],
       mutationFn: apiClient.workflows.savePriceListWithProducts,
-      onSuccess: () =>
+      onSuccess: (_priceList, { id }) =>
         Promise.all([
           queryClient.invalidateQueries({
             queryKey: priceListsQueryOptions.keys.all,
@@ -264,6 +267,13 @@ export const priceListEditorMutationOptions = {
           queryClient.invalidateQueries({
             queryKey: productsQueryOptions.keys.all,
           }),
+          ...(id
+            ? [
+                queryClient.invalidateQueries({
+                  queryKey: priceListsQueryOptions.keys.detail(id),
+                }),
+              ]
+            : []),
         ]).then(() => undefined),
     }),
 };
@@ -370,6 +380,42 @@ export const purchasesMutationOptions = {
             queryKey: inventoryQueryOptions.keys.all,
           }),
         ]).then(() => undefined),
+    }),
+  update: (queryClient: QueryClient) =>
+    mutationOptions({
+      mutationKey: ["purchases", "update"],
+      mutationFn: ({ id, input }: { id: string; input: UpdatePurchaseInput }) =>
+        purchasesApi.update(id, input),
+      onSuccess: (_data, { id }) =>
+        Promise.all([
+          queryClient.invalidateQueries({
+            queryKey: purchasesQueryOptions.keys.all,
+          }),
+          queryClient.invalidateQueries({
+            queryKey: purchasesQueryOptions.keys.detail(id),
+          }),
+          queryClient.invalidateQueries({
+            queryKey: inventoryQueryOptions.keys.all,
+          }),
+        ]).then(() => undefined),
+    }),
+  remove: (queryClient: QueryClient) =>
+    mutationOptions({
+      mutationKey: ["purchases", "remove"],
+      mutationFn: (id: string) => purchasesApi.remove(id),
+      onSuccess: (_data, id) => {
+        queryClient.removeQueries({
+          queryKey: purchasesQueryOptions.keys.detail(id),
+        });
+        return Promise.all([
+          queryClient.invalidateQueries({
+            queryKey: purchasesQueryOptions.keys.all,
+          }),
+          queryClient.invalidateQueries({
+            queryKey: inventoryQueryOptions.keys.all,
+          }),
+        ]).then(() => undefined);
+      },
     }),
 };
 

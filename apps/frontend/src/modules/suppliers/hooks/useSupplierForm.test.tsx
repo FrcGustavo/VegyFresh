@@ -97,18 +97,15 @@ describe("useSupplierForm", () => {
 
     act(() => result.current.handleSubmit("save"));
 
-    expect(result.current.formError).toBe(
-      "Completa el nombre del proveedor.",
-    );
+    expect(result.current.formError).toBe("Completa el nombre del proveedor.");
     expect(mocks.createSupplier).not.toHaveBeenCalled();
   });
 
   it("normaliza el payload y conserva el proveedor creado", async () => {
     const onSuccess = vi.fn();
-    const { result } = renderHook(
-      () => useSupplierForm(undefined, onSuccess),
-      { wrapper: createWrapper() },
-    );
+    const { result } = renderHook(() => useSupplierForm(undefined, onSuccess), {
+      wrapper: createWrapper(),
+    });
 
     act(() => {
       result.current.handleChange({
@@ -137,10 +134,9 @@ describe("useSupplierForm", () => {
 
   it("reinicia el formulario después de guardar y nuevo", async () => {
     const onSuccess = vi.fn();
-    const { result } = renderHook(
-      () => useSupplierForm(undefined, onSuccess),
-      { wrapper: createWrapper() },
-    );
+    const { result } = renderHook(() => useSupplierForm(undefined, onSuccess), {
+      wrapper: createWrapper(),
+    });
 
     act(() =>
       result.current.handleChange({
@@ -152,10 +148,7 @@ describe("useSupplierForm", () => {
     await waitFor(() => {
       expect(result.current.formData.name).toBe("");
       expect(result.current.isDisabled).toBe(false);
-      expect(onSuccess).toHaveBeenCalledWith(
-        "save-and-new",
-        savedSupplier,
-      );
+      expect(onSuccess).toHaveBeenCalledWith("save-and-new", savedSupplier);
     });
   });
 

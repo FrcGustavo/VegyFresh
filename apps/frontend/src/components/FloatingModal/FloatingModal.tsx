@@ -94,11 +94,7 @@ export default function FloatingModal({
         onMouseDown={handleMouseDown}
         sx={floatingModalStyles.header(isDragging)}
       >
-        <Box
-          component="h2"
-          id={titleId}
-          sx={floatingModalStyles.title}
-        >
+        <Box component="h2" id={titleId} sx={floatingModalStyles.title}>
           {title}
         </Box>
         <Box>

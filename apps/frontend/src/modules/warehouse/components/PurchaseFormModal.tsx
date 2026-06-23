@@ -129,13 +129,13 @@ export default function PurchaseFormModal({
   const mutation = useMutation(purchasesMutationOptions.create(queryClient));
 
   const handleMutationSuccess = () => {
-      setSupplierId("");
-      setPurchaseDate(new Date().toISOString().slice(0, 10));
-      setNotes("");
-      setItems([createEmptyRow()]);
-      setFormError(null);
-      onSuccess();
-      onClose();
+    setSupplierId("");
+    setPurchaseDate(new Date().toISOString().slice(0, 10));
+    setNotes("");
+    setItems([createEmptyRow()]);
+    setFormError(null);
+    onSuccess();
+    onClose();
   };
 
   const updateItem = (

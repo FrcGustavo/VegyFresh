@@ -42,7 +42,7 @@ describe('ProductsService', () => {
       {
         name: 'Tomato',
         supplier_id: 'supplier-1',
-      } as never,
+      },
       'org-1',
     );
 
@@ -61,7 +61,7 @@ describe('ProductsService', () => {
 
     await expect(
       service.create(
-        { name: 'Tomato', supplier_id: 'missing-supplier' } as never,
+        { name: 'Tomato', supplier_id: 'missing-supplier' },
         'org-1',
       ),
     ).rejects.toBeInstanceOf(NotFoundException);

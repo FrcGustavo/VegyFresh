@@ -31,7 +31,7 @@ export const useOrdersTableState = () => {
         setSelectedRowId(String(newItem.id ?? ""));
       }
     },
-    []
+    [],
   );
 
   return {
@@ -47,7 +47,7 @@ export const useOrdersTableState = () => {
 
 export const useOrdersSort = (
   initialField: OrderSortField = "created_at",
-  initialOrder: SortOrder = "desc"
+  initialOrder: SortOrder = "desc",
 ) => {
   const [sortBy, setSortBy] = useState<OrderSortField>(initialField);
   const [sortOrder, setSortOrder] = useState<SortOrder>(initialOrder);
@@ -68,9 +68,7 @@ export const useOrdersSort = (
     setSortBy((prev) => {
       const newSortBy = columnKey as OrderSortField;
       if (prev === newSortBy) {
-        setSortOrder((prevOrder) =>
-          prevOrder === "asc" ? "desc" : "asc"
-        );
+        setSortOrder((prevOrder) => (prevOrder === "asc" ? "desc" : "asc"));
         return prev;
       }
 
@@ -105,7 +103,7 @@ export const useFormatters = () => {
         currency: "MXN",
       });
     },
-    []
+    [],
   );
 
   return { formatDate, formatCurrency };

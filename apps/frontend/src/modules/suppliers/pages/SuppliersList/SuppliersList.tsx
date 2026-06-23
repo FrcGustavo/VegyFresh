@@ -12,9 +12,16 @@ import {
   useSuppliersSort,
   useSuppliersTableState,
 } from "./SuppliersList.hooks";
-import { SUPPLIERS_PAGE_SIZE, SUPPLIER_COLUMNS } from "./SuppliersList.constants";
+import {
+  SUPPLIERS_PAGE_SIZE,
+  SUPPLIER_COLUMNS,
+} from "./SuppliersList.constants";
 import { suppliersListStyles } from "./SuppliersList.styles";
-import type { SupplierListItem, SortByField, SortOrder } from "./SuppliersList.types";
+import type {
+  SupplierListItem,
+  SortByField,
+  SortOrder,
+} from "./SuppliersList.types";
 
 export default function SuppliersList() {
   const [query, setQuery] = useState("");

@@ -20,8 +20,7 @@ export default function UserFormModal({
 }: UserFormModalProps) {
   const [createdUserId, setCreatedUserId] = useState<string>();
   const [isCreatingNew, setIsCreatingNew] = useState(false);
-  const effectiveUserId =
-    createdUserId ?? (isCreatingNew ? undefined : userId);
+  const effectiveUserId = createdUserId ?? (isCreatingNew ? undefined : userId);
   const isEditing = !!effectiveUserId;
 
   const handleClose = () => {
@@ -87,8 +86,7 @@ export default function UserFormModal({
           ? "Crear Usuario"
           : createdUserId
             ? "Editar Usuario"
-            : (title ??
-              (effectiveUserId ? "Editar Usuario" : "Crear Usuario"))
+            : (title ?? (effectiveUserId ? "Editar Usuario" : "Crear Usuario"))
       }
       initialWidth={initialWidth}
       initialHeight={initialHeight}

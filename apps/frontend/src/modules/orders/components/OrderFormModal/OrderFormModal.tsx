@@ -87,8 +87,7 @@ export default function OrderFormModal({
           ? "Crear Pedido"
           : createdOrderId
             ? "Editar Pedido"
-            : (title ??
-              (effectiveOrderId ? "Editar Pedido" : "Crear Pedido"))
+            : (title ?? (effectiveOrderId ? "Editar Pedido" : "Crear Pedido"))
       }
       initialWidth={initialWidth}
       initialHeight={initialHeight}

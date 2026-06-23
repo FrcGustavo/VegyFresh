@@ -8,10 +8,7 @@ import { Table } from "../../../../components/Table";
 import UserFormModal from "../../components/UserFormModal";
 import ResourcePageTitle from "../../../../components/ResourcePageTitle";
 import ListPageToolbar from "../../../../components/ListPageToolbar";
-import {
-  useUsersSort,
-  useUsersTableState,
-} from "./UsersList.hooks";
+import { useUsersSort, useUsersTableState } from "./UsersList.hooks";
 import { USERS_PAGE_SIZE, USER_COLUMNS } from "./UsersList.constants";
 import { usersListStyles } from "./UsersList.styles";
 import type { UserListItem, SortByField, SortOrder } from "./UsersList.types";
@@ -51,7 +48,9 @@ export default function UsersList() {
     );
 
   const list: UserListItem[] = (data?.pages ?? []).flatMap((page) =>
-    Array.isArray(page) ? page : ((page as { data?: UserListItem[] })?.data ?? []),
+    Array.isArray(page)
+      ? page
+      : ((page as { data?: UserListItem[] })?.data ?? []),
   );
 
   return (
