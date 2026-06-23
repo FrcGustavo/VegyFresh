@@ -3,7 +3,9 @@ import type { SortByField, SortOrder } from "./SuppliersList.types";
 
 export const useSuppliersTableState = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalSupplierId, setModalSupplierId] = useState<string | undefined>(undefined);
+  const [modalSupplierId, setModalSupplierId] = useState<string | undefined>(
+    undefined,
+  );
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
 
   const handleCloseModal = useCallback(() => {
@@ -20,13 +22,16 @@ export const useSuppliersTableState = () => {
     setSelectedRowId(rowId);
   }, []);
 
-  const handleNavigateItem = useCallback((newIndex: number, items: { id: string | number }[]) => {
-    if (newIndex >= 0 && newIndex < items.length) {
-      const newItem = items[newIndex];
-      setModalSupplierId(String(newItem.id));
-      setSelectedRowId(String(newItem.id ?? ""));
-    }
-  }, []);
+  const handleNavigateItem = useCallback(
+    (newIndex: number, items: { id: string | number }[]) => {
+      if (newIndex >= 0 && newIndex < items.length) {
+        const newItem = items[newIndex];
+        setModalSupplierId(String(newItem.id));
+        setSelectedRowId(String(newItem.id ?? ""));
+      }
+    },
+    [],
+  );
 
   return {
     isModalOpen,

@@ -72,10 +72,9 @@ describe("useUserForm", () => {
 
   it("crea el usuario y devuelve su ID al modal", async () => {
     const onSuccess = vi.fn();
-    const { result } = renderHook(
-      () => useUserForm(undefined, onSuccess),
-      { wrapper: Wrapper },
-    );
+    const { result } = renderHook(() => useUserForm(undefined, onSuccess), {
+      wrapper: Wrapper,
+    });
     act(() => {
       result.current.handleChange({ target: { name: "name", value: "Ana" } });
       result.current.handleChange({

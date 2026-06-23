@@ -7,12 +7,8 @@ export default function ResourcePageTitle({
   icon,
 }: ResourcePageTitleProps) {
   return (
-    <Box
-      sx={resourcePageTitleStyles.container}
-    >
-      <Box sx={resourcePageTitleStyles.icon}>
-        {icon}
-      </Box>
+    <Box sx={resourcePageTitleStyles.container}>
+      <Box sx={resourcePageTitleStyles.icon}>{icon}</Box>
       <Typography variant="h5" component="h1">
         {title}
       </Typography>

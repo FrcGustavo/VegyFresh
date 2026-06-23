@@ -1,21 +1,19 @@
 import { useCallback, useState } from "react";
-import type { OrderSortField, SortOrder } from "./OrdersList.types";
+import type { PurchaseSortField, SortOrder } from "./PurchasesList.types";
 
-export const useOrdersTableState = () => {
+export const usePurchasesTableState = () => {
   type NavigableItem = { id?: string | number };
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalOrderId, setModalOrderId] = useState<string | undefined>(
-    undefined,
-  );
+  const [modalPurchaseId, setModalPurchaseId] = useState<string | undefined>();
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
 
   const handleCloseModal = useCallback(() => {
     setIsModalOpen(false);
-    setModalOrderId(undefined);
+    setModalPurchaseId(undefined);
   }, []);
 
   const handleOpenModal = useCallback((id?: string) => {
-    setModalOrderId(id);
+    setModalPurchaseId(id);
     setIsModalOpen(true);
   }, []);
 
@@ -27,7 +25,7 @@ export const useOrdersTableState = () => {
     (newIndex: number, items: NavigableItem[]) => {
       if (newIndex >= 0 && newIndex < items.length) {
         const newItem = items[newIndex];
-        setModalOrderId(String(newItem.id));
+        setModalPurchaseId(String(newItem.id));
         setSelectedRowId(String(newItem.id ?? ""));
       }
     },
@@ -36,7 +34,7 @@ export const useOrdersTableState = () => {
 
   return {
     isModalOpen,
-    modalOrderId,
+    modalPurchaseId,
     selectedRowId,
     handleCloseModal,
     handleOpenModal,
@@ -45,53 +43,44 @@ export const useOrdersTableState = () => {
   };
 };
 
-export const useOrdersSort = (
-  initialField: OrderSortField = "created_at",
+export const usePurchasesSort = (
+  initialField: PurchaseSortField = "purchase_date",
   initialOrder: SortOrder = "desc",
 ) => {
-  const [sortBy, setSortBy] = useState<OrderSortField>(initialField);
+  const [sortBy, setSortBy] = useState<PurchaseSortField>(initialField);
   const [sortOrder, setSortOrder] = useState<SortOrder>(initialOrder);
 
   const handleSort = useCallback((columnKey: string) => {
-    const validKeys: OrderSortField[] = [
-      "created_at",
-      "delivery_date",
+    const validKeys: PurchaseSortField[] = [
+      "purchase_date",
       "folio",
-      "client",
-      "description",
-      "total_amount",
+      "supplier",
+      "total",
+      "notes",
     ];
-    if (!validKeys.includes(columnKey as OrderSortField)) {
-      return;
-    }
+    if (!validKeys.includes(columnKey as PurchaseSortField)) return;
 
     setSortBy((prev) => {
-      const newSortBy = columnKey as OrderSortField;
-      if (prev === newSortBy) {
+      const nextSortBy = columnKey as PurchaseSortField;
+      if (prev === nextSortBy) {
         setSortOrder((prevOrder) => (prevOrder === "asc" ? "desc" : "asc"));
         return prev;
       }
 
       setSortOrder("asc");
-      return newSortBy;
+      return nextSortBy;
     });
   }, []);
 
-  return {
-    sortBy,
-    sortOrder,
-    setSortBy,
-    setSortOrder,
-    handleSort,
-  };
+  return { sortBy, sortOrder, handleSort };
 };
 
-export const useFormatters = () => {
+export const usePurchaseFormatters = () => {
   const formatDate = useCallback((value: string | null | undefined) => {
     if (!value) return "N/A";
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return "N/A";
-    return date.toLocaleDateString("es-MX");
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return "N/A";
+    return parsed.toLocaleDateString("es-MX");
   }, []);
 
   const formatCurrency = useCallback(

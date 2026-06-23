@@ -33,6 +33,7 @@ export type UpdateOrganizationInput = Schema<"UpdateOrganizationDto">;
 export type CreateInventoryAdjustmentInput =
   Schema<"CreateInventoryAdjustmentDto">;
 export type CreatePurchaseInput = Schema<"CreatePurchaseDto">;
+export type UpdatePurchaseInput = Partial<CreatePurchaseInput>;
 export type CreateAiInput = Schema<"CreateAiDto">;
 export type CreateWhatsappInput = Schema<"CreateWhatsappDto">;
 

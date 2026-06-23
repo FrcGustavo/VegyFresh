@@ -108,11 +108,7 @@ export function useUserForm(
   const updateMutation = useMutation(usersMutationOptions.update(queryClient));
 
   const handleSubmit = (action: SaveAction = "save") => {
-    if (
-      !formData.name.trim() ||
-      !formData.email.trim() ||
-      !formData.role_id
-    ) {
+    if (!formData.name.trim() || !formData.email.trim() || !formData.role_id) {
       setFormError("Completa el nombre, email y rol del usuario.");
       return;
     }

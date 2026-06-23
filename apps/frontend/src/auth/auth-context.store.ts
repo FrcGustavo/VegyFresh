@@ -1,5 +1,12 @@
 import { createContext } from "react";
-import type { AuthOrganization, AuthRole, AuthUser, LoginPayload, SignupPayload, SignupResponse } from "./authApi";
+import type {
+  AuthOrganization,
+  AuthRole,
+  AuthUser,
+  LoginPayload,
+  SignupPayload,
+  SignupResponse,
+} from "./authApi";
 
 export interface AuthState {
   user: AuthUser | null;

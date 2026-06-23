@@ -4,9 +4,9 @@ import type { SortByField, SortOrder } from "./PriceListsList.types";
 export const usePriceListsTableState = () => {
   type NavigableItem = { id?: string | number };
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalPriceListId, setModalPriceListId] = useState<
-    string | undefined
-  >(undefined);
+  const [modalPriceListId, setModalPriceListId] = useState<string | undefined>(
+    undefined,
+  );
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
 
   const handleCloseModal = useCallback(() => {
@@ -31,7 +31,7 @@ export const usePriceListsTableState = () => {
         setSelectedRowId(String(newItem.id ?? ""));
       }
     },
-    []
+    [],
   );
 
   return {
@@ -47,7 +47,7 @@ export const usePriceListsTableState = () => {
 
 export const usePriceListsSort = (
   initialField: SortByField = "folio",
-  initialOrder: SortOrder = "asc"
+  initialOrder: SortOrder = "asc",
 ) => {
   const [sortBy, setSortBy] = useState<SortByField>(initialField);
   const [sortOrder, setSortOrder] = useState<SortOrder>(initialOrder);
@@ -60,9 +60,7 @@ export const usePriceListsSort = (
     setSortBy((prev) => {
       const newSortBy = columnKey as SortByField;
       if (prev === newSortBy) {
-        setSortOrder((prevOrder) =>
-          prevOrder === "asc" ? "desc" : "asc"
-        );
+        setSortOrder((prevOrder) => (prevOrder === "asc" ? "desc" : "asc"));
         return prev;
       }
 

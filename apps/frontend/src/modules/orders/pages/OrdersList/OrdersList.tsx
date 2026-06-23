@@ -141,7 +141,15 @@ function OrdersTableView({
         handleOpenModal(undefined);
       },
     }),
-    [createdFilter, createdFrom, createdTo, setCreatedFilter, setCreatedFrom, setCreatedTo, handleOpenModal],
+    [
+      createdFilter,
+      createdFrom,
+      createdTo,
+      setCreatedFilter,
+      setCreatedFrom,
+      setCreatedTo,
+      handleOpenModal,
+    ],
   );
 
   useEffect(() => {

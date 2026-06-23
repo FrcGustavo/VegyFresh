@@ -75,18 +75,16 @@ export function usePriceListForm(
       const productPrices = existingPriceList.productPrices ?? [];
       queueMicrotask(() => {
         setName(existingPriceList.name);
-        setProductsList(
-          [
-            ...productPrices.map((pp: ExistingProductPrice) => ({
-              clientRowId: String(pp.id ?? createClientRowId()),
-              product_id: pp.product_id,
-              name: pp.product?.name || "",
-              price: Number(pp.price),
-              id: pp.id,
-            })),
-            createEmptyProductRow(),
-          ],
-        );
+        setProductsList([
+          ...productPrices.map((pp: ExistingProductPrice) => ({
+            clientRowId: String(pp.id ?? createClientRowId()),
+            product_id: pp.product_id,
+            name: pp.product?.name || "",
+            price: Number(pp.price),
+            id: pp.id,
+          })),
+          createEmptyProductRow(),
+        ]);
         setFormError(null);
         setIsDisabled(true);
       });
@@ -101,9 +99,9 @@ export function usePriceListForm(
   }, [id, existingPriceList]);
 
   const products = useMemo(() => {
-    const availableProducts = (Array.isArray(productsData)
-      ? productsData
-      : (productsData?.data ?? [])) as ProductOption[];
+    const availableProducts = (
+      Array.isArray(productsData) ? productsData : (productsData?.data ?? [])
+    ) as ProductOption[];
     const assignedProducts = (existingPriceList?.productPrices ?? [])
       .map((item) => item.product)
       .flatMap((item) => (item ? [{ id: item.id, name: item.name }] : []));

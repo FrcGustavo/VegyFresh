@@ -20,13 +20,16 @@ export const useUsersTableState = () => {
     setSelectedRowId(rowId);
   }, []);
 
-  const handleNavigateItem = useCallback((newIndex: number, items: { id: string | number }[]) => {
-    if (newIndex >= 0 && newIndex < items.length) {
-      const newItem = items[newIndex];
-      setModalUserId(String(newItem.id));
-      setSelectedRowId(String(newItem.id ?? ""));
-    }
-  }, []);
+  const handleNavigateItem = useCallback(
+    (newIndex: number, items: { id: string | number }[]) => {
+      if (newIndex >= 0 && newIndex < items.length) {
+        const newItem = items[newIndex];
+        setModalUserId(String(newItem.id));
+        setSelectedRowId(String(newItem.id ?? ""));
+      }
+    },
+    [],
+  );
 
   return {
     isModalOpen,

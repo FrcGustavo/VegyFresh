@@ -75,11 +75,13 @@ export function useProductForm(
 
   useEffect(() => {
     if (existingProduct) {
-      const loadedPrices = (existingProduct.productPrices ?? []).map((item) => ({
-        id: item.id,
-        price_list_id: item.price_list_id,
-        price: Number(item.price),
-      }));
+      const loadedPrices = (existingProduct.productPrices ?? []).map(
+        (item) => ({
+          id: item.id,
+          price_list_id: item.price_list_id,
+          price: Number(item.price),
+        }),
+      );
 
       queueMicrotask(() => {
         setFormData({
@@ -112,7 +114,11 @@ export function useProductForm(
   }, [id, existingProduct]);
 
   const { data: suppliersData } = useQuery(
-    suppliersQueryOptions.list({ limit: "200", order_by: "name", order: "asc" }),
+    suppliersQueryOptions.list({
+      limit: "200",
+      order_by: "name",
+      order: "asc",
+    }),
   );
   const { data: priceListsData } = useQuery(
     priceListsQueryOptions.list({
@@ -130,9 +136,11 @@ export function useProductForm(
     [suppliersData],
   );
   const priceLists = useMemo(() => {
-    const availablePriceLists = (Array.isArray(priceListsData)
-      ? priceListsData
-      : (priceListsData?.data ?? [])) as PriceListOption[];
+    const availablePriceLists = (
+      Array.isArray(priceListsData)
+        ? priceListsData
+        : (priceListsData?.data ?? [])
+    ) as PriceListOption[];
     const assignedPriceLists = (existingProduct?.productPrices ?? [])
       .map((item) => item.priceList)
       .flatMap((item) => (item ? [{ id: item.id, name: item.name }] : []));

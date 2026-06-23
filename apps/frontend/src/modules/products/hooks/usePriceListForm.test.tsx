@@ -148,11 +148,14 @@ describe("usePriceListForm", () => {
     act(() => result.current.handleSubmit("save"));
 
     await waitFor(() =>
-      expect(mocks.savePriceList).toHaveBeenCalledWith({
-        id: undefined,
-        name: "Menudeo",
-        products: [{ product_id: "product-1", price: 0 }],
-      }, expect.any(Object)),
+      expect(mocks.savePriceList).toHaveBeenCalledWith(
+        {
+          id: undefined,
+          name: "Menudeo",
+          products: [{ product_id: "product-1", price: 0 }],
+        },
+        expect.any(Object),
+      ),
     );
   });
 });

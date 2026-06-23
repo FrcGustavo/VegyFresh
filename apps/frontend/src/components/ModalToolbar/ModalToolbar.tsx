@@ -21,9 +21,7 @@ export default function ModalToolbar({
   isEditing = false,
 }: ModalToolbarProps) {
   return (
-    <Box
-      sx={modalToolbarStyles.container}
-    >
+    <Box sx={modalToolbarStyles.container}>
       {/* Save Actions */}
       <Box sx={modalToolbarStyles.actionGroup}>
         <Tooltip title="Guardar">

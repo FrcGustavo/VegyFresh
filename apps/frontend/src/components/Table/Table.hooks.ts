@@ -10,13 +10,10 @@ export const useTableResizableColumns = (
 ) => {
   const [columnWidths, setColumnWidths] = useState<ResizeState>(() => {
     if (typeof window === "undefined") {
-      return columns.reduce(
-        (acc, col) => {
-          acc[col.key] = col.defaultWidth;
-          return acc;
-        },
-        {} as ResizeState,
-      );
+      return columns.reduce((acc, col) => {
+        acc[col.key] = col.defaultWidth;
+        return acc;
+      }, {} as ResizeState);
     }
 
     try {
@@ -28,13 +25,10 @@ export const useTableResizableColumns = (
       // Continue with defaults
     }
 
-    return columns.reduce(
-      (acc, col) => {
-        acc[col.key] = col.defaultWidth;
-        return acc;
-      },
-      {} as ResizeState,
-    );
+    return columns.reduce((acc, col) => {
+      acc[col.key] = col.defaultWidth;
+      return acc;
+    }, {} as ResizeState);
   });
 
   const getColumnWidth = useCallback(

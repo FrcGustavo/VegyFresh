@@ -14,9 +14,7 @@ export default function ResizableHeaderCell({
   onSort,
 }: ResizableHeaderCellProps) {
   return (
-    <TableCell
-      sx={{ ...cellSx, ...resizableHeaderCellStyles.cell }}
-    >
+    <TableCell sx={{ ...cellSx, ...resizableHeaderCellStyles.cell }}>
       {sortable ? (
         <TableSortLabel
           active={sortActive}

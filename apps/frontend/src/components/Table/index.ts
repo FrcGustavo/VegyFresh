@@ -1,9 +1,6 @@
 export { Table } from "./Table";
 export { tableStyles } from "./Table.styles";
-export {
-  useTableResizableColumns,
-  useTableSelection,
-} from "./Table.hooks";
+export { useTableResizableColumns, useTableSelection } from "./Table.hooks";
 export type {
   SortOrder,
   ColumnConfig,

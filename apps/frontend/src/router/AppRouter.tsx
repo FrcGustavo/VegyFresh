@@ -5,7 +5,10 @@ import { AppRoutes } from "./AppRoutes";
 
 function RouteFallback() {
   return (
-    <Box role="status" sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+    <Box
+      role="status"
+      sx={{ display: "flex", justifyContent: "center", mt: 4 }}
+    >
       <CircularProgress />
     </Box>
   );

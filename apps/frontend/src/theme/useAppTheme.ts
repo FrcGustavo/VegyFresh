@@ -27,10 +27,10 @@ const createAppTheme = (mode: "light" | "dark") =>
       MuiCssBaseline: {
         styleOverrides: {
           html: {
-            fontSize: '12px',
+            fontSize: "12px",
           },
           body: {
-            fontSize: '1rem',
+            fontSize: "1rem",
           },
           // 'th.MuiTableCell-root, td.MuiTableCell-root': {
           //   padding: '1rem 0.5rem !important',

@@ -8,13 +8,14 @@ import { Table } from "../../../../components/Table";
 import ClientFormModal from "../../components/ClientFormModal";
 import ResourcePageTitle from "../../../../components/ResourcePageTitle";
 import ListPageToolbar from "../../../../components/ListPageToolbar";
-import {
-  useClientsSort,
-  useClientsTableState,
-} from "./ClientsList.hooks";
+import { useClientsSort, useClientsTableState } from "./ClientsList.hooks";
 import { CLIENTS_PAGE_SIZE, CLIENT_COLUMNS } from "./ClientsList.constants";
 import { clientsListStyles } from "./ClientsList.styles";
-import type { ClientListItem, SortByField, SortOrder } from "./ClientsList.types";
+import type {
+  ClientListItem,
+  SortByField,
+  SortOrder,
+} from "./ClientsList.types";
 
 export default function ClientsList() {
   const [query, setQuery] = useState("");
@@ -51,7 +52,9 @@ export default function ClientsList() {
     );
 
   const list: ClientListItem[] = (data?.pages ?? []).flatMap((page) =>
-    Array.isArray(page) ? page : ((page as { data?: ClientListItem[] })?.data ?? []),
+    Array.isArray(page)
+      ? page
+      : ((page as { data?: ClientListItem[] })?.data ?? []),
   );
 
   return (

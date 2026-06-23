@@ -115,7 +115,10 @@ export default function ProductFormModal({
 
           <Box sx={productFormModalStyles.tabContentWrapper}>
             {formProps.formError && (
-              <Alert severity="error" sx={productFormModalStyles.formErrorAlert}>
+              <Alert
+                severity="error"
+                sx={productFormModalStyles.formErrorAlert}
+              >
                 {formProps.formError}
               </Alert>
             )}
@@ -309,13 +312,17 @@ export default function ProductFormModal({
                                 margin="normal"
                                 required
                                 disabled={formProps.isDisabled}
-                                slotProps={{ htmlInput: { min: 0, step: 0.01 } }}
+                                slotProps={{
+                                  htmlInput: { min: 0, step: 0.01 },
+                                }}
                               />
                             </Box>
                             {!formProps.isDisabled && (
                               <IconButton
                                 color="error"
-                                onClick={() => formProps.removePriceField(index)}
+                                onClick={() =>
+                                  formProps.removePriceField(index)
+                                }
                                 sx={productFormModalStyles.priceDeleteButton}
                               >
                                 <DeleteIcon />
