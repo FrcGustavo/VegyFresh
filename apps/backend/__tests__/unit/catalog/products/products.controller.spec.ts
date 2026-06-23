@@ -24,10 +24,7 @@ describe('ProductsController', () => {
     const dto = { name: 'Tomato', supplier_id: 'supplier-1' };
     serviceMock.create.mockResolvedValue({ id: 'product-1' });
 
-    const result = await controller.create(
-      dto as never,
-      { org_id: 'org-1' } as never,
-    );
+    const result = await controller.create(dto, { org_id: 'org-1' } as never);
 
     expect(serviceMock.create).toHaveBeenCalledWith(dto, 'org-1');
     expect(result).toEqual({ id: 'product-1' });
