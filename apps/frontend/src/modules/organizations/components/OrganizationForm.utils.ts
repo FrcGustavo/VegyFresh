@@ -13,6 +13,7 @@ export const EMPTY_ORGANIZATION_FORM: OrganizationFormData = {
   order_folio_prefix: "O",
   client_folio_prefix: "C",
   supplier_folio_prefix: "S",
+  user_folio_prefix: "U",
   purchase_folio_prefix: "C",
 };
 
@@ -30,5 +31,6 @@ export const organizationToFormData = (
   order_folio_prefix: organization.order_folio_prefix ?? null,
   client_folio_prefix: organization.client_folio_prefix ?? null,
   supplier_folio_prefix: organization.supplier_folio_prefix ?? null,
+  user_folio_prefix: organization.user_folio_prefix ?? null,
   purchase_folio_prefix: organization.purchase_folio_prefix ?? null,
 });

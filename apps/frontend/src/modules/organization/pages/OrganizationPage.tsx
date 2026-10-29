@@ -1,5 +1,17 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { Alert, Box, CircularProgress, Paper, Typography } from "@mui/material";
+import BusinessRoundedIcon from "@mui/icons-material/BusinessRounded";
+import ReceiptLongRoundedIcon from "@mui/icons-material/ReceiptLongRounded";
+import {
+  Alert,
+  Box,
+  CircularProgress,
+  List,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Paper,
+  Typography,
+} from "@mui/material";
 import { useNavigate } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../../../auth/useAuth";
@@ -12,11 +24,21 @@ import {
 import {
   OrganizationForm,
   type OrganizationFormData,
+  type OrganizationFormSection,
 } from "../../organizations/components/OrganizationForm";
 import {
   EMPTY_ORGANIZATION_FORM,
   organizationToFormData,
 } from "../../organizations/components/OrganizationForm.utils";
+
+const ORGANIZATION_MENU: Array<{
+  key: OrganizationFormSection;
+  label: string;
+  icon: typeof BusinessRoundedIcon;
+}> = [
+  { key: "general", label: "General", icon: BusinessRoundedIcon },
+  { key: "folios", label: "Folios", icon: ReceiptLongRoundedIcon },
+];
 
 export default function OrganizationPage() {
   const navigate = useNavigate();
@@ -24,6 +46,8 @@ export default function OrganizationPage() {
   const { organization, refreshSession } = useAuth();
   const organizationId = organization?.id ?? "";
 
+  const [activeSection, setActiveSection] =
+    useState<OrganizationFormSection>("general");
   const [formData, setFormData] = useState<OrganizationFormData>(
     EMPTY_ORGANIZATION_FORM,
   );
@@ -73,6 +97,7 @@ export default function OrganizationPage() {
       order_folio_prefix: formData.order_folio_prefix,
       client_folio_prefix: formData.client_folio_prefix,
       supplier_folio_prefix: formData.supplier_folio_prefix,
+      user_folio_prefix: formData.user_folio_prefix,
       purchase_folio_prefix: formData.purchase_folio_prefix,
     };
 
@@ -135,32 +160,62 @@ export default function OrganizationPage() {
           : "Completa los datos para activar tu cuenta."}
       </Typography>
 
-      <Paper sx={{ p: 3, maxWidth: 960 }}>
-        {displayedError && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {displayedError}
-          </Alert>
-        )}
-        {success && (
-          <Alert severity="success" sx={{ mb: 2 }}>
-            {success}
-          </Alert>
-        )}
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: { xs: "1fr", md: "220px minmax(0, 960px)" },
+          gap: 2,
+          alignItems: "start",
+        }}
+      >
+        <Paper sx={{ overflow: "hidden" }}>
+          <List component="nav" aria-label="Opciones de organización">
+            {ORGANIZATION_MENU.map((item) => {
+              const Icon = item.icon;
+              return (
+                <ListItemButton
+                  key={item.key}
+                  selected={activeSection === item.key}
+                  onClick={() => setActiveSection(item.key)}
+                >
+                  <ListItemIcon>
+                    <Icon fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText primary={item.label} />
+                </ListItemButton>
+              );
+            })}
+          </List>
+        </Paper>
 
-        <OrganizationForm
-          value={formData}
-          onChange={handleChange}
-          onSubmit={handleSubmit}
-          isSubmitting={createMutation.isPending || updateMutation.isPending}
-          submitLabel={
-            organizationId ? "Guardar cambios" : "Guardar organización"
-          }
-          secondaryActionLabel={organizationId ? "Volver" : undefined}
-          onSecondaryAction={
-            organizationId ? () => void navigate("/settings") : undefined
-          }
-        />
-      </Paper>
+        <Paper sx={{ p: 3 }}>
+          {displayedError && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {displayedError}
+            </Alert>
+          )}
+          {success && (
+            <Alert severity="success" sx={{ mb: 2 }}>
+              {success}
+            </Alert>
+          )}
+
+          <OrganizationForm
+            value={formData}
+            onChange={handleChange}
+            onSubmit={handleSubmit}
+            section={activeSection}
+            isSubmitting={createMutation.isPending || updateMutation.isPending}
+            submitLabel={
+              organizationId ? "Guardar cambios" : "Guardar organización"
+            }
+            secondaryActionLabel={organizationId ? "Volver" : undefined}
+            onSecondaryAction={
+              organizationId ? () => void navigate("/settings") : undefined
+            }
+          />
+        </Paper>
+      </Box>
     </Box>
   );
 }

@@ -3,7 +3,6 @@ import {
   IsEmail,
   IsOptional,
   IsString,
-  IsUrl,
   Matches,
   MaxLength,
   MinLength,
@@ -20,10 +19,10 @@ export class CreateOrganizationDto {
   @ApiPropertyOptional({
     example: 'https://assets.vegyfresh.com/orgs/vegy-fresh/logo.png',
     nullable: true,
+    description: 'Public URL or data URL for the organization avatar.',
   })
   @ValidateIf((_, value) => value !== null && value !== undefined)
   @IsString()
-  @IsUrl({ require_protocol: true })
   @IsOptional()
   logo_url?: string | null;
 
