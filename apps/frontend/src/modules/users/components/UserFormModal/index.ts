@@ -1,6 +1,2 @@
-export { default } from "./UserFormModal";
-export { userFormModalStyles } from "./UserFormModal.styles";
-export type {
-  UserListItemRef,
-  UserFormModalProps,
-} from "./UserFormModal.types";
+export { default } from "../../../../presentation/users/components/UserFormModal";
+export * from "../../../../presentation/users/components/UserFormModal";
