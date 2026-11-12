@@ -31,7 +31,9 @@ until docker exec "$db" pg_isready -U identity_test -d identity_test >/dev/null 
 done
 
 docker run --rm --network "$network" -v "$root:/source:ro" \
-  -e IDENTITY_TEST_HOST=identity-db -e CHECK_BACKEND="${CHECK_BACKEND:-0}" \
+  -e IDENTITY_TEST_HOST=identity-db -e POSTGRES_HOST=identity-db -e POSTGRES_PORT=5432 \
+  -e POSTGRES_USER=identity_test -e POSTGRES_PASSWORD=identity_test -e POSTGRES_DB=identity_test \
+  -e CHECK_BACKEND="${CHECK_BACKEND:-0}" \
   node:20-bookworm-slim sh -eu -c '
     mkdir /work
     tar -C /source --exclude=.git --exclude=node_modules --exclude=.env --exclude=".env.*" -cf - . | tar -C /work -xf -
@@ -39,10 +41,12 @@ docker run --rm --network "$network" -v "$root:/source:ro" \
     corepack enable
     corepack prepare pnpm@10.11.0 --activate
     pnpm install --frozen-lockfile
+    pnpm --filter backend exec npm rebuild bcrypt
     pnpm --filter backend exec jest --config ./test/jest-e2e.json --runInBand --runTestsByPath test/integration/external-identity.e2e-spec.ts test/integration/identity-resolution.e2e-spec.ts
+    IDENTITY_PROVISIONING_TEST=true pnpm --filter backend exec jest --config ./test/jest-e2e.json --runInBand --runTestsByPath test/identity-provisioning.e2e-spec.ts
+    IDENTITY_HTTP_TEST=true pnpm --filter backend exec jest --config ./test/jest-e2e.json --runInBand --runTestsByPath test/identity.e2e-spec.ts
     if [ "$CHECK_BACKEND" = 1 ]; then
       status=0
-      pnpm --filter backend exec npm rebuild bcrypt || status=1
       pnpm --filter backend exec eslint "{src,apps,libs,test,__tests__}/**/*.ts" || status=1
       pnpm --filter backend exec tsc --noEmit --incremental false || status=1
       pnpm --filter backend exec tsc --noEmit --incremental false -p tsconfig.build.json || status=1

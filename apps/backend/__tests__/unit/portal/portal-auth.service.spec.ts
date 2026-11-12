@@ -1,56 +1,54 @@
 import { UnauthorizedException } from '@nestjs/common';
-import { PortalAuthSession } from 'src/portal/entities/portal-auth-session.entity';
 import { PortalAuthService } from 'src/portal/portal-auth.service';
-import type { DeepPartial } from 'typeorm';
 
-describe('PortalAuthService', () => {
-  const clientsRepository = {
-    findOne: jest.fn(),
-    findOneBy: jest.fn(),
-  };
-  const portalSessionsRepository = {
-    findOneBy: jest.fn(),
-    save: jest.fn(),
-    update: jest.fn(),
-    create: jest.fn(
-      (value: DeepPartial<PortalAuthSession>): PortalAuthSession =>
-        value as PortalAuthSession,
-    ),
-  };
-  const jwtService = {
-    signAsync: jest.fn(),
-    verifyAsync: jest.fn(),
-  };
-  const configService = {
-    get: jest.fn(),
-  };
-
+describe('PortalAuthService profile projection', () => {
+  const clientsRepository = { findOneBy: jest.fn() };
   let service: PortalAuthService;
 
   beforeEach(() => {
-    service = new PortalAuthService(
-      clientsRepository as never,
-      portalSessionsRepository as never,
-      jwtService as never,
-      configService as never,
-    );
+    service = new PortalAuthService(clientsRepository as never);
     jest.clearAllMocks();
   });
 
-  it('rejects login for unknown client', async () => {
-    clientsRepository.findOne.mockResolvedValue(null);
+  it('loads only the portal client mapped to the principal organization', async () => {
+    clientsRepository.findOneBy.mockResolvedValue({
+      id: 'client-1',
+      name: 'Client One',
+      email: 'client@example.com',
+      organization_id: 'org-1',
+    });
 
-    await expect(
-      service.login({ email: 'missing@vegyfresh.com', password: 'x' }),
-    ).rejects.toBeInstanceOf(UnauthorizedException);
+    const result = await service.me({
+      sub: 'client-1',
+      email: 'client@example.com',
+      organization_id: 'org-1',
+      type: 'portal-client',
+    });
+
+    expect(clientsRepository.findOneBy).toHaveBeenCalledWith({
+      id: 'client-1',
+      organization_id: 'org-1',
+    });
+    expect(result).toEqual({
+      client: {
+        id: 'client-1',
+        name: 'Client One',
+        email: 'client@example.com',
+        portalEnabled: true,
+      },
+    });
   });
 
-  it('rejects logout without session identifier', async () => {
+  it('rejects a portal client that is no longer active in its organization', async () => {
+    clientsRepository.findOneBy.mockResolvedValue(null);
+
     await expect(
-      service.logout({
+      service.me({
         sub: 'client-1',
+        email: 'client@example.com',
         organization_id: 'org-1',
-      } as never),
+        type: 'portal-client',
+      }),
     ).rejects.toBeInstanceOf(UnauthorizedException);
   });
 });
