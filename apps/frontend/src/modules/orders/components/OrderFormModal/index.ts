@@ -1,6 +1,2 @@
-export { default } from "./OrderFormModal";
-export { orderFormModalStyles } from "./OrderFormModal.styles";
-export type {
-  OrderListItemRef,
-  OrderFormModalProps,
-} from "./OrderFormModal.types";
+export { default } from "@/presentation/orders/components/OrderFormModal";
+export * from "@/presentation/orders/components/OrderFormModal";
