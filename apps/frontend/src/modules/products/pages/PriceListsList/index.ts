@@ -1,1 +1,1 @@
-export { default } from "./PriceListsList";
+export { default } from "@/presentation/products/pages/PriceListsList";
