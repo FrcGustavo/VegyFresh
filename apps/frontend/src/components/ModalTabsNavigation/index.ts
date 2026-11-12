@@ -1,6 +1,2 @@
-export { default } from "./ModalTabsNavigation";
-export { modalTabsNavigationStyles } from "./ModalTabsNavigation.styles";
-export type {
-  ModalTabOption,
-  ModalTabsNavigationProps,
-} from "./ModalTabsNavigation.types";
+export { default } from "../../presentation/components/ModalTabsNavigation";
+export * from "../../presentation/components/ModalTabsNavigation";

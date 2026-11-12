@@ -1,3 +1,2 @@
-export { default } from "./ModalTabPanel";
-export { modalTabPanelStyles } from "./ModalTabPanel.styles";
-export type { ModalTabPanelProps } from "./ModalTabPanel.types";
+export { default } from "../../presentation/components/ModalTabPanel";
+export * from "../../presentation/components/ModalTabPanel";

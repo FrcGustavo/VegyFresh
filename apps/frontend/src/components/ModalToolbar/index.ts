@@ -1,3 +1,2 @@
-export { default } from "./ModalToolbar";
-export { modalToolbarStyles } from "./ModalToolbar.styles";
-export type { ModalToolbarProps } from "./ModalToolbar.types";
+export { default } from "../../presentation/components/ModalToolbar";
+export * from "../../presentation/components/ModalToolbar";
