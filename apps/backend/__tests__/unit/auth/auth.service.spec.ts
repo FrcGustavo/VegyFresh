@@ -8,7 +8,7 @@ type UserRecord = {
   id: string;
   email: string;
   name?: string;
-  password_hash?: string;
+  password_hash?: string | null;
   organization_id?: string;
   role?: {
     id: string;
@@ -216,6 +216,18 @@ describe('AuthService security flows', () => {
     expect(result.organization.id).toBe('org-1');
     expect(result.role.name).toBe('admin');
     expect((result as Record<string, unknown>).membership).toBeUndefined();
+  });
+
+  it('rejects passwordless users from legacy password login', async () => {
+    usersRepository.findOne.mockResolvedValue({
+      id: 'passwordless-user',
+      email: 'owner@vegyfresh.com',
+      password_hash: null,
+    });
+
+    await expect(
+      service.login({ email: 'owner@vegyfresh.com', password: 'password' }),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
   });
 
   it('me returns the current user context', async () => {

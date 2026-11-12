@@ -17,6 +17,7 @@ const identities = { findOne: jest.fn() };
 const users = { findOne: jest.fn() };
 const clients = { findOne: jest.fn() };
 const identity = new IdentityService(
+  {} as never,
   identities as never,
   users as never,
   clients as never,
