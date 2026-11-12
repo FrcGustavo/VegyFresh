@@ -4,3 +4,9 @@ export type PortalClientProfile = {
   email: string | null;
   portalEnabled: boolean;
 };
+
+export type PortalSessionSnapshot = {
+  provider: "keycloak";
+  authenticated: boolean | null;
+  client?: PortalClientProfile;
+};
