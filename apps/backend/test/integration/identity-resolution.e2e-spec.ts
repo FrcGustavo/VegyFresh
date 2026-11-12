@@ -93,6 +93,7 @@ describeIntegration('identity resolution (PostgreSQL)', () => {
       [clientId],
     );
     service = new IdentityService(
+      dataSource,
       runner.manager.getRepository(ExternalIdentity),
       runner.manager.getRepository(User),
       runner.manager.getRepository(Client),

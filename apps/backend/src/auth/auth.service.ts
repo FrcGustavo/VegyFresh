@@ -117,7 +117,7 @@ export class AuthService {
       where: { email: dto.email },
       relations: { role: true, organization: true },
     });
-    if (!user) {
+    if (!user || !user.password_hash) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
