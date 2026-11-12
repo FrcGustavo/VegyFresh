@@ -1,3 +1,2 @@
-export { default } from "./ResizableHeaderCell";
-export { resizableHeaderCellStyles } from "./ResizableHeaderCell.styles";
-export type { ResizableHeaderCellProps } from "./ResizableHeaderCell.types";
+export { default } from "@/presentation/components/ResizableHeaderCell";
+export * from "@/presentation/components/ResizableHeaderCell";
