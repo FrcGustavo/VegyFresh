@@ -395,6 +395,22 @@ importers:
         specifier: ^4.1.7
         version: 4.1.7(@types/node@24.12.4)(jsdom@29.1.1(@noble/hashes@1.8.0))(vite@8.0.12(@types/node@24.12.4)(terser@5.47.1)(tsx@4.20.6))
 
+  jobs/seed-api:
+    dependencies:
+      '@vegyfresh/api-client':
+        specifier: workspace:*
+        version: link:../../packages/api-client
+    devDependencies:
+      '@types/node':
+        specifier: 24.12.4
+        version: 24.12.4
+      tsx:
+        specifier: ^4.20.6
+        version: 4.20.6
+      typescript:
+        specifier: ^5.9.2
+        version: 5.9.2
+
   packages/api-client:
     devDependencies:
       '@types/node':
@@ -442,22 +458,6 @@ importers:
         version: 4.20.6
       typescript:
         specifier: 5.9.2
-        version: 5.9.2
-
-  scripts/seed-api:
-    dependencies:
-      '@vegyfresh/api-client':
-        specifier: workspace:*
-        version: link:../../packages/api-client
-    devDependencies:
-      '@types/node':
-        specifier: 24.12.4
-        version: 24.12.4
-      tsx:
-        specifier: ^4.20.6
-        version: 4.20.6
-      typescript:
-        specifier: ^5.9.2
         version: 5.9.2
 
 packages:
