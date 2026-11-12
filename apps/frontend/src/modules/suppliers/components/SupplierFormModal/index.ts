@@ -1,6 +1,2 @@
-export { default } from "./SupplierFormModal";
-export { supplierFormModalStyles } from "./SupplierFormModal.styles";
-export type {
-  SupplierListItemRef,
-  SupplierFormModalProps,
-} from "./SupplierFormModal.types";
+export { default } from "../../../../presentation/suppliers/components/SupplierFormModal";
+export * from "../../../../presentation/suppliers/components/SupplierFormModal";

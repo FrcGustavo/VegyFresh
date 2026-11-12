@@ -1,1 +1,1 @@
-export { default } from "./SuppliersList";
+export { default } from "../../../../presentation/suppliers/pages/SuppliersList";
