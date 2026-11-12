@@ -9,7 +9,7 @@ NestJS API for VegyFresh with JWT auth and tenant-scoped access control.
 - Bearer token auth is required for protected endpoints.
 
 Export the current API contract with `pnpm --filter backend export:openapi`.
-This writes `packages/api-client/openapi.json` using local entity metadata and
+This writes `clients/api-client/openapi.json` using local entity metadata and
 isolated dummy configuration; it does not connect to a database. Run
 `pnpm --filter backend export:openapi --check` to detect a stale snapshot.
 Pass `--output <path>` to use a different output file.
