@@ -110,9 +110,13 @@ describe('Keycloak JWT and JWKS validation', () => {
   });
 
   it('rejects a wrong signature, issuer, audience, or expiration', async () => {
+    const payload: unknown = jwt.decode(token());
+    if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+      throw new Error('Expected object claims in the generated test token');
+    }
     for (const invalid of [
       token({}, otherKey),
-      jwt.sign(jwt.decode(token()), {
+      jwt.sign(payload, {
         secret: 'test-secret',
         algorithm: 'HS256',
         keyid: 'test-key',
