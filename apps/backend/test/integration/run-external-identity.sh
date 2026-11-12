@@ -39,7 +39,7 @@ docker run --rm --network "$network" -v "$root:/source:ro" \
     corepack enable
     corepack prepare pnpm@10.11.0 --activate
     pnpm install --frozen-lockfile
-    pnpm --filter backend exec jest --config ./test/jest-e2e.json --runInBand --runTestsByPath test/integration/external-identity.e2e-spec.ts
+    pnpm --filter backend exec jest --config ./test/jest-e2e.json --runInBand --runTestsByPath test/integration/external-identity.e2e-spec.ts test/integration/identity-resolution.e2e-spec.ts
     if [ "$CHECK_BACKEND" = 1 ]; then
       status=0
       pnpm --filter backend exec npm rebuild bcrypt || status=1
