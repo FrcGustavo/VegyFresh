@@ -13,6 +13,7 @@ import { AiModule } from './ai/ai.module';
 import { WhatsappModule } from './whatsapp/whatsapp.module';
 import { OrganizationsModule } from './organizations/organizations.module';
 import { AuthModule } from './auth/auth.module';
+import { IdentityModule } from './identity/identity.module';
 import { InventoryModule } from './inventory/inventory.module';
 import { PurchaseModule } from './purchase/purchase.module';
 import { PortalModule } from './portal/portal.module';
@@ -46,6 +47,7 @@ import config from './config';
     CatalogModule,
     OrganizationsModule,
     AuthModule,
+    IdentityModule,
     InventoryModule,
     PurchaseModule,
     PortalModule,
