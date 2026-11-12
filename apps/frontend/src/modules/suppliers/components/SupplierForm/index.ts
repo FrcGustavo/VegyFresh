@@ -1,7 +1,2 @@
-export { default } from "./SupplierForm";
-export { supplierFormStyles } from "./SupplierForm.styles";
-export type {
-  SupplierChangeEvent,
-  SupplierFormData,
-  SupplierFormProps,
-} from "./SupplierForm.types";
+export { default } from "../../../../presentation/suppliers/components/SupplierForm";
+export * from "../../../../presentation/suppliers/components/SupplierForm";
