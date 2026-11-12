@@ -1,6 +1,2 @@
-export { default } from "./ClientFormModal";
-export { clientFormModalStyles } from "./ClientFormModal.styles";
-export type {
-  ClientListItemRef,
-  ClientFormModalProps,
-} from "./ClientFormModal.types";
+export { default } from "../../../../presentation/clients/components/ClientFormModal";
+export * from "../../../../presentation/clients/components/ClientFormModal";
