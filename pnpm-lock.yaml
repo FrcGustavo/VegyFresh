@@ -330,6 +330,9 @@ importers:
       '@vegyfresh/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+      openid-client:
+        specifier: ^6.8.8
+        version: 6.8.9
       react:
         specifier: ^19.2.6
         version: 19.2.6
