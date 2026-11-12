@@ -1,0 +1,4532 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/api/v1": {
+      "get": {
+        "operationId": "AppController_getHello",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "API is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": "Hello World!"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Health check endpoint",
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/api/v1/clients": {
+      "post": {
+        "operationId": "ClientsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateClientDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Client created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "id": "client_123",
+                    "name": "ABC Trading"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 400,
+                    "message": [
+                      "name is required"
+                    ],
+                    "error": "Bad Request"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid token"
+          },
+          "403": {
+            "description": "Forbidden - insufficient permissions"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a new client",
+        "tags": [
+          "clients"
+        ]
+      },
+      "get": {
+        "operationId": "ClientsController_findAll",
+        "parameters": [
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Search by client name",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "order_by",
+            "required": false,
+            "in": "query",
+            "description": "Field to sort by",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "order",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Items per page (default: 25)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "description": "Pagination offset",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of clients",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": [
+                      {
+                        "id": "client_123",
+                        "name": "ABC Trading"
+                      }
+                    ],
+                    "total": 1
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid token"
+          },
+          "403": {
+            "description": "Forbidden - insufficient permissions"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get all clients",
+        "tags": [
+          "clients"
+        ]
+      }
+    },
+    "/api/v1/clients/{id}": {
+      "get": {
+        "operationId": "ClientsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Client ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Client found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "id": "client_123",
+                    "name": "ABC Trading"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid token"
+          },
+          "403": {
+            "description": "Forbidden - insufficient permissions"
+          },
+          "404": {
+            "description": "Client not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get a client by ID",
+        "tags": [
+          "clients"
+        ]
+      },
+      "patch": {
+        "operationId": "ClientsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Client ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateClientDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Client updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "id": "client_123",
+                    "name": "ABC Trading Updated"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 400,
+                    "message": [
+                      "field must be a string"
+                    ],
+                    "error": "Bad Request"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid token"
+          },
+          "403": {
+            "description": "Forbidden - insufficient permissions"
+          },
+          "404": {
+            "description": "Client not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a client",
+        "tags": [
+          "clients"
+        ]
+      },
+      "delete": {
+        "operationId": "ClientsController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Client ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Client deleted successfully"
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid token"
+          },
+          "403": {
+            "description": "Forbidden - insufficient permissions"
+          },
+          "404": {
+            "description": "Client not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a client",
+        "tags": [
+          "clients"
+        ]
+      }
+    },
+    "/api/v1/users": {
+      "post": {
+        "operationId": "UsersController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "id": "user_123",
+                    "email": "user@example.com",
+                    "name": "John Doe"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 400,
+                    "message": [
+                      "email is required"
+                    ],
+                    "error": "Bad Request"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid token"
+          },
+          "403": {
+            "description": "Forbidden - insufficient permissions"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a new user",
+        "tags": [
+          "users"
+        ]
+      },
+      "get": {
+        "operationId": "UsersController_findAll",
+        "parameters": [
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Search by user name",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "order_by",
+            "required": false,
+            "in": "query",
+            "description": "Field to sort by",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "order",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Items per page (default: 25)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "description": "Pagination offset",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of users",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": [
+                      {
+                        "id": "user_123",
+                        "email": "user@example.com",
+                        "name": "John Doe"
+                      }
+                    ],
+                    "total": 1
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid token"
+          },
+          "403": {
+            "description": "Forbidden - insufficient permissions"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get all users",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/api/v1/users/{id}": {
+      "get": {
+        "operationId": "UsersController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "User ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "id": "user_123",
+                    "email": "user@example.com",
+                    "name": "John Doe"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid token"
+          },
+          "403": {
+            "description": "Forbidden - insufficient permissions"
+          },
+          "404": {
+            "description": "User not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get a user by ID",
+        "tags": [
+          "users"
+        ]
+      },
+      "patch": {
+        "operationId": "UsersController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "User ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "id": "user_123",
+                    "email": "user@example.com",
+                    "name": "John Doe Updated"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 400,
+                    "message": [
+                      "field must be a string"
+                    ],
+                    "error": "Bad Request"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid token"
+          },
+          "403": {
+            "description": "Forbidden - insufficient permissions"
+          },
+          "404": {
+            "description": "User not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a user",
+        "tags": [
+          "users"
+        ]
+      },
+      "delete": {
+        "description": "Removes the user from the current organization.",
+        "operationId": "UsersController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "User ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User removed from organization"
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid token"
+          },
+          "403": {
+            "description": "Forbidden - insufficient permissions"
+          },
+          "404": {
+            "description": "User not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove a user from current organization",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/api/v1/roles": {
+      "get": {
+        "operationId": "RolesController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "List of roles"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get all available roles",
+        "tags": [
+          "roles"
+        ]
+      },
+      "post": {
+        "operationId": "RolesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRoleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Role created or already present"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a role if it does not exist",
+        "tags": [
+          "roles"
+        ]
+      }
+    },
+    "/api/v1/suppliers": {
+      "post": {
+        "operationId": "SuppliersController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSupplierDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Supplier created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "id": "supplier_123",
+                    "name": "Fresh Produce Inc"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 400,
+                    "message": [
+                      "name is required"
+                    ],
+                    "error": "Bad Request"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid token"
+          },
+          "403": {
+            "description": "Forbidden - insufficient permissions"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a new supplier",
+        "tags": [
+          "suppliers"
+        ]
+      },
+      "get": {
+        "operationId": "SuppliersController_findAll",
+        "parameters": [
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Search by supplier name",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "order_by",
+            "required": false,
+            "in": "query",
+            "description": "Field to sort by",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "order",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Items per page (default: 25)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "description": "Pagination offset",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of suppliers",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": [
+                      {
+                        "id": "supplier_123",
+                        "name": "Fresh Produce Inc"
+                      }
+                    ],
+                    "total": 1
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid token"
+          },
+          "403": {
+            "description": "Forbidden - insufficient permissions"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get all suppliers",
+        "tags": [
+          "suppliers"
+        ]
+      }
+    },
+    "/api/v1/suppliers/{id}": {
+      "get": {
+        "operationId": "SuppliersController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Supplier ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Supplier found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "id": "supplier_123",
+                    "name": "Fresh Produce Inc"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid token"
+          },
+          "403": {
+            "description": "Forbidden - insufficient permissions"
+          },
+          "404": {
+            "description": "Supplier not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get a supplier by ID",
+        "tags": [
+          "suppliers"
+        ]
+      },
+      "patch": {
+        "operationId": "SuppliersController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Supplier ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSupplierDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Supplier updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "id": "supplier_123",
+                    "name": "Fresh Produce Inc Updated"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 400,
+                    "message": [
+                      "field must be a string"
+                    ],
+                    "error": "Bad Request"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid token"
+          },
+          "403": {
+            "description": "Forbidden - insufficient permissions"
+          },
+          "404": {
+            "description": "Supplier not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a supplier",
+        "tags": [
+          "suppliers"
+        ]
+      },
+      "delete": {
+        "operationId": "SuppliersController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Supplier ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Supplier deleted successfully"
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid token"
+          },
+          "403": {
+            "description": "Forbidden - insufficient permissions"
+          },
+          "404": {
+            "description": "Supplier not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a supplier",
+        "tags": [
+          "suppliers"
+        ]
+      }
+    },
+    "/api/v1/orders": {
+      "post": {
+        "operationId": "OrdersController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateOrderDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Order created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "id": "order_123",
+                    "clientId": "client_123",
+                    "total": 100
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 400,
+                    "message": [
+                      "clientId is required"
+                    ],
+                    "error": "Bad Request"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid token"
+          },
+          "403": {
+            "description": "Forbidden - insufficient permissions"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a new order",
+        "tags": [
+          "orders"
+        ]
+      },
+      "get": {
+        "operationId": "OrdersController_findAll",
+        "parameters": [
+          {
+            "name": "created_filter",
+            "required": false,
+            "in": "query",
+            "description": "Creation date filter mode",
+            "schema": {
+              "example": "today",
+              "type": "string",
+              "enum": [
+                "all",
+                "today",
+                "range"
+              ]
+            }
+          },
+          {
+            "name": "created_from",
+            "required": false,
+            "in": "query",
+            "description": "Creation date start (YYYY-MM-DD)",
+            "schema": {
+              "example": "2026-05-01",
+              "type": "string"
+            }
+          },
+          {
+            "name": "created_to",
+            "required": false,
+            "in": "query",
+            "description": "Creation date end (YYYY-MM-DD)",
+            "schema": {
+              "example": "2026-05-23",
+              "type": "string"
+            }
+          },
+          {
+            "name": "order_by",
+            "required": false,
+            "in": "query",
+            "description": "Field to sort by",
+            "schema": {
+              "example": "created_at",
+              "type": "string"
+            }
+          },
+          {
+            "name": "order",
+            "required": false,
+            "in": "query",
+            "description": "Sort direction",
+            "schema": {
+              "example": "desc",
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Maximum number of records to return",
+            "schema": {
+              "default": 25,
+              "example": 25,
+              "type": "number"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "description": "Number of records to skip",
+            "schema": {
+              "example": 0,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of orders",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": [
+                      {
+                        "id": "order_123",
+                        "clientId": "client_123",
+                        "total": 100
+                      }
+                    ],
+                    "total": 1
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid token"
+          },
+          "403": {
+            "description": "Forbidden - insufficient permissions"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get all orders",
+        "tags": [
+          "orders"
+        ]
+      }
+    },
+    "/api/v1/orders/{id}": {
+      "get": {
+        "operationId": "OrdersController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Order ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Order found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "id": "order_123",
+                    "clientId": "client_123",
+                    "total": 100
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid token"
+          },
+          "403": {
+            "description": "Forbidden - insufficient permissions"
+          },
+          "404": {
+            "description": "Order not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get an order by ID",
+        "tags": [
+          "orders"
+        ]
+      },
+      "patch": {
+        "operationId": "OrdersController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Order ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateOrderDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Order updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "id": "order_123",
+                    "clientId": "client_123",
+                    "total": 150
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 400,
+                    "message": [
+                      "field must be a number"
+                    ],
+                    "error": "Bad Request"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid token"
+          },
+          "403": {
+            "description": "Forbidden - insufficient permissions"
+          },
+          "404": {
+            "description": "Order not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update an order",
+        "tags": [
+          "orders"
+        ]
+      },
+      "delete": {
+        "operationId": "OrdersController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Order ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Order deleted successfully"
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid token"
+          },
+          "403": {
+            "description": "Forbidden - insufficient permissions"
+          },
+          "404": {
+            "description": "Order not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete an order",
+        "tags": [
+          "orders"
+        ]
+      }
+    },
+    "/api/v1/products": {
+      "post": {
+        "operationId": "ProductsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProductDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Product created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "id": "product_123",
+                    "name": "Tomato"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 400,
+                    "message": [
+                      "name is required"
+                    ],
+                    "error": "Bad Request"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid token"
+          },
+          "403": {
+            "description": "Forbidden - insufficient permissions"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a new product",
+        "tags": [
+          "products"
+        ]
+      },
+      "get": {
+        "operationId": "ProductsController_findAll",
+        "parameters": [
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Search by product name",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "order_by",
+            "required": false,
+            "in": "query",
+            "description": "Field to sort by",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "order",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Items per page (default: 25)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "description": "Pagination offset",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of products",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": [
+                      {
+                        "id": "product_123",
+                        "name": "Tomato"
+                      }
+                    ],
+                    "total": 1
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid token"
+          },
+          "403": {
+            "description": "Forbidden - insufficient permissions"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get all products",
+        "tags": [
+          "products"
+        ]
+      }
+    },
+    "/api/v1/products/{id}": {
+      "get": {
+        "operationId": "ProductsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Product ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Product found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "id": "product_123",
+                    "name": "Tomato"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid token"
+          },
+          "403": {
+            "description": "Forbidden - insufficient permissions"
+          },
+          "404": {
+            "description": "Product not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get a product by ID",
+        "tags": [
+          "products"
+        ]
+      },
+      "patch": {
+        "operationId": "ProductsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Product ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProductDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Product updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "id": "product_123",
+                    "name": "Tomato Updated"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 400,
+                    "message": [
+                      "field must be a string"
+                    ],
+                    "error": "Bad Request"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid token"
+          },
+          "403": {
+            "description": "Forbidden - insufficient permissions"
+          },
+          "404": {
+            "description": "Product not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a product",
+        "tags": [
+          "products"
+        ]
+      },
+      "delete": {
+        "operationId": "ProductsController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Product ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Product deleted successfully"
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid token"
+          },
+          "403": {
+            "description": "Forbidden - insufficient permissions"
+          },
+          "404": {
+            "description": "Product not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a product",
+        "tags": [
+          "products"
+        ]
+      }
+    },
+    "/api/v1/price-lists": {
+      "post": {
+        "operationId": "PriceListsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePriceListDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Price list created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "id": "pricelist_123",
+                    "name": "Standard Pricing"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 400,
+                    "message": [
+                      "name is required"
+                    ],
+                    "error": "Bad Request"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid token"
+          },
+          "403": {
+            "description": "Forbidden - insufficient permissions"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a new price list",
+        "tags": [
+          "price-lists"
+        ]
+      },
+      "get": {
+        "operationId": "PriceListsController_findAll",
+        "parameters": [
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Search by price list name",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "order_by",
+            "required": false,
+            "in": "query",
+            "description": "Field to sort by",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "order",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Items per page (default: 25)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "description": "Pagination offset",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of price lists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": [
+                      {
+                        "id": "pricelist_123",
+                        "name": "Standard Pricing"
+                      }
+                    ],
+                    "total": 1
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid token"
+          },
+          "403": {
+            "description": "Forbidden - insufficient permissions"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get all price lists",
+        "tags": [
+          "price-lists"
+        ]
+      }
+    },
+    "/api/v1/price-lists/{id}": {
+      "get": {
+        "operationId": "PriceListsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Price list ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Price list found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "id": "pricelist_123",
+                    "name": "Standard Pricing"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid token"
+          },
+          "403": {
+            "description": "Forbidden - insufficient permissions"
+          },
+          "404": {
+            "description": "Price list not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get a price list by ID",
+        "tags": [
+          "price-lists"
+        ]
+      },
+      "patch": {
+        "operationId": "PriceListsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Price list ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePriceListDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Price list updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "id": "pricelist_123",
+                    "name": "Standard Pricing Updated"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 400,
+                    "message": [
+                      "field must be a string"
+                    ],
+                    "error": "Bad Request"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid token"
+          },
+          "403": {
+            "description": "Forbidden - insufficient permissions"
+          },
+          "404": {
+            "description": "Price list not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a price list",
+        "tags": [
+          "price-lists"
+        ]
+      },
+      "delete": {
+        "operationId": "PriceListsController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Price list ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Price list deleted successfully"
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid token"
+          },
+          "403": {
+            "description": "Forbidden - insufficient permissions"
+          },
+          "404": {
+            "description": "Price list not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a price list",
+        "tags": [
+          "price-lists"
+        ]
+      }
+    },
+    "/api/v1/product-prices": {
+      "post": {
+        "operationId": "ProductPricesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProductPriceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Product price created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "id": "prodprice_123",
+                    "productId": "product_123",
+                    "price": 5.99
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 400,
+                    "message": [
+                      "productId is required"
+                    ],
+                    "error": "Bad Request"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid token"
+          },
+          "403": {
+            "description": "Forbidden - insufficient permissions"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a new product price",
+        "tags": [
+          "product-prices"
+        ]
+      },
+      "get": {
+        "operationId": "ProductPricesController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "List of product prices",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": [
+                      {
+                        "id": "prodprice_123",
+                        "productId": "product_123",
+                        "price": 5.99
+                      }
+                    ],
+                    "total": 1
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid token"
+          },
+          "403": {
+            "description": "Forbidden - insufficient permissions"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get all product prices",
+        "tags": [
+          "product-prices"
+        ]
+      }
+    },
+    "/api/v1/product-prices/{id}": {
+      "get": {
+        "operationId": "ProductPricesController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Product price ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Product price found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "id": "prodprice_123",
+                    "productId": "product_123",
+                    "price": 5.99
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid token"
+          },
+          "403": {
+            "description": "Forbidden - insufficient permissions"
+          },
+          "404": {
+            "description": "Product price not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get a product price by ID",
+        "tags": [
+          "product-prices"
+        ]
+      },
+      "patch": {
+        "operationId": "ProductPricesController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Product price ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProductPriceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Product price updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "id": "prodprice_123",
+                    "productId": "product_123",
+                    "price": 6.99
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 400,
+                    "message": [
+                      "field must be a number"
+                    ],
+                    "error": "Bad Request"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid token"
+          },
+          "403": {
+            "description": "Forbidden - insufficient permissions"
+          },
+          "404": {
+            "description": "Product price not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a product price",
+        "tags": [
+          "product-prices"
+        ]
+      },
+      "delete": {
+        "operationId": "ProductPricesController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Product price ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Product price deleted successfully"
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid token"
+          },
+          "403": {
+            "description": "Forbidden - insufficient permissions"
+          },
+          "404": {
+            "description": "Product price not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a product price",
+        "tags": [
+          "product-prices"
+        ]
+      }
+    },
+    "/api/v1/organizations": {
+      "post": {
+        "operationId": "OrganizationsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateOrganizationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Organization created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "id": "org_123",
+                    "name": "Acme Corp"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 400,
+                    "message": [
+                      "name is required",
+                      "name must be a string"
+                    ],
+                    "error": "Bad Request"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Create organization",
+        "tags": [
+          "organizations"
+        ]
+      }
+    },
+    "/api/v1/organizations/{id}": {
+      "get": {
+        "operationId": "OrganizationsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Organization ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Organization found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "id": "org_123",
+                    "name": "Acme Corp"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Organization not found"
+          }
+        },
+        "summary": "Find organization by ID",
+        "tags": [
+          "organizations"
+        ]
+      },
+      "patch": {
+        "operationId": "OrganizationsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Organization ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateOrganizationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Organization updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "id": "org_123",
+                    "name": "Acme Corp Updated"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 400,
+                    "message": [
+                      "field must be a string"
+                    ],
+                    "error": "Bad Request"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Organization not found"
+          }
+        },
+        "summary": "Update organization",
+        "tags": [
+          "organizations"
+        ]
+      }
+    },
+    "/api/v1/auth/signup": {
+      "post": {
+        "description": "Creates a user account and leaves organization setup for later.",
+        "operationId": "AuthController_signup",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignupDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User account created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "id": "user_123",
+                    "email": "user@example.com"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 400,
+                    "message": [
+                      "email is required"
+                    ],
+                    "error": "Bad Request"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Signup user",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "description": "Returns JWTs that include org_id and role context from the user record.",
+        "operationId": "AuthController_login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "access_token": "eyJhbGci...",
+                    "refresh_token": "eyJhbGci..."
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 400,
+                    "message": [
+                      "email is required"
+                    ],
+                    "error": "Bad Request"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials"
+          }
+        },
+        "summary": "Login with email and password",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/me": {
+      "get": {
+        "description": "Returns the current user, organization, and role from the access token session.",
+        "operationId": "AuthController_me",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Authenticated user context"
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid token"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get current user context",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/refresh": {
+      "post": {
+        "description": "Requires refresh token in body. Session must be active and tied to the same tenant organization.",
+        "operationId": "AuthController_refresh",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshTokenDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Token refresh successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "access_token": "eyJhbGci...",
+                    "refresh_token": "eyJhbGci..."
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 400,
+                    "message": [
+                      "refresh_token is required"
+                    ],
+                    "error": "Bad Request"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or expired refresh token"
+          }
+        },
+        "summary": "Refresh access and refresh token pair",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "description": "Revokes only the current tenant-bound session (by session_id).",
+        "operationId": "AuthController_logout",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Session revoked successfully"
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid token"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Revoke current session",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/inventory": {
+      "get": {
+        "operationId": "InventoryController_findInventory",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Current inventory snapshot",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "products": [
+                      {
+                        "productId": "product_123",
+                        "quantity": 100
+                      }
+                    ],
+                    "updatedAt": "2024-01-15T10:30:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid token"
+          },
+          "403": {
+            "description": "Forbidden - insufficient permissions"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get current inventory snapshot",
+        "tags": [
+          "inventory"
+        ]
+      }
+    },
+    "/api/v1/inventory/movements": {
+      "get": {
+        "operationId": "InventoryController_findInventoryMovements",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Inventory movement history",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "movements": [
+                      {
+                        "id": "movement_123",
+                        "productId": "product_123",
+                        "quantity": 10,
+                        "type": "purchase"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid token"
+          },
+          "403": {
+            "description": "Forbidden - insufficient permissions"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get inventory movement history",
+        "tags": [
+          "inventory"
+        ]
+      }
+    },
+    "/api/v1/inventory/adjustments": {
+      "post": {
+        "operationId": "InventoryController_createAdjustment",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateInventoryAdjustmentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Inventory adjustment created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "id": "adjustment_123",
+                    "productId": "product_123",
+                    "quantity": -5,
+                    "reason": "Damage"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 400,
+                    "message": [
+                      "productId is required"
+                    ],
+                    "error": "Bad Request"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid token"
+          },
+          "403": {
+            "description": "Forbidden - insufficient permissions"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create manual inventory adjustment",
+        "tags": [
+          "inventory"
+        ]
+      }
+    },
+    "/api/v1/purchases": {
+      "get": {
+        "operationId": "PurchaseController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "List of purchases",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": [
+                      {
+                        "id": "purchase_123",
+                        "productId": "product_123",
+                        "quantity": 10
+                      }
+                    ],
+                    "total": 1
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid token"
+          },
+          "403": {
+            "description": "Forbidden - insufficient permissions"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get all purchases",
+        "tags": [
+          "purchase"
+        ]
+      },
+      "post": {
+        "operationId": "PurchaseController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePurchaseDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Purchase created and stock increased",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "id": "purchase_123",
+                    "productId": "product_123",
+                    "quantity": 10
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 400,
+                    "message": [
+                      "productId is required"
+                    ],
+                    "error": "Bad Request"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid token"
+          },
+          "403": {
+            "description": "Forbidden - insufficient permissions"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a purchase and increase stock",
+        "tags": [
+          "purchase"
+        ]
+      }
+    },
+    "/api/v1/purchases/{id}": {
+      "get": {
+        "operationId": "PurchaseController_find",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Purchase ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Purchase details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "id": "purchase_123",
+                    "productId": "product_123",
+                    "quantity": 10
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid token"
+          },
+          "403": {
+            "description": "Forbidden - insufficient permissions"
+          },
+          "404": {
+            "description": "Purchase not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get purchase details by id",
+        "tags": [
+          "purchase"
+        ]
+      },
+      "patch": {
+        "operationId": "PurchaseController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Purchase ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePurchaseDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Purchase updated and stock adjusted"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid token"
+          },
+          "403": {
+            "description": "Forbidden - insufficient permissions"
+          },
+          "404": {
+            "description": "Purchase not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a purchase and adjust stock",
+        "tags": [
+          "purchase"
+        ]
+      },
+      "delete": {
+        "operationId": "PurchaseController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Purchase ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Purchase deleted and stock reversed"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid token"
+          },
+          "403": {
+            "description": "Forbidden - insufficient permissions"
+          },
+          "404": {
+            "description": "Purchase not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a purchase and reverse stock",
+        "tags": [
+          "purchase"
+        ]
+      }
+    },
+    "/api/v1/portal/auth/login": {
+      "post": {
+        "operationId": "PortalAuthController_login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PortalLoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Portal login successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "access_token": "eyJhbGci...",
+                    "refresh_token": "eyJhbGci..."
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 400,
+                    "message": [
+                      "email is required"
+                    ],
+                    "error": "Bad Request"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials"
+          }
+        },
+        "summary": "Login customer portal client",
+        "tags": [
+          "portal-auth"
+        ]
+      }
+    },
+    "/api/v1/portal/auth/refresh": {
+      "post": {
+        "operationId": "PortalAuthController_refresh",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PortalRefreshTokenDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Token refresh successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "access_token": "eyJhbGci...",
+                    "refresh_token": "eyJhbGci..."
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 400,
+                    "message": [
+                      "refresh_token is required"
+                    ],
+                    "error": "Bad Request"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or expired refresh token"
+          }
+        },
+        "summary": "Refresh portal session tokens",
+        "tags": [
+          "portal-auth"
+        ]
+      }
+    },
+    "/api/v1/portal/auth/me": {
+      "get": {
+        "operationId": "PortalAuthController_me",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Portal client profile",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "id": "client_123",
+                    "email": "client@example.com",
+                    "name": "Client Name"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid token"
+          }
+        },
+        "summary": "Get authenticated portal client profile",
+        "tags": [
+          "portal-auth"
+        ]
+      }
+    },
+    "/api/v1/portal/auth/logout": {
+      "post": {
+        "operationId": "PortalAuthController_logout",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Portal session revoked successfully"
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid token"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Logout current portal session",
+        "tags": [
+          "portal-auth"
+        ]
+      }
+    },
+    "/api/v1/portal/orders": {
+      "get": {
+        "operationId": "PortalOrdersController_findAll",
+        "parameters": [
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "includeCanceled",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PortalOrderResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "List orders for authenticated portal client",
+        "tags": [
+          "portal-orders"
+        ]
+      }
+    },
+    "/api/v1/portal/orders/{id}": {
+      "get": {
+        "operationId": "PortalOrdersController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PortalOrderResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get portal order detail",
+        "tags": [
+          "portal-orders"
+        ]
+      }
+    },
+    "/api/v1/ai/interpret": {
+      "post": {
+        "operationId": "AiController_interpret",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAiDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Interpret incoming text with configured AI provider",
+        "tags": [
+          "ai"
+        ]
+      }
+    },
+    "/api/v1/whatsapp/webhook": {
+      "get": {
+        "operationId": "WhatsappController_verifyWebhook",
+        "parameters": [
+          {
+            "name": "hub.challenge",
+            "required": false,
+            "in": "query",
+            "schema": {}
+          },
+          {
+            "name": "hub.verify_token",
+            "required": false,
+            "in": "query",
+            "schema": {}
+          },
+          {
+            "name": "hub.mode",
+            "required": false,
+            "in": "query",
+            "schema": {}
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Verify Meta WhatsApp webhook endpoint",
+        "tags": [
+          "whatsapp"
+        ]
+      },
+      "post": {
+        "operationId": "WhatsappController_handleWebhook",
+        "parameters": [
+          {
+            "name": "x-hub-signature-256",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Receive incoming webhook events from Meta",
+        "tags": [
+          "whatsapp"
+        ]
+      }
+    },
+    "/api/v1/whatsapp/send": {
+      "post": {
+        "operationId": "WhatsappController_sendMessage",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWhatsappDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Send a direct WhatsApp message through Meta API",
+        "tags": [
+          "whatsapp"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "VegyFresh Backend API",
+    "description": "Backend API documentation for VegyFresh.\n\nAuthentication is JWT-based and tenant-aware: access tokens include org_id, role, and permissions claims. Protected endpoints are scoped to the authenticated tenant context.",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [
+    {
+      "name": "auth",
+      "description": "Authentication and session endpoints"
+    },
+    {
+      "name": "organizations",
+      "description": "Organization management endpoints"
+    },
+    {
+      "name": "users",
+      "description": "User management endpoints"
+    },
+    {
+      "name": "roles",
+      "description": "Role management endpoints"
+    },
+    {
+      "name": "clients",
+      "description": "Client management endpoints"
+    },
+    {
+      "name": "suppliers",
+      "description": "Supplier management endpoints"
+    },
+    {
+      "name": "products",
+      "description": "Product catalog endpoints"
+    },
+    {
+      "name": "price-lists",
+      "description": "Price list management endpoints"
+    },
+    {
+      "name": "product-prices",
+      "description": "Product pricing endpoints"
+    },
+    {
+      "name": "orders",
+      "description": "Order management endpoints"
+    },
+    {
+      "name": "whatsapp",
+      "description": "WhatsApp webhook and messaging endpoints"
+    },
+    {
+      "name": "ai",
+      "description": "AI interpretation endpoints"
+    }
+  ],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      }
+    },
+    "schemas": {
+      "CreateClientDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Supermercado La Esquina"
+          },
+          "phone_number": {
+            "type": "string",
+            "example": "+5491112345678"
+          },
+          "email": {
+            "type": "object",
+            "example": "cliente@example.com",
+            "nullable": true
+          },
+          "country": {
+            "type": "object",
+            "example": "México",
+            "nullable": true
+          },
+          "state": {
+            "type": "object",
+            "example": "Jalisco",
+            "nullable": true
+          },
+          "city": {
+            "type": "object",
+            "example": "Guadalajara",
+            "nullable": true
+          },
+          "postal_code": {
+            "type": "object",
+            "example": "44100",
+            "nullable": true
+          },
+          "address": {
+            "type": "object",
+            "example": "Av. Siempreviva 742",
+            "nullable": true
+          },
+          "suburb": {
+            "type": "object",
+            "example": "Centro",
+            "nullable": true
+          },
+          "external_number": {
+            "type": "object",
+            "example": "123",
+            "nullable": true
+          },
+          "internal_number": {
+            "type": "object",
+            "example": "4B",
+            "nullable": true
+          },
+          "avatar_url": {
+            "type": "object",
+            "example": "https://example.com/logo.png",
+            "nullable": true
+          },
+          "price_list_id": {
+            "type": "object",
+            "example": "550e8400-e29b-41d4-a716-446655440000",
+            "nullable": true
+          }
+        },
+        "required": [
+          "name",
+          "phone_number"
+        ]
+      },
+      "UpdateClientDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Supermercado La Esquina"
+          },
+          "phone_number": {
+            "type": "string",
+            "example": "+5491112345678"
+          },
+          "email": {
+            "type": "object",
+            "example": "cliente@example.com",
+            "nullable": true
+          },
+          "country": {
+            "type": "object",
+            "example": "México",
+            "nullable": true
+          },
+          "state": {
+            "type": "object",
+            "example": "Jalisco",
+            "nullable": true
+          },
+          "city": {
+            "type": "object",
+            "example": "Guadalajara",
+            "nullable": true
+          },
+          "postal_code": {
+            "type": "object",
+            "example": "44100",
+            "nullable": true
+          },
+          "address": {
+            "type": "object",
+            "example": "Av. Siempreviva 742",
+            "nullable": true
+          },
+          "suburb": {
+            "type": "object",
+            "example": "Centro",
+            "nullable": true
+          },
+          "external_number": {
+            "type": "object",
+            "example": "123",
+            "nullable": true
+          },
+          "internal_number": {
+            "type": "object",
+            "example": "4B",
+            "nullable": true
+          },
+          "avatar_url": {
+            "type": "object",
+            "example": "https://example.com/logo.png",
+            "nullable": true
+          },
+          "price_list_id": {
+            "type": "object",
+            "example": "550e8400-e29b-41d4-a716-446655440000",
+            "nullable": true
+          }
+        }
+      },
+      "CreateUserDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "John Doe"
+          },
+          "email": {
+            "type": "string",
+            "example": "john@example.com"
+          },
+          "password": {
+            "type": "string",
+            "example": "super-secure-password"
+          },
+          "role_id": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "avatar_url": {
+            "type": "object",
+            "example": "https://example.com/avatar.png",
+            "nullable": true
+          }
+        },
+        "required": [
+          "name",
+          "email",
+          "password",
+          "role_id"
+        ]
+      },
+      "UpdateUserDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "John Doe"
+          },
+          "email": {
+            "type": "string",
+            "example": "john@example.com"
+          },
+          "password": {
+            "type": "string",
+            "example": "super-secure-password"
+          },
+          "role_id": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "avatar_url": {
+            "type": "object",
+            "example": "https://example.com/avatar.png",
+            "nullable": true
+          }
+        }
+      },
+      "CreateRolePermissionDto": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "example": "read"
+          },
+          "resource": {
+            "type": "string",
+            "example": "catalog"
+          }
+        },
+        "required": [
+          "action",
+          "resource"
+        ]
+      },
+      "CreateRoleDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "operativo"
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateRolePermissionDto"
+            }
+          }
+        },
+        "required": [
+          "name",
+          "permissions"
+        ]
+      },
+      "CreateSupplierDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Proveedor SA"
+          },
+          "email": {
+            "type": "object",
+            "example": "contacto@proveedor.com",
+            "nullable": true
+          },
+          "phone_number": {
+            "type": "object",
+            "example": "+525512345678",
+            "nullable": true
+          },
+          "logo_url": {
+            "type": "object",
+            "example": "https://example.com/logo.png",
+            "nullable": true
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "UpdateSupplierDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Proveedor SA"
+          },
+          "email": {
+            "type": "object",
+            "example": "contacto@proveedor.com",
+            "nullable": true
+          },
+          "phone_number": {
+            "type": "object",
+            "example": "+525512345678",
+            "nullable": true
+          },
+          "logo_url": {
+            "type": "object",
+            "example": "https://example.com/logo.png",
+            "nullable": true
+          }
+        }
+      },
+      "CreateOrderItemDto": {
+        "type": "object",
+        "properties": {
+          "product_id": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "quantity": {
+            "type": "number",
+            "example": 3
+          },
+          "unit_price": {
+            "type": "number",
+            "example": 250.5
+          }
+        },
+        "required": [
+          "product_id",
+          "quantity",
+          "unit_price"
+        ]
+      },
+      "CreateOrderDto": {
+        "type": "object",
+        "properties": {
+          "client_id": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "user_id": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING_REVIEW",
+              "APPROVED",
+              "IN_PROGRESS",
+              "REJECTED",
+              "DELIVERED",
+              "CANCELED"
+            ],
+            "example": "PENDING_REVIEW"
+          },
+          "origin": {
+            "type": "string",
+            "enum": [
+              "WHATSAPP",
+              "ADMIN",
+              "MANUAL",
+              "PORTAL"
+            ],
+            "example": "WHATSAPP"
+          },
+          "delivery_date": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-05-23T12:00:00.000Z"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateOrderItemDto"
+            }
+          }
+        },
+        "required": [
+          "client_id",
+          "user_id",
+          "origin",
+          "items"
+        ]
+      },
+      "UpdateOrderDto": {
+        "type": "object",
+        "properties": {
+          "client_id": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "user_id": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING_REVIEW",
+              "APPROVED",
+              "IN_PROGRESS",
+              "REJECTED",
+              "DELIVERED",
+              "CANCELED"
+            ],
+            "example": "PENDING_REVIEW"
+          },
+          "origin": {
+            "type": "string",
+            "enum": [
+              "WHATSAPP",
+              "ADMIN",
+              "MANUAL",
+              "PORTAL"
+            ],
+            "example": "WHATSAPP"
+          },
+          "delivery_date": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-05-23T12:00:00.000Z"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateOrderItemDto"
+            }
+          }
+        }
+      },
+      "CreateProductDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Tomate perita"
+          },
+          "description": {
+            "type": "object",
+            "example": "Tomate fresco de temporada",
+            "nullable": true
+          },
+          "supplier_id": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "stock": {
+            "type": "number",
+            "example": 100
+          },
+          "unit": {
+            "type": "string",
+            "enum": [
+              "kg",
+              "pz"
+            ],
+            "example": "kg",
+            "default": "pz"
+          },
+          "images": {
+            "example": [
+              "https://example.com/img1.jpg"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "name",
+          "supplier_id"
+        ]
+      },
+      "UpdateProductDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Tomate perita"
+          },
+          "description": {
+            "type": "object",
+            "example": "Tomate fresco de temporada",
+            "nullable": true
+          },
+          "supplier_id": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "stock": {
+            "type": "number",
+            "example": 100
+          },
+          "unit": {
+            "type": "string",
+            "enum": [
+              "kg",
+              "pz"
+            ],
+            "example": "kg",
+            "default": "pz"
+          },
+          "images": {
+            "example": [
+              "https://example.com/img1.jpg"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "CreatePriceListDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Lista Minorista"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "UpdatePriceListDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Lista Minorista"
+          }
+        }
+      },
+      "CreateProductPriceDto": {
+        "type": "object",
+        "properties": {
+          "product_id": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "price_list_id": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "price": {
+            "type": "number",
+            "example": 150.75
+          }
+        },
+        "required": [
+          "product_id",
+          "price_list_id",
+          "price"
+        ]
+      },
+      "UpdateProductPriceDto": {
+        "type": "object",
+        "properties": {
+          "product_id": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "price_list_id": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "price": {
+            "type": "number",
+            "example": 150.75
+          }
+        }
+      },
+      "CreateOrganizationDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Vegy Fresh Monterrey"
+          },
+          "logo_url": {
+            "type": "object",
+            "example": "https://assets.vegyfresh.com/orgs/vegy-fresh/logo.png",
+            "nullable": true,
+            "description": "Public URL or data URL for the organization avatar."
+          },
+          "legal_name": {
+            "type": "object",
+            "example": "Vegy Fresh SA de CV",
+            "nullable": true
+          },
+          "email": {
+            "type": "object",
+            "example": "admin@vegyfresh.com",
+            "nullable": true
+          },
+          "phone_number": {
+            "type": "object",
+            "example": "+528181234567",
+            "nullable": true
+          },
+          "address": {
+            "type": "object",
+            "example": "Monterrey, Nuevo Leon",
+            "nullable": true
+          },
+          "product_folio_prefix": {
+            "type": "object",
+            "example": "P",
+            "nullable": true,
+            "description": "Custom prefix for product folios"
+          },
+          "price_list_folio_prefix": {
+            "type": "object",
+            "example": "LP",
+            "nullable": true,
+            "description": "Custom prefix for price list folios"
+          },
+          "order_folio_prefix": {
+            "type": "object",
+            "example": "O",
+            "nullable": true,
+            "description": "Custom prefix for order folios"
+          },
+          "client_folio_prefix": {
+            "type": "object",
+            "example": "C",
+            "nullable": true,
+            "description": "Custom prefix for client folios"
+          },
+          "supplier_folio_prefix": {
+            "type": "object",
+            "example": "S",
+            "nullable": true,
+            "description": "Custom prefix for supplier folios"
+          },
+          "user_folio_prefix": {
+            "type": "object",
+            "example": "U",
+            "nullable": true,
+            "description": "Custom prefix for user folios"
+          },
+          "purchase_folio_prefix": {
+            "type": "object",
+            "example": "C",
+            "nullable": true,
+            "description": "Custom prefix for purchase folios"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "UpdateOrganizationDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Vegy Fresh Monterrey"
+          },
+          "logo_url": {
+            "type": "object",
+            "example": "https://assets.vegyfresh.com/orgs/vegy-fresh/logo.png",
+            "nullable": true,
+            "description": "Public URL or data URL for the organization avatar."
+          },
+          "legal_name": {
+            "type": "object",
+            "example": "Vegy Fresh SA de CV",
+            "nullable": true
+          },
+          "email": {
+            "type": "object",
+            "example": "admin@vegyfresh.com",
+            "nullable": true
+          },
+          "phone_number": {
+            "type": "object",
+            "example": "+528181234567",
+            "nullable": true
+          },
+          "address": {
+            "type": "object",
+            "example": "Monterrey, Nuevo Leon",
+            "nullable": true
+          },
+          "product_folio_prefix": {
+            "type": "object",
+            "example": "P",
+            "nullable": true,
+            "description": "Custom prefix for product folios"
+          },
+          "price_list_folio_prefix": {
+            "type": "object",
+            "example": "LP",
+            "nullable": true,
+            "description": "Custom prefix for price list folios"
+          },
+          "order_folio_prefix": {
+            "type": "object",
+            "example": "O",
+            "nullable": true,
+            "description": "Custom prefix for order folios"
+          },
+          "client_folio_prefix": {
+            "type": "object",
+            "example": "C",
+            "nullable": true,
+            "description": "Custom prefix for client folios"
+          },
+          "supplier_folio_prefix": {
+            "type": "object",
+            "example": "S",
+            "nullable": true,
+            "description": "Custom prefix for supplier folios"
+          },
+          "user_folio_prefix": {
+            "type": "object",
+            "example": "U",
+            "nullable": true,
+            "description": "Custom prefix for user folios"
+          },
+          "purchase_folio_prefix": {
+            "type": "object",
+            "example": "C",
+            "nullable": true,
+            "description": "Custom prefix for purchase folios"
+          }
+        }
+      },
+      "SignupDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "John Doe"
+          },
+          "email": {
+            "type": "string",
+            "example": "john@example.com"
+          },
+          "password": {
+            "type": "string",
+            "example": "super-secure-password"
+          }
+        },
+        "required": [
+          "name",
+          "email",
+          "password"
+        ]
+      },
+      "LoginDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "john@example.com"
+          },
+          "password": {
+            "type": "string",
+            "example": "super-secure-password"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "RefreshTokenDto": {
+        "type": "object",
+        "properties": {
+          "refresh_token": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "refresh_token"
+        ]
+      },
+      "CreateInventoryAdjustmentDto": {
+        "type": "object",
+        "properties": {
+          "product_id": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "quantity": {
+            "type": "number",
+            "example": -1.25,
+            "description": "Signed quantity delta. Positive increases stock, negative reduces."
+          },
+          "reason": {
+            "type": "object",
+            "example": "Ajuste por merma",
+            "nullable": true
+          }
+        },
+        "required": [
+          "product_id",
+          "quantity"
+        ]
+      },
+      "CreatePurchaseItemDto": {
+        "type": "object",
+        "properties": {
+          "product_id": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "quantity": {
+            "type": "number",
+            "example": 12.5
+          },
+          "unit_cost": {
+            "type": "number",
+            "example": 34.9
+          }
+        },
+        "required": [
+          "product_id",
+          "quantity",
+          "unit_cost"
+        ]
+      },
+      "CreatePurchaseDto": {
+        "type": "object",
+        "properties": {
+          "supplier_id": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "purchase_date": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-05-23T12:00:00.000Z"
+          },
+          "notes": {
+            "type": "object",
+            "example": "Compra semanal de frutas",
+            "nullable": true
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreatePurchaseItemDto"
+            }
+          }
+        },
+        "required": [
+          "supplier_id",
+          "items"
+        ]
+      },
+      "UpdatePurchaseDto": {
+        "type": "object",
+        "properties": {
+          "supplier_id": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "purchase_date": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-05-23T12:00:00.000Z"
+          },
+          "notes": {
+            "type": "object",
+            "example": "Compra semanal de frutas",
+            "nullable": true
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreatePurchaseItemDto"
+            }
+          }
+        }
+      },
+      "PortalLoginDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "customer@example.com",
+            "description": "Customer email address"
+          },
+          "password": {
+            "type": "string",
+            "example": "SecurePass123!",
+            "description": "Customer password (min 8 characters)",
+            "minLength": 8
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "PortalRefreshTokenDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "PortalProductResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "folio": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "supplier_id": {
+            "type": "string"
+          },
+          "organization_id": {
+            "type": "string"
+          },
+          "stock": {
+            "oneOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "unit": {
+            "type": "string",
+            "enum": [
+              "kg",
+              "pz"
+            ]
+          },
+          "images": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "folio",
+          "name",
+          "description",
+          "supplier_id",
+          "organization_id",
+          "stock",
+          "unit",
+          "images",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "PortalOrderItemResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "order_id": {
+            "type": "string"
+          },
+          "product_id": {
+            "type": "string"
+          },
+          "quantity": {
+            "oneOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "unit_price": {
+            "oneOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "subtotal": {
+            "oneOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "product": {
+            "$ref": "#/components/schemas/PortalProductResponseDto"
+          }
+        },
+        "required": [
+          "id",
+          "order_id",
+          "product_id",
+          "quantity",
+          "unit_price",
+          "subtotal",
+          "product"
+        ]
+      },
+      "PortalOrderResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "client_id": {
+            "type": "string"
+          },
+          "user_id": {
+            "type": "string"
+          },
+          "organization_id": {
+            "type": "string"
+          },
+          "total_amount": {
+            "oneOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "folio": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING_REVIEW",
+              "APPROVED",
+              "IN_PROGRESS",
+              "REJECTED",
+              "DELIVERED",
+              "CANCELED"
+            ]
+          },
+          "origin": {
+            "type": "string",
+            "enum": [
+              "WHATSAPP",
+              "ADMIN",
+              "MANUAL",
+              "PORTAL"
+            ]
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PortalOrderItemResponseDto"
+            }
+          },
+          "delivery_date": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "client_id",
+          "user_id",
+          "organization_id",
+          "total_amount",
+          "folio",
+          "description",
+          "status",
+          "origin",
+          "items",
+          "delivery_date",
+          "created_at"
+        ]
+      },
+      "CreateAiDto": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Necesito 10 kg de tomate y 5 de cebolla"
+          },
+          "context": {
+            "type": "object",
+            "example": {
+              "channel": "whatsapp",
+              "customerPhone": "5491122334455"
+            },
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "CreateWhatsappDto": {
+        "type": "object",
+        "properties": {
+          "to": {
+            "type": "string",
+            "example": "5491122334455"
+          },
+          "text": {
+            "type": "string",
+            "example": "Hola! Ya recibimos tu pedido."
+          }
+        },
+        "required": [
+          "to",
+          "text"
+        ]
+      }
+    }
+  }
+}
