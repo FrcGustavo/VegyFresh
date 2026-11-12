@@ -1,7 +1,7 @@
 import { lazy } from "react";
 import { Navigate, Route, Routes } from "react-router";
 import MainLayout from "../layout/MainLayout";
-import { canAccessUsersResource } from "../auth/authorization";
+import { canAccessUsersResource } from "@/domain/auth/authorization";
 import {
   HomeRedirect,
   OrganizationRoute,

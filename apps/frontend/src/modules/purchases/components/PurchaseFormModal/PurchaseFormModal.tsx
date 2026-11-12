@@ -25,7 +25,7 @@ import {
   suppliersQueryOptions,
   type CreatePurchaseInput,
 } from "../../../../api";
-import { createClientRowId } from "../../../../utils/clientRowId";
+import { createClientRowId } from "@/infrastructure/identifiers/clientRowId";
 import type { PurchaseFormModalProps } from "./PurchaseFormModal.types";
 
 type SaveAction = "save" | "save-and-close" | "save-and-new";
