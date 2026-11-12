@@ -1,6 +1,2 @@
-export { default } from "./PriceListForm";
-export { priceListFormStyles } from "./PriceListForm.styles";
-export type {
-  PriceListProductItem,
-  PriceListFormProps,
-} from "./PriceListForm.types";
+export { default } from "@/presentation/products/components/PriceListForm";
+export * from "@/presentation/products/components/PriceListForm";
