@@ -1,1 +1,1 @@
-export { LoadingState } from "@vegyfresh/ui";
+export { LoadingState } from "../../presentation/components/LoadingState";

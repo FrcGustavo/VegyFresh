@@ -1,1 +1,1 @@
-export { ErrorState } from "@vegyfresh/ui";
+export { ErrorState } from "../../presentation/components/ErrorState";
