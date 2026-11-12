@@ -11,6 +11,7 @@ VegyFresh is a Turborepo-based monorepo with:
 - `apps/backend` — main API (`/api/v1`) with Swagger docs at `/api/docs`
 - `apps/frontend` — internal/admin application
 - `apps/portal` — customer portal application
+- `clients/api-client` — shared API client and generated contract
 - `jobs/seed-api` — database/API seed script
 
 ## Backend modules (current)
