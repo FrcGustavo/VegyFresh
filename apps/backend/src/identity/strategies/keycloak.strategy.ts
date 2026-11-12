@@ -36,7 +36,11 @@ export class KeycloakAccessStrategy extends PassportStrategy(
   async validate(payload: unknown) {
     const claims = tokenClaims(payload);
     validateKeycloakClientClaims(claims, this.settings, 'admin');
-    return this.identity.resolveUser(claims.iss, claims.sub);
+    return this.identity.resolveAdminUser(claims.iss, claims.sub, {
+      email: claims.email,
+      name: claims.name,
+      preferred_username: claims.preferred_username,
+    });
   }
 }
 

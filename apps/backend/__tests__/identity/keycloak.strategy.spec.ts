@@ -170,13 +170,24 @@ describe('Keycloak strategy adapters', () => {
     expect(identities.findOne).not.toHaveBeenCalled();
   });
 
-  it('rejects an unlinked identity without searching by token email', async () => {
-    identities.findOne.mockResolvedValue(null);
-    await expect(authenticate(admin, token())).rejects.toThrow();
-    expect(identities.findOne).toHaveBeenCalledWith({
-      where: { issuer, subject: 'external-subject', identity_type: 'user' },
+  it('passes verified admin claims to onboarding only after validation', async () => {
+    const resolve = jest
+      .spyOn(identity, 'resolveAdminUser')
+      .mockResolvedValueOnce({
+        sub: 'new-user',
+        email: 'token@example.test',
+        org_id: '',
+        role: 'owner',
+        permissions: ['*'],
+      });
+    await expect(authenticate(admin, token())).resolves.toMatchObject({
+      sub: 'new-user',
     });
-    expect(users.findOne).not.toHaveBeenCalled();
-    expect(clients.findOne).not.toHaveBeenCalled();
+    expect(resolve).toHaveBeenCalledWith(
+      issuer,
+      'external-subject',
+      expect.objectContaining({ email: 'token@example.test' }),
+    );
+    resolve.mockRestore();
   });
 });
