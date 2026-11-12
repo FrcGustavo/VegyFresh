@@ -7,13 +7,14 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Public } from '../auth/decorators/public.decorator';
 import { PortalAccessTokenGuard } from './guards/portal-access-token.guard';
 import { CurrentPortalClient } from './decorators/current-portal-client.decorator';
 import type { AuthenticatedPortalClient } from './types/authenticated-portal-client.type';
 import { PortalOrdersService } from './portal-orders.service';
 import { PortalOrdersQueryDto } from './dto/portal-orders-query.dto';
+import { PortalOrderResponseDto } from './dto/portal-order-response.dto';
 
 @ApiTags('portal-orders')
 @Controller('portal/orders')
@@ -33,6 +34,7 @@ export class PortalOrdersController {
 
   @Get()
   @ApiOperation({ summary: 'List orders for authenticated portal client' })
+  @ApiOkResponse({ type: PortalOrderResponseDto, isArray: true })
   findAll(
     @CurrentPortalClient() user: AuthenticatedPortalClient,
     @Query() query: PortalOrdersQueryDto,
@@ -42,6 +44,7 @@ export class PortalOrdersController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get portal order detail' })
+  @ApiOkResponse({ type: PortalOrderResponseDto })
   findOne(
     @CurrentPortalClient() user: AuthenticatedPortalClient,
     @Param('id') id: string,
