@@ -1,1 +1,1 @@
-export { default } from "./PurchasesList";
+export { default } from "@/presentation/purchases/pages/PurchasesList";

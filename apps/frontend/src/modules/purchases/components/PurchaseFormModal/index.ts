@@ -1,1 +1,1 @@
-export { default } from "./PurchaseFormModal";
+export { default } from "@/presentation/purchases/components/PurchaseFormModal";
