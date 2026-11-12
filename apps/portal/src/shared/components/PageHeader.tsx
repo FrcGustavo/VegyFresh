@@ -1,1 +1,1 @@
-export { PageHeader } from "@vegyfresh/ui";
+export { PageHeader } from "../../presentation/components/PageHeader";

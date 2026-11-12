@@ -336,46 +336,6 @@ export interface paths {
         patch: operations["OrganizationsController_update"];
         trace?: never;
     };
-    "/api/v1/auth/signup": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Signup user
-         * @description Creates a user account and leaves organization setup for later.
-         */
-        post: operations["AuthController_signup"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/login": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Login with email and password
-         * @description Returns JWTs that include org_id and role context from the user record.
-         */
-        post: operations["AuthController_login"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/auth/me": {
         parameters: {
             query?: never;
@@ -385,51 +345,11 @@ export interface paths {
         };
         /**
          * Get current user context
-         * @description Returns the current user, organization, and role from the access token session.
+         * @description Returns the linked local user, organization, role, and permissions.
          */
         get: operations["AuthController_me"];
         put?: never;
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/refresh": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Refresh access and refresh token pair
-         * @description Requires refresh token in body. Session must be active and tied to the same tenant organization.
-         */
-        post: operations["AuthController_refresh"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/logout": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Revoke current session
-         * @description Revokes only the current tenant-bound session (by session_id).
-         */
-        post: operations["AuthController_logout"];
         delete?: never;
         options?: never;
         head?: never;
@@ -524,40 +444,6 @@ export interface paths {
         patch: operations["PurchaseController_update"];
         trace?: never;
     };
-    "/api/v1/portal/auth/login": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Login customer portal client */
-        post: operations["PortalAuthController_login"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/portal/auth/refresh": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Refresh portal session tokens */
-        post: operations["PortalAuthController_refresh"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/portal/auth/me": {
         parameters: {
             query?: never;
@@ -569,23 +455,6 @@ export interface paths {
         get: operations["PortalAuthController_me"];
         put?: never;
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/portal/auth/logout": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Logout current portal session */
-        post: operations["PortalAuthController_logout"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1017,23 +886,6 @@ export interface components {
              */
             purchase_folio_prefix?: Record<string, never> | null;
         };
-        SignupDto: {
-            /** @example John Doe */
-            name: string;
-            /** @example john@example.com */
-            email: string;
-            /** @example super-secure-password */
-            password: string;
-        };
-        LoginDto: {
-            /** @example john@example.com */
-            email: string;
-            /** @example super-secure-password */
-            password: string;
-        };
-        RefreshTokenDto: {
-            refresh_token: string;
-        };
         CreateInventoryAdjustmentDto: {
             /** @example 550e8400-e29b-41d4-a716-446655440000 */
             product_id: string;
@@ -1077,19 +929,6 @@ export interface components {
             notes?: Record<string, never> | null;
             items?: components["schemas"]["CreatePurchaseItemDto"][];
         };
-        PortalLoginDto: {
-            /**
-             * @description Customer email address
-             * @example customer@example.com
-             */
-            email: string;
-            /**
-             * @description Customer password (min 8 characters)
-             * @example SecurePass123!
-             */
-            password: string;
-        };
-        PortalRefreshTokenDto: Record<string, never>;
         PortalProductResponseDto: {
             id: string;
             folio: string;
@@ -2960,79 +2799,6 @@ export interface operations {
             };
         };
     };
-    AuthController_signup: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SignupDto"];
-            };
-        };
-        responses: {
-            /** @description User account created */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation error */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
-    AuthController_login: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["LoginDto"];
-            };
-        };
-        responses: {
-            /** @description Login successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation error */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Invalid credentials */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
     AuthController_me: {
         parameters: {
             query?: never;
@@ -3049,72 +2815,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Unauthorized - missing or invalid token */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AuthController_refresh: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RefreshTokenDto"];
-            };
-        };
-        responses: {
-            /** @description Token refresh successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation error */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Invalid or expired refresh token */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AuthController_logout: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Session revoked successfully */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Unauthorized - missing or invalid token */
+            /** @description Unauthorized - missing or invalid Keycloak access token */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -3465,86 +3166,6 @@ export interface operations {
             };
         };
     };
-    PortalAuthController_login: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PortalLoginDto"];
-            };
-        };
-        responses: {
-            /** @description Portal login successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation error */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Invalid credentials */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PortalAuthController_refresh: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PortalRefreshTokenDto"];
-            };
-        };
-        responses: {
-            /** @description Token refresh successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation error */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Invalid or expired refresh token */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
     PortalAuthController_me: {
         parameters: {
             query?: never;
@@ -3563,32 +3184,7 @@ export interface operations {
                     "application/json": unknown;
                 };
             };
-            /** @description Unauthorized - missing or invalid token */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PortalAuthController_logout: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Portal session revoked successfully */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Unauthorized - missing or invalid token */
+            /** @description Unauthorized - missing or invalid Keycloak access token */
             401: {
                 headers: {
                     [name: string]: unknown;

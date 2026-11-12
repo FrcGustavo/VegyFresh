@@ -2382,116 +2382,9 @@
         ]
       }
     },
-    "/api/v1/auth/signup": {
-      "post": {
-        "description": "Creates a user account and leaves organization setup for later.",
-        "operationId": "AuthController_signup",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SignupDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "User account created",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "example": {
-                    "id": "user_123",
-                    "email": "user@example.com"
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Validation error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "example": {
-                    "statusCode": 400,
-                    "message": [
-                      "email is required"
-                    ],
-                    "error": "Bad Request"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "summary": "Signup user",
-        "tags": [
-          "auth"
-        ]
-      }
-    },
-    "/api/v1/auth/login": {
-      "post": {
-        "description": "Returns JWTs that include org_id and role context from the user record.",
-        "operationId": "AuthController_login",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/LoginDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Login successful",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "example": {
-                    "access_token": "eyJhbGci...",
-                    "refresh_token": "eyJhbGci..."
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Validation error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "example": {
-                    "statusCode": 400,
-                    "message": [
-                      "email is required"
-                    ],
-                    "error": "Bad Request"
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Invalid credentials"
-          }
-        },
-        "summary": "Login with email and password",
-        "tags": [
-          "auth"
-        ]
-      }
-    },
     "/api/v1/auth/me": {
       "get": {
-        "description": "Returns the current user, organization, and role from the access token session.",
+        "description": "Returns the linked local user, organization, role, and permissions.",
         "operationId": "AuthController_me",
         "parameters": [],
         "responses": {
@@ -2499,7 +2392,7 @@
             "description": "Authenticated user context"
           },
           "401": {
-            "description": "Unauthorized - missing or invalid token"
+            "description": "Unauthorized - missing or invalid Keycloak access token"
           }
         },
         "security": [
@@ -2508,85 +2401,6 @@
           }
         ],
         "summary": "Get current user context",
-        "tags": [
-          "auth"
-        ]
-      }
-    },
-    "/api/v1/auth/refresh": {
-      "post": {
-        "description": "Requires refresh token in body. Session must be active and tied to the same tenant organization.",
-        "operationId": "AuthController_refresh",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RefreshTokenDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Token refresh successful",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "example": {
-                    "access_token": "eyJhbGci...",
-                    "refresh_token": "eyJhbGci..."
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Validation error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "example": {
-                    "statusCode": 400,
-                    "message": [
-                      "refresh_token is required"
-                    ],
-                    "error": "Bad Request"
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Invalid or expired refresh token"
-          }
-        },
-        "summary": "Refresh access and refresh token pair",
-        "tags": [
-          "auth"
-        ]
-      }
-    },
-    "/api/v1/auth/logout": {
-      "post": {
-        "description": "Revokes only the current tenant-bound session (by session_id).",
-        "operationId": "AuthController_logout",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Session revoked successfully"
-          },
-          "401": {
-            "description": "Unauthorized - missing or invalid token"
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Revoke current session",
         "tags": [
           "auth"
         ]
@@ -2982,114 +2796,6 @@
         ]
       }
     },
-    "/api/v1/portal/auth/login": {
-      "post": {
-        "operationId": "PortalAuthController_login",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/PortalLoginDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Portal login successful",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "example": {
-                    "access_token": "eyJhbGci...",
-                    "refresh_token": "eyJhbGci..."
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Validation error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "example": {
-                    "statusCode": 400,
-                    "message": [
-                      "email is required"
-                    ],
-                    "error": "Bad Request"
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Invalid credentials"
-          }
-        },
-        "summary": "Login customer portal client",
-        "tags": [
-          "portal-auth"
-        ]
-      }
-    },
-    "/api/v1/portal/auth/refresh": {
-      "post": {
-        "operationId": "PortalAuthController_refresh",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/PortalRefreshTokenDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Token refresh successful",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "example": {
-                    "access_token": "eyJhbGci...",
-                    "refresh_token": "eyJhbGci..."
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Validation error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "example": {
-                    "statusCode": 400,
-                    "message": [
-                      "refresh_token is required"
-                    ],
-                    "error": "Bad Request"
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Invalid or expired refresh token"
-          }
-        },
-        "summary": "Refresh portal session tokens",
-        "tags": [
-          "portal-auth"
-        ]
-      }
-    },
     "/api/v1/portal/auth/me": {
       "get": {
         "operationId": "PortalAuthController_me",
@@ -3101,34 +2807,19 @@
               "application/json": {
                 "schema": {
                   "example": {
-                    "id": "client_123",
-                    "email": "client@example.com",
-                    "name": "Client Name"
+                    "client": {
+                      "id": "client_123",
+                      "email": "client@example.com",
+                      "name": "Client Name",
+                      "portalEnabled": true
+                    }
                   }
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized - missing or invalid token"
-          }
-        },
-        "summary": "Get authenticated portal client profile",
-        "tags": [
-          "portal-auth"
-        ]
-      }
-    },
-    "/api/v1/portal/auth/logout": {
-      "post": {
-        "operationId": "PortalAuthController_logout",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Portal session revoked successfully"
-          },
-          "401": {
-            "description": "Unauthorized - missing or invalid token"
+            "description": "Unauthorized - missing or invalid Keycloak access token"
           }
         },
         "security": [
@@ -3136,7 +2827,7 @@
             "bearer": []
           }
         ],
-        "summary": "Logout current portal session",
+        "summary": "Get authenticated portal client profile",
         "tags": [
           "portal-auth"
         ]
@@ -4110,56 +3801,6 @@
           }
         }
       },
-      "SignupDto": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "example": "John Doe"
-          },
-          "email": {
-            "type": "string",
-            "example": "john@example.com"
-          },
-          "password": {
-            "type": "string",
-            "example": "super-secure-password"
-          }
-        },
-        "required": [
-          "name",
-          "email",
-          "password"
-        ]
-      },
-      "LoginDto": {
-        "type": "object",
-        "properties": {
-          "email": {
-            "type": "string",
-            "example": "john@example.com"
-          },
-          "password": {
-            "type": "string",
-            "example": "super-secure-password"
-          }
-        },
-        "required": [
-          "email",
-          "password"
-        ]
-      },
-      "RefreshTokenDto": {
-        "type": "object",
-        "properties": {
-          "refresh_token": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "refresh_token"
-        ]
-      },
       "CreateInventoryAdjustmentDto": {
         "type": "object",
         "properties": {
@@ -4258,30 +3899,6 @@
             }
           }
         }
-      },
-      "PortalLoginDto": {
-        "type": "object",
-        "properties": {
-          "email": {
-            "type": "string",
-            "example": "customer@example.com",
-            "description": "Customer email address"
-          },
-          "password": {
-            "type": "string",
-            "example": "SecurePass123!",
-            "description": "Customer password (min 8 characters)",
-            "minLength": 8
-          }
-        },
-        "required": [
-          "email",
-          "password"
-        ]
-      },
-      "PortalRefreshTokenDto": {
-        "type": "object",
-        "properties": {}
       },
       "PortalProductResponseDto": {
         "type": "object",

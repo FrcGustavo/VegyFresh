@@ -37,8 +37,22 @@ describe('OpenAPI export', () => {
         paths: Record<string, Record<string, unknown>>;
         components: { securitySchemes: Record<string, unknown> };
       };
-      expect(document.paths['/api/v1/auth/login'].post).toBeDefined();
+      for (const path of [
+        '/api/v1/auth/signup',
+        '/api/v1/auth/login',
+        '/api/v1/auth/refresh',
+        '/api/v1/auth/logout',
+        '/api/v1/portal/auth/login',
+        '/api/v1/portal/auth/setup-password',
+        '/api/v1/portal/auth/refresh',
+        '/api/v1/portal/auth/logout',
+      ]) {
+        expect(document.paths[path]).toBeUndefined();
+      }
       expect(document.paths['/api/v1/auth/me'].get).toHaveProperty('security');
+      expect(document.paths['/api/v1/portal/auth/me'].get).toHaveProperty(
+        'security',
+      );
       expect(document.paths['/api/v1/portal/orders'].get).toBeDefined();
       expect(document.components.securitySchemes.bearer).toBeDefined();
       expect(() => run('--check')).not.toThrow();

@@ -44,7 +44,7 @@ async function exportOpenApi() {
   try {
     process.chdir(emptyCwd);
     process.env = {
-      JWT_SECRET: 'openapi-export-only-secret-not-for-runtime',
+      KEYCLOAK_ISSUER: 'https://keycloak.invalid/realms/openapi',
       POSTGRES_HOST: 'localhost',
       POSTGRES_PORT: '5432',
       POSTGRES_USER: 'openapi',

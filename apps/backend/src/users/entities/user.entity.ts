@@ -32,8 +32,8 @@ export class User {
   @Column({ type: 'varchar', length: 255, unique: true })
   email!: string;
 
-  @Column({ type: 'text' })
-  password_hash!: string;
+  @Column({ type: 'text', nullable: true })
+  password_hash!: string | null;
 
   @Column({ type: 'uuid' })
   role_id!: string;
