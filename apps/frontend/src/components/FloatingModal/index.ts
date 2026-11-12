@@ -1,4 +1,2 @@
-export { default as FloatingModal } from "./FloatingModal";
-export { default } from "./FloatingModal";
-export { floatingModalStyles } from "./FloatingModal.styles";
-export type { FloatingModalProps } from "./FloatingModal.types";
+export { default } from "../../presentation/components/FloatingModal";
+export * from "../../presentation/components/FloatingModal";

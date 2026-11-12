@@ -1,3 +1,2 @@
-export { default } from "./ResourcePageTitle";
-export { resourcePageTitleStyles } from "./ResourcePageTitle.styles";
-export type { ResourcePageTitleProps } from "./ResourcePageTitle.types";
+export { default } from "../../presentation/components/ResourcePageTitle";
+export * from "../../presentation/components/ResourcePageTitle";

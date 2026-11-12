@@ -1,6 +1,2 @@
-export { default } from "./ListPageToolbar";
-export { listPageToolbarStyles } from "./ListPageToolbar.styles";
-export type {
-  ListPageToolbarConfig,
-  ListPageToolbarProps,
-} from "./ListPageToolbar.types";
+export { default } from "../../presentation/components/ListPageToolbar";
+export * from "../../presentation/components/ListPageToolbar";
