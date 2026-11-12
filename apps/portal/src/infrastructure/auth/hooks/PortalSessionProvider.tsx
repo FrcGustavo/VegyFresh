@@ -1,37 +1,19 @@
 import {
-  createContext,
-  useContext,
   useEffect,
   useMemo,
   useState,
   type ReactNode,
 } from "react";
-import {
-  authApi,
-  type LoginPayload,
-  type SetupPasswordPayload,
-} from "../api/authApi";
+import { authApi } from "../authApi";
 import {
   clearTokens,
   getAccessToken,
   getRefreshToken,
   setTokens,
-  HttpError,
-} from "../../../shared/api/httpClient";
-import type { PortalClientProfile } from "../types/auth.types";
+} from "../../api/httpClient";
+import type { PortalClientProfile } from "../../../domain/auth/auth.types";
 
-type PortalSessionContextValue = {
-  client: PortalClientProfile | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  login: (payload: LoginPayload) => Promise<void>;
-  setupPassword: (payload: SetupPasswordPayload) => Promise<void>;
-  logout: () => Promise<void>;
-};
-
-const PortalSessionContext = createContext<PortalSessionContextValue | null>(
-  null,
-);
+import { PortalSessionContext, type PortalSessionContextValue } from "./portalSessionContext";
 
 export function PortalSessionProvider({ children }: { children: ReactNode }) {
   const [client, setClient] = useState<PortalClientProfile | null>(null);
@@ -96,21 +78,5 @@ export function PortalSessionProvider({ children }: { children: ReactNode }) {
     <PortalSessionContext.Provider value={value}>
       {children}
     </PortalSessionContext.Provider>
-  );
-}
-
-export function usePortalSession() {
-  const context = useContext(PortalSessionContext);
-  if (!context) {
-    throw new Error(
-      "usePortalSession must be used inside PortalSessionProvider",
-    );
-  }
-  return context;
-}
-
-export function isAuthError(error: unknown) {
-  return (
-    error instanceof HttpError && (error.status === 401 || error.status === 403)
   );
 }
