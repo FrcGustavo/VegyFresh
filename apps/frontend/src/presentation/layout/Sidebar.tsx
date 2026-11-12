@@ -23,7 +23,7 @@ import {
   Store,
 } from "@mui/icons-material";
 import { useNavigate, useLocation } from "react-router";
-import { useAuth } from "../auth/useAuth";
+import { useAuth } from "@/auth/useAuth";
 import {
   canAccessUsersResource,
   canAccessOrganizationResource,

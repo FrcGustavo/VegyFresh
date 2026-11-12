@@ -8,7 +8,7 @@ import {
   usersQueryOptions,
   type User,
 } from "../../../api";
-import { validateImageFile } from "../../../utils/imageValidation";
+import { validateImageFile } from "@/presentation/utils/imageValidation";
 
 export type SaveAction = "save" | "save-and-close" | "save-and-new";
 type UserChangeEvent = { target: { name: string; value: string } };

@@ -7,7 +7,7 @@ import {
   priceListsQueryOptions,
   type Client,
 } from "../../../api";
-import { validateImageFile } from "../../../utils/imageValidation";
+import { validateImageFile } from "@/presentation/utils/imageValidation";
 import {
   findLocationByPostalCode,
   getCitiesByCountryAndState,
