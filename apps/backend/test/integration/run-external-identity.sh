@@ -47,7 +47,8 @@ docker run --rm --network "$network" -v "$root:/source:ro" \
     IDENTITY_HTTP_TEST=true pnpm --filter backend exec jest --config ./test/jest-e2e.json --runInBand --runTestsByPath test/identity.e2e-spec.ts
     if [ "$CHECK_BACKEND" = 1 ]; then
       status=0
-      pnpm --filter backend exec eslint "{src,apps,libs,test,__tests__}/**/*.ts" || status=1
+      pnpm --filter backend lint || status=1
+      pnpm --filter backend exec tsc --noEmit --incremental false -p ../../services/backend/tsconfig.json || status=1
       pnpm --filter backend exec tsc --noEmit --incremental false || status=1
       pnpm --filter backend exec tsc --noEmit --incremental false -p tsconfig.build.json || status=1
       pnpm --filter backend exec jest --runInBand || status=1
