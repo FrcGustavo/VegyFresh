@@ -8,7 +8,7 @@ import {
   suppliersQueryOptions,
   type Product,
 } from "../../../api";
-import { createClientRowId } from "../../../utils/clientRowId";
+import { createClientRowId } from "@/infrastructure/identifiers/clientRowId";
 
 export type SaveAction = "save" | "save-and-close" | "save-and-new";
 type ProductChangeEvent = { target: { name: string; value: string } };

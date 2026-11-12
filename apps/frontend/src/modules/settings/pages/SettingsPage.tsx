@@ -12,7 +12,7 @@ import { useNavigate } from "react-router";
 import {
   useThemePreferenceStore,
   type ThemePreference,
-} from "../../../theme/useThemePreferenceStore";
+} from "@/infrastructure/preferences/useThemePreferenceStore";
 
 export default function SettingsPage() {
   const navigate = useNavigate();

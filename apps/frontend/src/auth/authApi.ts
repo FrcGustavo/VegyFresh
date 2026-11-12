@@ -1,4 +1,7 @@
 import { API_URL } from "../api";
+import type { AuthRole } from "../domain/auth/AuthRole";
+
+export type { AuthRole } from "../domain/auth/AuthRole";
 
 export interface AuthUser {
   id: string;
@@ -10,12 +13,6 @@ export interface AuthOrganization {
   id: string;
   name: string;
   folio: string;
-}
-
-export interface AuthRole {
-  id: string;
-  name: string;
-  permissions: string[];
 }
 
 export interface AuthSessionResponse {

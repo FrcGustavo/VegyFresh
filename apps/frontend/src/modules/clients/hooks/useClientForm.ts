@@ -15,7 +15,7 @@ import {
   getCountries,
   getPostalCodesByLocation,
   getStatesByCountry,
-} from "../constants/locationCatalog";
+} from "@/domain/clients/locationCatalog";
 
 export type SaveAction = "save" | "save-and-close" | "save-and-new";
 type ClientChangeEvent = { target: { name: string; value: string } };

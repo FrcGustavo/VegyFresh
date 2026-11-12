@@ -1,6 +1,6 @@
 import { createTheme, useMediaQuery } from "@mui/material";
 import { useMemo } from "react";
-import { useThemePreferenceStore } from "./useThemePreferenceStore";
+import { useThemePreferenceStore } from "@/infrastructure/preferences/useThemePreferenceStore";
 
 const createAppTheme = (mode: "light" | "dark") =>
   createTheme({

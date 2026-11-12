@@ -1,3 +1,4 @@
+import { fileURLToPath, URL } from "node:url";
 import { mkdir, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { defineConfig, loadEnv, type Plugin, type ResolvedConfig } from "vite";
@@ -46,6 +47,7 @@ export default defineConfig(({ command, mode }) => {
   const apiUrl = command === "build" ? normalizeApiUrl(env.VITE_API_URL) : undefined;
 
   return {
+    resolve: { alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) } },
     plugins: [
       react(),
       babel({ presets: [reactCompilerPreset()] }),

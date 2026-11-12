@@ -27,7 +27,7 @@ import { useAuth } from "../auth/useAuth";
 import {
   canAccessUsersResource,
   canAccessOrganizationResource,
-} from "../auth/authorization";
+} from "@/domain/auth/authorization";
 
 const drawerWidth = 260;
 

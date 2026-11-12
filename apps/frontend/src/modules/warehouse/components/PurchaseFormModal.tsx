@@ -21,7 +21,7 @@ import {
   purchasesMutationOptions,
   suppliersQueryOptions,
 } from "../../../api";
-import { createClientRowId } from "../../../utils/clientRowId";
+import { createClientRowId } from "@/infrastructure/identifiers/clientRowId";
 
 type PurchaseItemRow = {
   clientRowId: string;
