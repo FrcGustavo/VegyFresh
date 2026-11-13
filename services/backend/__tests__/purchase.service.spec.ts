@@ -1,15 +1,15 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { FindOperator, Repository } from 'typeorm';
-import { Product } from '../src/catalog/products/entities/product.entity';
+import { Product } from 'src/catalog/products/entities/product.entity';
 import {
   InventoryMovement,
   InventoryMovementType,
-} from '../src/inventory/entities/inventory-movement.entity';
-import { PurchaseItem } from '../src/purchase/entities/purchase-item.entity';
-import { Purchase } from '../src/purchase/entities/purchase.entity';
-import { PurchaseService } from '../src/purchase/purchase.service';
-import { Supplier } from '../src/suppliers/entities/supplier.entity';
-import { User } from '../src/users/entities/user.entity';
+} from 'src/inventory/entities/inventory-movement.entity';
+import { PurchaseItem } from 'src/purchase/entities/purchase-item.entity';
+import { Purchase } from 'src/purchase/entities/purchase.entity';
+import { PurchaseService } from 'src/purchase/purchase.service';
+import { Supplier } from 'src/suppliers/entities/supplier.entity';
+import { User } from 'src/users/entities/user.entity';
 
 type DataStore = {
   purchases: Purchase[];

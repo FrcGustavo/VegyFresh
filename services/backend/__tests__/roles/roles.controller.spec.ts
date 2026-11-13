@@ -1,6 +1,6 @@
 import { Test } from '@nestjs/testing';
-import { RolesController } from '../../src/roles/roles.controller';
-import { RolesService } from '../../src/roles/roles.service';
+import { RolesController } from 'src/roles/roles.controller';
+import { RolesService } from 'src/roles/roles.service';
 
 describe('RolesController', () => {
   const roles = [

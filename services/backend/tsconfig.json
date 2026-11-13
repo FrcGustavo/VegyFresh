@@ -3,6 +3,8 @@
   "compilerOptions": {
     "baseUrl": "../../apps/backend",
     "paths": {
+      "passport-jwt": ["node_modules/@types/passport-jwt"],
+      "bcrypt": ["node_modules/@types/bcrypt"],
       "src/*": [
         "src/*"
       ],

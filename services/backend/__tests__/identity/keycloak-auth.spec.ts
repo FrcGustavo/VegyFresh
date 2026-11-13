@@ -8,7 +8,7 @@ import {
   KeycloakAuthSettings,
   resolveKeycloakSettings,
   validateKeycloakClientClaims,
-} from '../../src/identity/keycloak-auth.config';
+} from 'src/identity/keycloak-auth.config';
 
 const { privateKey, publicKey } = generateKeyPairSync('rsa', {
   modulusLength: 2048,
@@ -88,10 +88,7 @@ function authenticate(raw: string, kind: 'admin' | 'portal'): Promise<boolean> {
     strategy.success = () => resolve(true);
     strategy.fail = () => resolve(false);
     strategy.error = () => resolve(false);
-    strategy.authenticate(
-      { headers: { authorization: `Bearer ${raw}` } } as never,
-      {},
-    );
+    strategy.authenticate({ headers: { authorization: `Bearer ${raw}` } }, {});
   });
 }
 
