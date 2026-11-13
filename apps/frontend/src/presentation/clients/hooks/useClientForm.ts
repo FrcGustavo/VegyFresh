@@ -1,12 +1,8 @@
 import { useState, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
-import {
-  clientsMutationOptions,
-  clientsQueryOptions,
-  priceListsQueryOptions,
-  type Client,
-} from "../../../api";
+import type { Client } from "../../../domain/contacts/contact";
+import type { ClientFormData } from "../../../application/contacts/saveContact";
+import { useClientEditor } from "../../../infrastructure/contacts/useContacts";
 import { validateImageFile } from "../../../utils/imageValidation";
 import {
   findLocationByPostalCode,
@@ -19,25 +15,6 @@ import {
 
 export type SaveAction = "save" | "save-and-close" | "save-and-new";
 type ClientChangeEvent = { target: { name: string; value: string } };
-interface ClientFormData {
-  name: string;
-  phone_number: string;
-  email: string;
-  country: string;
-  state: string;
-  city: string;
-  postal_code: string;
-  address: string;
-  suburb: string;
-  external_number: string;
-  internal_number: string;
-  avatar_url: string;
-  price_list_id: string;
-}
-interface PriceListOption {
-  id: string;
-  name: string;
-}
 const EMPTY_CLIENT_FORM: ClientFormData = {
   name: "",
   phone_number: "",
@@ -58,17 +35,12 @@ export function useClientForm(
   id?: string,
   onSuccess?: (action: SaveAction, client: Client) => void,
 ) {
-  const queryClient = useQueryClient();
+  const { detail: { data: existingClient, isLoading }, priceLists, isSaving, save } = useClientEditor(id);
   const navigate = useNavigate();
   const [formData, setFormData] = useState<ClientFormData>(EMPTY_CLIENT_FORM);
   const [avatarFileError, setAvatarFileError] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
   const [isDisabled, setIsDisabled] = useState(!!id);
-
-  const { data: existingClient, isLoading } = useQuery({
-    ...clientsQueryOptions.detail(id ?? ""),
-    enabled: !!id,
-  });
 
   useEffect(() => {
     if (existingClient) {
@@ -101,17 +73,6 @@ export function useClientForm(
       });
     }
   }, [id, existingClient]);
-
-  const { data: priceListsData } = useQuery(
-    priceListsQueryOptions.list({
-      limit: "200",
-      order_by: "name",
-      order: "asc",
-    }),
-  );
-  const priceLists = (
-    Array.isArray(priceListsData) ? priceListsData : priceListsData?.data || []
-  ) as PriceListOption[];
 
   const handleChange = (e: ClientChangeEvent) => {
     const { name, value } = e.target;
@@ -170,39 +131,9 @@ export function useClientForm(
     reader.readAsDataURL(file);
   };
 
-  const createMutation = useMutation(
-    clientsMutationOptions.create(queryClient),
-  );
-  const updateMutation = useMutation(
-    clientsMutationOptions.update(queryClient),
-  );
-
   const handleSubmit = (action: SaveAction = "save") => {
-    if (!formData.name.trim() || !formData.phone_number.trim()) {
-      setFormError("Completa el nombre y el teléfono del cliente.");
-      return;
-    }
-
-    const nullable = (value: string) => value.trim() || null;
-    const input = {
-      name: formData.name.trim(),
-      phone_number: formData.phone_number.trim(),
-      email: nullable(formData.email),
-      country: nullable(formData.country),
-      state: nullable(formData.state),
-      city: nullable(formData.city),
-      postal_code: nullable(formData.postal_code),
-      address: nullable(formData.address),
-      suburb: nullable(formData.suburb),
-      external_number: nullable(formData.external_number),
-      internal_number: nullable(formData.internal_number),
-      avatar_url: nullable(formData.avatar_url),
-      price_list_id: nullable(formData.price_list_id),
-    };
-
     setFormError(null);
-    const options = {
-      onSuccess: (client: Client) => {
+    const onSaved = (client: Client) => {
         if (action === "save-and-new") {
           setFormData(EMPTY_CLIENT_FORM);
           setAvatarFileError("");
@@ -215,14 +146,12 @@ export function useClientForm(
         } else {
           navigate("/clients");
         }
-      },
-      onError: (error: Error) => setFormError(error.message),
-    };
+      };
 
-    if (id) {
-      updateMutation.mutate({ id, input }, options);
-    } else {
-      createMutation.mutate(input, options);
+    try {
+      void save(formData).then(onSaved).catch((error: Error) => setFormError(error.message));
+    } catch (error) {
+      setFormError((error as Error).message);
     }
   };
 
@@ -255,7 +184,7 @@ export function useClientForm(
     postalCodeOptions,
     coloniaOptions,
     isLoading,
-    isSaving: createMutation.isPending || updateMutation.isPending,
+    isSaving,
     handleChange,
     handleAvatarFileChange,
     handleSubmit,

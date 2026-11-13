@@ -1,8 +1,7 @@
 import { Box, CircularProgress, Typography } from "@mui/material";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useInfiniteQuery } from "@tanstack/react-query";
 import { LocalShipping } from "@mui/icons-material";
-import { suppliersQueryOptions } from "../../../../api";
+import { useSuppliersList } from "../../../../infrastructure/contacts/useContacts";
 import { useDebouncedValue } from "../../../../hooks/useDebouncedValue";
 import { Table } from "../../../../components/Table";
 import SupplierFormModal from "../../components/SupplierFormModal";
@@ -28,20 +27,17 @@ export default function SuppliersList() {
   const { sortBy, sortOrder, handleSort } = useSuppliersSort();
   const debouncedQuery = useDebouncedValue(query, 400);
   const {
-    data,
+    items: list,
     isLoading,
     error,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useInfiniteQuery({
-    ...suppliersQueryOptions.infiniteList({
-      limit: String(SUPPLIERS_PAGE_SIZE),
-      order_by: sortBy,
-      order: sortOrder,
-      search: debouncedQuery.trim() || undefined,
-    }),
-    placeholderData: (previousData) => previousData,
+  } = useSuppliersList({
+    limit: String(SUPPLIERS_PAGE_SIZE),
+    order_by: sortBy,
+    order: sortOrder,
+    search: debouncedQuery.trim() || undefined,
   });
 
   if (isLoading)
@@ -56,10 +52,6 @@ export default function SuppliersList() {
         Error al cargar: {(error as Error).message}
       </Typography>
     );
-
-  const list = (data?.pages ?? []).flatMap((page) =>
-    Array.isArray(page) ? page : (page?.data ?? []),
-  );
 
   return (
     <SuppliersTable
