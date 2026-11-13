@@ -4,7 +4,7 @@ import { createVegyTheme } from "@vegyfresh/ui";
 import { useState, type ReactNode } from "react";
 import { PortalSessionProvider } from "../../infrastructure/auth/hooks/PortalSessionProvider";
 import type { PortalSessionSnapshot } from "../../domain/auth/auth.types";
-import type { PortalSessionAdapter } from "../../infrastructure/auth/browserSession";
+import { browserSession, type PortalSessionAdapter } from "../../infrastructure/auth/browserSession";
 import { createQueryClient } from "./queryClient";
 
 const theme = createVegyTheme();
@@ -19,7 +19,7 @@ export function AppProviders({ children, initialSession, sessionAdapter }: {
     <QueryClientProvider client={queryClient}>
       <PortalSessionProvider
         initialSession={initialSession}
-        adapter={sessionAdapter}
+        adapter={sessionAdapter ?? browserSession}
         onIdentityChange={() => queryClient.clear()}
       >
         <ThemeProvider theme={theme}>
