@@ -6,7 +6,7 @@ import {
   suppliersQueryOptions,
   type Supplier,
 } from "../../../api";
-import { validateImageFile } from "../../../utils/imageValidation";
+import { validateImageFile } from "@/presentation/utils/imageValidation";
 
 export type SaveAction = "save" | "save-and-close" | "save-and-new";
 type SupplierChangeEvent = { target: { name: string; value: string } };

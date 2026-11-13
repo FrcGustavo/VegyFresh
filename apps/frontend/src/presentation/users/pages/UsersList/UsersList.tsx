@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { AdminPanelSettings } from "@mui/icons-material";
 import { usersQueryOptions } from "../../../../api";
-import { useDebouncedValue } from "../../../../hooks/useDebouncedValue";
+import { useDebouncedValue } from "@/presentation/hooks/useDebouncedValue";
 import { Table } from "../../../../components/Table";
 import UserFormModal from "../../components/UserFormModal";
 import ResourcePageTitle from "../../../../components/ResourcePageTitle";

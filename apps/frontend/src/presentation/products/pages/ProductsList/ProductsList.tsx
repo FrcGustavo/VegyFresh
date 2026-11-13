@@ -3,7 +3,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { Inventory } from "@mui/icons-material";
 import { Box, Typography, CircularProgress } from "@mui/material";
 import { productsQueryOptions } from "../../../../api";
-import { useDebouncedValue } from "../../../../hooks/useDebouncedValue";
+import { useDebouncedValue } from "@/presentation/hooks/useDebouncedValue";
 import { Table } from "../../../../components/Table";
 import type { ColumnConfig } from "../../../../components/Table";
 import ProductFormModal from "../../components/ProductFormModal";

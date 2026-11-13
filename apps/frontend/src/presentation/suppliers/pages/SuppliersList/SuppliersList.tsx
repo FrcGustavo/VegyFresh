@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { LocalShipping } from "@mui/icons-material";
 import { suppliersQueryOptions } from "../../../../api";
-import { useDebouncedValue } from "../../../../hooks/useDebouncedValue";
+import { useDebouncedValue } from "@/presentation/hooks/useDebouncedValue";
 import { Table } from "../../../../components/Table";
 import SupplierFormModal from "../../components/SupplierFormModal";
 import ResourcePageTitle from "../../../../components/ResourcePageTitle";
