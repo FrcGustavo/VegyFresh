@@ -1,7 +1,7 @@
 import { DataSource } from 'typeorm';
 import { config } from 'dotenv';
 import { ConfigService } from '@nestjs/config';
-import { join } from 'path';
+import { entityPaths, migrationPaths } from './discovery';
 
 config();
 const configService = new ConfigService();
@@ -41,7 +41,7 @@ export default new DataSource({
   synchronize: false,
   logging: true,
   connectTimeoutMS: 5000,
-  entities: [join(__dirname, '..', '**', '*.entity.{ts,js}')],
-  migrations: [join(__dirname, 'migrations', '*.{ts,js}')],
+  entities: entityPaths(),
+  migrations: migrationPaths(),
   migrationsTableName: 'migrations',
 });

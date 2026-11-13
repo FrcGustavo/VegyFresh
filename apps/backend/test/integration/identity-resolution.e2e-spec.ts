@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { join } from 'path';
+import { entityPaths } from '../../src/database/discovery';
 import { DataSource, EntityTarget, ObjectLiteral, QueryRunner } from 'typeorm';
 import { UnauthorizedException } from '@nestjs/common';
 import { AddExternalIdentities1793210000000 } from '../../src/database/migrations/1793210000000-add-external-identities';
@@ -31,7 +31,7 @@ describeIntegration('identity resolution (PostgreSQL)', () => {
       username: 'identity_test',
       password: 'identity_test',
       database: 'identity_test',
-      entities: [join(__dirname, '../../src/**/*.entity.ts')],
+      entities: entityPaths(),
       synchronize: false,
       installExtensions: false,
     });
