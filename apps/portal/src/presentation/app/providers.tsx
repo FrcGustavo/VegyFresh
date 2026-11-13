@@ -1,18 +1,14 @@
-import { CssBaseline, ThemeProvider, createTheme } from "@mui/material";
+import { CssBaseline, ThemeProvider } from "@mui/material";
 import { QueryClientProvider } from "@tanstack/react-query";
-import type { ReactNode } from "react";
-import { PortalSessionProvider } from "../features/auth/hooks/usePortalSession";
-import { queryClient } from "./queryClient";
+import { createVegyTheme } from "@vegyfresh/ui";
+import { useState, type ReactNode } from "react";
+import { PortalSessionProvider } from "../../infrastructure/auth/hooks/PortalSessionProvider";
+import { createQueryClient } from "./queryClient";
 
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: "#2e7d32",
-    },
-  },
-});
+const theme = createVegyTheme();
 
 export function AppProviders({ children }: { children: ReactNode }) {
+  const [queryClient] = useState(createQueryClient);
   return (
     <QueryClientProvider client={queryClient}>
       <PortalSessionProvider>
