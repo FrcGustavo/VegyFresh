@@ -7,7 +7,7 @@ import { useClientForm } from "./useClientForm";
 
 const mocks = vi.hoisted(() => ({ createClient: vi.fn() }));
 
-vi.mock("../../../api", () => ({
+vi.mock("../../../infrastructure/api", () => ({
   clientsQueryOptions: {
     detail: (id: string) => ({
       queryKey: ["clients", "detail", id],
