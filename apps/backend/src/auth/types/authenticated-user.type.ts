@@ -4,6 +4,4 @@ export type AuthenticatedUser = {
   org_id: string;
   role: string;
   permissions: string[];
-  session_id?: string;
-  sid?: string;
 };
