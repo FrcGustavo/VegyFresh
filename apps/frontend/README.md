@@ -58,7 +58,7 @@ CapRover builds the image.
 - Feature code lives in `src/modules`.
 - Shared UI primitives live in `src/components`.
 - Shared hooks live in `src/hooks`.
-- API calls should go through `src/api/index.ts`. Typed resource clients live in `src/api/resources.ts`.
+- API calls should use the public `src/infrastructure/api` exports. Typed resource clients live in `src/infrastructure/api/resources.ts`; `src/api/index.ts` remains a compatibility barrel for existing consumers.
 - Regenerate the OpenAPI contract types from `VITE_API_URL_JSON` with `pnpm --filter frontend generate:api-types`.
 - Server state is managed with TanStack Query.
 - Material UI theme setup lives in `src/App.tsx`.
