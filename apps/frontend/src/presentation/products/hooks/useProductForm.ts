@@ -1,33 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
-import {
-  priceListsQueryOptions,
-  productEditorMutationOptions,
-  productsQueryOptions,
-  suppliersQueryOptions,
-  type Product,
-} from "../../../api";
+import type {
+  ProductFormData,
+  ProductPriceRow,
+} from "../../../application/catalog/saveCatalog";
+import { useProductEditor } from "../../../infrastructure/catalog/useCatalog";
 import { createClientRowId } from "@/infrastructure/identifiers/clientRowId";
 
 export type SaveAction = "save" | "save-and-close" | "save-and-new";
 type ProductChangeEvent = { target: { name: string; value: string } };
-
-interface ProductFormData {
-  name: string;
-  description: string;
-  stock: number | string;
-  supplier_id: string;
-  unit: "kg" | "pz";
-  images: string[];
-}
-
-interface ProductPriceRow {
-  id?: string;
-  clientRowId: string;
-  price_list_id: string;
-  price: number | string;
-}
 
 interface SupplierOption {
   id: string;
@@ -56,9 +37,15 @@ const createEmptyPrice = (): ProductPriceRow => ({
 
 export function useProductForm(
   id?: string,
-  onSuccess?: (action: SaveAction, product: Product) => void,
+  onSuccess?: (action: SaveAction, product: { id: string }) => void,
 ) {
-  const queryClient = useQueryClient();
+  const {
+    detail: { data: existingProduct, isLoading: isLoadingProduct },
+    suppliers: suppliersData,
+    priceLists: priceListsData,
+    isSaving,
+    save,
+  } = useProductEditor(id);
   const navigate = useNavigate();
   const [formData, setFormData] = useState<ProductFormData>(EMPTY_PRODUCT_FORM);
   const [prices, setPrices] = useState<ProductPriceRow[]>([]);
@@ -67,11 +54,6 @@ export function useProductForm(
   >([]);
   const [formError, setFormError] = useState<string | null>(null);
   const [isDisabled, setIsDisabled] = useState(!!id);
-
-  const { data: existingProduct, isLoading: isLoadingProduct } = useQuery({
-    ...productsQueryOptions.detail(id ?? ""),
-    enabled: !!id,
-  });
 
   useEffect(() => {
     if (existingProduct) {
@@ -112,21 +94,6 @@ export function useProductForm(
       });
     }
   }, [id, existingProduct]);
-
-  const { data: suppliersData } = useQuery(
-    suppliersQueryOptions.list({
-      limit: "200",
-      order_by: "name",
-      order: "asc",
-    }),
-  );
-  const { data: priceListsData } = useQuery(
-    priceListsQueryOptions.list({
-      limit: "200",
-      order_by: "name",
-      order: "asc",
-    }),
-  );
 
   const suppliers = useMemo(
     () =>
@@ -207,64 +174,11 @@ export function useProductForm(
     setFormError(null);
   };
 
-  const mutation = useMutation(productEditorMutationOptions.save(queryClient));
-
-  const validate = () => {
-    if (!formData.name.trim() || !formData.supplier_id) {
-      return "Completa el nombre y el proveedor.";
-    }
-
-    const stock = Number(formData.stock);
-    if (!Number.isFinite(stock) || stock < 0) {
-      return "El stock debe ser un número igual o mayor que cero.";
-    }
-
-    if (
-      prices.some(
-        (item) =>
-          !item.price_list_id ||
-          item.price === "" ||
-          !Number.isFinite(Number(item.price)),
-      )
-    ) {
-      return "Completa la lista y el importe de cada precio.";
-    }
-
-    const selectedLists = prices.map((item) => item.price_list_id);
-    if (new Set(selectedLists).size !== selectedLists.length) {
-      return "Cada lista de precios solo puede asignarse una vez.";
-    }
-
-    return null;
-  };
-
   const handleSubmit = (action: SaveAction = "save") => {
-    const validationError = validate();
-    if (validationError) {
-      setFormError(validationError);
-      return;
-    }
-
     setFormError(null);
-    mutation.mutate(
-      {
-        id,
-        product: {
-          name: formData.name.trim(),
-          description: formData.description.trim() || null,
-          supplier_id: formData.supplier_id,
-          stock: Number(formData.stock),
-          unit: formData.unit,
-          images: formData.images.map((image) => image.trim()).filter(Boolean),
-        },
-        prices: prices.map((item) => ({
-          price_list_id: item.price_list_id,
-          price: Number(item.price),
-        })),
-        existingPrices: originalPrices,
-      },
-      {
-        onSuccess: (product) => {
+    try {
+      void save(formData, prices, originalPrices)
+        .then((product) => {
           if (action === "save-and-new") {
             setFormData(EMPTY_PRODUCT_FORM);
             setPrices([]);
@@ -272,16 +186,13 @@ export function useProductForm(
           } else {
             setIsDisabled(true);
           }
-
-          if (onSuccess) {
-            onSuccess(action, product);
-          } else {
-            navigate("/products");
-          }
-        },
-        onError: (error) => setFormError(error.message),
-      },
-    );
+          if (onSuccess) onSuccess(action, product);
+          else navigate("/products");
+        })
+        .catch((error: Error) => setFormError(error.message));
+    } catch (error) {
+      setFormError((error as Error).message);
+    }
   };
 
   return {
@@ -291,7 +202,7 @@ export function useProductForm(
     priceLists,
     formError,
     isLoading: isLoadingProduct,
-    isSaving: mutation.isPending,
+    isSaving,
     handleChange,
     addImageField,
     updateImageField,

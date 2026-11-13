@@ -7,7 +7,7 @@ import { useUserForm } from "./useUserForm";
 
 const mocks = vi.hoisted(() => ({ createUser: vi.fn() }));
 
-vi.mock("../../../api", () => ({
+vi.mock("../../../infrastructure/api", () => ({
   usersQueryOptions: {
     detail: (id: string) => ({
       queryKey: ["users", "detail", id],

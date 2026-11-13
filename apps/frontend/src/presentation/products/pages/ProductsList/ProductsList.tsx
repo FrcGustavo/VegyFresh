@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useInfiniteQuery } from "@tanstack/react-query";
 import { Inventory } from "@mui/icons-material";
 import { Box, Typography, CircularProgress } from "@mui/material";
-import { productsQueryOptions } from "../../../../api";
+import { useProductsList } from "../../../../infrastructure/catalog/useCatalog";
 import { useDebouncedValue } from "../../../../hooks/useDebouncedValue";
 import { Table } from "../../../../components/Table";
 import type { ColumnConfig } from "../../../../components/Table";
@@ -24,20 +23,17 @@ export default function ProductsList() {
   const debouncedQuery = useDebouncedValue(query, 400);
 
   const {
-    data,
+    items: list,
     isLoading,
     error,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useInfiniteQuery({
-    ...productsQueryOptions.infiniteList({
-      limit: String(PRODUCTS_PAGE_SIZE),
-      order_by: sortBy,
-      order: sortOrder,
-      search: debouncedQuery.trim() || undefined,
-    }),
-    placeholderData: (previousData) => previousData,
+  } = useProductsList({
+    limit: String(PRODUCTS_PAGE_SIZE),
+    order_by: sortBy,
+    order: sortOrder,
+    search: debouncedQuery.trim() || undefined,
   });
 
   if (isLoading)
@@ -52,10 +48,6 @@ export default function ProductsList() {
         Error al cargar: {(error as Error).message}
       </Typography>
     );
-
-  const list = (data?.pages ?? []).flatMap((page) =>
-    Array.isArray(page) ? page : (page?.data ?? []),
-  );
 
   return (
     <ProductsTableView
