@@ -3,7 +3,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { LocalOffer } from "@mui/icons-material";
 import { Box, Typography, CircularProgress } from "@mui/material";
 import { priceListsQueryOptions } from "../../../../api";
-import { useDebouncedValue } from "../../../../hooks/useDebouncedValue";
+import { useDebouncedValue } from "@/presentation/hooks/useDebouncedValue";
 import { Table } from "../../../../components/Table";
 import PriceListFormModal from "../../components/PriceListFormModal";
 import ResourcePageTitle from "../../../../components/ResourcePageTitle";

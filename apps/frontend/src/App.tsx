@@ -1,9 +1,10 @@
 import { CssBaseline, ThemeProvider } from "@mui/material";
 import { AuthProvider } from "./auth/AuthContext";
+import { ThemePreferenceProvider } from "./infrastructure/preferences/ThemePreferenceProvider";
 import { AppRouter } from "./router/AppRouter";
-import { useAppTheme } from "./theme/useAppTheme";
+import { useAppTheme } from "./presentation/theme/useAppTheme";
 
-function App() {
+function ThemedApp() {
   const { theme } = useAppTheme();
 
   return (
@@ -13,6 +14,14 @@ function App() {
         <AppRouter />
       </AuthProvider>
     </ThemeProvider>
+  );
+}
+
+function App() {
+  return (
+    <ThemePreferenceProvider>
+      <ThemedApp />
+    </ThemePreferenceProvider>
   );
 }
 

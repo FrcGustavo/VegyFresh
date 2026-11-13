@@ -20,6 +20,8 @@ import type {
   Order,
   OrderListQuery,
   Organization,
+  PortalOrder,
+  PortalOrderListQuery,
   PriceList,
   PriceListListQuery,
   Product,
@@ -162,6 +164,16 @@ export function createApiClient({ request }: { request: ApiRequest }) {
   >(request, "/product-prices");
 
   const resources = {
+    portalOrders: {
+      list: (query?: PortalOrderListQuery, options?: RequestInit) =>
+        requireBody(
+          request<PortalOrder[]>(withQuery("/portal/orders", query), options),
+        ),
+      get: (id: string, options?: RequestInit) =>
+        requireBody(
+          request<PortalOrder>(`/portal/orders/${encodeURIComponent(id)}`, options),
+        ),
+    },
     clients,
     users,
     suppliers,

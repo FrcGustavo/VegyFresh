@@ -13,7 +13,7 @@
     "dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
-    "lint": "eslint \"{src,apps,libs,test,__tests__}/**/*.ts\" --fix",
+    "lint": "cd ../.. && apps/backend/node_modules/.bin/eslint --config apps/backend/eslint.config.mjs \"apps/backend/{src,apps,libs,test,__tests__}/**/*.ts\" \"services/backend/__tests__/**/*.ts\" --fix",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
@@ -84,7 +84,7 @@
     ],
     "rootDir": ".",
     "testMatch": [
-      "<rootDir>/__tests__/**/*.spec.ts"
+      "**/*.spec.ts"
     ],
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
@@ -96,6 +96,13 @@
       "src/**/*.(t|j)s"
     ],
     "coverageDirectory": "./coverage",
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "roots": [
+      "<rootDir>/__tests__",
+      "<rootDir>/../../services/backend/__tests__"
+    ],
+    "modulePaths": [
+      "<rootDir>/node_modules"
+    ]
   }
 }
