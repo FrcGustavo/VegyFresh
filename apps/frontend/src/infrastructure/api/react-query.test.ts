@@ -42,3 +42,22 @@ describe("integración de productos con React Query", () => {
     });
   });
 });
+
+it("propaga la cancelación y pagina con el total del servidor", async () => {
+  const { clientsApi } = await import("./resources");
+  const { clientsQueryOptions } = await import("./react-query");
+  const getAll = vi.spyOn(clientsApi, "getAll").mockResolvedValue({
+    data: [{ id: "1" }, { id: "2" }] as never,
+    total: 3,
+  });
+  const signal = new AbortController().signal;
+  const options = clientsQueryOptions.infiniteList({ limit: "2" });
+  const page = await options.queryFn!({ pageParam: 0, signal } as never);
+
+  expect(getAll).toHaveBeenCalledWith({ limit: "2", offset: 0 }, { signal });
+  expect(options.getNextPageParam!(page, [page], 0, [0])).toBe(2);
+  expect(
+    options.getNextPageParam!({ data: [{}] as never, total: 3 }, [], 2, []),
+  ).toBeUndefined();
+  getAll.mockRestore();
+});
