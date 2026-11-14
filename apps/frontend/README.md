@@ -85,3 +85,18 @@ pnpm audit --prod
 ```
 
 Previous review found a moderate `qs` advisory through the backend dependency path, not through frontend runtime code.
+
+## Parallel Start runtime
+
+The default development and production commands still use the SPA. A parallel TanStack Start runtime provides the native session and allowlisted API routes, plus a small server-rendered session page while the administrative screens are migrated. It is not the production entrypoint yet.
+
+For this runtime set `VEGYFRESH_PUBLIC_ORIGIN` to its canonical public origin (HTTPS except loopback), `VEGYFRESH_API_URL` to the backend origin, `KEYCLOAK_ISSUER` and `VEGYFRESH_SESSION_SECRET` to the server-side identity settings. Optional `KEYCLOAK_CLIENT_ID`, `KEYCLOAK_CLIENT_SECRET`, and `KEYCLOAK_INTERNAL_URL` configure the provider. Keep these values server-side.
+
+```bash
+pnpm --filter frontend dev:start
+pnpm --filter frontend build:start
+pnpm --filter frontend serve:start
+pnpm --filter frontend test:start # requires build:start
+```
+
+Start creates session projections per request; the BFF keeps provider tokens in encrypted HttpOnly cookies and applies its existing API allowlist. The HTTP integration test uses disposable identity and API fixtures.

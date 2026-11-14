@@ -10,7 +10,11 @@
     "generate:api-types": "pnpm --filter @vegyfresh/api-client generate:api-types",
     "lint": "eslint .",
     "test": "vitest run --exclude 'tests/*.test.mjs' && node --test tests/adminRoutes.test.mjs tests/apiProxy.test.mjs",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "dev:start": "vite --config vite.start.config.ts --host 0.0.0.0 --port 5173 --strictPort",
+    "build:start": "vite build --config vite.start.config.ts",
+    "serve:start": "node .output/server/index.mjs",
+    "test:start": "node --test tests/start-runtime.test.mjs"
   },
   "dependencies": {
     "@vegyfresh/api-client": "workspace:*",
@@ -24,7 +28,9 @@
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "react-router": "^7.14.2",
-    "zustand": "^5.0.13"
+    "zustand": "^5.0.13",
+    "@tanstack/react-router": "^1.169.5",
+    "@tanstack/react-start": "^1.169.5"
   },
   "devDependencies": {
     "@babel/core": "^7.29.0",
@@ -46,6 +52,7 @@
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.58.2",
     "vite": "^8.0.10",
-    "vitest": "^4.1.7"
+    "vitest": "^4.1.7",
+    "nitro": "3.0.261103-rc"
   }
 }
