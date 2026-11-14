@@ -30,6 +30,30 @@ owner when its profile is valid and the owner role is configured.
 
 The API does not expose local signup, login, refresh, or logout endpoints.
 
+## Identity mappings
+
+A new verified admin subject with a valid profile can receive a local owner
+profile without an organization. The API never links an existing profile by
+email. A portal subject requires an explicit client mapping whose client belongs
+to an organization. Mappings use the exact issuer, subject and identity type;
+roles and organization access remain local to the API.
+
+After reviewing the target record and applying the identity migration, an
+operator may create a mapping with placeholders replaced by the verified
+Keycloak subject and the intended local UUID:
+
+```sql
+INSERT INTO external_identities (issuer, subject, identity_type, user_id)
+VALUES ('<ISSUER>', '<SUBJECT>', 'user', '<USER_UUID>');
+
+INSERT INTO external_identities (issuer, subject, identity_type, client_id)
+VALUES ('<ISSUER>', '<SUBJECT>', 'portal-client', '<CLIENT_UUID>');
+```
+
+Use the statement for the intended identity type only. The database enforces
+the mapping type and uniqueness constraints. Review the target environment and
+record before applying any migration or mapping.
+
 ## Secure Defaults
 
 - `BCRYPT_SALT_ROUNDS` defaults to `12` (minimum accepted: `10`) for local user password administration.

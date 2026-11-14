@@ -4,6 +4,8 @@ services:
       context: ../..
       dockerfile: infrastructure/tooling/Dockerfile
     working_dir: /repo
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - ../..:/repo
       - root_dependencies:/repo/node_modules
@@ -14,6 +16,14 @@ services:
       - api_client_dependencies:/repo/clients/api-client/node_modules
       - ui_dependencies:/repo/packages/ui/node_modules
       - seed_api_dependencies:/repo/jobs/seed-api/node_modules
+  image-tests:
+    extends: tools
+    environment:
+      SMOKE_API_HOST: image-tests
+      SMOKE_DOCKER_NETWORK: ${SMOKE_DOCKER_NETWORK:-vegyfresh-tools_default}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    entrypoint: ["node", "infrastructure/tooling/smoke-images.mjs"]
 volumes:
   root_dependencies:
   frontend_dependencies:

@@ -1,5 +1,6 @@
 .DEFAULT_GOAL := help
-NODE_IMAGE ?= node:20-bookworm-slim
+ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST)))/../..)
+include $(ROOT)/infrastructure/tooling/commands.mk
 
 .PHONY: help config install up down logs test check
 help:
@@ -21,6 +22,6 @@ logs:
 	docker compose -f compose.yml logs -f keycloak
 
 test:
-	docker run --rm --mount type=bind,source="$(CURDIR)",target=/work,readonly --workdir /work $(NODE_IMAGE) node --test realm.test.mjs
+	$(TOOLS) node --test infrastructure/keycloak/realm.test.mjs
 
 check: config test

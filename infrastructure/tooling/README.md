@@ -11,3 +11,18 @@ docker compose --project-name vegyfresh-tools -f infrastructure/tooling/compose.
 ```
 
 Commit the manifest and pnpm-generated lockfile together.
+
+Unit Makefiles use the same container and volumes. For example, run
+`make -C clients/api-client check contract`, `make -C jobs/seed-api check`,
+`make -C packages/ui check` or `make -C apps/docs check`. The catalogue dev
+server is available at `http://localhost:5175` through
+`make -C apps/docs dev`. See each unit's README for generation and seed inputs.
+
+The tooling container resolves `host.docker.internal` to the host gateway for
+local services. A job must still be explicitly configured with its target URL
+and credentials; running validation does not run the seed.
+
+To smoke-test a built web image, run `make test-images APP=admin IMAGE=<tag>`
+or set `APP=portal`. The image driver has access to the Docker socket to start
+an isolated application container and a disposable API fixture. It selects
+application routes from `APP`, not from the image tag.
