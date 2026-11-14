@@ -19,6 +19,9 @@
   "include": [
     "__tests__/**/*.ts",
     "src/auth/**/*.ts",
-    "src/identity/**/*.ts"
+    "src/catalog/**/*.ts",
+    "src/clients/**/*.ts",
+    "src/identity/**/*.ts",
+    "src/suppliers/**/*.ts"
   ]
 }
