@@ -1,4 +1,5 @@
 import { JwtService } from '@nestjs/jwt';
+import type { Request } from 'express';
 import { generateKeyPairSync } from 'node:crypto';
 import { createServer, Server } from 'node:http';
 import { AddressInfo } from 'node:net';
@@ -93,7 +94,10 @@ function authenticate(
     strategy.success = resolve;
     strategy.fail = () => reject(new Error('Authentication failed'));
     strategy.error = reject;
-    strategy.authenticate({ headers: { authorization: `Bearer ${raw}` } }, {});
+    strategy.authenticate(
+      { headers: { authorization: `Bearer ${raw}` } } as Request,
+      {},
+    );
   });
 }
 

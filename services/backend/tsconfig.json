@@ -3,6 +3,7 @@
   "compilerOptions": {
     "baseUrl": "../../apps/backend",
     "paths": {
+      "express": ["node_modules/@types/express"],
       "passport-jwt": ["node_modules/@types/passport-jwt"],
       "bcrypt": ["node_modules/@types/bcrypt"],
       "src/*": [
@@ -18,9 +19,11 @@
   },
   "include": [
     "__tests__/**/*.ts",
+    "src/ai/**/*.ts",
     "src/auth/**/*.ts",
     "src/catalog/**/*.ts",
     "src/clients/**/*.ts",
+    "src/database/**/*.ts",
     "src/folios/**/*.ts",
     "src/identity/**/*.ts",
     "src/inventory/**/*.ts",
@@ -30,6 +33,7 @@
     "src/purchase/**/*.ts",
     "src/roles/**/*.ts",
     "src/suppliers/**/*.ts",
-    "src/users/**/*.ts"
+    "src/users/**/*.ts",
+    "src/whatsapp/**/*.ts"
   ]
 }
