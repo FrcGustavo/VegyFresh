@@ -1,5 +1,9 @@
+import {
+  purchaseTotal,
+  validPurchaseItems,
+} from "@/application/purchases/purchaseDraft";
 import { useMemo, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useWarehousePurchaseEditor } from "@/infrastructure/purchases/usePurchases";
 import {
   Box,
   Button,
@@ -16,11 +20,6 @@ import {
 } from "@mui/material";
 import { Add as AddIcon, Delete as DeleteIcon } from "@mui/icons-material";
 import FloatingModal from "@/presentation/components/FloatingModal";
-import {
-  productsQueryOptions,
-  purchasesMutationOptions,
-  suppliersQueryOptions,
-} from "@/infrastructure/api";
 import { createClientRowId } from "@/infrastructure/identifiers/clientRowId";
 
 type PurchaseItemRow = {
@@ -56,7 +55,11 @@ export default function PurchaseFormModal({
   onClose,
   onSuccess,
 }: PurchaseFormModalProps) {
-  const queryClient = useQueryClient();
+  const {
+    suppliers: { data: suppliersData },
+    products: { data: productsData },
+    create: mutation,
+  } = useWarehousePurchaseEditor(isOpen);
   const [supplierId, setSupplierId] = useState("");
   const [purchaseDate, setPurchaseDate] = useState(() =>
     new Date().toISOString().slice(0, 10),
@@ -64,19 +67,6 @@ export default function PurchaseFormModal({
   const [notes, setNotes] = useState("");
   const [items, setItems] = useState<PurchaseItemRow[]>([createEmptyRow()]);
   const [formError, setFormError] = useState<string | null>(null);
-
-  const { data: suppliersData } = useQuery({
-    ...suppliersQueryOptions.list(),
-    enabled: isOpen,
-  });
-  const { data: productsData } = useQuery({
-    ...productsQueryOptions.list({
-      limit: "200",
-      order_by: "name",
-      order: "asc",
-    }),
-    enabled: isOpen,
-  });
 
   const suppliers = useMemo(
     () =>
@@ -97,36 +87,8 @@ export default function PurchaseFormModal({
     [products],
   );
 
-  const validItems = useMemo(
-    () =>
-      items
-        .filter((item) => item.product_id.trim())
-        .map((item) => ({
-          product_id: item.product_id,
-          quantity: Number(item.quantity),
-          unit_cost: Number(item.unit_cost),
-        }))
-        .filter(
-          (item) =>
-            Number.isFinite(item.quantity) &&
-            item.quantity > 0 &&
-            Number.isFinite(item.unit_cost) &&
-            item.unit_cost > 0,
-        ),
-    [items],
-  );
-
-  const total = useMemo(
-    () =>
-      validItems.reduce(
-        (sum, item) =>
-          sum + Number((item.quantity * item.unit_cost).toFixed(2)),
-        0,
-      ),
-    [validItems],
-  );
-
-  const mutation = useMutation(purchasesMutationOptions.create(queryClient));
+  const validItems = useMemo(() => validPurchaseItems(items), [items]);
+  const total = useMemo(() => purchaseTotal(validItems), [validItems]);
 
   const handleMutationSuccess = () => {
     setSupplierId("");

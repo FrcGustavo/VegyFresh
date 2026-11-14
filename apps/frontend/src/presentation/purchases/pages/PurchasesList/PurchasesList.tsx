@@ -1,8 +1,7 @@
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { usePurchasesList } from "@/infrastructure/purchases/usePurchases";
 import { ReceiptLong } from "@mui/icons-material";
 import { Box, CircularProgress, Typography } from "@mui/material";
-import { purchasesQueryOptions } from "@/infrastructure/api";
 import ListPageToolbar from "@/presentation/components/ListPageToolbar";
 import ResourcePageTitle from "@/presentation/components/ResourcePageTitle";
 import { Table } from "@/presentation/components/Table";
@@ -48,7 +47,7 @@ const getSortValue = (
 export default function PurchasesList() {
   const [query, setQuery] = useState("");
   const { sortBy, sortOrder, handleSort } = usePurchasesSort();
-  const { data, isLoading, error } = useQuery(purchasesQueryOptions.list());
+  const { data, isLoading, error } = usePurchasesList();
 
   const list = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();

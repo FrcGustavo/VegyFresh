@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useWarehouseData } from "@/infrastructure/inventory/useInventory";
 import {
   Box,
   CircularProgress,
@@ -14,7 +14,6 @@ import {
   Typography,
 } from "@mui/material";
 import { Warehouse as WarehouseIcon } from "@mui/icons-material";
-import { inventoryQueryOptions, purchasesQueryOptions } from "@/infrastructure/api";
 import ListPageToolbar from "@/presentation/components/ListPageToolbar";
 import ResourcePageTitle from "@/presentation/components/ResourcePageTitle";
 import PurchaseFormModal from "../components/PurchaseFormModal";
@@ -73,9 +72,11 @@ const formatQuantity = (value: number | string | null | undefined) => {
 export default function WarehousePage() {
   const [activeTab, setActiveTab] = useState(0);
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
-  const inventoryQuery = useQuery(inventoryQueryOptions.stock());
-  const purchasesQuery = useQuery(purchasesQueryOptions.list());
-  const movementsQuery = useQuery(inventoryQueryOptions.movements());
+  const {
+    inventory: inventoryQuery,
+    purchases: purchasesQuery,
+    movements: movementsQuery,
+  } = useWarehouseData();
 
   const isLoading =
     inventoryQuery.isLoading ||

@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { usePriceLists } from "@/infrastructure/catalog/usePriceLists";
 import { LocalOffer } from "@mui/icons-material";
 import { Box, Typography, CircularProgress } from "@mui/material";
-import { priceListsQueryOptions } from "@/infrastructure/api";
 import { useDebouncedValue } from "@/presentation/hooks/useDebouncedValue";
 import { Table } from "@/presentation/components/Table";
 import PriceListFormModal from "../../components/PriceListFormModal";
@@ -29,20 +28,17 @@ export default function PriceListsList() {
   const debouncedQuery = useDebouncedValue(query, 400);
 
   const {
-    data,
+    items: list,
     isLoading,
     error,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useInfiniteQuery({
-    ...priceListsQueryOptions.infiniteList({
-      limit: String(PRICE_LISTS_PAGE_SIZE),
-      order_by: sortBy,
-      order: sortOrder,
-      search: debouncedQuery.trim() || undefined,
-    }),
-    placeholderData: (previousData) => previousData,
+  } = usePriceLists({
+    limit: String(PRICE_LISTS_PAGE_SIZE),
+    order_by: sortBy,
+    order: sortOrder,
+    search: debouncedQuery.trim() || undefined,
   });
 
   if (isLoading)
@@ -57,10 +53,6 @@ export default function PriceListsList() {
         Error al cargar: {(error as Error).message}
       </Typography>
     );
-
-  const list = (data?.pages ?? []).flatMap((page) =>
-    Array.isArray(page) ? page : (page?.data ?? []),
-  );
 
   return (
     <PriceListsTableView

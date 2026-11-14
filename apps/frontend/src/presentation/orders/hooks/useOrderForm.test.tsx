@@ -100,9 +100,9 @@ describe("useOrderForm", () => {
     expect(result.current.items).toHaveLength(1);
   });
 
-  it("muestra validaciones dentro del formulario", () => {
+  it("muestra validaciones dentro del formulario", async () => {
     const { result } = renderHook(() => useOrderForm(), { wrapper: Wrapper });
-    act(() => result.current.handleSubmit("save"));
+    await act(() => result.current.handleSubmit("save"));
     expect(result.current.formError).toBe(
       "Selecciona un cliente válido por folio o nombre.",
     );
@@ -122,7 +122,7 @@ describe("useOrderForm", () => {
       result.current.updateItemField(0, "quantity", "2");
       result.current.updateItemField(0, "unit_price", "15.5");
     });
-    act(() => result.current.handleSubmit("save"));
+    await act(() => result.current.handleSubmit("save"));
 
     await waitFor(() => {
       expect(mocks.createOrder).toHaveBeenCalledWith(

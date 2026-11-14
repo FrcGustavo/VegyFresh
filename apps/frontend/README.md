@@ -58,3 +58,12 @@ For `make start`, configure `VEGYFRESH_API_URL` and `KEYCLOAK_INTERNAL_URL` in
 `.env` with addresses reachable from the container (for local host services,
 use `host.docker.internal`); the public issuer and origin remain browser-facing.
 The `/health` endpoint returns an uncached status response.
+
+### Frontend layer checks
+
+`pnpm --filter frontend lint` verifies that domain and application code stays
+independent of browser APIs and infrastructure, and that presentation uses
+infrastructure adapters for server state. Run `pnpm --filter frontend
+check:architecture` to run that check separately. Order, price-list and
+purchase draft rules are tested without a browser; their query and mutation
+adapters keep cache behavior in the infrastructure layer.

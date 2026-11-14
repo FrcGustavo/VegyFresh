@@ -1,5 +1,9 @@
+import {
+  purchaseTotal,
+  validPurchaseItems,
+} from "@/application/purchases/purchaseDraft";
 import { useEffect, useMemo, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { usePurchaseEditor } from "@/infrastructure/purchases/usePurchases";
 import {
   Alert,
   Box,
@@ -18,13 +22,7 @@ import {
 import { Add as AddIcon, Delete as DeleteIcon } from "@mui/icons-material";
 import FloatingModal from "@/presentation/components/FloatingModal";
 import ModalToolbar from "@/presentation/components/ModalToolbar";
-import {
-  productsQueryOptions,
-  purchasesMutationOptions,
-  purchasesQueryOptions,
-  suppliersQueryOptions,
-  type CreatePurchaseInput,
-} from "@/infrastructure/api";
+import type { CreatePurchaseInput } from "@/infrastructure/api";
 import { createClientRowId } from "@/infrastructure/identifiers/clientRowId";
 import type { PurchaseFormModalProps } from "./PurchaseFormModal.types";
 
@@ -78,7 +76,6 @@ export default function PurchaseFormModal({
   currentIndex = 0,
   onNavigate,
 }: PurchaseFormModalProps) {
-  const queryClient = useQueryClient();
   const [createdPurchaseId, setCreatedPurchaseId] = useState<string>();
   const [isCreatingNew, setIsCreatingNew] = useState(false);
   const effectivePurchaseId =
@@ -94,26 +91,14 @@ export default function PurchaseFormModal({
   const [formError, setFormError] = useState<string | null>(null);
   const [isDisabled, setIsDisabled] = useState(!!effectivePurchaseId);
 
-  const { data: existingPurchase, isLoading: isLoadingPurchase } = useQuery({
-    ...purchasesQueryOptions.detail(effectivePurchaseId ?? ""),
-    enabled: isOpen && !!effectivePurchaseId,
-  });
-  const { data: suppliersData } = useQuery({
-    ...suppliersQueryOptions.list({
-      limit: "200",
-      order_by: "name",
-      order: "asc",
-    }),
-    enabled: isOpen,
-  });
-  const { data: productsData } = useQuery({
-    ...productsQueryOptions.list({
-      limit: "200",
-      order_by: "name",
-      order: "asc",
-    }),
-    enabled: isOpen,
-  });
+  const {
+    detail: { data: existingPurchase, isLoading: isLoadingPurchase },
+    suppliers: { data: suppliersData },
+    products: { data: productsData },
+    create: createMutation,
+    update: updateMutation,
+    isSaving,
+  } = usePurchaseEditor(isOpen, effectivePurchaseId);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -170,43 +155,9 @@ export default function PurchaseFormModal({
     [products],
   );
 
-  const validItems = useMemo(
-    () =>
-      items
-        .filter((item) => item.product_id.trim())
-        .map((item) => ({
-          product_id: item.product_id,
-          quantity: Number(item.quantity),
-          unit_cost: Number(item.unit_cost),
-        }))
-        .filter(
-          (item) =>
-            Number.isFinite(item.quantity) &&
-            item.quantity > 0 &&
-            Number.isFinite(item.unit_cost) &&
-            item.unit_cost > 0,
-        ),
-    [items],
-  );
+  const validItems = useMemo(() => validPurchaseItems(items), [items]);
+  const total = useMemo(() => purchaseTotal(validItems), [validItems]);
 
-  const total = useMemo(
-    () =>
-      validItems.reduce(
-        (sum, item) =>
-          sum + Number((item.quantity * item.unit_cost).toFixed(2)),
-        0,
-      ),
-    [validItems],
-  );
-
-  const createMutation = useMutation(
-    purchasesMutationOptions.create(queryClient),
-  );
-  const updateMutation = useMutation(
-    purchasesMutationOptions.update(queryClient),
-  );
-
-  const isSaving = createMutation.isPending || updateMutation.isPending;
   const totalProducts = validItems.length;
 
   const handleClose = () => {

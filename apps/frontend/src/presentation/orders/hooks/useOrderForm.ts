@@ -1,16 +1,9 @@
 import { useState, useEffect, useMemo, useRef } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAppNavigate } from "@/presentation/router/useAppNavigation";
-import {
-  clientsQueryOptions,
-  ordersMutationOptions,
-  ordersQueryOptions,
-  productsQueryOptions,
-  usersQueryOptions,
-  type CreateOrderInput,
-  type Order,
-} from "@/infrastructure/api";
+import type { Order } from "@/infrastructure/api";
 import { createClientRowId } from "@/infrastructure/identifiers/clientRowId";
+import { createSaveOrderUseCase } from "@/application/orders/saveOrder";
+import { useOrderEditor } from "@/infrastructure/orders/useOrderEditor";
 
 export type SaveAction = "save" | "save-and-close" | "save-and-new";
 type OrderChangeEvent = { target: { name: string; value: string } };
@@ -94,8 +87,14 @@ export function useOrderForm(
   id?: string,
   onSuccess?: (action: SaveAction, order: Order) => void,
 ) {
-  const queryClient = useQueryClient();
   const navigate = useAppNavigate();
+  const {
+    detail: { data: existingOrder, isLoading: isLoadingOrder },
+    clients: { data: clientsData },
+    users: { data: usersData },
+    lookups: orderLookups,
+    writer: orderWriter,
+  } = useOrderEditor(id);
   const [formData, setFormData] = useState<OrderFormData>(EMPTY_FORM_DATA);
   const [items, setItems] = useState<OrderFormItem[]>([createEmptyItem()]);
   const [isDisabled, setIsDisabled] = useState(!!id);
@@ -109,11 +108,6 @@ export function useOrderForm(
     null,
   );
   const clientLookupVersionRef = useRef(0);
-
-  const { data: existingOrder, isLoading: isLoadingOrder } = useQuery({
-    ...ordersQueryOptions.detail(id ?? ""),
-    enabled: !!id,
-  });
 
   useEffect(() => {
     if (existingOrder) {
@@ -171,9 +165,6 @@ export function useOrderForm(
       });
     }
   }, [id, existingOrder]);
-
-  const { data: clientsData } = useQuery(clientsQueryOptions.list());
-  const { data: usersData } = useQuery(usersQueryOptions.list());
 
   const clients = useMemo(
     () =>
@@ -258,14 +249,12 @@ export function useOrderForm(
     clientLookupVersionRef.current = requestVersion;
 
     clientLookupTimerRef.current = setTimeout(async () => {
-      const response = await queryClient.fetchQuery(
-        clientsQueryOptions.list({
-          search: searchText,
-          limit: "50",
-          order_by: "name",
-          order: "asc",
-        }),
-      );
+      const response = await orderLookups.searchClients({
+        search: searchText,
+        limit: "50",
+        order_by: "name",
+        order: "asc",
+      });
       const clientsFromApi = (
         Array.isArray(response) ? response : (response?.data ?? [])
       ) as ClientRef[];
@@ -408,14 +397,12 @@ export function useOrderForm(
     lookupVersionRef.current[rowKey] = requestVersion;
 
     lookupTimersRef.current[rowKey] = setTimeout(async () => {
-      const response = await queryClient.fetchQuery(
-        productsQueryOptions.list({
-          search: searchText,
-          limit: "25",
-          order_by: "name",
-          order: "asc",
-        }),
-      );
+      const response = await orderLookups.searchProducts({
+        search: searchText,
+        limit: "25",
+        order_by: "name",
+        order: "asc",
+      });
       const productsFromApi = (
         Array.isArray(response) ? response : response?.data || []
       ) as ProductRef[];
@@ -482,79 +469,39 @@ export function useOrderForm(
     }, 300);
   };
 
-  const createMutation = useMutation(ordersMutationOptions.create(queryClient));
-  const updateMutation = useMutation(ordersMutationOptions.update(queryClient));
+  const handleSubmit = async (action: SaveAction = "save") => {
+    setFormError(null);
 
-  const handleSubmit = (action: SaveAction = "save") => {
-    if (!formData.client_id) {
-      setFormError("Selecciona un cliente válido por folio o nombre.");
-      return;
-    }
-
-    if (!formData.user_id) {
-      setFormError("Selecciona un usuario responsable del pedido.");
-      return;
-    }
-
-    const validItems = items.filter(
-      (item) => String(item.product_id || "").trim() !== "",
-    );
-
-    if (validItems.length === 0) {
-      setFormError("Agrega al menos un producto al pedido.");
-      return;
-    }
-
-    if (
-      validItems.some(
-        (item) =>
-          !Number.isFinite(Number(item.quantity)) ||
-          Number(item.quantity) <= 0 ||
-          !Number.isFinite(Number(item.unit_price)) ||
-          Number(item.unit_price) < 0,
-      )
-    ) {
-      setFormError(
-        "Cada partida debe tener una cantidad mayor que cero y un precio válido.",
+    try {
+      const result = await createSaveOrderUseCase(orderWriter)(
+        id,
+        formData,
+        items,
       );
-      return;
-    }
+      if (!result.success) {
+        setFormError(result.error);
+        return;
+      }
 
-    const payload = {
-      client_id: formData.client_id,
-      user_id: formData.user_id,
-      status: formData.status,
-      origin: formData.origin,
-      delivery_date: formData.delivery_date || undefined,
-      items: validItems.map((i) => ({
-        product_id: i.product_id,
-        quantity: Number(i.quantity),
-        unit_price: Number(i.unit_price),
-      })),
-    } as CreateOrderInput;
-    const options = {
-      onSuccess: (order: Order) => {
-        if (action === "save-and-new") {
-          setFormData(EMPTY_FORM_DATA);
-          setItems([createEmptyItem()]);
-          setClientLookup({ folio: "", name: "" });
-        } else {
-          setIsDisabled(true);
-        }
+      if (action === "save-and-new") {
+        setFormData(EMPTY_FORM_DATA);
+        setItems([createEmptyItem()]);
+        setClientLookup({ folio: "", name: "" });
+      } else {
+        setIsDisabled(true);
+      }
 
-        if (onSuccess) {
-          onSuccess(action, order);
-        } else {
-          navigate("/orders");
-        }
-      },
-      onError: (error: Error) => setFormError(error.message),
-    };
-
-    if (id) {
-      updateMutation.mutate({ id, input: payload }, options);
-    } else {
-      createMutation.mutate(payload, options);
+      if (onSuccess) {
+        onSuccess(action, result.order);
+      } else {
+        navigate("/orders");
+      }
+    } catch (error) {
+      setFormError(
+        error instanceof Error
+          ? error.message
+          : "No se pudo guardar el pedido.",
+      );
     }
   };
 
@@ -566,7 +513,7 @@ export function useOrderForm(
     users,
     totalGeneral,
     isLoading: isLoadingOrder,
-    isSaving: createMutation.isPending || updateMutation.isPending,
+    isSaving: orderWriter.isPending,
     formError,
     handleChange,
     addItemField,

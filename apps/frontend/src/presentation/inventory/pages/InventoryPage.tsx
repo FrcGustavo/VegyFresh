@@ -1,8 +1,7 @@
 import { useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useInventoryStock } from "@/infrastructure/inventory/useInventory";
 import { Box, CircularProgress, Typography } from "@mui/material";
 import { Warehouse as WarehouseIcon } from "@mui/icons-material";
-import { inventoryQueryOptions } from "@/infrastructure/api";
 import ResourcePageTitle from "@/presentation/components/ResourcePageTitle";
 import { Table } from "@/presentation/components/Table";
 import type { ColumnConfig } from "@/presentation/components/Table";
@@ -54,7 +53,7 @@ const formatQuantity = (value: number | string | null | undefined) => {
 };
 
 export default function InventoryPage() {
-  const inventoryQuery = useQuery(inventoryQueryOptions.stock());
+  const inventoryQuery = useInventoryStock();
   const inventory = useMemo(
     () => (inventoryQuery.data ?? []) as ProductInventoryItem[],
     [inventoryQuery.data],
