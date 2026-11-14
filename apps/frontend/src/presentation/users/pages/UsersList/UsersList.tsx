@@ -1,4 +1,4 @@
-import { Box, CircularProgress, Typography } from "@mui/material";
+import { Box, CircularProgress } from "@mui/material";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AdminPanelSettings } from "@mui/icons-material";
 import { useUsersList } from "../../../../infrastructure/catalog/useCatalog";
@@ -6,6 +6,7 @@ import { useDebouncedValue } from "@/presentation/hooks/useDebouncedValue";
 import { Table } from "@/presentation/components/Table";
 import UserFormModal from "../../components/UserFormModal";
 import ResourcePageTitle from "@/presentation/components/ResourcePageTitle";
+import { ErrorState } from "@/presentation/ui";
 import ListPageToolbar from "@/presentation/components/ListPageToolbar";
 import { useUsersSort, useUsersTableState } from "./UsersList.hooks";
 import { USERS_PAGE_SIZE, USER_COLUMNS } from "./UsersList.constants";
@@ -38,9 +39,7 @@ export default function UsersList() {
     );
   if (error)
     return (
-      <Typography color="error">
-        Error al cargar: {(error as Error).message}
-      </Typography>
+      <ErrorState message={`Error al cargar: ${(error as Error).message}`} />
     );
 
   return (

@@ -2,10 +2,11 @@ import { ORDERS_INITIAL_FILTER } from "@/application/query/listDefaults";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useOrdersList } from "@/infrastructure/orders/useOrdersList";
 import { ShoppingCart } from "@mui/icons-material";
-import { Box, Typography, CircularProgress } from "@mui/material";
+import { Box, CircularProgress } from "@mui/material";
 import { Table } from "@/presentation/components/Table";
 import OrderFormModal from "../../components/OrderFormModal";
 import ResourcePageTitle from "@/presentation/components/ResourcePageTitle";
+import { ErrorState } from "@/presentation/ui";
 import ListPageToolbar from "@/presentation/components/ListPageToolbar";
 import {
   useOrdersTableState,
@@ -22,7 +23,9 @@ import type {
 } from "./OrdersList.types";
 
 export default function OrdersList() {
-  const [createdFilter, setCreatedFilter] = useState<CreatedFilter>(ORDERS_INITIAL_FILTER);
+  const [createdFilter, setCreatedFilter] = useState<CreatedFilter>(
+    ORDERS_INITIAL_FILTER,
+  );
   const [createdFrom, setCreatedFrom] = useState("");
   const [createdTo, setCreatedTo] = useState("");
   const { sortBy, sortOrder, handleSort } = useOrdersSort();
@@ -52,9 +55,7 @@ export default function OrdersList() {
     );
   if (error)
     return (
-      <Typography color="error">
-        Error al cargar: {(error as Error).message}
-      </Typography>
+      <ErrorState message={`Error al cargar: ${(error as Error).message}`} />
     );
 
   return (

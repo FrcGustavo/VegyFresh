@@ -81,6 +81,9 @@ importers:
       '@vegyfresh/api-client':
         specifier: workspace:*
         version: link:../../clients/api-client
+      '@vegyfresh/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
       openid-client:
         specifier: ^6.8.8
         version: 6.8.9

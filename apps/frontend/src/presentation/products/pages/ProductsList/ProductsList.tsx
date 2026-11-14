@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Inventory } from "@mui/icons-material";
-import { Box, Typography, CircularProgress } from "@mui/material";
+import { Box, CircularProgress } from "@mui/material";
 import { useProductsList } from "../../../../infrastructure/catalog/useCatalog";
 import { useDebouncedValue } from "@/presentation/hooks/useDebouncedValue";
 import { Table } from "@/presentation/components/Table";
 import type { ColumnConfig } from "@/presentation/components/Table";
 import ProductFormModal from "../../components/ProductFormModal";
 import ResourcePageTitle from "@/presentation/components/ResourcePageTitle";
+import { ErrorState } from "@/presentation/ui";
 import ListPageToolbar from "@/presentation/components/ListPageToolbar";
 import { useProductsTableState, useProductsSort } from "./ProductsList.hooks";
 import { productsListStyles } from "./ProductsList.styles";
@@ -44,9 +45,7 @@ export default function ProductsList() {
     );
   if (error)
     return (
-      <Typography color="error">
-        Error al cargar: {(error as Error).message}
-      </Typography>
+      <ErrorState message={`Error al cargar: ${(error as Error).message}`} />
     );
 
   return (

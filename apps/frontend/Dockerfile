@@ -28,6 +28,8 @@ COPY packages/ui/package.json packages/ui/package.json
 RUN pnpm install --filter frontend... --frozen-lockfile
 COPY apps/frontend apps/frontend
 COPY clients/api-client clients/api-client
+COPY packages/ui packages/ui
+RUN pnpm --filter @vegyfresh/ui build
 RUN pnpm --filter frontend build
 
 FROM node:24-bookworm-slim AS runtime

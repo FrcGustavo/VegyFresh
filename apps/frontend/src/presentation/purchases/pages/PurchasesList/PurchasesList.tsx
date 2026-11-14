@@ -1,9 +1,10 @@
 import { useMemo, useState } from "react";
 import { usePurchasesList } from "@/infrastructure/purchases/usePurchases";
 import { ReceiptLong } from "@mui/icons-material";
-import { Box, CircularProgress, Typography } from "@mui/material";
+import { Box, CircularProgress } from "@mui/material";
 import ListPageToolbar from "@/presentation/components/ListPageToolbar";
 import ResourcePageTitle from "@/presentation/components/ResourcePageTitle";
+import { ErrorState } from "@/presentation/ui";
 import { Table } from "@/presentation/components/Table";
 import type { ColumnConfig } from "@/presentation/components/Table";
 import PurchaseFormModal from "../../components/PurchaseFormModal";
@@ -90,9 +91,7 @@ export default function PurchasesList() {
 
   if (error) {
     return (
-      <Typography color="error">
-        Error al cargar: {(error as Error).message}
-      </Typography>
+      <ErrorState message={`Error al cargar: ${(error as Error).message}`} />
     );
   }
 
