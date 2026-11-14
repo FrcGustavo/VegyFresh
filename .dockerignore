@@ -1,17 +1,15 @@
-node_modules
-apps/*/node_modules
-apps/*/dist
+**/node_modules
+**/dist
+**/coverage
 .git
-.env
-coverage
+**/.env
+**/.env.*
+!**/.env.example
+.aws
+.codex
+.agents
 .DS_Store
-
-# Portal runtime is built from source, never from local credentials or build output.
-apps/portal/.env*
-apps/portal/.output
-apps/portal/.tanstack
-
-# Administrator server builds must not include local credentials or outputs.
-apps/frontend/.env*
-apps/frontend/.output
-apps/frontend/.tanstack
+**/.pnpm-store
+**/.output
+**/.nitro
+**/.tanstack
