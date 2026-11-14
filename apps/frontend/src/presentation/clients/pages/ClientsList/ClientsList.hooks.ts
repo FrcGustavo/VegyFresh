@@ -1,3 +1,4 @@
+import { LIST_INITIAL_FIELD, LIST_INITIAL_ORDER } from "@/application/query/listDefaults";
 import { useCallback, useState } from "react";
 import type { SortByField, SortOrder } from "./ClientsList.types";
 
@@ -45,8 +46,8 @@ export const useClientsTableState = () => {
 };
 
 export const useClientsSort = (
-  initialField: SortByField = "folio",
-  initialOrder: SortOrder = "asc",
+  initialField: SortByField = LIST_INITIAL_FIELD,
+  initialOrder: SortOrder = LIST_INITIAL_ORDER,
 ) => {
   const [sortBy, setSortBy] = useState<SortByField>(initialField);
   const [sortOrder, setSortOrder] = useState<SortOrder>(initialOrder);

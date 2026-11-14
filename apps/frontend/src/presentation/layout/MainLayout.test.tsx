@@ -19,7 +19,7 @@ describe("MainLayout", () => {
       user: { id: "user-1", name: "Owner", email: "owner@example.com" },
       organization: { id: "org-1", name: "Org", folio: "ORG" },
       role: { id: "role-1", name: "owner", permissions: ["*"] },
-      isAuthenticated: true, isLoading: false, login: vi.fn(), signup: vi.fn(),
+      isAuthenticated: true, isLoading: false,
       refreshSession: vi.fn(), logout,
     });
   });

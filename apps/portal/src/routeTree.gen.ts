@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ErrorRouteImport } from './routes/error'
 import { Route as HealthRouteImport } from './routes/health'
 import { Route as PortalRouteImport } from './routes/portal'
 import { Route as SessionRouteImport } from './routes/session'
@@ -24,6 +25,11 @@ import { Route as PortalOrdersOrderIdRouteImport } from './routes/portal.orders.
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ErrorRoute = ErrorRouteImport.update({
+  id: '/error',
+  path: '/error',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HealthRoute = HealthRouteImport.update({
@@ -79,6 +85,7 @@ const PortalOrdersOrderIdRoute = PortalOrdersOrderIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/error': typeof ErrorRoute
   '/health': typeof HealthRoute
   '/portal': typeof PortalRouteWithChildren
   '/session': typeof SessionRouteWithChildren
@@ -92,6 +99,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/error': typeof ErrorRoute
   '/health': typeof HealthRoute
   '/session': typeof SessionRouteWithChildren
   '/api/$': typeof ApiSplatRoute
@@ -104,6 +112,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/error': typeof ErrorRoute
   '/health': typeof HealthRoute
   '/portal': typeof PortalRouteWithChildren
   '/session': typeof SessionRouteWithChildren
@@ -119,6 +128,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/error'
     | '/health'
     | '/portal'
     | '/session'
@@ -132,6 +142,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/error'
     | '/health'
     | '/session'
     | '/api/$'
@@ -143,6 +154,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/error'
     | '/health'
     | '/portal'
     | '/session'
@@ -157,6 +169,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ErrorRoute: typeof ErrorRoute
   HealthRoute: typeof HealthRoute
   PortalRoute: typeof PortalRouteWithChildren
   SessionRoute: typeof SessionRouteWithChildren
@@ -170,6 +183,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/error': {
+      id: '/error'
+      path: '/error'
+      fullPath: '/error'
+      preLoaderRoute: typeof ErrorRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/health': {
@@ -287,6 +307,7 @@ const SessionRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ErrorRoute: ErrorRoute,
   HealthRoute: HealthRoute,
   PortalRoute: PortalRouteWithChildren,
   SessionRoute: SessionRouteWithChildren,

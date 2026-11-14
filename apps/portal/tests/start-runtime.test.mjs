@@ -108,6 +108,14 @@ test("Start SSR keeps concurrent sessions isolated and completes the OIDC callba
     assert.equal(response.headers.get("location"), "/");
     assert.match(response.headers.get("cache-control"), /private, no-store/);
   }
+  const errorResponse = await fetch(`${origin}/error?error=%3Cscript%3Esecret%3C%2Fscript%3E`);
+  const errorHtml = await errorResponse.text();
+  assert.equal(errorResponse.status, 200);
+  assert.match(errorHtml, /Unable to sign in/);
+  assert.doesNotMatch(errorHtml, /secret/);
+  assert.match(errorHtml, /session\/login/);
+  const outageError = await fetch(`${origin}/error?error=temporarily_unavailable`);
+  assert.match(await outageError.text(), /temporarily unavailable/);
   const [alice, bob] = await Promise.all([login("Alice"), login("Bob")]);
   const [a, b, guest] = await Promise.all([alice, bob, ""].map((cookie) => fetch(origin, { headers: { cookie } })));
   const [htmlA, htmlB, htmlGuest] = await Promise.all([a.text(), b.text(), guest.text()]);

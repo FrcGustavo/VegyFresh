@@ -1,3 +1,5 @@
+import { LIST_PAGE_SIZE } from "@/application/query/listDefaults";
+
 export const ORDER_COLUMNS = [
   {
     key: "created_at",
@@ -43,4 +45,4 @@ export const ORDER_COLUMNS = [
   },
 ] as const;
 
-export const ORDERS_PAGE_SIZE = 25;
+export const ORDERS_PAGE_SIZE = LIST_PAGE_SIZE;

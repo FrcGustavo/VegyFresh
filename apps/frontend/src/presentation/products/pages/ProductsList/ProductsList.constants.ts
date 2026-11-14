@@ -1,3 +1,5 @@
+import { LIST_PAGE_SIZE } from "@/application/query/listDefaults";
+
 export const PRODUCT_COLUMNS = [
   {
     key: "folio",
@@ -22,4 +24,4 @@ export const PRODUCT_COLUMNS = [
   },
 ] as const;
 
-export const PRODUCTS_PAGE_SIZE = 25;
+export const PRODUCTS_PAGE_SIZE = LIST_PAGE_SIZE;

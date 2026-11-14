@@ -1,3 +1,5 @@
+import { LIST_PAGE_SIZE } from "@/application/query/listDefaults";
+
 export const PRICE_LIST_COLUMNS = [
   {
     key: "folio",
@@ -15,4 +17,4 @@ export const PRICE_LIST_COLUMNS = [
   },
 ] as const;
 
-export const PRICE_LISTS_PAGE_SIZE = 25;
+export const PRICE_LISTS_PAGE_SIZE = LIST_PAGE_SIZE;

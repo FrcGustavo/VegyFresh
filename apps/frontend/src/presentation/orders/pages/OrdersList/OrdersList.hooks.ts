@@ -1,3 +1,4 @@
+import { ORDERS_INITIAL_FIELD, ORDERS_INITIAL_ORDER } from "@/application/query/listDefaults";
 import { useCallback, useState } from "react";
 import type { OrderSortField, SortOrder } from "./OrdersList.types";
 
@@ -46,8 +47,8 @@ export const useOrdersTableState = () => {
 };
 
 export const useOrdersSort = (
-  initialField: OrderSortField = "created_at",
-  initialOrder: SortOrder = "desc",
+  initialField: OrderSortField = ORDERS_INITIAL_FIELD,
+  initialOrder: SortOrder = ORDERS_INITIAL_ORDER,
 ) => {
   const [sortBy, setSortBy] = useState<OrderSortField>(initialField);
   const [sortOrder, setSortOrder] = useState<SortOrder>(initialOrder);
@@ -91,7 +92,7 @@ export const useFormatters = () => {
     if (!value) return "N/A";
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return "N/A";
-    return date.toLocaleDateString("es-MX");
+    return date.toLocaleDateString("es-MX", { timeZone: "UTC" });
   }, []);
 
   const formatCurrency = useCallback(

@@ -3,9 +3,11 @@
 The administrator runs on TanStack Start and Nitro. Its server owns the
 Keycloak session and proxies allowlisted API routes. Browser requests use
 same-origin HttpOnly cookies; the API determines organization and role access.
-Administrative screen data loads in the browser after hydration. API resources and
-their browser transport live in `src/infrastructure/api`; session adapters
-live in `src/infrastructure/auth`.
+The initial orders, clients, suppliers, products, price lists, users, purchases,
+inventory, and organization views load through the request-local BFF during SSR.
+Authorized data hydrates an identity-scoped query cache; failed preloads retry in
+the browser. API resources and browser transport live in `src/infrastructure/api`;
+session adapters live in `src/infrastructure/auth`.
 
 Run `pnpm --filter frontend dev` for development, `pnpm --filter frontend build`
 to build, and `pnpm --filter frontend start` to serve the resulting `.output`

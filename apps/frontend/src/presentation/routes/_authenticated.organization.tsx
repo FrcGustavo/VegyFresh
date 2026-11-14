@@ -1,4 +1,17 @@
+import { HydrationBoundary } from "@tanstack/react-query";
+import { readServerPage } from "@/infrastructure/query/serverPage";
+/* eslint-disable react-refresh/only-export-components -- File routes export their configuration. */
 import { createFileRoute } from "@tanstack/react-router";
 import OrganizationPage from "../organization/pages/OrganizationPage";
 import { OrganizationRoute } from "../router/RouteGuards";
-export const Route = createFileRoute("/_authenticated/organization")({ component: () => <OrganizationRoute><OrganizationPage /></OrganizationRoute> });
+export const Route = createFileRoute("/_authenticated/organization")({
+  loader: ({ context }) => context.session.authenticated === true && context.session.user?.id && context.session.user.name && context.session.user.email ? readServerPage({ data: "organization" }) : null,
+  component: Page,
+});
+
+function Page() {
+  const data = Route.useLoaderData();
+  const { session } = Route.useRouteContext();
+  const identity = JSON.stringify([session.user?.id, session.organization?.id, session.role?.id]);
+  return <HydrationBoundary state={data?.identity === identity ? JSON.parse(data.state) : undefined}><OrganizationRoute><OrganizationPage /></OrganizationRoute></HydrationBoundary>;
+}
