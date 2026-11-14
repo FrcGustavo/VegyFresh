@@ -8,7 +8,7 @@ services:
     command:
       - sh
       - -c
-      - CI=true pnpm install --filter frontend... --frozen-lockfile && pnpm --filter frontend dev
+      - CI=true pnpm install --filter frontend... --frozen-lockfile && pnpm --filter @vegyfresh/ui build && pnpm --filter frontend dev
     ports:
       - "${FRONTEND_PORT:-5173}:5173"
     volumes:
@@ -16,6 +16,8 @@ services:
       - frontend_node_modules:/repo/node_modules
       - frontend_app_node_modules:/repo/apps/frontend/node_modules
       - api_client_node_modules:/repo/clients/api-client/node_modules
+      - ui_node_modules:/repo/packages/ui/node_modules
+      - ui_dist:/repo/packages/ui/dist
     env_file:
       - path: .env
         required: false
@@ -32,3 +34,5 @@ volumes:
   frontend_node_modules:
   frontend_app_node_modules:
   api_client_node_modules:
+  ui_node_modules:
+  ui_dist:

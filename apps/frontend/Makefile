@@ -22,7 +22,7 @@ help:
 		'  make lint check-types test build check' \
 		'  make compose-config Validate the development Compose file'
 install:
-	$(COMPOSE) run --build --rm --no-deps frontend sh -c 'CI=true pnpm install --filter frontend... --frozen-lockfile'
+	$(COMPOSE) run --build --rm --no-deps frontend sh -c 'CI=true pnpm install --filter frontend... --frozen-lockfile && pnpm --filter @vegyfresh/ui build'
 build:
 	$(PNPM) run build
 check-types:

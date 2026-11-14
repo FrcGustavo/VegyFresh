@@ -23,5 +23,7 @@ dist-ssr
 *.sln
 *.sw?
 
+# TanStack Start and Nitro build output
 .output
 .tanstack
+.nitro
