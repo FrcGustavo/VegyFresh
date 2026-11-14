@@ -6,11 +6,11 @@ import { describe, expect, it, vi } from "vitest";
 import { createQueryClient } from "./queryClient";
 import { StartSignIn } from "./StartSignIn";
 
-vi.mock("../../session.functions", () => ({ getPublicSession: vi.fn() }));
+vi.mock("../../infrastructure/auth/session.functions", () => ({ getPublicSession: vi.fn() }));
 
 describe("Start guest page", () => {
   it("hydrates the public server snapshot without rereading the session", async () => {
-    const { getPublicSession } = await import("../../session.functions");
+    const { getPublicSession } = await import("../../infrastructure/auth/session.functions");
     const session = { provider: "keycloak" as const, authenticated: true, client: { id: "a", name: "Alice", email: null, portalEnabled: true } };
     const view = () => <QueryClientProvider client={createQueryClient()}><StartSignIn initialSession={session} /></QueryClientProvider>;
     const html = renderToString(view());

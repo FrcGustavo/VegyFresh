@@ -1,26 +1,3 @@
-import { API_URL } from "../config/env";
-
-const ACCESS_TOKEN_KEY = "portal-access-token";
-const REFRESH_TOKEN_KEY = "portal-refresh-token";
-
-export function getAccessToken() {
-  return localStorage.getItem(ACCESS_TOKEN_KEY);
-}
-
-export function getRefreshToken() {
-  return localStorage.getItem(REFRESH_TOKEN_KEY);
-}
-
-export function setTokens(accessToken: string, refreshToken: string) {
-  localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
-  localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
-}
-
-export function clearTokens() {
-  localStorage.removeItem(ACCESS_TOKEN_KEY);
-  localStorage.removeItem(REFRESH_TOKEN_KEY);
-}
-
 export class HttpError extends Error {
   status: number;
 
@@ -35,26 +12,33 @@ export async function requestApi<T>(
   options?: RequestInit,
 ): Promise<T> {
   const headers = new Headers(options?.headers);
+  headers.delete("Authorization");
+  if (!headers.has("Accept")) headers.set("Accept", "application/json");
   if (options?.body && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
 
-  const accessToken = getAccessToken();
-  if (accessToken && !headers.has("Authorization")) {
-    headers.set("Authorization", `Bearer ${accessToken}`);
-  }
-
-  const response = await fetch(`${API_URL}${path}`, {
+  const response = await fetch(`/api/v1${path}`, {
     ...options,
+    credentials: "same-origin",
     headers,
   });
 
   const text = await response.text();
-  const payload = text ? (JSON.parse(text) as { message?: string }) : null;
-
-  if (!response.ok) {
-    throw new HttpError(payload?.message ?? "Request failed", response.status);
+  let payload: unknown = null;
+  if (text) {
+    try {
+      payload = JSON.parse(text);
+    } catch {
+      if (response.ok) throw new Error("Invalid response from server");
+    }
   }
 
-  return (payload ?? null) as T;
+  if (!response.ok) {
+    const message = payload && typeof payload === "object" && "message" in payload && typeof payload.message === "string"
+      ? payload.message : "Request failed";
+    throw new HttpError(message, response.status);
+  }
+
+  return payload as T;
 }

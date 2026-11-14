@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { startOrdersApi } from "./startOrdersApi";
+import { ordersApi } from "./ordersApi";
 
 const order = {
   id: "order-1", client_id: "private-client", organization_id: "private-org", folio: "A1",
@@ -15,7 +15,7 @@ describe("Start portal orders", () => {
     const fetchMock = vi.fn().mockResolvedValue(response([order]));
     vi.stubGlobal("fetch", fetchMock);
     const signal = new AbortController().signal;
-    const [result] = await startOrdersApi.list({ status: "APPROVED" }, signal);
+    const [result] = await ordersApi.list({ status: "APPROVED" }, signal);
     const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
     expect(url).toBe("/api/v1/portal/orders?page=1&pageSize=50&status=APPROVED");
     expect(init.credentials).toBe("same-origin");
@@ -30,10 +30,10 @@ describe("Start portal orders", () => {
     const fetchMock = vi.fn().mockResolvedValueOnce(response(order)).mockResolvedValueOnce(response({ message: "Forbidden" }, 403))
       .mockResolvedValueOnce(new Response("upstream unavailable", { status: 502 }));
     vi.stubGlobal("fetch", fetchMock);
-    await startOrdersApi.get("order/1");
+    await ordersApi.get("order/1");
     expect(fetchMock.mock.calls[0][0]).toBe("/api/v1/portal/orders/order%2F1");
-    await expect(startOrdersApi.get("other-client")).rejects.toMatchObject({ message: "Forbidden", status: 403 });
-    await expect(startOrdersApi.list({})).rejects.toMatchObject({ message: "Request failed", status: 502 });
+    await expect(ordersApi.get("other-client")).rejects.toMatchObject({ message: "Forbidden", status: 403 });
+    await expect(ordersApi.list({})).rejects.toMatchObject({ message: "Request failed", status: 502 });
   });
 
   it("passes an abort through to fetch", async () => {
@@ -41,7 +41,7 @@ describe("Start portal orders", () => {
       init.signal?.addEventListener("abort", () => reject(new DOMException("Aborted", "AbortError")));
     })));
     const controller = new AbortController();
-    const request = startOrdersApi.list({}, controller.signal);
+    const request = ordersApi.list({}, controller.signal);
     controller.abort();
     await expect(request).rejects.toMatchObject({ name: "AbortError" });
   });
