@@ -22,7 +22,7 @@ import {
   Warehouse,
   Store,
 } from "@mui/icons-material";
-import { useNavigate, useLocation } from "react-router";
+import { useAppNavigate, useAppLocation } from "@/presentation/router/useAppNavigation";
 import { useAuth } from "@/auth/useAuth";
 import {
   canAccessUsersResource,
@@ -55,8 +55,8 @@ const menuItems = [
 ];
 
 export default function Sidebar() {
-  const navigate = useNavigate();
-  const location = useLocation();
+  const navigate = useAppNavigate();
+  const location = useAppLocation();
   const { role, organization } = useAuth();
 
   const visibleMenuItems = menuItems.filter((item) => {

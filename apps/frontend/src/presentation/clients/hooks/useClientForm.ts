@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router";
+import { useAppNavigate } from "@/presentation/router/useAppNavigation";
 import type { Client } from "../../../domain/contacts/contact";
 import type { ClientFormData } from "../../../application/contacts/saveContact";
 import { useClientEditor } from "../../../infrastructure/contacts/useContacts";
@@ -36,7 +36,7 @@ export function useClientForm(
   onSuccess?: (action: SaveAction, client: Client) => void,
 ) {
   const { detail: { data: existingClient, isLoading }, priceLists, isSaving, save } = useClientEditor(id);
-  const navigate = useNavigate();
+  const navigate = useAppNavigate();
   const [formData, setFormData] = useState<ClientFormData>(EMPTY_CLIENT_FORM);
   const [avatarFileError, setAvatarFileError] = useState("");
   const [formError, setFormError] = useState<string | null>(null);

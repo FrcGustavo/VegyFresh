@@ -114,6 +114,24 @@ export async function fetchApi<T = any>(
   endpoint: string,
   options?: RequestInit,
 ): Promise<T | null> {
+  if (import.meta.env.VITE_START_RUNTIME === "true") {
+    const headers = new Headers(buildHeaders(null, options));
+    headers.delete("Authorization");
+    const response = await fetch(`/api/v1${endpoint}`, {
+      ...options,
+      credentials: "same-origin",
+      headers,
+    });
+    if (!response.ok) {
+      if (response.status === 401 && typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("auth:logout"));
+      }
+      const error = await parseErrorPayload(response);
+      throw new Error(error?.message || "Error en la petición");
+    }
+    return response.status === 204 ? null : parseJson<T>(response);
+  }
+
   const { authStorage } = await import("../auth/authStorage");
   const accessToken = authStorage.getAccessToken();
 

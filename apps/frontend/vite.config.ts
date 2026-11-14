@@ -47,6 +47,7 @@ export default defineConfig(({ command, mode }) => {
   const apiUrl = command === "build" ? normalizeApiUrl(env.VITE_API_URL) : undefined;
 
   return {
+    define: { "import.meta.env.VITE_START_RUNTIME": JSON.stringify("false") },
     resolve: { alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) } },
     plugins: [
       react(),

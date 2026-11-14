@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router";
+import { useAppNavigate } from "@/presentation/router/useAppNavigation";
 import {
   priceListEditorMutationOptions,
   priceListsQueryOptions,
@@ -49,7 +49,7 @@ export function usePriceListForm(
   onSuccess?: (action: SaveAction, priceList: PriceList) => void,
 ) {
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
+  const navigate = useAppNavigate();
   const [name, setName] = useState("");
   const [productsList, setProductsList] = useState<PriceListProductRow[]>([
     createEmptyProductRow(),
