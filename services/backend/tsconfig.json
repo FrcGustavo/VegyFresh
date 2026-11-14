@@ -25,7 +25,11 @@
     "src/identity/**/*.ts",
     "src/inventory/**/*.ts",
     "src/orders/**/*.ts",
+    "src/organizations/**/*.ts",
+    "src/portal/**/*.ts",
     "src/purchase/**/*.ts",
-    "src/suppliers/**/*.ts"
+    "src/roles/**/*.ts",
+    "src/suppliers/**/*.ts",
+    "src/users/**/*.ts"
   ]
 }
