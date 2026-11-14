@@ -12,7 +12,10 @@ export default function MainLayout({ children }: { children?: ReactNode }) {
 
   const handleLogout = async () => {
     await logout();
-    void navigate("/login");
+    // Start logout navigates through the provider before returning to the app.
+    if (import.meta.env.VITE_START_RUNTIME !== "true") {
+      void navigate("/login");
+    }
   };
 
   return (

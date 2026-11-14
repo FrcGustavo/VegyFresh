@@ -3,7 +3,6 @@ apps/*/node_modules
 apps/*/dist
 .git
 .env
-!apps/frontend/.env
 coverage
 .DS_Store
 
@@ -11,3 +10,8 @@ coverage
 apps/portal/.env*
 apps/portal/.output
 apps/portal/.tanstack
+
+# Administrator server builds must not include local credentials or outputs.
+apps/frontend/.env*
+apps/frontend/.output
+apps/frontend/.tanstack

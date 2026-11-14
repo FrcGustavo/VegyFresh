@@ -1,10 +1,14 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useAuth } from "@/auth/useAuth";
 import MainLayout from "./MainLayout";
 
 vi.mock("@/auth/useAuth", () => ({ useAuth: vi.fn() }));
+vi.mock("@/presentation/router/useAppNavigation", async () => {
+  const { useLocation, useNavigate } = await import("react-router");
+  return { useAppLocation: useLocation, useAppNavigate: useNavigate };
+});
 
 const logout = vi.fn();
 
@@ -23,6 +27,8 @@ function renderLayout() {
 }
 
 describe("MainLayout", () => {
+  afterEach(() => vi.unstubAllEnvs());
+
   beforeEach(() => {
     logout.mockReset().mockResolvedValue(undefined);
     vi.mocked(useAuth).mockReturnValue({
@@ -71,5 +77,16 @@ describe("MainLayout", () => {
     expect(screen.getByText("Orders content")).toBeInTheDocument();
     finishLogout();
     expect(await screen.findByText("Login page")).toBeInTheDocument();
+  });
+
+  it("lets Start complete its provider logout redirect", async () => {
+    vi.stubEnv("VITE_START_RUNTIME", "true");
+    renderLayout();
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Cerrar sesión" }));
+    });
+    expect(logout).toHaveBeenCalledOnce();
+    expect(screen.getByText("Orders content")).toBeInTheDocument();
+    expect(screen.queryByText("Login page")).not.toBeInTheDocument();
   });
 });
