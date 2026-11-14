@@ -9,21 +9,21 @@ import {
   RoleProtectedRoute,
 } from "./RouteGuards";
 
-const OrdersList = lazy(() => import("../modules/orders/pages/OrdersList"));
+const OrdersList = lazy(() => import("../presentation/orders/pages/OrdersList"));
 const ProductsList = lazy(
-  () => import("../modules/products/pages/ProductsList"),
+  () => import("../presentation/products/pages/ProductsList"),
 );
 const PurchasesList = lazy(
-  () => import("../modules/purchases/pages/PurchasesList"),
+  () => import("../presentation/purchases/pages/PurchasesList"),
 );
 const PriceListsList = lazy(
-  () => import("../modules/products/pages/PriceListsList"),
+  () => import("../presentation/products/pages/PriceListsList"),
 );
-const ClientsList = lazy(() => import("../modules/clients/pages/ClientsList"));
+const ClientsList = lazy(() => import("../presentation/clients/pages/ClientsList"));
 const SuppliersList = lazy(
-  () => import("../modules/suppliers/pages/SuppliersList"),
+  () => import("../presentation/suppliers/pages/SuppliersList"),
 );
-const UsersList = lazy(() => import("../modules/users/pages/UsersList"));
+const UsersList = lazy(() => import("../presentation/users/pages/UsersList"));
 const OrganizationPage = lazy(
   () => import("../presentation/organization/pages/OrganizationPage"),
 );
@@ -33,8 +33,8 @@ const InventoryPage = lazy(
 const SettingsPage = lazy(
   () => import("../presentation/settings/pages/SettingsPage"),
 );
-const LoginPage = lazy(() => import("../modules/auth/pages/LoginPage"));
-const SignupPage = lazy(() => import("../modules/auth/pages/SignupPage"));
+const LoginPage = lazy(() => import("../modules/auth/pages/LoginPage/LoginPage"));
+const SignupPage = lazy(() => import("../modules/auth/pages/SignupPage/SignupPage"));
 
 export function AppRoutes() {
   return (

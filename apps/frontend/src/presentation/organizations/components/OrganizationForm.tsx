@@ -1,6 +1,6 @@
 import { Avatar, Box, Button, TextField, Typography } from "@mui/material";
 import { useState, type FormEventHandler } from "react";
-import { validateImageFile } from "../../../utils/imageValidation";
+import { validateImageFile } from "@/presentation/utils/imageValidation";
 
 export type OrganizationFormSection = "general" | "folios";
 
