@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { startOrdersApi } from "../../../../infrastructure/orders/api/startOrdersApi";
+import { ordersApi } from "../../../../infrastructure/orders/api/ordersApi";
 import { OrderDetailView } from "./OrderDetailView";
 import { OrdersView } from "./OrdersView";
 
@@ -19,10 +19,10 @@ describe("Start orders views", () => {
     )));
     vi.stubGlobal("fetch", fetchMock);
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-    const view = render(<QueryClientProvider client={client}><OrdersView ordersApi={startOrdersApi} orderLink={(id) => <a href={`/portal/orders/${id}`}>View</a>} /></QueryClientProvider>);
+    const view = render(<QueryClientProvider client={client}><OrdersView ordersApi={ordersApi} orderLink={(id) => <a href={`/portal/orders/${id}`}>View</a>} /></QueryClientProvider>);
     expect(await screen.findByText("A-123")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "View" })).toHaveAttribute("href", "/portal/orders/one");
-    view.rerender(<QueryClientProvider client={client}><OrderDetailView ordersApi={startOrdersApi} orderId="one" /></QueryClientProvider>);
+    view.rerender(<QueryClientProvider client={client}><OrderDetailView ordersApi={ordersApi} orderId="one" /></QueryClientProvider>);
     expect(await screen.findByText("Order A-123")).toBeInTheDocument();
     expect(screen.getByText("carrot")).toBeInTheDocument();
     expect(fetchMock.mock.calls.map(([url]) => url)).toEqual(["/api/v1/portal/orders?page=1&pageSize=50", "/api/v1/portal/orders/one"]);
@@ -32,7 +32,7 @@ describe("Start orders views", () => {
   it("shows an API denial without displaying another client's order", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({ message: "Forbidden" }), { status: 403 })));
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-    const view = render(<QueryClientProvider client={client}><OrderDetailView ordersApi={startOrdersApi} orderId="other-client" /></QueryClientProvider>);
+    const view = render(<QueryClientProvider client={client}><OrderDetailView ordersApi={ordersApi} orderId="other-client" /></QueryClientProvider>);
     expect(await screen.findByRole("alert")).toHaveTextContent("Forbidden");
     expect(screen.queryByText("Order A-123")).not.toBeInTheDocument();
     view.unmount(); client.clear();

@@ -1,14 +1,11 @@
-import { useQuery } from "@tanstack/react-query";
+import { usePublicSession } from "../../infrastructure/auth/usePublicSession";
+import { logoutSession } from "../../infrastructure/auth/sessionActions";
 import { useState } from "react";
 import type { PortalSessionSnapshot } from "../../domain/auth/auth.types";
-import { getPublicSession } from "../../session.functions";
-import { logoutSession } from "../../infrastructure/auth/sessionActions";
 
 export function StartSignIn({ initialSession }: { initialSession: PortalSessionSnapshot }) {
   const [logoutFailed, setLogoutFailed] = useState(false);
-  const { data: session, refetch, isFetching } = useQuery({
-    queryKey: ["portal-session"], queryFn: () => getPublicSession(), initialData: initialSession, staleTime: Infinity,
-  });
+  const { data: session, refetch, isFetching } = usePublicSession(initialSession);
 
   async function logout() {
     setLogoutFailed(false);

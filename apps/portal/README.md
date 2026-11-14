@@ -27,8 +27,10 @@ Provision portal identities in the API; the portal does not create clients or
 manage their passwords. Legacy login and password setup URLs redirect to the
 sign-in page. The dashboard metrics are placeholders. Order list and detail
 pages render API-authorized data on the server using the request’s session. If
-the initial order request fails, the browser retries through the same BFF after
-hydration. Delivery dates use UTC for consistent server and browser rendering.
+the initial order request fails, the browser retries through the BFF after
+hydration. The browser transport never sends bearer tokens and preserves HTTP
+errors and request cancellation. Delivery dates use UTC for consistent server
+and browser rendering.
 Responses are private and never cacheable.
 
 `pnpm --filter portal lint`, `check-types`, `test`, and `build` validate the

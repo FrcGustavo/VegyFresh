@@ -1,7 +1,7 @@
 /* eslint-disable react-refresh/only-export-components -- TanStack route modules export their route configuration. */
 import { Chip } from "@mui/material";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { startOrdersApi } from "../infrastructure/orders/api/startOrdersApi";
+import { ordersApi } from "../infrastructure/orders/api/ordersApi";
 import { getServerOrders } from "../orders.functions";
 import { OrdersView } from "../presentation/features/orders/pages/OrdersView";
 
@@ -12,5 +12,5 @@ export const Route = createFileRoute("/portal/orders/")({
 
 function OrdersRoute() {
   const result = Route.useLoaderData();
-  return <OrdersView initialOrders={result?.kind === "list" ? result.value : undefined} ordersApi={startOrdersApi} orderLink={(id) => <Link to="/portal/orders/$orderId" params={{ orderId: id }}><Chip clickable size="small" label="View" /></Link>} />;
+  return <OrdersView initialOrders={result?.kind === "list" ? result.value : undefined} ordersApi={ordersApi} orderLink={(id) => <Link to="/portal/orders/$orderId" params={{ orderId: id }}><Chip clickable size="small" label="View" /></Link>} />;
 }

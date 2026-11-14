@@ -19,12 +19,10 @@ const response = (body: unknown, status = 200) =>
 
 afterEach(() => {
   vi.unstubAllGlobals();
-  localStorage.clear();
 });
 
 describe("portal orders adapter", () => {
-  it("uses the authenticated SDK list and preserves decimal values while projecting fields", async () => {
-    localStorage.setItem("portal-access-token", "portal-token");
+  it("uses the same-origin BFF and preserves decimal values while projecting fields", async () => {
     const fetchMock = vi.fn().mockResolvedValue(response([wireOrder]));
     vi.stubGlobal("fetch", fetchMock);
     const signal = new AbortController().signal;
@@ -34,7 +32,8 @@ describe("portal orders adapter", () => {
     expect(fetchMock).toHaveBeenCalledOnce();
     const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
     expect(url).toContain("/portal/orders?page=1&pageSize=50&status=APPROVED");
-    expect(new Headers(init.headers).get("Authorization")).toBe("Bearer portal-token");
+    expect(new Headers(init.headers).get("Authorization")).toBeNull();
+    expect(init.credentials).toBe("same-origin");
     expect(init.signal).toBe(signal);
     expect(order.total_amount).toBe("9007199254740993.50");
     expect(order.items[0]).toEqual({ id: "line-1", product_id: "p1",
