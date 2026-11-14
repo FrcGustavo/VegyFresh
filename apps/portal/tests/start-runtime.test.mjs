@@ -85,6 +85,12 @@ test("Start SSR keeps concurrent sessions isolated and completes the OIDC callba
     assert.match(callback.headers.getSetCookie().join(" "), /HttpOnly/i);
     return session.join("; ");
   }
+  for (const path of ["/login", "/signup", "/register", "/setup-password"]) {
+    const response = await fetch(`${origin}${path}`, { redirect: "manual" });
+    assert.equal(response.status, 303);
+    assert.equal(response.headers.get("location"), "/");
+    assert.match(response.headers.get("cache-control"), /private, no-store/);
+  }
   const [alice, bob] = await Promise.all([login("Alice"), login("Bob")]);
   const [a, b, guest] = await Promise.all([alice, bob, ""].map((cookie) => fetch(origin, { headers: { cookie } })));
   const [htmlA, htmlB, htmlGuest] = await Promise.all([a.text(), b.text(), guest.text()]);
