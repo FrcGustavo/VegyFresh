@@ -71,3 +71,17 @@ export default defineConfig([
   },
 ]);
 ```
+
+### Start migration
+
+The default `dev` and `build` commands still run the existing SPA. The separately
+invoked `pnpm dev:start` and `pnpm build:start` / `pnpm serve:start` run the
+Start session and dashboard foundation. Configure `VEGYFRESH_PUBLIC_ORIGIN`,
+`VEGYFRESH_API_URL`, `KEYCLOAK_ISSUER`, and `VEGYFRESH_SESSION_SECRET` for the
+existing portal proxy; the issuer must serve the portal client and callback.
+The Start runtime supports Keycloak sign-in, callback, session projection,
+sign-out, and a protected dashboard. Dashboard metrics remain placeholders;
+order routes and data have not yet migrated, so this separate runtime is not a
+replacement for the SPA. `pnpm test:start` runs
+the built server against disposable identity and API fixtures after
+`pnpm build:start`.

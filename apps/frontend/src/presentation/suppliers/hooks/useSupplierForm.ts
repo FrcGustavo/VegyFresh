@@ -3,7 +3,7 @@ import { useNavigate } from "react-router";
 import type { Supplier } from "../../../domain/contacts/contact";
 import type { SupplierFormData } from "../../../application/contacts/saveContact";
 import { useSupplierEditor } from "../../../infrastructure/contacts/useContacts";
-import { validateImageFile } from "../../../utils/imageValidation";
+import { validateImageFile } from "@/presentation/utils/imageValidation";
 
 export type SaveAction = "save" | "save-and-close" | "save-and-new";
 type SupplierChangeEvent = { target: { name: string; value: string } };

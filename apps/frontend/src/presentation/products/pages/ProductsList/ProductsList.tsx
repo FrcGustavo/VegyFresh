@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Inventory } from "@mui/icons-material";
 import { Box, Typography, CircularProgress } from "@mui/material";
 import { useProductsList } from "../../../../infrastructure/catalog/useCatalog";
-import { useDebouncedValue } from "../../../../hooks/useDebouncedValue";
+import { useDebouncedValue } from "@/presentation/hooks/useDebouncedValue";
 import { Table } from "../../../../components/Table";
 import type { ColumnConfig } from "../../../../components/Table";
 import ProductFormModal from "../../components/ProductFormModal";

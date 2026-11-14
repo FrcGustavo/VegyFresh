@@ -2,7 +2,7 @@ import { Box, CircularProgress, Typography } from "@mui/material";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { People } from "@mui/icons-material";
 import { useClientsList } from "../../../../infrastructure/contacts/useContacts";
-import { useDebouncedValue } from "../../../../hooks/useDebouncedValue";
+import { useDebouncedValue } from "@/presentation/hooks/useDebouncedValue";
 import { Table } from "../../../../components/Table";
 import ClientFormModal from "../../components/ClientFormModal";
 import ResourcePageTitle from "../../../../components/ResourcePageTitle";

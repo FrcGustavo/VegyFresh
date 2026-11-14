@@ -55,6 +55,11 @@ export type ProductListQuery = NonNullable<
 export type PriceListListQuery = NonNullable<
   operations["PriceListsController_findAll"]["parameters"]["query"]
 >;
+export type PortalOrderListQuery = NonNullable<
+  operations["PortalOrdersController_findAll"]["parameters"]["query"]
+>;
+export type PortalOrder = Schema<"PortalOrderResponseDto">;
+export type PortalOrderItem = Schema<"PortalOrderItemResponseDto">;
 
 export type SortOrder = "asc" | "desc";
 

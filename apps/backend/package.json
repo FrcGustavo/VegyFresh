@@ -13,7 +13,7 @@
     "dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
-    "lint": "eslint \"{src,apps,libs,test,__tests__}/**/*.ts\" --fix",
+    "lint": "cd ../.. && apps/backend/node_modules/.bin/eslint --config apps/backend/eslint.config.mjs \"apps/backend/{src,apps,libs,test,__tests__}/**/*.ts\" \"services/backend/__tests__/**/*.ts\" --fix",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
@@ -23,7 +23,10 @@
     "typeorm:prod": "typeorm -d dist/database/dataSource.js",
     "migrations:generate": "npm run typeorm migration:generate",
     "migrations:run": "npm run typeorm migration:run",
-    "migrations:run:prod": "npm run typeorm:prod migration:run"
+    "migrations:run:prod": "npm run typeorm:prod migration:run",
+    "postinstall": "node scripts/install-source-bridge.cjs",
+    "prepare:source-bridge": "node scripts/install-source-bridge.cjs",
+    "test:source-bridge": "node --test scripts/install-source-bridge.test.cjs"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
@@ -84,7 +87,7 @@
     ],
     "rootDir": ".",
     "testMatch": [
-      "<rootDir>/__tests__/**/*.spec.ts"
+      "**/*.spec.ts"
     ],
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
@@ -96,6 +99,13 @@
       "src/**/*.(t|j)s"
     ],
     "coverageDirectory": "./coverage",
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "roots": [
+      "<rootDir>/__tests__",
+      "<rootDir>/../../services/backend/__tests__"
+    ],
+    "modulePaths": [
+      "<rootDir>/node_modules"
+    ]
   }
 }

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router";
 import type { Client } from "../../../domain/contacts/contact";
 import type { ClientFormData } from "../../../application/contacts/saveContact";
 import { useClientEditor } from "../../../infrastructure/contacts/useContacts";
-import { validateImageFile } from "../../../utils/imageValidation";
+import { validateImageFile } from "@/presentation/utils/imageValidation";
 import {
   findLocationByPostalCode,
   getCitiesByCountryAndState,

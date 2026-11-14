@@ -1,55 +1,37 @@
-import {
-  useEffect,
-  useMemo,
-  useState,
-  type ReactNode,
-} from "react";
-import { authApi } from "../authApi";
-import {
-  clearTokens,
-  getAccessToken,
-  getRefreshToken,
-  setTokens,
-} from "../../api/httpClient";
-import type { PortalClientProfile } from "../../../domain/auth/auth.types";
-
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import type { PortalClientProfile, PortalSessionSnapshot } from "../../../domain/auth/auth.types";
+import type { PortalSessionAdapter } from "../browserSession";
 import { PortalSessionContext, type PortalSessionContextValue } from "./portalSessionContext";
 
-export function PortalSessionProvider({ children }: { children: ReactNode }) {
-  const [client, setClient] = useState<PortalClientProfile | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+export function PortalSessionProvider({
+  children,
+  initialSession,
+  adapter,
+  onIdentityChange,
+}: {
+  children: ReactNode;
+  initialSession?: PortalSessionSnapshot;
+  adapter: PortalSessionAdapter;
+  onIdentityChange?: () => void;
+}) {
+  const [client, setClient] = useState<PortalClientProfile | null>(
+    () => initialSession?.authenticated === true ? initialSession.client ?? null : null,
+  );
+  const [isLoading, setIsLoading] = useState(
+    () => initialSession === undefined || initialSession.authenticated === null,
+  );
+  // The snapshot belongs to this provider's request and must not be replaced on rerender.
+  const [needsLoad] = useState(() => initialSession === undefined);
 
   useEffect(() => {
-    const hydrate = async () => {
-      const accessToken = getAccessToken();
-      const refreshToken = getRefreshToken();
-
-      if (!accessToken && !refreshToken) {
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        if (accessToken) {
-          const profile = await authApi.me();
-          setClient(profile);
-          setIsLoading(false);
-          return;
-        }
-
-        const refreshed = await authApi.refresh();
-        setTokens(refreshed.access_token, refreshed.refresh_token);
-        setClient(refreshed.client);
-      } catch {
-        clearTokens();
-        setClient(null);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    void hydrate();
-  }, []);
+    if (!needsLoad) return;
+    let active = true;
+    void adapter.load().then(
+      (profile) => { if (active) setClient(profile); },
+      () => { if (active) setClient(null); },
+    ).finally(() => { if (active) setIsLoading(false); });
+    return () => { active = false; };
+  }, [adapter, needsLoad]);
 
   const value = useMemo<PortalSessionContextValue>(
     () => ({
@@ -57,26 +39,23 @@ export function PortalSessionProvider({ children }: { children: ReactNode }) {
       isAuthenticated: Boolean(client),
       isLoading,
       login: async (payload) => {
-        const response = await authApi.login(payload);
-        setTokens(response.access_token, response.refresh_token);
-        setClient(response.client);
+        const profile = await adapter.login(payload);
+        onIdentityChange?.();
+        setClient(profile);
       },
       setupPassword: async (payload) => {
-        const response = await authApi.setupPassword(payload);
-        setTokens(response.access_token, response.refresh_token);
-        setClient(response.client);
+        const profile = await adapter.setupPassword(payload);
+        onIdentityChange?.();
+        setClient(profile);
       },
       logout: async () => {
-        await authApi.logout();
+        await adapter.logout();
+        onIdentityChange?.();
         setClient(null);
       },
     }),
-    [client, isLoading],
+    [adapter, client, isLoading, onIdentityChange],
   );
 
-  return (
-    <PortalSessionContext.Provider value={value}>
-      {children}
-    </PortalSessionContext.Provider>
-  );
+  return <PortalSessionContext.Provider value={value}>{children}</PortalSessionContext.Provider>;
 }

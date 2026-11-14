@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import type { UserFormData } from "../../../application/catalog/saveCatalog";
 import { useUserEditor } from "../../../infrastructure/catalog/useCatalog";
-import { validateImageFile } from "../../../utils/imageValidation";
+import { validateImageFile } from "@/presentation/utils/imageValidation";
 
 export type SaveAction = "save" | "save-and-close" | "save-and-new";
 type UserChangeEvent = { target: { name: string; value: string } };
