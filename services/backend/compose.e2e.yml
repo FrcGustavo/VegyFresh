@@ -1,0 +1,58 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: identity_test
+      POSTGRES_PASSWORD: identity_test
+      POSTGRES_DB: identity_test
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}",
+        ]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+    networks:
+      e2e:
+        aliases:
+          - identity-db
+
+  test:
+    build:
+      context: ../..
+      dockerfile: services/backend/Dockerfile
+      target: build
+    working_dir: /repo
+    environment:
+      NODE_ENV: test
+      IDENTITY_TEST_HOST: identity-db
+      IDENTITY_PROVISIONING_TEST: "true"
+      IDENTITY_HTTP_TEST: "true"
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: identity_test
+      POSTGRES_PASSWORD: identity_test
+      POSTGRES_DB: identity_test
+      AUTH_PROVIDER: keycloak
+      KEYCLOAK_ISSUER: http://identity.e2e.test/realms/vegyfresh
+      KEYCLOAK_AUDIENCE: vegyfresh-api
+      KEYCLOAK_ADMIN_CLIENT_ID: vegyfresh-admin
+      KEYCLOAK_PORTAL_CLIENT_ID: vegyfresh-portal
+      KEYCLOAK_ADMIN_SCOPE: vegyfresh-api
+      KEYCLOAK_PORTAL_SCOPE: vegyfresh-portal
+    command:
+      [
+        "sh",
+        "-c",
+        "pnpm --filter backend exec jest --config ./test/jest-e2e.json --runInBand --runTestsByPath test/integration/external-identity.e2e-spec.ts test/integration/identity-resolution.e2e-spec.ts && pnpm --filter backend exec jest --config ./test/jest-e2e.json --runInBand --runTestsByPath test/identity-provisioning.e2e-spec.ts && pnpm --filter backend exec jest --config ./test/jest-e2e.json --runInBand --runTestsByPath test/identity.e2e-spec.ts",
+      ]
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - e2e
+
+networks:
+  e2e:

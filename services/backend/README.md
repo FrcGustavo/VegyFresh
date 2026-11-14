@@ -1,6 +1,6 @@
 # VegyFresh Backend
 
-NestJS API for VegyFresh with JWT auth and tenant-scoped access control.
+NestJS API for VegyFresh with Keycloak authentication and tenant-scoped access control.
 
 ## API Docs (Swagger)
 
@@ -34,12 +34,24 @@ The API does not expose local signup, login, refresh, or logout endpoints.
 
 - `BCRYPT_SALT_ROUNDS` defaults to `12` (minimum accepted: `10`) for local user password administration.
 
-## Local scripts
+## Local Docker commands
+
+Copy `.env.example` to `.env` and configure the local environment. From the
+repository root, `make -C services/backend dev` starts PostgreSQL, runs pending
+migrations, and serves the API on `127.0.0.1:3000`. Keycloak must be started
+separately; its browser-facing issuer remains `http://localhost:8080`, while
+containers fetch its JWKS through `host.docker.internal`. Run
+`make -C services/backend down` to stop the stack without deleting its database
+volume. `make -C services/backend compose-config ENV_FILE="$PWD/services/backend/.env.example"`
+validates the Compose configuration without starting containers.
+
+`make -C services/backend test-e2e` runs the identity and tenant integration
+suites against an isolated PostgreSQL Compose project and removes its temporary
+volume afterward. Unit checks and the production image use Docker as well:
 
 ```bash
-pnpm --filter backend run build
-pnpm --filter backend run test
-pnpm --filter backend run dev
+make -C services/backend lint check-types test build
+make -C services/backend docker-build
 ```
 
 ## WhatsApp Webhook Integration
