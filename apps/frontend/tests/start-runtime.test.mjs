@@ -51,6 +51,7 @@ test("built Start routes isolate sessions and forward only authorized API calls"
     const name = authorization.endsWith("Alice") ? "Alice" : "Bob";
     res.setHeader("content-type", "application/json");
     if (req.url.startsWith("/api/v1/auth/me")) return res.end(JSON.stringify({ user: { id: name, name, email: `${name}@example.test`, secret: "do-not-serialize" }, organization: withoutOrganization ? null : { id: name, name: `Org ${name}` }, role: { id: "admin", name: "admin", permissions: allowUsers ? ["users:manage"] : ["users.read"] }, privateToken: "do-not-serialize" }));
+    if (req.url.startsWith("/api/v1/orders")) return res.end(JSON.stringify({ data: [{ id: name, folio: `ORDER-${name}`, client: { name: `Customer ${name}` }, total_amount: 12 }], total: 1 }));
     res.end(JSON.stringify({ owner: name, path: req.url }));
   });
   const apiPort = await listen(api);
@@ -98,8 +99,13 @@ test("built Start routes isolate sessions and forward only authorized API calls"
   const [htmlA, htmlB] = await Promise.all([a.text(), b.text()]);
   assert.match(a.headers.get("cache-control"), /private, no-store/);
   assert.match(a.headers.get("vary"), /cookie/i);
-  assert.match(htmlA, /Alice@example.test/); assert.doesNotMatch(htmlA, /Bob|access-Alice|refresh-Alice|do-not-serialize/);
-  assert.match(htmlB, /Bob@example.test/); assert.doesNotMatch(htmlB, /Alice|access-Bob|refresh-Bob|do-not-serialize/);
+  const withoutScripts = (html) => html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "");
+  assert.match(htmlA, /Alice@example.test/); assert.match(withoutScripts(htmlA), /ORDER-Alice/); assert.doesNotMatch(htmlA, /Bob|access-Alice|refresh-Alice|do-not-serialize/);
+  assert.match(htmlB, /Bob@example.test/); assert.match(withoutScripts(htmlB), /ORDER-Bob/); assert.doesNotMatch(htmlB, /Alice|access-Bob|refresh-Bob|do-not-serialize/);
+  for (const cookie of [...alice.split("; "), ...bob.split("; ")]) {
+    const value = cookie.slice(cookie.indexOf("=") + 1);
+    assert.ok(!htmlA.includes(value) && !htmlB.includes(value), "session cookie must not enter SSR HTML");
+  }
   assert.equal(guest.status, 303);
   assert.equal(guest.headers.get("location"), "/login?returnTo=%2Forders");
   assert.equal((await fetch(origin, { headers: { cookie: alice }, redirect: "manual" })).headers.get("location"), "/orders");

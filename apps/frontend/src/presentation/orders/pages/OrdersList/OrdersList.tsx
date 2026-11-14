@@ -1,3 +1,4 @@
+import { ORDERS_INITIAL_FILTER } from "@/application/query/listDefaults";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useOrdersList } from "@/infrastructure/orders/useOrdersList";
 import { ShoppingCart } from "@mui/icons-material";
@@ -21,7 +22,7 @@ import type {
 } from "./OrdersList.types";
 
 export default function OrdersList() {
-  const [createdFilter, setCreatedFilter] = useState<CreatedFilter>("all");
+  const [createdFilter, setCreatedFilter] = useState<CreatedFilter>(ORDERS_INITIAL_FILTER);
   const [createdFrom, setCreatedFrom] = useState("");
   const [createdTo, setCreatedTo] = useState("");
   const { sortBy, sortOrder, handleSort } = useOrdersSort();

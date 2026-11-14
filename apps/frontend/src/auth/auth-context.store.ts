@@ -3,9 +3,6 @@ import type {
   AuthOrganization,
   AuthRole,
   AuthUser,
-  LoginPayload,
-  SignupPayload,
-  SignupResponse,
 } from "@/infrastructure/auth/authApi";
 
 export interface AuthState {
@@ -17,14 +14,6 @@ export interface AuthState {
 }
 
 export interface AuthContextValue extends AuthState {
-  login: (payload: LoginPayload) => Promise<{
-    access_token: string;
-    refresh_token: string;
-    user: AuthUser;
-    organization: AuthOrganization | null;
-    role: AuthRole;
-  }>;
-  signup: (payload: SignupPayload) => Promise<SignupResponse>;
   refreshSession: () => Promise<void>;
   logout: () => Promise<void>;
 }

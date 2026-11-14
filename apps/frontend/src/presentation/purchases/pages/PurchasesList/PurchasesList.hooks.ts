@@ -80,7 +80,7 @@ export const usePurchaseFormatters = () => {
     if (!value) return "N/A";
     const parsed = new Date(value);
     if (Number.isNaN(parsed.getTime())) return "N/A";
-    return parsed.toLocaleDateString("es-MX");
+    return parsed.toLocaleDateString("es-MX", { timeZone: "UTC" });
   }, []);
 
   const formatCurrency = useCallback(

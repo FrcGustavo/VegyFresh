@@ -63,15 +63,10 @@ export function StartAuthProvider({
     window.location.assign(await endBrowserSession());
   }
 
-  const unsupported = async (): Promise<never> => {
-    throw new Error("Usa el inicio de sesión seguro");
-  };
   return (
     <AuthContext.Provider
       value={{
         ...state,
-        login: unsupported,
-        signup: unsupported,
         refreshSession,
         logout,
       }}
