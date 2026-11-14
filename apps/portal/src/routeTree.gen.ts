@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as HealthRouteImport } from './routes/health'
 import { Route as PortalRouteImport } from './routes/portal'
 import { Route as SessionRouteImport } from './routes/session'
 import { Route as ApiSplatRouteImport } from './routes/api.$'
@@ -23,6 +24,11 @@ import { Route as PortalOrdersOrderIdRouteImport } from './routes/portal.orders.
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HealthRoute = HealthRouteImport.update({
+  id: '/health',
+  path: '/health',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PortalRoute = PortalRouteImport.update({
@@ -73,6 +79,7 @@ const PortalOrdersOrderIdRoute = PortalOrdersOrderIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/health': typeof HealthRoute
   '/portal': typeof PortalRouteWithChildren
   '/session': typeof SessionRouteWithChildren
   '/api/$': typeof ApiSplatRoute
@@ -85,6 +92,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/health': typeof HealthRoute
   '/session': typeof SessionRouteWithChildren
   '/api/$': typeof ApiSplatRoute
   '/portal/dashboard': typeof PortalDashboardRoute
@@ -96,6 +104,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/health': typeof HealthRoute
   '/portal': typeof PortalRouteWithChildren
   '/session': typeof SessionRouteWithChildren
   '/api/$': typeof ApiSplatRoute
@@ -110,6 +119,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/health'
     | '/portal'
     | '/session'
     | '/api/$'
@@ -122,6 +132,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/health'
     | '/session'
     | '/api/$'
     | '/portal/dashboard'
@@ -132,6 +143,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/health'
     | '/portal'
     | '/session'
     | '/api/$'
@@ -145,6 +157,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  HealthRoute: typeof HealthRoute
   PortalRoute: typeof PortalRouteWithChildren
   SessionRoute: typeof SessionRouteWithChildren
   ApiSplatRoute: typeof ApiSplatRoute
@@ -157,6 +170,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/health': {
+      id: '/health'
+      path: '/health'
+      fullPath: '/health'
+      preLoaderRoute: typeof HealthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/portal': {
@@ -267,6 +287,7 @@ const SessionRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  HealthRoute: HealthRoute,
   PortalRoute: PortalRouteWithChildren,
   SessionRoute: SessionRouteWithChildren,
   ApiSplatRoute: ApiSplatRoute,

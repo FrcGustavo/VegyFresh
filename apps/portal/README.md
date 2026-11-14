@@ -35,3 +35,13 @@ Responses are private and never cacheable.
 unit. `pnpm --filter portal test:start` exercises the built server against
 disposable identity and API fixtures. It does not replace an end-to-end check
 with the real identity provider, API, database, and browser.
+
+Copy `.env.example` to `.env` in this directory and configure the session secret
+and identity provider. `make dev` starts the app-owned Docker Compose stack,
+`make down` stops it, and `make check` runs checks. The Compose service reads
+Keycloak credentials and the session secret from `.env`. It defaults to the API
+at `host.docker.internal:3000` and Keycloak at `host.docker.internal:8080`;
+set `DEV_API_URL` and `DEV_KEYCLOAK_INTERNAL_URL` in the shell to override
+those container-facing URLs. Set `PORTAL_PORT` for the host port and
+`DEV_PUBLIC_ORIGIN` for the browser-facing origin if needed. `make docker-build`
+builds the production image, and `make start` runs it with the same `.env`.
