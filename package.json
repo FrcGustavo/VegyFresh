@@ -1,20 +1,18 @@
 {
-  "dependencies": {
-    "@nestjs/mapped-types": "*"
-  },
-  "name": "my-turborepo",
+  "name": "vegyfresh-workspace",
   "private": true,
   "scripts": {
-    "build": "turbo run build",
-    "dev": "turbo run dev",
-    "lint": "turbo run lint",
+    "build": "pnpm -r --if-present run build",
+    "dev": "pnpm -r --parallel --if-present run dev",
+    "lint": "pnpm -r --if-present run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "check-types": "turbo run check-types",
+    "check-types": "pnpm -r --if-present run check-types",
+    "test": "pnpm --filter backend test --runInBand && pnpm -r --filter '!backend' --if-present run test",
+    "check": "pnpm lint && pnpm check-types && pnpm test && pnpm build",
     "seed:api": "pnpm --filter @vegyfresh/seed-api run seed"
   },
   "devDependencies": {
     "prettier": "^3.7.4",
-    "turbo": "^2.9.6",
     "typescript": "5.9.2"
   },
   "engines": {

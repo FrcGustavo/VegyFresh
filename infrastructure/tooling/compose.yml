@@ -1,0 +1,25 @@
+services:
+  tools:
+    build:
+      context: ../..
+      dockerfile: infrastructure/tooling/Dockerfile
+    working_dir: /repo
+    volumes:
+      - ../..:/repo
+      - root_dependencies:/repo/node_modules
+      - frontend_dependencies:/repo/apps/frontend/node_modules
+      - portal_dependencies:/repo/apps/portal/node_modules
+      - docs_dependencies:/repo/apps/docs/node_modules
+      - backend_dependencies:/repo/services/backend/node_modules
+      - api_client_dependencies:/repo/clients/api-client/node_modules
+      - ui_dependencies:/repo/packages/ui/node_modules
+      - seed_api_dependencies:/repo/jobs/seed-api/node_modules
+volumes:
+  root_dependencies:
+  frontend_dependencies:
+  portal_dependencies:
+  docs_dependencies:
+  backend_dependencies:
+  api_client_dependencies:
+  ui_dependencies:
+  seed_api_dependencies:

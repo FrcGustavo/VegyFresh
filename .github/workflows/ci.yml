@@ -1,0 +1,19 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: make check
+      - run: make contract
+      - name: Verify built web server routes
+        run: docker compose --project-name vegyfresh-tools -f infrastructure/tooling/compose.yml run --build --rm --no-deps tools sh -c 'pnpm --filter frontend test:start && pnpm --filter portal test:start'
