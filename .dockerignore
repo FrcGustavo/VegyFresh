@@ -6,3 +6,8 @@ apps/*/dist
 !apps/frontend/.env
 coverage
 .DS_Store
+
+# Portal runtime is built from source, never from local credentials or build output.
+apps/portal/.env*
+apps/portal/.output
+apps/portal/.tanstack
