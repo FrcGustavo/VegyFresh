@@ -12,7 +12,7 @@ import {
   Paper,
   Typography,
 } from "@mui/material";
-import { useAppNavigate } from "@/presentation/router/useAppNavigation";
+import { useAppInvalidate, useAppNavigate } from "@/presentation/router/useAppNavigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../../../auth/useAuth";
 import { authStorage } from "../../../auth/authStorage";
@@ -42,6 +42,7 @@ const ORGANIZATION_MENU: Array<{
 
 export default function OrganizationPage() {
   const navigate = useAppNavigate();
+  const invalidate = useAppInvalidate();
   const queryClient = useQueryClient();
   const { organization, refreshSession } = useAuth();
   const organizationId = organization?.id ?? "";
@@ -114,6 +115,7 @@ export default function OrganizationPage() {
               authStorage.setTokens(tokens.access_token, tokens.refresh_token);
             }
             await refreshSession();
+            await invalidate();
             void navigate("/orders");
           } catch (refreshError) {
             setError(
@@ -132,10 +134,19 @@ export default function OrganizationPage() {
       { id: organizationId, input: payload },
       {
         onSuccess: async (updated) => {
-          setFormData(organizationToFormData(updated));
-          await refreshSession();
-          setSuccess("Organización actualizada");
-          void navigate("/orders");
+          try {
+            setFormData(organizationToFormData(updated));
+            await refreshSession();
+            await invalidate();
+            setSuccess("Organización actualizada");
+            void navigate("/orders");
+          } catch (refreshError) {
+            setError(
+              refreshError instanceof Error
+                ? refreshError.message
+                : "No se pudo actualizar la sesión",
+            );
+          }
         },
         onError: (saveError) => setError(saveError.message),
       },
