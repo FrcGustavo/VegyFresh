@@ -1,5 +1,5 @@
 import { Card, CardContent, Grid, Typography } from "@mui/material";
-import { usePortalSession } from "../../../../features/auth/hooks/usePortalSession";
+import { usePortalSession } from "../../../../infrastructure/auth/hooks/usePortalSession";
 import { PageHeader } from "../../../components/PageHeader";
 
 export function DashboardPage() {
