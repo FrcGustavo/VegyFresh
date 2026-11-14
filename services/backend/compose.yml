@@ -1,0 +1,104 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-vegyfresh}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-vegyfresh-local-only}
+      POSTGRES_DB: ${POSTGRES_DB:-vegyfresh}
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    volumes:
+      - backend_postgres_data:/var/lib/postgresql/data
+    networks:
+      - backend
+
+  migrate:
+    build:
+      context: ../..
+      dockerfile: services/backend/Dockerfile
+      target: build
+    working_dir: /repo
+    env_file:
+      - ${ENV_FILE:-.env}
+    environment:
+      NODE_ENV: development
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER:-vegyfresh}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-vegyfresh-local-only}
+      POSTGRES_DB: ${POSTGRES_DB:-vegyfresh}
+    command: ["pnpm", "--filter", "backend", "run", "migrations:run"]
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - backend
+
+  api:
+    build:
+      context: ../..
+      dockerfile: services/backend/Dockerfile
+      target: build
+    working_dir: /repo
+    env_file:
+      - ${ENV_FILE:-.env}
+    environment:
+      NODE_ENV: development
+      HOST: 0.0.0.0
+      PORT: 3000
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER:-vegyfresh}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-vegyfresh-local-only}
+      POSTGRES_DB: ${POSTGRES_DB:-vegyfresh}
+      AUTH_PROVIDER: ${AUTH_PROVIDER:-keycloak}
+      KEYCLOAK_ISSUER: ${KEYCLOAK_ISSUER:-http://localhost:8080/realms/vegyfresh}
+      KEYCLOAK_AUDIENCE: ${KEYCLOAK_AUDIENCE:-vegyfresh-api}
+      KEYCLOAK_ADMIN_CLIENT_ID: ${KEYCLOAK_ADMIN_CLIENT_ID:-vegyfresh-admin}
+      KEYCLOAK_PORTAL_CLIENT_ID: ${KEYCLOAK_PORTAL_CLIENT_ID:-vegyfresh-portal}
+      KEYCLOAK_ADMIN_SCOPE: ${KEYCLOAK_ADMIN_SCOPE:-vegyfresh-api}
+      KEYCLOAK_PORTAL_SCOPE: ${KEYCLOAK_PORTAL_SCOPE:-vegyfresh-portal}
+      KEYCLOAK_JWKS_URI: ${KEYCLOAK_JWKS_URI:-http://host.docker.internal:8080/realms/vegyfresh/protocol/openid-connect/certs}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:5174}
+    command: ["pnpm", "--filter", "backend", "run", "dev"]
+    ports:
+      - "127.0.0.1:${API_PORT:-3000}:3000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/api/v1/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    volumes:
+      - ./src:/repo/services/backend/src
+    networks:
+      - backend
+
+networks:
+  backend:
+
+volumes:
+  backend_postgres_data:
