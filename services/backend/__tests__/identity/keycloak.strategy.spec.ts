@@ -2,11 +2,11 @@ import { JwtService } from '@nestjs/jwt';
 import { generateKeyPairSync } from 'node:crypto';
 import { createServer, Server } from 'node:http';
 import { AddressInfo } from 'node:net';
-import { IdentityService } from '../../src/identity/identity.service';
+import { IdentityService } from 'src/identity/identity.service';
 import {
   KeycloakAccessStrategy,
   KeycloakPortalStrategy,
-} from '../../src/identity/strategies/keycloak.strategy';
+} from 'src/identity/strategies/keycloak.strategy';
 
 const issuer = 'https://identity.example/realms/vegyfresh';
 const { privateKey, publicKey } = generateKeyPairSync('rsa', {
@@ -93,10 +93,7 @@ function authenticate(
     strategy.success = resolve;
     strategy.fail = () => reject(new Error('Authentication failed'));
     strategy.error = reject;
-    strategy.authenticate(
-      { headers: { authorization: `Bearer ${raw}` } } as never,
-      {},
-    );
+    strategy.authenticate({ headers: { authorization: `Bearer ${raw}` } }, {});
   });
 }
 

@@ -1,5 +1,5 @@
 import { UnauthorizedException } from '@nestjs/common';
-import { IdentityService } from '../../src/identity/identity.service';
+import { IdentityService } from 'src/identity/identity.service';
 
 describe('IdentityService', () => {
   const identities = { findOne: jest.fn() };

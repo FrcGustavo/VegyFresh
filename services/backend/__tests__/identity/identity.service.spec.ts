@@ -3,11 +3,11 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { DataSource, EntityManager, Repository } from 'typeorm';
-import { Client } from '../../src/clients/entities/client.entity';
-import { Role } from '../../src/roles/entities/role.entity';
-import { User } from '../../src/users/entities/user.entity';
-import { ExternalIdentity } from '../../src/identity/entities/external-identity.entity';
-import { IdentityService } from '../../src/identity/identity.service';
+import { Client } from 'src/clients/entities/client.entity';
+import { Role } from 'src/roles/entities/role.entity';
+import { User } from 'src/users/entities/user.entity';
+import { ExternalIdentity } from 'src/identity/entities/external-identity.entity';
+import { IdentityService } from 'src/identity/identity.service';
 
 describe('IdentityService', () => {
   const findExternalIdentity = jest.fn();
