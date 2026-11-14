@@ -17,6 +17,8 @@
     ]
   },
   "include": [
-    "__tests__/**/*.ts"
+    "__tests__/**/*.ts",
+    "src/auth/**/*.ts",
+    "src/identity/**/*.ts"
   ]
 }
