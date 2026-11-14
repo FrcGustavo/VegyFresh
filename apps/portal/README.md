@@ -26,7 +26,10 @@ Register the external `/session/callback` URL with the Keycloak portal client.
 Provision portal identities in the API; the portal does not create clients or
 manage their passwords. Legacy login and password setup URLs redirect to the
 sign-in page. The dashboard metrics are placeholders. Order list and detail
-pages render a loading state on the server and retrieve data after hydration.
+pages render API-authorized data on the server using the request’s session. If
+the initial order request fails, the browser retries through the same BFF after
+hydration. Delivery dates use UTC for consistent server and browser rendering.
+Responses are private and never cacheable.
 
 `pnpm --filter portal lint`, `check-types`, `test`, and `build` validate the
 unit. `pnpm --filter portal test:start` exercises the built server against

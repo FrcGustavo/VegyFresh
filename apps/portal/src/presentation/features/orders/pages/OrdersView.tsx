@@ -10,13 +10,14 @@ import {
   TableRow,
 } from "@mui/material";
 import type { ReactNode } from "react";
+import type { PortalOrder } from "../../../../domain/orders/order.types";
 import type { OrdersPort } from "../../../../application/orders/orders";
 import { useOrders } from "../../../../infrastructure/orders/hooks/useOrders";
 import { PageHeader } from "../../../components/PageHeader";
 import { LoadingState } from "../../../components/LoadingState";
 
-export function OrdersView({ ordersApi, orderLink }: { ordersApi: OrdersPort; orderLink: (id: string) => ReactNode }) {
-  const query = useOrders(ordersApi);
+export function OrdersView({ ordersApi, orderLink, initialOrders }: { ordersApi: OrdersPort; orderLink: (id: string) => ReactNode; initialOrders?: PortalOrder[] }) {
+  const query = useOrders(ordersApi, undefined, initialOrders);
 
   if (query.isLoading) {
     return <LoadingState />;
@@ -52,7 +53,7 @@ export function OrdersView({ ordersApi, orderLink }: { ordersApi: OrdersPort; or
                 </TableCell>
                 <TableCell>
                   {order.delivery_date
-                    ? new Date(order.delivery_date).toLocaleDateString("es-MX")
+                    ? new Date(order.delivery_date).toLocaleDateString("es-MX", { timeZone: "UTC" })
                     : "-"}
                 </TableCell>
                 <TableCell align="right">

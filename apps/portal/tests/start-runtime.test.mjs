@@ -15,6 +15,8 @@ test("Start SSR keeps concurrent sessions isolated and completes the OIDC callba
   const { privateKey, publicKey } = generateKeyPairSync("rsa", { modulusLength: 2048 });
   const jwk = { ...publicKey.export({ format: "jwk" }), kid: "test-key", use: "sig", alg: "RS256" };
   const authorizations = new Map();
+  let refreshCalls = 0;
+  const usedRefreshTokens = new Set();
   let issuer;
   const identity = createServer(async (req, res) => {
     const path = new URL(req.url, issuer).pathname;
@@ -29,7 +31,13 @@ test("Start SSR keeps concurrent sessions isolated and completes the OIDC callba
       let body = ""; for await (const chunk of req) body += chunk;
       const params = new URLSearchParams(body);
       const identityName = params.get("grant_type") === "refresh_token" ? params.get("refresh_token").replace("refresh-", "") : params.get("code");
-      if (params.get("grant_type") === "refresh_token") return res.end(JSON.stringify({ access_token: `renewed-${identityName}`, refresh_token: `refresh-${identityName}`, token_type: "Bearer", expires_in: 300, refresh_expires_in: 3600 }));
+      if (params.get("grant_type") === "refresh_token") {
+        const token = params.get("refresh_token");
+        refreshCalls++;
+        if (usedRefreshTokens.has(token)) { res.statusCode = 400; return res.end(JSON.stringify({ error: "invalid_grant" })); }
+        usedRefreshTokens.add(token);
+        return res.end(JSON.stringify({ access_token: `renewed-${identityName}`, refresh_token: `rotated-${identityName}`, token_type: "Bearer", expires_in: 300, refresh_expires_in: 3600 }));
+      }
       const nonce = authorizations.get(identityName);
       const now = Math.floor(Date.now() / 1000);
       const claims = `${encode({ alg: "RS256", kid: "test-key", typ: "JWT" })}.${encode({ iss: issuer, sub: identityName, aud: "vegyfresh-portal", iat: now, exp: now + 300, nonce })}`;
@@ -50,7 +58,13 @@ test("Start SSR keeps concurrent sessions isolated and completes the OIDC callba
     if (!/^Bearer (?:access|renewed)-(?:Alice|Bob)$/.test(authorization) || (requireRenewal && authorization === "Bearer access-Alice")) { res.statusCode = 401; return res.end(); }
     const name = authorization.endsWith("Alice") ? "Alice" : "Bob";
     res.setHeader("content-type", "application/json");
-    if (req.url.startsWith("/api/v1/portal/orders")) return res.end(JSON.stringify({ owner: name, path: req.url }));
+    if (req.url.startsWith("/api/v1/portal/orders")) {
+      const order = { id: "order-1", folio: `ORDER-${name}`, status: "pending", origin: "portal", description: "", delivery_date: "2026-01-01T00:30:00.000Z", created_at: "2026-01-01T00:00:00Z", total_amount: 10, items: [{ id: "item-1", product_id: `PRODUCT-${name}`, quantity: 1, unit_price: 10, subtotal: 10 }] };
+      if (req.url.includes("pageSize=50")) return res.end(JSON.stringify([order]));
+      if (req.url.endsWith("/order-1")) return res.end(JSON.stringify(order));
+      if (req.url.endsWith("/missing")) { res.statusCode = 404; return res.end(JSON.stringify({ message: "private upstream error" })); }
+      return res.end(JSON.stringify({ owner: name, path: req.url }));
+    }
     res.end(JSON.stringify({ client: { id: name, name, email: null, portalEnabled: true }, privateToken: "do-not-serialize" }));
   });
   const apiPort = await listen(api);
@@ -109,17 +123,26 @@ test("Start SSR keeps concurrent sessions isolated and completes the OIDC callba
   assert.ok([302, 303, 307].includes(guestDashboard.status));
   assert.equal(guestDashboard.headers.get("location"), "/");
   assert.doesNotMatch(await guestDashboard.text(), /Customer portal dashboard/);
-  // Order pages render a loading shell on the server; each browser fetches through its own BFF cookie.
+  // Each request renders only its own API-authorized orders into private HTML.
   for (const path of ["/portal/orders", "/portal/orders/order-1"]) {
     const [pageA, pageB, pageGuest] = await Promise.all([alice, bob, ""].map((cookie) => fetch(`${origin}${path}`, { headers: { cookie }, redirect: "manual" })));
     assert.equal(pageA.status, 200); assert.equal(pageB.status, 200);
     assert.match(pageA.headers.get("cache-control"), /private, no-store/);
     const [pageHtmlA, pageHtmlB] = await Promise.all([pageA.text(), pageB.text()]);
+    assert.match(pageHtmlA.split("<script")[0], /ORDER-Alice/);
     assert.doesNotMatch(pageHtmlA, /Bob|access-Alice|refresh-Alice|do-not-serialize/);
+    assert.match(pageHtmlB.split("<script")[0], /ORDER-Bob/);
     assert.doesNotMatch(pageHtmlB, /Alice|access-Bob|refresh-Bob|do-not-serialize/);
+    for (const pair of [...alice.split("; "), ...bob.split("; ")]) {
+      const value = pair.slice(pair.indexOf("=") + 1);
+      assert.ok(value.length > 10);
+      assert.ok(!pageHtmlA.includes(value) && !pageHtmlB.includes(value), "sealed cookie appeared in HTML");
+    }
     assert.ok([302, 303, 307].includes(pageGuest.status));
     assert.equal(pageGuest.headers.get("location"), "/");
   }
+  const missing = await fetch(`${origin}/portal/orders/missing`, { headers: { cookie: alice } });
+  assert.doesNotMatch(await missing.text(), /ORDER-Bob|private upstream error|access-Alice|refresh-Alice/);
   const index = await fetch(`${origin}/portal`, { headers: { cookie: alice }, redirect: "manual" });
   assert.ok([302, 303, 307].includes(index.status));
   assert.equal(index.headers.get("location"), "/portal/dashboard");
@@ -137,6 +160,14 @@ test("Start SSR keeps concurrent sessions isolated and completes the OIDC callba
   assert.equal((await fetch(`${origin}/api/v1/portal/orders`, { method: "POST", headers: { cookie: alice, origin: "https://attacker.example" } })).status, 404);
   assert.equal(apiCalls, callsBeforeDenied);
   requireRenewal = true;
+  const refreshCallsBeforePage = refreshCalls;
+  const renewedPage = await fetch(`${origin}/portal/orders`, { headers: { cookie: alice } });
+  assert.match(await renewedPage.text(), /ORDER-Alice/);
+  assert.ok(renewedPage.headers.getSetCookie().some((value) => value.startsWith("vegyfresh_portal_refresh_token=") && /HttpOnly/i.test(value)));
+  assert.equal(refreshCalls - refreshCallsBeforePage, 1);
+  const rotatedCookies = cookies(renewedPage).join("; ");
+  const rotatedSession = await fetch(`${origin}/session`, { headers: { cookie: rotatedCookies } });
+  assert.equal((await rotatedSession.json()).client.name, "Alice");
   const renewed = await fetch(`${origin}/api/v1/portal/orders`, { headers: { cookie: alice } });
   assert.equal(renewed.status, 200);
   assert.deepEqual(await renewed.json(), { owner: "Alice", path: "/api/v1/portal/orders" });
