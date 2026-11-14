@@ -1,8 +1,8 @@
 # Local Keycloak development realm
 
 This unit defines a local-only Keycloak 26.8.1 service and the `vegyfresh`
-realm. It is preparatory infrastructure: it does not change the existing
-applications' authentication or provision application accounts.
+realm used by the applications and API. It does not provision application
+accounts or link existing profiles.
 
 Run commands from the repository root:
 
@@ -42,3 +42,7 @@ by default; `basic` includes the subject in access tokens. The optional
 password recovery, but contains no application users, client secrets, or
 application roles. A Keycloak identity alone does not grant application access;
 authorization and identity mapping must be handled by the application API.
+
+The API provisions an organization-less owner for a new verified administrator
+subject. Existing profiles and portal clients require an explicit identity link;
+see [backend identity setup](../../services/backend/README.md#identity-mappings).

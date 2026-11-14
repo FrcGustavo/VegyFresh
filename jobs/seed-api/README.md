@@ -7,9 +7,9 @@ compras ni pedidos.
 ## Ejecución
 
 ```bash
-SEED_API_BASE_URL=http://localhost:3000/api/v1 \
+SEED_API_BASE_URL=http://host.docker.internal:3000/api/v1 \
 SEED_API_BEARER_TOKEN=<token> \
-pnpm seed:api
+make -C jobs/seed-api run
 ```
 
 El token debe pertenecer a la organización que recibirá los datos y contar con
@@ -25,11 +25,12 @@ Variables opcionales:
 ## Comandos
 
 ```bash
-pnpm --filter @vegyfresh/seed-api check-types
-pnpm --filter @vegyfresh/seed-api test
-pnpm --filter @vegyfresh/seed-api build
+make -C jobs/seed-api check
 ```
 
 La implementación separa configuración, dominio, generadores puros, acceso al
 API, servicios por agregado y utilerías. Las pruebas usan un API en memoria para
 validar relaciones y ejecutar el flujo dos veces.
+
+El seed crea perfiles de negocio, no cuentas de Keycloak. Para iniciar sesión,
+los usuarios y clientes existentes requieren un vínculo de identidad explícito.

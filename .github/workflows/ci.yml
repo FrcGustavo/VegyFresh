@@ -16,4 +16,26 @@ jobs:
       - run: make check
       - run: make contract
       - name: Verify built web server routes
-        run: docker compose --project-name vegyfresh-tools -f infrastructure/tooling/compose.yml run --build --rm --no-deps tools sh -c 'pnpm --filter frontend test:start && pnpm --filter portal test:start'
+        run: make test-runtime
+      - name: Verify identity and tenant integration
+        run: make test-e2e
+      - name: Validate local identity configuration
+        run: make -C infrastructure/keycloak check
+  images:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - unit: apps/frontend
+            app: admin
+          - unit: apps/portal
+            app: portal
+          - unit: services/backend
+            app: backend
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -f ${{ matrix.unit }}/Dockerfile -t vegyfresh-check .
+      - if: matrix.app != 'backend'
+        run: make test-images APP=${{ matrix.app }} IMAGE=vegyfresh-check
+      - if: matrix.app == 'backend'
+        run: docker run --rm --entrypoint node vegyfresh-check -e "require('node:assert/strict').ok(require('node:fs').existsSync('dist/main.js')); require('./dist/app.module.js'); require('jwks-rsa').passportJwtSecret({ jwksUri:'http://localhost:8080/unused' });"
