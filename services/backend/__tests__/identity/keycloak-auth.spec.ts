@@ -1,4 +1,5 @@
 import { JwtService } from '@nestjs/jwt';
+import type { Request } from 'express';
 import { generateKeyPairSync } from 'node:crypto';
 import { createServer, Server } from 'node:http';
 import { AddressInfo } from 'node:net';
@@ -88,7 +89,10 @@ function authenticate(raw: string, kind: 'admin' | 'portal'): Promise<boolean> {
     strategy.success = () => resolve(true);
     strategy.fail = () => resolve(false);
     strategy.error = () => resolve(false);
-    strategy.authenticate({ headers: { authorization: `Bearer ${raw}` } }, {});
+    strategy.authenticate(
+      { headers: { authorization: `Bearer ${raw}` } } as Request,
+      {},
+    );
   });
 }
 
