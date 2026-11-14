@@ -1,5 +1,5 @@
 #!/bin/sh
-# Run from any directory: apps/backend/test/integration/run-external-identity.sh
+# Run from any directory: services/backend/test/integration/run-external-identity.sh
 # Set CHECK_BACKEND=1 to also run backend lint, type checks, unit tests and build.
 set -eu
 root=$(CDPATH= cd -- "$(dirname -- "$0")/../../../.." && pwd)
@@ -48,7 +48,7 @@ docker run --rm --network "$network" -v "$root:/source:ro" \
     if [ "$CHECK_BACKEND" = 1 ]; then
       status=0
       pnpm --filter backend lint || status=1
-      pnpm --filter backend exec tsc --noEmit --incremental false -p ../../services/backend/tsconfig.json || status=1
+      pnpm --filter backend exec tsc --noEmit --incremental false -p tsconfig.json || status=1
       pnpm --filter backend exec tsc --noEmit --incremental false || status=1
       pnpm --filter backend exec tsc --noEmit --incremental false -p tsconfig.build.json || status=1
       pnpm --filter backend exec jest --runInBand || status=1

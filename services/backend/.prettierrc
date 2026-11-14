@@ -1,1 +1,4 @@
-../../apps/backend/.prettierrc
+{
+  "singleQuote": true,
+  "trailingComma": "all"
+}

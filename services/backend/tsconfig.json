@@ -1,40 +1,25 @@
 {
-  "extends": "../../apps/backend/tsconfig.json",
   "compilerOptions": {
-    "baseUrl": "../../apps/backend",
-    "paths": {
-      "express": ["node_modules/@types/express"],
-      "passport-jwt": ["node_modules/@types/passport-jwt"],
-      "bcrypt": ["node_modules/@types/bcrypt"],
-      "src/*": [
-        "src/*"
-      ],
-      "*": [
-        "node_modules/*"
-      ]
-    },
-    "typeRoots": [
-      "../../apps/backend/node_modules/@types"
-    ]
-  },
-  "include": [
-    "src/*.ts",
-    "__tests__/**/*.ts",
-    "src/ai/**/*.ts",
-    "src/auth/**/*.ts",
-    "src/catalog/**/*.ts",
-    "src/clients/**/*.ts",
-    "src/database/**/*.ts",
-    "src/folios/**/*.ts",
-    "src/identity/**/*.ts",
-    "src/inventory/**/*.ts",
-    "src/orders/**/*.ts",
-    "src/organizations/**/*.ts",
-    "src/portal/**/*.ts",
-    "src/purchase/**/*.ts",
-    "src/roles/**/*.ts",
-    "src/suppliers/**/*.ts",
-    "src/users/**/*.ts",
-    "src/whatsapp/**/*.ts"
-  ]
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "resolvePackageJsonExports": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "declaration": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "target": "ES2023",
+    "sourceMap": true,
+    "outDir": "./dist",
+    "baseUrl": "./",
+    "incremental": true,
+    "skipLibCheck": true,
+    "strictNullChecks": true,
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitAny": false,
+    "strictBindCallApply": false,
+    "noFallthroughCasesInSwitch": false
+  }
 }

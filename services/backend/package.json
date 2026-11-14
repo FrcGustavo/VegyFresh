@@ -8,12 +8,12 @@
   "scripts": {
     "build": "nest build",
     "export:openapi": "ts-node -r tsconfig-paths/register scripts/export-openapi.ts",
-    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\" \"../../services/backend/__tests__/**/*.ts\"",
+    "format": "prettier --write \"{src,test,__tests__}/**/*.ts\"",
     "start": "nest start",
     "dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
-    "lint": "cd ../.. && apps/backend/node_modules/.bin/eslint --config apps/backend/eslint.config.mjs \"apps/backend/{src,apps,libs,test}/**/*.ts\" \"services/backend/__tests__/**/*.ts\" \"services/backend/src/*.ts\" \"services/backend/src/{ai,auth,catalog,clients,database,folios,identity,inventory,orders,organizations,portal,purchase,roles,suppliers,users,whatsapp}/**/*.ts\" --fix",
+    "lint": "eslint \"{src,test,__tests__}/**/*.ts\"",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
@@ -24,10 +24,9 @@
     "migrations:generate": "npm run typeorm migration:generate",
     "migrations:run": "npm run typeorm migration:run",
     "migrations:run:prod": "npm run typeorm:prod migration:run",
-    "postinstall": "node scripts/install-source-bridge.cjs",
-    "prepare:source-bridge": "node scripts/install-source-bridge.cjs",
-    "test:source-bridge": "node --test scripts/install-source-bridge.test.cjs",
-    "test:discovery": "pnpm run build && node --test scripts/test-typeorm-discovery.cjs"
+    "test:discovery": "pnpm run build && node --test scripts/test-typeorm-discovery.cjs",
+    "lint:fix": "eslint \"{src,test,__tests__}/**/*.ts\" --fix",
+    "check-types": "tsc --noEmit -p tsconfig.build.json"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
@@ -70,7 +69,7 @@
     "eslint-plugin-prettier": "^5.2.2",
     "globals": "^17.0.0",
     "jest": "^30.0.0",
-    "prettier": "^3.4.2",
+    "prettier": "3.8.3",
     "source-map-support": "^0.5.21",
     "supertest": "^7.0.0",
     "ts-jest": "^29.2.5",
@@ -102,7 +101,7 @@
     "coverageDirectory": "./coverage",
     "testEnvironment": "node",
     "roots": [
-      "<rootDir>/../../services/backend/__tests__"
+      "<rootDir>/__tests__"
     ],
     "modulePaths": [
       "<rootDir>/node_modules"
