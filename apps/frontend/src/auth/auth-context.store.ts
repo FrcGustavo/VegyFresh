@@ -6,7 +6,7 @@ import type {
   LoginPayload,
   SignupPayload,
   SignupResponse,
-} from "./authApi";
+} from "@/infrastructure/auth/authApi";
 
 export interface AuthState {
   user: AuthUser | null;

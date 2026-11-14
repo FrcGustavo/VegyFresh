@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ReceiptLong } from "@mui/icons-material";
 import { Box, CircularProgress, Typography } from "@mui/material";
-import { purchasesQueryOptions } from "../../../../api";
+import { purchasesQueryOptions } from "@/infrastructure/api";
 import ListPageToolbar from "@/presentation/components/ListPageToolbar";
 import ResourcePageTitle from "@/presentation/components/ResourcePageTitle";
 import { Table } from "@/presentation/components/Table";

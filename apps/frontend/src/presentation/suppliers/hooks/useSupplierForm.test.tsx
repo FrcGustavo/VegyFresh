@@ -11,7 +11,7 @@ const mocks = vi.hoisted(() => ({
   updateSupplier: vi.fn(),
 }));
 
-vi.mock("../../../infrastructure/api", () => ({
+vi.mock("@/infrastructure/api", () => ({
   suppliersQueryOptions: {
     detail: (id: string) => ({
       queryKey: ["suppliers", "detail", id],

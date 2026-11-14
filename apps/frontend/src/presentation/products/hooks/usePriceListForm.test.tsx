@@ -10,7 +10,7 @@ const mocks = vi.hoisted(() => ({
   savePriceList: vi.fn(),
 }));
 
-vi.mock("../../../api", () => ({
+vi.mock("@/infrastructure/api", () => ({
   productsQueryOptions: {
     list: () => ({
       queryKey: ["products", "list"],

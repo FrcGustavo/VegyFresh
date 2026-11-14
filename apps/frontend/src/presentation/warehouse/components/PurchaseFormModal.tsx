@@ -20,7 +20,7 @@ import {
   productsQueryOptions,
   purchasesMutationOptions,
   suppliersQueryOptions,
-} from "../../../api";
+} from "@/infrastructure/api";
 import { createClientRowId } from "@/infrastructure/identifiers/clientRowId";
 
 type PurchaseItemRow = {

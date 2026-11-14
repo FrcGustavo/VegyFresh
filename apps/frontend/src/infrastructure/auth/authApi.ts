@@ -1,7 +1,7 @@
-import { API_URL } from "../api";
-import type { AuthRole } from "../domain/auth/AuthRole";
+import { API_URL } from "../api/client";
+import type { AuthRole } from "@/domain/auth/AuthRole";
 
-export type { AuthRole } from "../domain/auth/AuthRole";
+export type { AuthRole } from "@/domain/auth/AuthRole";
 
 export interface AuthUser {
   id: string;

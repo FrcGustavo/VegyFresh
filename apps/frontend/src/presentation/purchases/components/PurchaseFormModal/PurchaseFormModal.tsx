@@ -24,7 +24,7 @@ import {
   purchasesQueryOptions,
   suppliersQueryOptions,
   type CreatePurchaseInput,
-} from "../../../../api";
+} from "@/infrastructure/api";
 import { createClientRowId } from "@/infrastructure/identifiers/clientRowId";
 import type { PurchaseFormModalProps } from "./PurchaseFormModal.types";
 

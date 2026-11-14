@@ -31,7 +31,7 @@ vi.mock("@tanstack/react-query", () => ({
 vi.mock("../../../auth/useAuth", () => ({
   useAuth: () => ({ organization: mocks.organization, refreshSession: mocks.refreshSession }),
 }));
-vi.mock("../../../api", () => ({
+vi.mock("@/infrastructure/api", () => ({
   organizationsQueryOptions: { detail: (id: string) => ({ queryKey: ["organizations", "detail", id] }) },
   organizationsMutationOptions: {
     create: () => ({ mutationKey: ["organizations", "create"] }),

@@ -1,7 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { authStorage } from "../../auth/authStorage";
-import * as legacyApi from "../../api";
+import { authStorage } from "@/infrastructure/auth/authStorage";
 import * as infrastructureApi from "./index";
 
 afterEach(() => {
@@ -10,14 +9,6 @@ afterEach(() => {
 });
 
 describe("API infrastructure boundary", () => {
-  it("keeps the legacy barrel connected to the same resource and query exports", () => {
-    expect(legacyApi.clientsApi).toBe(infrastructureApi.clientsApi);
-    expect(legacyApi.clientsQueryOptions).toBe(
-      infrastructureApi.clientsQueryOptions,
-    );
-    expect(legacyApi.fetchApi).toBe(infrastructureApi.fetchApi);
-  });
-
   it("refreshes the active browser session and retries a resource request", async () => {
     authStorage.setTokens("expired", "refresh-old");
     const fetchMock = vi

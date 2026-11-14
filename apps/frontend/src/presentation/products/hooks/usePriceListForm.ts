@@ -6,7 +6,7 @@ import {
   priceListsQueryOptions,
   productsQueryOptions,
   type PriceList,
-} from "../../../api";
+} from "@/infrastructure/api";
 import { createClientRowId } from "@/infrastructure/identifiers/clientRowId";
 
 export type SaveAction = "save" | "save-and-close" | "save-and-new";
