@@ -28,7 +28,8 @@ test("Start SSR keeps concurrent sessions isolated and completes the OIDC callba
     if (path.endsWith("/token")) {
       let body = ""; for await (const chunk of req) body += chunk;
       const params = new URLSearchParams(body);
-      const identityName = params.get("code");
+      const identityName = params.get("grant_type") === "refresh_token" ? params.get("refresh_token").replace("refresh-", "") : params.get("code");
+      if (params.get("grant_type") === "refresh_token") return res.end(JSON.stringify({ access_token: `renewed-${identityName}`, refresh_token: `refresh-${identityName}`, token_type: "Bearer", expires_in: 300, refresh_expires_in: 3600 }));
       const nonce = authorizations.get(identityName);
       const now = Math.floor(Date.now() / 1000);
       const claims = `${encode({ alg: "RS256", kid: "test-key", typ: "JWT" })}.${encode({ iss: issuer, sub: identityName, aud: "vegyfresh-portal", iat: now, exp: now + 300, nonce })}`;
@@ -40,10 +41,16 @@ test("Start SSR keeps concurrent sessions isolated and completes the OIDC callba
   const identityPort = await listen(identity);
   issuer = `http://127.0.0.1:${identityPort}/realms/test`;
   let apiUnavailable = false;
+  let apiCalls = 0;
+  let requireRenewal = false;
   const api = createServer((req, res) => {
+    apiCalls++;
     if (apiUnavailable) { res.statusCode = 503; return res.end(); }
-    const name = req.headers.authorization === "Bearer access-Alice" ? "Alice" : "Bob";
+    const authorization = req.headers.authorization || "";
+    if (!/^Bearer (?:access|renewed)-(?:Alice|Bob)$/.test(authorization) || (requireRenewal && authorization === "Bearer access-Alice")) { res.statusCode = 401; return res.end(); }
+    const name = authorization.endsWith("Alice") ? "Alice" : "Bob";
     res.setHeader("content-type", "application/json");
+    if (req.url.startsWith("/api/v1/portal/orders")) return res.end(JSON.stringify({ owner: name, path: req.url }));
     res.end(JSON.stringify({ client: { id: name, name, email: null, portalEnabled: true }, privateToken: "do-not-serialize" }));
   });
   const apiPort = await listen(api);
@@ -99,6 +106,26 @@ test("Start SSR keeps concurrent sessions isolated and completes the OIDC callba
   const index = await fetch(`${origin}/portal`, { headers: { cookie: alice }, redirect: "manual" });
   assert.ok([302, 303, 307].includes(index.status));
   assert.equal(index.headers.get("location"), "/portal/dashboard");
+  const session = await fetch(`${origin}/session`, { headers: { cookie: alice } });
+  assert.deepEqual(await session.json(), { provider: "keycloak", authenticated: true, client: { id: "Alice", name: "Alice", email: null, portalEnabled: true } });
+  assert.match(session.headers.get("cache-control"), /private, no-store/);
+  const [ordersA, ordersB, guestOrders] = await Promise.all([alice, bob, ""].map((cookie) => fetch(`${origin}/api/v1/portal/orders?page=1`, { headers: { cookie, authorization: "Bearer forged" } })));
+  assert.deepEqual(await ordersA.json(), { owner: "Alice", path: "/api/v1/portal/orders?page=1" });
+  assert.deepEqual(await ordersB.json(), { owner: "Bob", path: "/api/v1/portal/orders?page=1" });
+  assert.equal(guestOrders.status, 401);
+  assert.match(ordersA.headers.get("cache-control"), /private, no-store/);
+  assert.match(ordersA.headers.get("vary"), /cookie/i);
+  const callsBeforeDenied = apiCalls;
+  assert.equal((await fetch(`${origin}/api/v1/users`, { headers: { cookie: alice } })).status, 404);
+  assert.equal((await fetch(`${origin}/api/v1/portal/orders`, { method: "POST", headers: { cookie: alice, origin: "https://attacker.example" } })).status, 404);
+  assert.equal(apiCalls, callsBeforeDenied);
+  requireRenewal = true;
+  const renewed = await fetch(`${origin}/api/v1/portal/orders`, { headers: { cookie: alice } });
+  assert.equal(renewed.status, 200);
+  assert.deepEqual(await renewed.json(), { owner: "Alice", path: "/api/v1/portal/orders" });
+  assert.ok(renewed.headers.getSetCookie().some((value) => value.startsWith("vegyfresh_portal_access_token=") && /HttpOnly/i.test(value)));
+  assert.ok(renewed.headers.getSetCookie().some((value) => value.startsWith("vegyfresh_portal_refresh_token=") && /HttpOnly/i.test(value)));
+  requireRenewal = false;
   apiUnavailable = true;
   const unavailable = await fetch(`${origin}/portal/dashboard`, { headers: { cookie: alice }, redirect: "manual" });
   const unavailableHtml = await unavailable.text();

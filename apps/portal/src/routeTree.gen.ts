@@ -11,8 +11,11 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PortalRouteImport } from './routes/portal'
+import { Route as SessionRouteImport } from './routes/session'
+import { Route as ApiSplatRouteImport } from './routes/api.$'
 import { Route as PortalIndexRouteImport } from './routes/portal.index'
 import { Route as PortalDashboardRouteImport } from './routes/portal.dashboard'
+import { Route as SessionSplatRouteImport } from './routes/session.$'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -22,6 +25,16 @@ const IndexRoute = IndexRouteImport.update({
 const PortalRoute = PortalRouteImport.update({
   id: '/portal',
   path: '/portal',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SessionRoute = SessionRouteImport.update({
+  id: '/session',
+  path: '/session',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSplatRoute = ApiSplatRouteImport.update({
+  id: '/api/$',
+  path: '/api/$',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PortalIndexRoute = PortalIndexRouteImport.update({
@@ -34,36 +47,68 @@ const PortalDashboardRoute = PortalDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => PortalRoute,
 } as any)
+const SessionSplatRoute = SessionSplatRouteImport.update({
+  id: '/$',
+  path: '/$',
+  getParentRoute: () => SessionRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/portal': typeof PortalRouteWithChildren
+  '/session': typeof SessionRouteWithChildren
+  '/api/$': typeof ApiSplatRoute
   '/portal/dashboard': typeof PortalDashboardRoute
+  '/session/$': typeof SessionSplatRoute
   '/portal/': typeof PortalIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/session': typeof SessionRouteWithChildren
+  '/api/$': typeof ApiSplatRoute
   '/portal/dashboard': typeof PortalDashboardRoute
+  '/session/$': typeof SessionSplatRoute
   '/portal': typeof PortalIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/portal': typeof PortalRouteWithChildren
+  '/session': typeof SessionRouteWithChildren
+  '/api/$': typeof ApiSplatRoute
   '/portal/dashboard': typeof PortalDashboardRoute
+  '/session/$': typeof SessionSplatRoute
   '/portal/': typeof PortalIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/portal' | '/portal/dashboard' | '/portal/'
+  fullPaths:
+    | '/'
+    | '/portal'
+    | '/session'
+    | '/api/$'
+    | '/portal/dashboard'
+    | '/session/$'
+    | '/portal/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/portal/dashboard' | '/portal'
-  id: '__root__' | '/' | '/portal' | '/portal/dashboard' | '/portal/'
+  to:
+    '/' | '/session' | '/api/$' | '/portal/dashboard' | '/session/$' | '/portal'
+  id:
+    | '__root__'
+    | '/'
+    | '/portal'
+    | '/session'
+    | '/api/$'
+    | '/portal/dashboard'
+    | '/session/$'
+    | '/portal/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   PortalRoute: typeof PortalRouteWithChildren
+  SessionRoute: typeof SessionRouteWithChildren
+  ApiSplatRoute: typeof ApiSplatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -82,6 +127,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PortalRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/session': {
+      id: '/session'
+      path: '/session'
+      fullPath: '/session'
+      preLoaderRoute: typeof SessionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/$': {
+      id: '/api/$'
+      path: '/api/$'
+      fullPath: '/api/$'
+      preLoaderRoute: typeof ApiSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/portal/': {
       id: '/portal/'
       path: '/'
@@ -95,6 +154,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/portal/dashboard'
       preLoaderRoute: typeof PortalDashboardRouteImport
       parentRoute: typeof PortalRoute
+    }
+    '/session/$': {
+      id: '/session/$'
+      path: '/$'
+      fullPath: '/session/$'
+      preLoaderRoute: typeof SessionSplatRouteImport
+      parentRoute: typeof SessionRoute
     }
   }
 }
@@ -112,9 +178,22 @@ const PortalRouteChildren: PortalRouteChildren = {
 const PortalRouteWithChildren =
   PortalRoute._addFileChildren(PortalRouteChildren)
 
+interface SessionRouteChildren {
+  SessionSplatRoute: typeof SessionSplatRoute
+}
+
+const SessionRouteChildren: SessionRouteChildren = {
+  SessionSplatRoute: SessionSplatRoute,
+}
+
+const SessionRouteWithChildren =
+  SessionRoute._addFileChildren(SessionRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   PortalRoute: PortalRouteWithChildren,
+  SessionRoute: SessionRouteWithChildren,
+  ApiSplatRoute: ApiSplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
