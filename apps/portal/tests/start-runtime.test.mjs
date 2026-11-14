@@ -77,6 +77,9 @@ test("Start SSR keeps concurrent sessions isolated and completes the OIDC callba
     try { await fetch(origin); ready = true; } catch { await new Promise((resolve) => setTimeout(resolve, 50)); }
   }
   assert.ok(ready, "Start server did not start");
+  const health = await fetch(`${origin}/health`);
+  assert.equal(health.status, 200);
+  assert.deepEqual(await health.json(), { status: "ok" });
   const assets = await readdir(".output/public/assets");
   assert.ok(assets.length, "Start client assets are missing");
   for (const asset of assets) {

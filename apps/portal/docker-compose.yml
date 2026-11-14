@@ -1,0 +1,38 @@
+services:
+  portal:
+    build:
+      context: ../..
+      dockerfile: apps/portal/Dockerfile
+      target: development
+    working_dir: /repo
+    command:
+      - sh
+      - -c
+      - CI=true pnpm install --filter portal... --frozen-lockfile && pnpm --filter @vegyfresh/ui build && pnpm --filter portal dev
+    ports:
+      - "${PORTAL_PORT:-5174}:5174"
+    volumes:
+      - ../..:/repo
+      - portal_node_modules:/repo/node_modules
+      - portal_app_node_modules:/repo/apps/portal/node_modules
+      - api_client_node_modules:/repo/clients/api-client/node_modules
+      - ui_node_modules:/repo/packages/ui/node_modules
+      - ui_dist:/repo/packages/ui/dist
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      HOST: 0.0.0.0
+      PORT: "5174"
+      VEGYFRESH_API_URL: ${DEV_API_URL:-http://host.docker.internal:3000}
+      VEGYFRESH_PUBLIC_ORIGIN: ${DEV_PUBLIC_ORIGIN:-http://localhost:${PORTAL_PORT:-5174}}
+      KEYCLOAK_INTERNAL_URL: ${DEV_KEYCLOAK_INTERNAL_URL:-http://host.docker.internal:8080/realms/vegyfresh}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+volumes:
+  portal_node_modules:
+  portal_app_node_modules:
+  api_client_node_modules:
+  ui_node_modules:
+  ui_dist:
