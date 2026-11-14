@@ -4,10 +4,10 @@ import { LocalOffer } from "@mui/icons-material";
 import { Box, Typography, CircularProgress } from "@mui/material";
 import { priceListsQueryOptions } from "../../../../api";
 import { useDebouncedValue } from "@/presentation/hooks/useDebouncedValue";
-import { Table } from "../../../../components/Table";
+import { Table } from "@/presentation/components/Table";
 import PriceListFormModal from "../../components/PriceListFormModal";
-import ResourcePageTitle from "../../../../components/ResourcePageTitle";
-import ListPageToolbar from "../../../../components/ListPageToolbar";
+import ResourcePageTitle from "@/presentation/components/ResourcePageTitle";
+import ListPageToolbar from "@/presentation/components/ListPageToolbar";
 import {
   usePriceListsTableState,
   usePriceListsSort,

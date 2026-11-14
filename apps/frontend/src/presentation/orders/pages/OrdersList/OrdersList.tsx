@@ -3,10 +3,10 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { ShoppingCart } from "@mui/icons-material";
 import { Box, Typography, CircularProgress } from "@mui/material";
 import { ordersQueryOptions } from "../../../../api";
-import { Table } from "../../../../components/Table";
+import { Table } from "@/presentation/components/Table";
 import OrderFormModal from "../../components/OrderFormModal";
-import ResourcePageTitle from "../../../../components/ResourcePageTitle";
-import ListPageToolbar from "../../../../components/ListPageToolbar";
+import ResourcePageTitle from "@/presentation/components/ResourcePageTitle";
+import ListPageToolbar from "@/presentation/components/ListPageToolbar";
 import {
   useOrdersTableState,
   useOrdersSort,

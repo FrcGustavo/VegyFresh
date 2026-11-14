@@ -15,8 +15,8 @@ import {
 } from "@mui/material";
 import { Warehouse as WarehouseIcon } from "@mui/icons-material";
 import { inventoryQueryOptions, purchasesQueryOptions } from "../../../api";
-import ListPageToolbar from "../../../components/ListPageToolbar";
-import ResourcePageTitle from "../../../components/ResourcePageTitle";
+import ListPageToolbar from "@/presentation/components/ListPageToolbar";
+import ResourcePageTitle from "@/presentation/components/ResourcePageTitle";
 import PurchaseFormModal from "../components/PurchaseFormModal";
 
 type ProductInventoryItem = {

@@ -10,10 +10,10 @@ import {
   Paper,
 } from "@mui/material";
 import { Delete as DeleteIcon, Add as AddIcon } from "@mui/icons-material";
-import FloatingModal from "../../../../components/FloatingModal";
-import ModalTabPanel from "../../../../components/ModalTabPanel";
-import ModalTabsNavigation from "../../../../components/ModalTabsNavigation";
-import ModalToolbar from "../../../../components/ModalToolbar";
+import FloatingModal from "@/presentation/components/FloatingModal";
+import ModalTabPanel from "@/presentation/components/ModalTabPanel";
+import ModalTabsNavigation from "@/presentation/components/ModalTabsNavigation";
+import ModalToolbar from "@/presentation/components/ModalToolbar";
 import { useProductForm } from "../../hooks/useProductForm";
 import { productFormModalStyles } from "./ProductFormModal.styles";
 import type { ProductFormModalProps } from "./ProductFormModal.types";
