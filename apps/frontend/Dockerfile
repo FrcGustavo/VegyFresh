@@ -1,3 +1,19 @@
+FROM node:24-bookworm-slim AS development
+WORKDIR /repo
+ENV NODE_ENV=development
+RUN corepack enable && corepack prepare pnpm@10.11.0 --activate
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY apps/frontend/package.json apps/frontend/package.json
+COPY apps/portal/package.json apps/portal/package.json
+COPY apps/docs/package.json apps/docs/package.json
+COPY services/backend/package.json services/backend/package.json
+COPY clients/api-client/package.json clients/api-client/package.json
+COPY jobs/seed-api/package.json jobs/seed-api/package.json
+COPY packages/ui/package.json packages/ui/package.json
+RUN pnpm install --filter frontend... --frozen-lockfile
+EXPOSE 5173
+CMD ["pnpm", "--filter", "frontend", "dev"]
+
 FROM node:24-bookworm-slim AS build
 WORKDIR /repo
 RUN corepack enable && corepack prepare pnpm@10.11.0 --activate
@@ -16,7 +32,9 @@ RUN pnpm --filter frontend build
 
 FROM node:24-bookworm-slim AS runtime
 WORKDIR /app
-ENV NODE_ENV=production PORT=80 HOST=0.0.0.0
+ENV NODE_ENV=production
+ENV PORT=80
+ENV HOST=0.0.0.0
 COPY --from=build --chown=node:node /repo/apps/frontend/.output ./
 USER node
 EXPOSE 80

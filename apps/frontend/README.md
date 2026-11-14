@@ -12,7 +12,7 @@ available temporarily as `pnpm --filter frontend build:spa`. Build the productio
 image from the repository root with:
 
 ```sh
-docker build -f Dockerfile.frontend -t vegyfresh-frontend .
+docker build -f apps/frontend/Dockerfile -t vegyfresh-frontend .
 ```
 
 Provide the following server environment variables at runtime (including in
@@ -42,3 +42,17 @@ Run `pnpm --filter frontend lint`, `check-types`, `test`, and `build` for unit
 validation. `pnpm --filter frontend test:start` exercises the built server
 against disposable identity and API fixtures; it does not replace a check with
 real Keycloak, the API, database and browser.
+
+Copy `.env.example` to `.env` in this directory and configure the session secret
+and identity provider. `make dev` starts the app-owned Docker Compose stack,
+`make down` stops it, and `make check` runs checks. The Compose service reads
+Keycloak credentials and the session secret from `.env`. It defaults to the API
+at `host.docker.internal:3000` and Keycloak at `host.docker.internal:8080`;
+set `DEV_API_URL` and `DEV_KEYCLOAK_INTERNAL_URL` in the shell to override
+those container-facing URLs. Set `FRONTEND_PORT` for the host port and
+`DEV_PUBLIC_ORIGIN` for the browser-facing origin if needed. `make docker-build`
+builds the production image, and `make start` runs it with the same `.env`.
+For `make start`, configure `VEGYFRESH_API_URL` and `KEYCLOAK_INTERNAL_URL` in
+`.env` with addresses reachable from the container (for local host services,
+use `host.docker.internal`); the public issuer and origin remain browser-facing.
+The `/health` endpoint returns an uncached status response.
