@@ -26,7 +26,8 @@
     "migrations:run:prod": "npm run typeorm:prod migration:run",
     "postinstall": "node scripts/install-source-bridge.cjs",
     "prepare:source-bridge": "node scripts/install-source-bridge.cjs",
-    "test:source-bridge": "node --test scripts/install-source-bridge.test.cjs"
+    "test:source-bridge": "node --test scripts/install-source-bridge.test.cjs",
+    "test:discovery": "pnpm run build && node --test scripts/test-typeorm-discovery.cjs"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",

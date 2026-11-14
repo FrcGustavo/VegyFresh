@@ -4,6 +4,7 @@ import { ExternalIdentity } from '../src/identity/entities/external-identity.ent
 import { IdentityService } from '../src/identity/identity.service';
 import { Role } from '../src/roles/entities/role.entity';
 import { User } from '../src/users/entities/user.entity';
+import { entityPaths, migrationPaths } from '../src/database/discovery';
 
 const issuer = 'https://identity.example.test/realms/vegyfresh';
 
@@ -23,8 +24,8 @@ describeIntegration('identity provisioning with PostgreSQL', () => {
       username: process.env.POSTGRES_USER,
       password: process.env.POSTGRES_PASSWORD,
       database: process.env.POSTGRES_DB,
-      entities: [__dirname + '/../src/**/*.entity.ts'],
-      migrations: [__dirname + '/../src/database/migrations/*.ts'],
+      entities: entityPaths(),
+      migrations: migrationPaths(),
       synchronize: false,
     });
     await db.initialize();
