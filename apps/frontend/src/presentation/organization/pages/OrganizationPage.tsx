@@ -12,15 +12,14 @@ import {
   Paper,
   Typography,
 } from "@mui/material";
-import { useAppInvalidate, useAppNavigate } from "@/presentation/router/useAppNavigation";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useAppInvalidate,
+  useAppNavigate,
+} from "@/presentation/router/useAppNavigation";
+import { useOrganizationEditor } from "@/infrastructure/organization/useOrganizationEditor";
 import { useAuth } from "../../../auth/useAuth";
 import { authStorage } from "@/infrastructure/auth/authStorage";
 import { authApi } from "@/infrastructure/auth/authApi";
-import {
-  organizationsMutationOptions,
-  organizationsQueryOptions,
-} from "@/infrastructure/api";
 import {
   OrganizationForm,
   type OrganizationFormData,
@@ -43,7 +42,6 @@ const ORGANIZATION_MENU: Array<{
 export default function OrganizationPage() {
   const navigate = useAppNavigate();
   const invalidate = useAppInvalidate();
-  const queryClient = useQueryClient();
   const { organization, refreshSession } = useAuth();
   const organizationId = organization?.id ?? "";
 
@@ -54,16 +52,11 @@ export default function OrganizationPage() {
   );
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const organizationQuery = useQuery({
-    ...organizationsQueryOptions.detail(organizationId),
-    enabled: Boolean(organizationId),
-  });
-  const createMutation = useMutation(
-    organizationsMutationOptions.create(queryClient),
-  );
-  const updateMutation = useMutation(
-    organizationsMutationOptions.update(queryClient),
-  );
+  const {
+    detail: organizationQuery,
+    create: createMutation,
+    update: updateMutation,
+  } = useOrganizationEditor(organizationId);
 
   useEffect(() => {
     if (organizationQuery.data) {
@@ -109,7 +102,9 @@ export default function OrganizationPage() {
             if (import.meta.env.VITE_START_RUNTIME !== "true") {
               const refreshToken = authStorage.getRefreshToken();
               if (!refreshToken) {
-                throw new Error("No hay refresh token para actualizar la sesión");
+                throw new Error(
+                  "No hay refresh token para actualizar la sesión",
+                );
               }
               const tokens = await authApi.refresh(refreshToken);
               authStorage.setTokens(tokens.access_token, tokens.refresh_token);

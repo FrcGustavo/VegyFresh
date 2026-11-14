@@ -1,12 +1,8 @@
+import { preparePriceList } from "@/application/catalog/priceListDraft";
 import { useEffect, useMemo, useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { usePriceListEditor } from "@/infrastructure/catalog/usePriceLists";
 import { useAppNavigate } from "@/presentation/router/useAppNavigation";
-import {
-  priceListEditorMutationOptions,
-  priceListsQueryOptions,
-  productsQueryOptions,
-  type PriceList,
-} from "@/infrastructure/api";
+import type { PriceList } from "@/infrastructure/api";
 import { createClientRowId } from "@/infrastructure/identifiers/clientRowId";
 
 export type SaveAction = "save" | "save-and-close" | "save-and-new";
@@ -48,7 +44,11 @@ export function usePriceListForm(
   id?: string,
   onSuccess?: (action: SaveAction, priceList: PriceList) => void,
 ) {
-  const queryClient = useQueryClient();
+  const {
+    products: { data: productsData },
+    detail: { data: existingPriceList, isLoading },
+    save: mutation,
+  } = usePriceListEditor(id);
   const navigate = useAppNavigate();
   const [name, setName] = useState("");
   const [productsList, setProductsList] = useState<PriceListProductRow[]>([
@@ -56,19 +56,6 @@ export function usePriceListForm(
   ]);
   const [isDisabled, setIsDisabled] = useState(!!id);
   const [formError, setFormError] = useState<string | null>(null);
-
-  const { data: productsData } = useQuery(
-    productsQueryOptions.list({
-      limit: "200",
-      order_by: "name",
-      order: "asc",
-    }),
-  );
-
-  const { data: existingPriceList, isLoading } = useQuery({
-    ...priceListsQueryOptions.detail(id ?? ""),
-    enabled: !!id,
-  });
 
   useEffect(() => {
     if (existingPriceList) {
@@ -115,10 +102,6 @@ export function usePriceListForm(
       ).values(),
     );
   }, [existingPriceList, productsData]);
-
-  const mutation = useMutation(
-    priceListEditorMutationOptions.save(queryClient),
-  );
 
   const addProductField = () => {
     setProductsList((current) =>
@@ -176,46 +159,14 @@ export function usePriceListForm(
   };
 
   const handleSubmit = (action: SaveAction = "save") => {
-    if (!name.trim()) {
-      setFormError("Completa el nombre de la lista de precios.");
+    const result = preparePriceList(name, productsList);
+    if (!result.success) {
+      setFormError(result.error);
       return;
     }
-
-    const assignedProducts = productsList.filter(
-      (product) => product.product_id || product.price !== "",
-    );
-
-    if (
-      assignedProducts.some(
-        (product) =>
-          !product.product_id ||
-          product.price === "" ||
-          !Number.isFinite(Number(product.price)) ||
-          Number(product.price) < 0,
-      )
-    ) {
-      setFormError("Completa el producto y un precio válido en cada fila.");
-      return;
-    }
-
-    const selectedProducts = assignedProducts.map(
-      (product) => product.product_id,
-    );
-    if (new Set(selectedProducts).size !== selectedProducts.length) {
-      setFormError("Cada producto solo puede asignarse una vez.");
-      return;
-    }
-
     setFormError(null);
     mutation.mutate(
-      {
-        id,
-        name: name.trim(),
-        products: assignedProducts.map((product) => ({
-          product_id: product.product_id,
-          price: Number(product.price),
-        })),
-      },
+      { id, ...result.value },
       {
         onSuccess: (priceList) => {
           if (action === "save-and-new") {

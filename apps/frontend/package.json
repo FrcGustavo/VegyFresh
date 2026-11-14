@@ -8,15 +8,16 @@
     "build": "tsc -b && vite build --config vite.start.config.ts",
     "check-types": "tsc -b",
     "generate:api-types": "pnpm --filter @vegyfresh/api-client generate:api-types",
-    "lint": "eslint .",
-    "test": "vitest run --exclude 'tests/*.test.mjs' && node --test tests/adminRoutes.test.mjs tests/apiProxy.test.mjs",
+    "lint": "pnpm run check:architecture && eslint .",
+    "test": "node --test scripts/check-architecture.test.mjs && vitest run --exclude 'tests/*.test.mjs' --exclude 'scripts/*.test.mjs' && node --test tests/adminRoutes.test.mjs tests/apiProxy.test.mjs",
     "preview": "pnpm run start",
     "dev:start": "vite --config vite.start.config.ts --host 0.0.0.0 --port 5173 --strictPort",
     "build:start": "vite build --config vite.start.config.ts",
     "serve:start": "node .output/server/index.mjs",
     "test:start": "node --test tests/start-runtime.test.mjs",
     "start": "node .output/server/index.mjs",
-    "build:spa": "tsc -b && vite build"
+    "build:spa": "tsc -b && vite build",
+    "check:architecture": "node scripts/check-architecture.mjs"
   },
   "dependencies": {
     "@vegyfresh/api-client": "workspace:*",

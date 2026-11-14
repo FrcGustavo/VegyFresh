@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useOrdersList } from "@/infrastructure/orders/useOrdersList";
 import { ShoppingCart } from "@mui/icons-material";
 import { Box, Typography, CircularProgress } from "@mui/material";
-import { ordersQueryOptions } from "@/infrastructure/api";
 import { Table } from "@/presentation/components/Table";
 import OrderFormModal from "../../components/OrderFormModal";
 import ResourcePageTitle from "@/presentation/components/ResourcePageTitle";
@@ -28,24 +27,21 @@ export default function OrdersList() {
   const { sortBy, sortOrder, handleSort } = useOrdersSort();
 
   const {
-    data,
+    items: list,
     isLoading,
     error,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useInfiniteQuery(
-    ordersQueryOptions.infiniteList({
-      limit: ORDERS_PAGE_SIZE,
-      order_by: sortBy,
-      order: sortOrder,
-      created_filter: createdFilter,
-      created_from:
-        createdFilter === "range" ? createdFrom || undefined : undefined,
-      created_to:
-        createdFilter === "range" ? createdTo || undefined : undefined,
-    }),
-  );
+  } = useOrdersList({
+    limit: ORDERS_PAGE_SIZE,
+    order_by: sortBy,
+    order: sortOrder,
+    created_filter: createdFilter,
+    created_from:
+      createdFilter === "range" ? createdFrom || undefined : undefined,
+    created_to: createdFilter === "range" ? createdTo || undefined : undefined,
+  });
 
   if (isLoading)
     return (
@@ -59,10 +55,6 @@ export default function OrdersList() {
         Error al cargar: {(error as Error).message}
       </Typography>
     );
-
-  const list = (data?.pages ?? []).flatMap((page) =>
-    Array.isArray(page) ? page : page?.data || [],
-  );
 
   return (
     <OrdersTableView
