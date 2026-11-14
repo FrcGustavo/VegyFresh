@@ -12,14 +12,9 @@ import {
   Paper,
   Typography,
 } from "@mui/material";
-import {
-  useAppInvalidate,
-  useAppNavigate,
-} from "@/presentation/router/useAppNavigation";
+import { useNavigate, useRouter } from "@tanstack/react-router";
 import { useOrganizationEditor } from "@/infrastructure/organization/useOrganizationEditor";
 import { useAuth } from "../../../auth/useAuth";
-import { authStorage } from "@/infrastructure/auth/authStorage";
-import { authApi } from "@/infrastructure/auth/authApi";
 import {
   OrganizationForm,
   type OrganizationFormData,
@@ -40,8 +35,8 @@ const ORGANIZATION_MENU: Array<{
 ];
 
 export default function OrganizationPage() {
-  const navigate = useAppNavigate();
-  const invalidate = useAppInvalidate();
+  const navigate = useNavigate();
+  const router = useRouter();
   const { organization, refreshSession } = useAuth();
   const organizationId = organization?.id ?? "";
 
@@ -99,19 +94,9 @@ export default function OrganizationPage() {
       createMutation.mutate(payload, {
         onSuccess: async () => {
           try {
-            if (import.meta.env.VITE_START_RUNTIME !== "true") {
-              const refreshToken = authStorage.getRefreshToken();
-              if (!refreshToken) {
-                throw new Error(
-                  "No hay refresh token para actualizar la sesión",
-                );
-              }
-              const tokens = await authApi.refresh(refreshToken);
-              authStorage.setTokens(tokens.access_token, tokens.refresh_token);
-            }
             await refreshSession();
-            await invalidate();
-            void navigate("/orders");
+            await router.invalidate();
+            void navigate({ to: "/orders" });
           } catch (refreshError) {
             setError(
               refreshError instanceof Error
@@ -132,9 +117,9 @@ export default function OrganizationPage() {
           try {
             setFormData(organizationToFormData(updated));
             await refreshSession();
-            await invalidate();
+            await router.invalidate();
             setSuccess("Organización actualizada");
-            void navigate("/orders");
+            void navigate({ to: "/orders" });
           } catch (refreshError) {
             setError(
               refreshError instanceof Error
@@ -218,7 +203,7 @@ export default function OrganizationPage() {
             }
             secondaryActionLabel={organizationId ? "Volver" : undefined}
             onSecondaryAction={
-              organizationId ? () => void navigate("/settings") : undefined
+              organizationId ? () => void navigate({ to: "/settings" }) : undefined
             }
           />
         </Paper>

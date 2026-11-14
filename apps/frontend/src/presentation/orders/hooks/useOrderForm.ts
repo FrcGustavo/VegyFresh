@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from "react";
-import { useAppNavigate } from "@/presentation/router/useAppNavigation";
+import { useNavigate } from "@tanstack/react-router";
 import type { Order } from "@/infrastructure/api";
 import { createClientRowId } from "@/infrastructure/identifiers/clientRowId";
 import { createSaveOrderUseCase } from "@/application/orders/saveOrder";
@@ -87,7 +87,7 @@ export function useOrderForm(
   id?: string,
   onSuccess?: (action: SaveAction, order: Order) => void,
 ) {
-  const navigate = useAppNavigate();
+  const navigate = useNavigate();
   const {
     detail: { data: existingOrder, isLoading: isLoadingOrder },
     clients: { data: clientsData },
@@ -494,7 +494,7 @@ export function useOrderForm(
       if (onSuccess) {
         onSuccess(action, result.order);
       } else {
-        navigate("/orders");
+        navigate({ to: "/orders" });
       }
     } catch (error) {
       setFormError(

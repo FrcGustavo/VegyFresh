@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useAppNavigate } from "@/presentation/router/useAppNavigation";
+import { useNavigate } from "@tanstack/react-router";
 import type { Client } from "../../../domain/contacts/contact";
 import type { ClientFormData } from "../../../application/contacts/saveContact";
 import { useClientEditor } from "../../../infrastructure/contacts/useContacts";
@@ -36,7 +36,7 @@ export function useClientForm(
   onSuccess?: (action: SaveAction, client: Client) => void,
 ) {
   const { detail: { data: existingClient, isLoading }, priceLists, isSaving, save } = useClientEditor(id);
-  const navigate = useAppNavigate();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState<ClientFormData>(EMPTY_CLIENT_FORM);
   const [avatarFileError, setAvatarFileError] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
@@ -144,7 +144,7 @@ export function useClientForm(
         if (onSuccess) {
           onSuccess(action, client);
         } else {
-          navigate("/clients");
+          navigate({ to: "/clients" });
         }
       };
 

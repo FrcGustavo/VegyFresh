@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useAppNavigate } from "@/presentation/router/useAppNavigation";
+import { useNavigate } from "@tanstack/react-router";
 import type { Supplier } from "../../../domain/contacts/contact";
 import type { SupplierFormData } from "../../../application/contacts/saveContact";
 import { useSupplierEditor } from "../../../infrastructure/contacts/useContacts";
@@ -19,7 +19,7 @@ export function useSupplierForm(
   onSuccess?: (action: SaveAction, supplier: Supplier) => void,
 ) {
   const { detail: { data: existingSupplier, isLoading }, isSaving, save } = useSupplierEditor(id);
-  const navigate = useAppNavigate();
+  const navigate = useNavigate();
   const [formData, setFormData] =
     useState<SupplierFormData>(EMPTY_SUPPLIER_FORM);
   const [logoFileError, setLogoFileError] = useState("");
@@ -87,7 +87,7 @@ export function useSupplierForm(
         if (onSuccess) {
           onSuccess(action, supplier);
         } else {
-          navigate("/suppliers");
+          navigate({ to: "/suppliers" });
         }
       };
 
