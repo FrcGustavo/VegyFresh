@@ -1,9 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import {
-  clientsQueryOptions,
-  ordersQueryOptions,
-  usersQueryOptions,
-} from "../api";
+import { clientsQueryOptions, ordersQueryOptions, usersQueryOptions } from "../query";
 import { useOrderLookups } from "./useOrderLookups";
 import { useOrderWriter } from "./useOrderWriter";
 

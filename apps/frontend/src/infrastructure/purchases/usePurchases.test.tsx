@@ -11,7 +11,7 @@ const mocks = vi.hoisted(() => ({
   create: vi.fn(),
   update: vi.fn(),
 }));
-vi.mock("../api", () => ({
+vi.mock("../query", () => ({
   purchasesQueryOptions: {
     detail: (id: string) => ({
       queryKey: ["purchase", id],

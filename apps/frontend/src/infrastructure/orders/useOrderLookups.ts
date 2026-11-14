@@ -1,9 +1,5 @@
-import {
-  clientsQueryOptions,
-  productsQueryOptions,
-  type ClientListQuery,
-  type ProductListQuery,
-} from "../api";
+import { clientsQueryOptions, productsQueryOptions } from "../query";
+import { type ClientListQuery, type ProductListQuery } from "../api";
 import { useQueryClient } from "@tanstack/react-query";
 
 export function useOrderLookups() {

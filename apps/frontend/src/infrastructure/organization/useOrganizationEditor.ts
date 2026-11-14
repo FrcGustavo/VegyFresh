@@ -1,8 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  organizationsMutationOptions,
-  organizationsQueryOptions,
-} from "../api";
+import { organizationsMutationOptions, organizationsQueryOptions } from "../query";
 
 export function useOrganizationEditor(id: string) {
   const client = useQueryClient();

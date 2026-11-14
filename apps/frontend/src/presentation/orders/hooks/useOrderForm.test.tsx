@@ -10,7 +10,7 @@ const mocks = vi.hoisted(() => ({
   createOrder: vi.fn(),
 }));
 
-vi.mock("@/infrastructure/api", () => ({
+vi.mock("@/infrastructure/query", () => ({
   ordersQueryOptions: {
     detail: (id: string) => ({
       queryKey: ["orders", "detail", id],

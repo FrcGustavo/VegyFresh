@@ -1,9 +1,5 @@
-import {
-  ordersMutationOptions,
-  type CreateOrderInput,
-  type Order,
-  type UpdateOrderInput,
-} from "../api";
+import { ordersMutationOptions } from "../query";
+import { type CreateOrderInput, type Order, type UpdateOrderInput } from "../api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type {
   OrderSaveInput,

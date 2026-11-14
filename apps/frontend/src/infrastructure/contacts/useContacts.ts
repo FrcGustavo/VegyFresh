@@ -1,10 +1,18 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { saveClient, saveSupplier, type ClientFormData, type SupplierFormData } from "../../application/contacts/saveContact";
 import {
-  clientsMutationOptions, clientsQueryOptions, priceListsQueryOptions,
-  suppliersMutationOptions, suppliersQueryOptions,
-  type ClientListQuery, type SupplierListQuery,
-} from "../api";
+  saveClient,
+  saveSupplier,
+  type ClientFormData,
+  type SupplierFormData,
+} from "../../application/contacts/saveContact";
+import {
+  clientsMutationOptions,
+  clientsQueryOptions,
+  priceListsQueryOptions,
+  suppliersMutationOptions,
+  suppliersQueryOptions,
+} from "../query";
+import { type ClientListQuery, type SupplierListQuery } from "../api";
 
 type ClientListParams = Omit<ClientListQuery, "offset" | "limit"> & { limit: string };
 type SupplierListParams = Omit<SupplierListQuery, "offset" | "limit"> & { limit: string };

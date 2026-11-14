@@ -4,7 +4,7 @@ import {
   purchasesMutationOptions,
   purchasesQueryOptions,
   suppliersQueryOptions,
-} from "../api";
+} from "../query";
 
 export function usePurchasesList() {
   return useQuery(purchasesQueryOptions.list());

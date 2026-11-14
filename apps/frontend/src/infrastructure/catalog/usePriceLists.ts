@@ -8,7 +8,7 @@ import {
   priceListEditorMutationOptions,
   priceListsQueryOptions,
   productsQueryOptions,
-} from "../api";
+} from "../query";
 
 type Params = Parameters<typeof priceListsQueryOptions.infiniteList>[0];
 export function usePriceLists(query: Params) {

@@ -73,3 +73,13 @@ test('rejects direct transport, aliased React Query hooks and browser storage in
   assert.match(result.output, /React Query pertenece a infrastructure: useQuery/);
   assert.match(result.output, /almacenamiento del navegador/);
 });
+
+
+test('keeps API transport independent from query integration', () => {
+  const result = check({
+    'infrastructure/query/index.ts': 'export const options = {};',
+    'infrastructure/api/index.ts': "export { options } from '../query'; import { queryOptions } from '@tanstack/react-query';",
+  });
+  assert.equal(result.status, 1);
+  assert.match(result.output, /transporte API no debe depender/);
+});

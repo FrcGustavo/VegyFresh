@@ -20,9 +20,8 @@ import {
   suppliersQueryOptions,
   usersMutationOptions,
   usersQueryOptions,
-  type ProductListQuery,
-  type UserListQuery,
-} from "../api";
+} from "../query";
+import { type ProductListQuery, type UserListQuery } from "../api";
 
 type UserListParams = Omit<UserListQuery, "offset" | "limit"> & {
   limit: string;
