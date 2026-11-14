@@ -1,5 +1,5 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { ordersQueryOptions } from "../api";
+import { ordersQueryOptions } from "../query";
 
 type Params = Parameters<typeof ordersQueryOptions.infiniteList>[0];
 export function useOrdersList(query: Params) {

@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { inventoryQueryOptions, purchasesQueryOptions } from "../api";
+import { inventoryQueryOptions, purchasesQueryOptions } from "../query";
 
 export function useInventoryStock() {
   return useQuery(inventoryQueryOptions.stock());

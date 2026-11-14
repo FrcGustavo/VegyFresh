@@ -2,7 +2,8 @@ import type { PropsWithChildren } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
-import { clientsApi, clientsQueryOptions, priceListsApi } from "../api";
+import { clientsApi, priceListsApi } from "../api";
+import { clientsQueryOptions } from "../query";
 import { useClientEditor, useClientsList } from "./useContacts";
 
 afterEach(() => vi.restoreAllMocks());

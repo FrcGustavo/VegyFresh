@@ -31,6 +31,9 @@ for (const file of files) {
     if (ts.isImportTypeNode(node) && ts.isLiteralTypeNode(node.argument)) specifier = node.argument.literal;
     if (specifier && ts.isStringLiteral(specifier)) {
       const name = specifier.text;
+      if (file.startsWith(path.join(src, 'infrastructure', 'api') + path.sep) && name === '@tanstack/react-query') {
+        report(file, 'El transporte API no debe depender de la integración React Query.');
+      }
       if (['domain', 'application'].includes(layer) && !/^(?:\.|@\/)/.test(name)) {
         report(file, `La capa ${layer} no admite dependencias externas: ${name}`);
       }
@@ -53,6 +56,10 @@ for (const file of files) {
       const target = ts.resolveModuleName(name, file, options, ts.sys, cache).resolvedModule?.resolvedFileName;
       if (target?.startsWith(src + path.sep)) {
         targets.push(target);
+        if (file.startsWith(path.join(src, 'infrastructure', 'api') + path.sep) &&
+          target.startsWith(path.join(src, 'infrastructure', 'query') + path.sep)) {
+          report(file, 'El transporte API no debe depender de la integración React Query.');
+        }
         if (layer === 'presentation' && target === path.join(src, 'infrastructure', 'api', 'requests.ts')) {
           report(file, 'Invoca casos de uso o hooks de infraestructura, no peticiones HTTP directamente.');
         }
