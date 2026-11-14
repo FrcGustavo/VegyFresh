@@ -8,14 +8,14 @@ import {
   Typography,
 } from "@mui/material";
 import { Button } from "@mui/material";
-import { useAppNavigate } from "@/presentation/router/useAppNavigation";
+import { useNavigate } from "@tanstack/react-router";
 import {
   useThemePreferenceStore,
   type ThemePreference,
 } from "@/infrastructure/preferences/useThemePreferenceStore";
 
 export default function SettingsPage() {
-  const navigate = useAppNavigate();
+  const navigate = useNavigate();
   const themePreference = useThemePreferenceStore(
     (state) => state.themePreference,
   );
@@ -51,7 +51,7 @@ export default function SettingsPage() {
         <Typography variant="subtitle1" gutterBottom>
           Organización
         </Typography>
-        <Button variant="contained" onClick={() => navigate("/organization")}>
+        <Button variant="contained" onClick={() => navigate({ to: "/organization" })}>
           Editar organización
         </Button>
       </Paper>

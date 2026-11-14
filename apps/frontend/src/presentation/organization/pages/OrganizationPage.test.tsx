@@ -13,35 +13,29 @@ const mocks = vi.hoisted(() => {
   };
 });
 
-vi.mock("@/presentation/router/useAppNavigation", () => ({
-  useAppNavigate: () => mocks.navigate,
-  useAppInvalidate: () => mocks.invalidate,
+vi.mock("@tanstack/react-router", async (importOriginal) => ({
+  ...await importOriginal<typeof import("@tanstack/react-router")>(),
+  useNavigate: () => mocks.navigate,
+  useRouter: () => ({ invalidate: mocks.invalidate }),
 }));
-vi.mock("@tanstack/react-query", () => ({
-  useQuery: () => ({ data: undefined, isLoading: false, error: null }),
-  useQueryClient: () => ({}),
-  useMutation: (options: { mutationKey: string[] }) => ({
-    isPending: false,
-    mutate: (_input: unknown, callbacks: { onSuccess?: (value: unknown) => unknown }) => {
-      mocks.steps.push(options.mutationKey[1]);
-      void callbacks.onSuccess?.({ id: "org", name: "Nueva organización" });
-    },
+vi.mock("@/infrastructure/organization/useOrganizationEditor", () => ({
+  useOrganizationEditor: () => ({
+    detail: { data: undefined, isLoading: false, error: null },
+    ...Object.fromEntries(["create", "update"].map((action) => [action, {
+      isPending: false,
+      mutate: (_input: unknown, callbacks: { onSuccess?: (value: unknown) => unknown }) => {
+        mocks.steps.push(action);
+        void callbacks.onSuccess?.({ id: "org", name: "Nueva organización" });
+      },
+    }])),
   }),
 }));
 vi.mock("../../../auth/useAuth", () => ({
   useAuth: () => ({ organization: mocks.organization, refreshSession: mocks.refreshSession }),
 }));
-vi.mock("@/infrastructure/query", () => ({
-  organizationsQueryOptions: { detail: (id: string) => ({ queryKey: ["organizations", "detail", id] }) },
-  organizationsMutationOptions: {
-    create: () => ({ mutationKey: ["organizations", "create"] }),
-    update: () => ({ mutationKey: ["organizations", "update"] }),
-  },
-}));
 
 describe("OrganizationPage session changes", () => {
   beforeEach(() => {
-    vi.stubEnv("VITE_START_RUNTIME", "true");
     mocks.steps.length = 0;
     mocks.organization = null;
     mocks.navigate.mockClear();
@@ -54,7 +48,7 @@ describe("OrganizationPage session changes", () => {
     render(<OrganizationPage />);
     fireEvent.change(screen.getByRole("textbox", { name: "Nombre" }), { target: { value: "Nueva organización" } });
     fireEvent.click(screen.getByRole("button", { name: action === "create" ? "Guardar organización" : "Guardar cambios" }));
-    await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith("/orders"));
+    await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith({ to: "/orders" }));
     expect(mocks.steps).toEqual([action, "refresh", "invalidate", "navigate"]);
   });
 

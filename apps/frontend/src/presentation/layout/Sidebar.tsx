@@ -22,7 +22,7 @@ import {
   Warehouse,
   Store,
 } from "@mui/icons-material";
-import { useAppNavigate, useAppLocation } from "@/presentation/router/useAppNavigation";
+import { useNavigate, useLocation } from "@tanstack/react-router";
 import { useAuth } from "@/auth/useAuth";
 import {
   canAccessUsersResource,
@@ -55,8 +55,8 @@ const menuItems = [
 ];
 
 export default function Sidebar() {
-  const navigate = useAppNavigate();
-  const location = useAppLocation();
+  const navigate = useNavigate();
+  const location = useLocation();
   const { role, organization } = useAuth();
 
   const visibleMenuItems = menuItems.filter((item) => {
@@ -99,7 +99,7 @@ export default function Sidebar() {
               <ListItem key={item.text} disablePadding>
                 <ListItemButton
                   selected={isSelected}
-                  onClick={() => navigate(item.path)}
+                  onClick={() => navigate({ to: item.path })}
                   sx={{
                     "&.Mui-selected": {
                       backgroundColor: "primary.light",

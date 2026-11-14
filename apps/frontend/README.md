@@ -4,13 +4,12 @@ The administrator runs on TanStack Start and Nitro. Its server owns the
 Keycloak session and proxies allowlisted API routes. Browser requests use
 same-origin HttpOnly cookies; the API determines organization and role access.
 Administrative screen data loads in the browser after hydration. API resources and
-their browser transport live in `src/infrastructure/api`; legacy SPA session
-adapters live in `src/infrastructure/auth` during the migration.
+their browser transport live in `src/infrastructure/api`; session adapters
+live in `src/infrastructure/auth`.
 
 Run `pnpm --filter frontend dev` for development, `pnpm --filter frontend build`
 to build, and `pnpm --filter frontend start` to serve the resulting `.output`
-directory. These commands run with Node 24 in Docker. The legacy SPA build is
-available temporarily as `pnpm --filter frontend build:spa`. Build the production
+directory. These commands run with Node 24 in Docker. Build the production
 image from the repository root with:
 
 ```sh
@@ -35,9 +34,7 @@ bundle:
 
 Register the external `/session/callback` URL with the Keycloak administrator
 client. Login and registration redirect to Keycloak. The server encrypts tokens
-in HttpOnly cookies and projects only the public profile to the page. The old
-`API_URL` and `VITE_API_URL` settings configure the legacy SPA and do not
-configure this server. `API_SCHEMA_URL` (or `VITE_API_URL_JSON`) supplies the
+in HttpOnly cookies and projects only the public profile to the page. `API_SCHEMA_URL` (or `VITE_API_URL_JSON`) supplies the
 OpenAPI document URL when regenerating API types.
 
 Run `pnpm --filter frontend lint`, `check-types`, `test`, and `build` for unit

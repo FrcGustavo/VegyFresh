@@ -1,21 +1,14 @@
 import { Box, AppBar, Toolbar, IconButton, Tooltip, Chip } from "@mui/material";
 import { Logout } from "@mui/icons-material";
-import { Outlet } from "react-router";
 import type { ReactNode } from "react";
-import { useAppNavigate } from "@/presentation/router/useAppNavigation";
 import Sidebar from "./Sidebar";
 import { useAuth } from "@/auth/useAuth";
 
-export default function MainLayout({ children }: { children?: ReactNode }) {
+export default function MainLayout({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth();
-  const navigate = useAppNavigate();
 
   const handleLogout = async () => {
     await logout();
-    // Start logout navigates through the provider before returning to the app.
-    if (import.meta.env.VITE_START_RUNTIME !== "true") {
-      void navigate("/login");
-    }
   };
 
   return (
@@ -75,7 +68,7 @@ export default function MainLayout({ children }: { children?: ReactNode }) {
         }}
       >
         <Box>
-          {children ?? <Outlet />}
+          {children}
         </Box>
       </Box>
     </Box>

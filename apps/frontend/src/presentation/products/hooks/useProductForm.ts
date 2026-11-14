@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useAppNavigate } from "@/presentation/router/useAppNavigation";
+import { useNavigate } from "@tanstack/react-router";
 import type {
   ProductFormData,
   ProductPriceRow,
@@ -46,7 +46,7 @@ export function useProductForm(
     isSaving,
     save,
   } = useProductEditor(id);
-  const navigate = useAppNavigate();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState<ProductFormData>(EMPTY_PRODUCT_FORM);
   const [prices, setPrices] = useState<ProductPriceRow[]>([]);
   const [originalPrices, setOriginalPrices] = useState<
@@ -187,7 +187,7 @@ export function useProductForm(
             setIsDisabled(true);
           }
           if (onSuccess) onSuccess(action, product);
-          else navigate("/products");
+          else navigate({ to: "/products" });
         })
         .catch((error: Error) => setFormError(error.message));
     } catch (error) {

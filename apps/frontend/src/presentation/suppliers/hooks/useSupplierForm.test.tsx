@@ -1,9 +1,11 @@
 import type { PropsWithChildren } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, renderHook, waitFor } from "@testing-library/react";
-import { MemoryRouter } from "react-router";
+import { createTestRouterWrapper } from "../../../test/router";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useSupplierForm } from "./useSupplierForm";
+
+const { wrapper: TestRouter } = createTestRouterWrapper();
 
 const mocks = vi.hoisted(() => ({
   suppliers: new Map<string, unknown>(),
@@ -34,11 +36,11 @@ function createWrapper() {
 
   return function Wrapper({ children }: PropsWithChildren) {
     return (
-      <MemoryRouter>
+      <TestRouter>
         <QueryClientProvider client={queryClient}>
           {children}
         </QueryClientProvider>
-      </MemoryRouter>
+      </TestRouter>
     );
   };
 }

@@ -1,7 +1,7 @@
 import { preparePriceList } from "@/application/catalog/priceListDraft";
 import { useEffect, useMemo, useState } from "react";
 import { usePriceListEditor } from "@/infrastructure/catalog/usePriceLists";
-import { useAppNavigate } from "@/presentation/router/useAppNavigation";
+import { useNavigate } from "@tanstack/react-router";
 import type { PriceList } from "@/infrastructure/api";
 import { createClientRowId } from "@/infrastructure/identifiers/clientRowId";
 
@@ -49,7 +49,7 @@ export function usePriceListForm(
     detail: { data: existingPriceList, isLoading },
     save: mutation,
   } = usePriceListEditor(id);
-  const navigate = useAppNavigate();
+  const navigate = useNavigate();
   const [name, setName] = useState("");
   const [productsList, setProductsList] = useState<PriceListProductRow[]>([
     createEmptyProductRow(),
@@ -179,7 +179,7 @@ export function usePriceListForm(
           if (onSuccess) {
             onSuccess(action, priceList);
           } else {
-            navigate("/price-lists");
+            navigate({ to: "/price-lists" });
           }
         },
         onError: (error) => setFormError(error.message),

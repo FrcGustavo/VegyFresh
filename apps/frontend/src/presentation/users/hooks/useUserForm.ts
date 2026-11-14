@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useAppNavigate } from "@/presentation/router/useAppNavigation";
+import { useNavigate } from "@tanstack/react-router";
 import type { UserFormData } from "../../../application/catalog/saveCatalog";
 import { useUserEditor } from "../../../infrastructure/catalog/useCatalog";
 import { validateImageFile } from "@/presentation/utils/imageValidation";
@@ -26,7 +26,7 @@ export function useUserForm(
     createAdminRole,
     save,
   } = useUserEditor(id);
-  const navigate = useAppNavigate();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState<UserFormData>(EMPTY_USER_FORM);
   const [avatarFileError, setAvatarFileError] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
@@ -93,7 +93,7 @@ export function useUserForm(
             setIsDisabled(true);
           }
           if (onSuccess) onSuccess(action, user);
-          else navigate("/users");
+          else navigate({ to: "/users" });
         })
         .catch((error: Error) => setFormError(error.message));
     } catch (error) {
