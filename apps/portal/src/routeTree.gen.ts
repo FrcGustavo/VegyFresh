@@ -15,7 +15,10 @@ import { Route as SessionRouteImport } from './routes/session'
 import { Route as ApiSplatRouteImport } from './routes/api.$'
 import { Route as PortalIndexRouteImport } from './routes/portal.index'
 import { Route as PortalDashboardRouteImport } from './routes/portal.dashboard'
+import { Route as PortalOrdersRouteImport } from './routes/portal.orders'
 import { Route as SessionSplatRouteImport } from './routes/session.$'
+import { Route as PortalOrdersIndexRouteImport } from './routes/portal.orders.index'
+import { Route as PortalOrdersOrderIdRouteImport } from './routes/portal.orders.$orderId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -47,10 +50,25 @@ const PortalDashboardRoute = PortalDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => PortalRoute,
 } as any)
+const PortalOrdersRoute = PortalOrdersRouteImport.update({
+  id: '/orders',
+  path: '/orders',
+  getParentRoute: () => PortalRoute,
+} as any)
 const SessionSplatRoute = SessionSplatRouteImport.update({
   id: '/$',
   path: '/$',
   getParentRoute: () => SessionRoute,
+} as any)
+const PortalOrdersIndexRoute = PortalOrdersIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => PortalOrdersRoute,
+} as any)
+const PortalOrdersOrderIdRoute = PortalOrdersOrderIdRouteImport.update({
+  id: '/$orderId',
+  path: '/$orderId',
+  getParentRoute: () => PortalOrdersRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -59,8 +77,11 @@ export interface FileRoutesByFullPath {
   '/session': typeof SessionRouteWithChildren
   '/api/$': typeof ApiSplatRoute
   '/portal/dashboard': typeof PortalDashboardRoute
+  '/portal/orders': typeof PortalOrdersRouteWithChildren
   '/session/$': typeof SessionSplatRoute
   '/portal/': typeof PortalIndexRoute
+  '/portal/orders/$orderId': typeof PortalOrdersOrderIdRoute
+  '/portal/orders/': typeof PortalOrdersIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -69,6 +90,8 @@ export interface FileRoutesByTo {
   '/portal/dashboard': typeof PortalDashboardRoute
   '/session/$': typeof SessionSplatRoute
   '/portal': typeof PortalIndexRoute
+  '/portal/orders/$orderId': typeof PortalOrdersOrderIdRoute
+  '/portal/orders': typeof PortalOrdersIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -77,8 +100,11 @@ export interface FileRoutesById {
   '/session': typeof SessionRouteWithChildren
   '/api/$': typeof ApiSplatRoute
   '/portal/dashboard': typeof PortalDashboardRoute
+  '/portal/orders': typeof PortalOrdersRouteWithChildren
   '/session/$': typeof SessionSplatRoute
   '/portal/': typeof PortalIndexRoute
+  '/portal/orders/$orderId': typeof PortalOrdersOrderIdRoute
+  '/portal/orders/': typeof PortalOrdersIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -88,11 +114,21 @@ export interface FileRouteTypes {
     | '/session'
     | '/api/$'
     | '/portal/dashboard'
+    | '/portal/orders'
     | '/session/$'
     | '/portal/'
+    | '/portal/orders/$orderId'
+    | '/portal/orders/'
   fileRoutesByTo: FileRoutesByTo
   to:
-    '/' | '/session' | '/api/$' | '/portal/dashboard' | '/session/$' | '/portal'
+    | '/'
+    | '/session'
+    | '/api/$'
+    | '/portal/dashboard'
+    | '/session/$'
+    | '/portal'
+    | '/portal/orders/$orderId'
+    | '/portal/orders'
   id:
     | '__root__'
     | '/'
@@ -100,8 +136,11 @@ export interface FileRouteTypes {
     | '/session'
     | '/api/$'
     | '/portal/dashboard'
+    | '/portal/orders'
     | '/session/$'
     | '/portal/'
+    | '/portal/orders/$orderId'
+    | '/portal/orders/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -155,6 +194,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PortalDashboardRouteImport
       parentRoute: typeof PortalRoute
     }
+    '/portal/orders': {
+      id: '/portal/orders'
+      path: '/orders'
+      fullPath: '/portal/orders'
+      preLoaderRoute: typeof PortalOrdersRouteImport
+      parentRoute: typeof PortalRoute
+    }
     '/session/$': {
       id: '/session/$'
       path: '/$'
@@ -162,16 +208,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SessionSplatRouteImport
       parentRoute: typeof SessionRoute
     }
+    '/portal/orders/': {
+      id: '/portal/orders/'
+      path: '/'
+      fullPath: '/portal/orders/'
+      preLoaderRoute: typeof PortalOrdersIndexRouteImport
+      parentRoute: typeof PortalOrdersRoute
+    }
+    '/portal/orders/$orderId': {
+      id: '/portal/orders/$orderId'
+      path: '/$orderId'
+      fullPath: '/portal/orders/$orderId'
+      preLoaderRoute: typeof PortalOrdersOrderIdRouteImport
+      parentRoute: typeof PortalOrdersRoute
+    }
   }
 }
 
+interface PortalOrdersRouteChildren {
+  PortalOrdersOrderIdRoute: typeof PortalOrdersOrderIdRoute
+  PortalOrdersIndexRoute: typeof PortalOrdersIndexRoute
+}
+
+const PortalOrdersRouteChildren: PortalOrdersRouteChildren = {
+  PortalOrdersOrderIdRoute: PortalOrdersOrderIdRoute,
+  PortalOrdersIndexRoute: PortalOrdersIndexRoute,
+}
+
+const PortalOrdersRouteWithChildren = PortalOrdersRoute._addFileChildren(
+  PortalOrdersRouteChildren,
+)
+
 interface PortalRouteChildren {
   PortalDashboardRoute: typeof PortalDashboardRoute
+  PortalOrdersRoute: typeof PortalOrdersRouteWithChildren
   PortalIndexRoute: typeof PortalIndexRoute
 }
 
 const PortalRouteChildren: PortalRouteChildren = {
   PortalDashboardRoute: PortalDashboardRoute,
+  PortalOrdersRoute: PortalOrdersRouteWithChildren,
   PortalIndexRoute: PortalIndexRoute,
 }
 

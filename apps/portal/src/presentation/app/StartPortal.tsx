@@ -35,6 +35,7 @@ function StartPortalLayout() {
   const [logoutFailed, setLogoutFailed] = useState(false);
   return <PortalShell navigation={<>
     <Button color="inherit" component={Link} to="/portal/dashboard">Dashboard</Button>
+    <Button color="inherit" component={Link} to="/portal/orders">Orders</Button>
     <Button color="inherit" onClick={async () => {
       setLogoutFailed(false);
       try { await session.logout(); } catch { setLogoutFailed(true); }

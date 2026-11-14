@@ -103,6 +103,17 @@ test("Start SSR keeps concurrent sessions isolated and completes the OIDC callba
   assert.ok([302, 303, 307].includes(guestDashboard.status));
   assert.equal(guestDashboard.headers.get("location"), "/");
   assert.doesNotMatch(await guestDashboard.text(), /Customer portal dashboard/);
+  // Order pages render a loading shell on the server; each browser fetches through its own BFF cookie.
+  for (const path of ["/portal/orders", "/portal/orders/order-1"]) {
+    const [pageA, pageB, pageGuest] = await Promise.all([alice, bob, ""].map((cookie) => fetch(`${origin}${path}`, { headers: { cookie }, redirect: "manual" })));
+    assert.equal(pageA.status, 200); assert.equal(pageB.status, 200);
+    assert.match(pageA.headers.get("cache-control"), /private, no-store/);
+    const [pageHtmlA, pageHtmlB] = await Promise.all([pageA.text(), pageB.text()]);
+    assert.doesNotMatch(pageHtmlA, /Bob|access-Alice|refresh-Alice|do-not-serialize/);
+    assert.doesNotMatch(pageHtmlB, /Alice|access-Bob|refresh-Bob|do-not-serialize/);
+    assert.ok([302, 303, 307].includes(pageGuest.status));
+    assert.equal(pageGuest.headers.get("location"), "/");
+  }
   const index = await fetch(`${origin}/portal`, { headers: { cookie: alice }, redirect: "manual" });
   assert.ok([302, 303, 307].includes(index.status));
   assert.equal(index.headers.get("location"), "/portal/dashboard");
