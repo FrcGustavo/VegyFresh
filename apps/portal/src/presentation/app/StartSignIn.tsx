@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import type { PortalSessionSnapshot } from "../../domain/auth/auth.types";
 import { getPublicSession } from "../../session.functions";
+import { logoutSession } from "../../infrastructure/auth/sessionActions";
 
 export function StartSignIn({ initialSession }: { initialSession: PortalSessionSnapshot }) {
   const [logoutFailed, setLogoutFailed] = useState(false);
@@ -12,11 +13,7 @@ export function StartSignIn({ initialSession }: { initialSession: PortalSessionS
   async function logout() {
     setLogoutFailed(false);
     try {
-      const response = await fetch("/session/logout", { method: "POST" });
-      const result: unknown = await response.json();
-      if (!response.ok || !result || typeof result !== "object" ||
-          !("redirectTo" in result) || result.redirectTo !== "/session/logout/redirect") throw new Error("Logout failed");
-      window.location.assign(result.redirectTo);
+      await logoutSession();
     } catch {
       setLogoutFailed(true);
     }

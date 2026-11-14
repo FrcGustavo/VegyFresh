@@ -1,7 +1,7 @@
 import { act } from "react";
 import { hydrateRoot } from "react-dom/client";
 import { renderToString } from "react-dom/server";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { DashboardPage } from "../features/dashboard/pages/DashboardPage";
 import { StartPortal } from "./StartPortal";
@@ -29,6 +29,15 @@ describe("Start protected dashboard", () => {
     await act(async () => root?.unmount());
     errors.mockRestore();
     container.remove();
+  });
+
+  it("shows an error when logout fails", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, json: async () => ({}) }));
+    const view = render(<StartPortal session={snapshot} />);
+    fireEvent.click(screen.getByRole("button", { name: "Logout" }));
+    await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("Sign out failed"));
+    view.unmount();
+    vi.unstubAllGlobals();
   });
 
   it("retries an unavailable session without displaying the protected page", () => {

@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { renderToString } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
-import { AppProviders } from "../../presentation/app/providers";
+import { PortalSessionProvider } from "./hooks/PortalSessionProvider";
 import { usePortalSession } from "./hooks/usePortalSession";
 import { readServerSession } from "./serverSession.server";
 import type { PortalProxy } from "../server/proxyRuntime.server";
@@ -28,8 +28,8 @@ describe("server sessions", () => {
     const [a, b] = await Promise.all(["a", "b"].map((id) => readServerSession(
       new Request("https://portal.example/portal", { headers: { cookie: `session=${id}` } }), proxy,
     )));
-    const htmlA = renderToString(<AppProviders initialSession={a.session}><Profile /></AppProviders>);
-    const htmlB = renderToString(<AppProviders initialSession={b.session}><Profile /></AppProviders>);
+    const htmlA = renderToString(<PortalSessionProvider initialSession={a.session}><Profile /></PortalSessionProvider>);
+    const htmlB = renderToString(<PortalSessionProvider initialSession={b.session}><Profile /></PortalSessionProvider>);
     expect(htmlA).toContain("Alice");
     expect(htmlA).not.toContain("Bob");
     expect(htmlB).toContain("Bob");
@@ -46,6 +46,6 @@ describe("server sessions", () => {
       handle: vi.fn(),
     };
     const { session } = await readServerSession(new Request("https://portal.example"), proxy);
-    expect(renderToString(<AppProviders initialSession={session}><Profile /></AppProviders>)).toContain("loading");
+    expect(renderToString(<PortalSessionProvider initialSession={session}><Profile /></PortalSessionProvider>)).toContain("loading");
   });
 });
