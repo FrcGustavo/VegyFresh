@@ -8,13 +8,14 @@ import {
   TableHead,
   TableRow,
 } from "@mui/material";
+import type { PortalOrder } from "../../../../domain/orders/order.types";
 import type { OrdersPort } from "../../../../application/orders/orders";
 import { useOrderDetail } from "../../../../infrastructure/orders/hooks/useOrderDetail";
 import { PageHeader } from "../../../components/PageHeader";
 import { LoadingState } from "../../../components/LoadingState";
 
-export function OrderDetailView({ ordersApi, orderId }: { ordersApi: OrdersPort; orderId: string }) {
-  const orderQuery = useOrderDetail(ordersApi, orderId);
+export function OrderDetailView({ ordersApi, orderId, initialOrder }: { ordersApi: OrdersPort; orderId: string; initialOrder?: PortalOrder }) {
+  const orderQuery = useOrderDetail(ordersApi, orderId, initialOrder);
 
   if (orderQuery.isLoading) {
     return <LoadingState />;
