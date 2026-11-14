@@ -52,8 +52,8 @@ const getErrorStatus = (error: unknown): number | null => {
 
 async function attemptTokenRefresh(): Promise<string | null> {
   // Lazy imports to avoid circular dependency issues at module init
-  const { authStorage } = await import("../auth/authStorage");
-  const { authApi } = await import("../auth/authApi");
+  const { authStorage } = await import("@/infrastructure/auth/authStorage");
+  const { authApi } = await import("@/infrastructure/auth/authApi");
 
   const refreshToken = authStorage.getRefreshToken();
   if (!refreshToken) {
@@ -132,7 +132,7 @@ export async function fetchApi<T = any>(
     return response.status === 204 ? null : parseJson<T>(response);
   }
 
-  const { authStorage } = await import("../auth/authStorage");
+  const { authStorage } = await import("@/infrastructure/auth/authStorage");
   const accessToken = authStorage.getAccessToken();
 
   const response = await fetch(`${API_URL}${endpoint}`, {

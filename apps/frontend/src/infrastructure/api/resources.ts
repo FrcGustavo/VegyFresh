@@ -1,5 +1,5 @@
 import { createApiClient } from "@vegyfresh/api-client";
-import { fetchApi } from "../../api/client";
+import { fetchApi } from "@/infrastructure/api/client";
 
 export const apiClient = createApiClient({ request: fetchApi });
 

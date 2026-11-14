@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { ShoppingCart } from "@mui/icons-material";
 import { Box, Typography, CircularProgress } from "@mui/material";
-import { ordersQueryOptions } from "../../../../api";
+import { ordersQueryOptions } from "@/infrastructure/api";
 import { Table } from "@/presentation/components/Table";
 import OrderFormModal from "../../components/OrderFormModal";
 import ResourcePageTitle from "@/presentation/components/ResourcePageTitle";

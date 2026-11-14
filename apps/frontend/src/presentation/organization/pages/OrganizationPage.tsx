@@ -15,12 +15,12 @@ import {
 import { useAppInvalidate, useAppNavigate } from "@/presentation/router/useAppNavigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../../../auth/useAuth";
-import { authStorage } from "../../../auth/authStorage";
-import { authApi } from "../../../auth/authApi";
+import { authStorage } from "@/infrastructure/auth/authStorage";
+import { authApi } from "@/infrastructure/auth/authApi";
 import {
   organizationsMutationOptions,
   organizationsQueryOptions,
-} from "../../../api";
+} from "@/infrastructure/api";
 import {
   OrganizationForm,
   type OrganizationFormData,

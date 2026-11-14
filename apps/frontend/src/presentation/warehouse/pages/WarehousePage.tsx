@@ -14,7 +14,7 @@ import {
   Typography,
 } from "@mui/material";
 import { Warehouse as WarehouseIcon } from "@mui/icons-material";
-import { inventoryQueryOptions, purchasesQueryOptions } from "../../../api";
+import { inventoryQueryOptions, purchasesQueryOptions } from "@/infrastructure/api";
 import ListPageToolbar from "@/presentation/components/ListPageToolbar";
 import ResourcePageTitle from "@/presentation/components/ResourcePageTitle";
 import PurchaseFormModal from "../components/PurchaseFormModal";

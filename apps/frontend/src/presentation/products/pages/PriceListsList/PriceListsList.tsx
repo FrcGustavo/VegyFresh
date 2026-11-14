@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { LocalOffer } from "@mui/icons-material";
 import { Box, Typography, CircularProgress } from "@mui/material";
-import { priceListsQueryOptions } from "../../../../api";
+import { priceListsQueryOptions } from "@/infrastructure/api";
 import { useDebouncedValue } from "@/presentation/hooks/useDebouncedValue";
 import { Table } from "@/presentation/components/Table";
 import PriceListFormModal from "../../components/PriceListFormModal";

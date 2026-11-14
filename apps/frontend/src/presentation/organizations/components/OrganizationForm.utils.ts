@@ -1,4 +1,4 @@
-import type { Organization } from "../../../api";
+import type { Organization } from "@/infrastructure/api";
 import type { OrganizationFormData } from "./OrganizationForm";
 
 export const EMPTY_ORGANIZATION_FORM: OrganizationFormData = {

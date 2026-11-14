@@ -9,7 +9,7 @@ import {
   usersQueryOptions,
   type CreateOrderInput,
   type Order,
-} from "../../../api";
+} from "@/infrastructure/api";
 import { createClientRowId } from "@/infrastructure/identifiers/clientRowId";
 
 export type SaveAction = "save" | "save-and-close" | "save-and-new";
