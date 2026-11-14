@@ -1,0 +1,34 @@
+services:
+  frontend:
+    build:
+      context: ../..
+      dockerfile: apps/frontend/Dockerfile
+      target: development
+    working_dir: /repo
+    command:
+      - sh
+      - -c
+      - CI=true pnpm install --filter frontend... --frozen-lockfile && pnpm --filter frontend dev
+    ports:
+      - "${FRONTEND_PORT:-5173}:5173"
+    volumes:
+      - ../..:/repo
+      - frontend_node_modules:/repo/node_modules
+      - frontend_app_node_modules:/repo/apps/frontend/node_modules
+      - api_client_node_modules:/repo/clients/api-client/node_modules
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      HOST: 0.0.0.0
+      PORT: "5173"
+      VEGYFRESH_API_URL: ${DEV_API_URL:-http://host.docker.internal:3000}
+      VEGYFRESH_PUBLIC_ORIGIN: ${DEV_PUBLIC_ORIGIN:-http://localhost:${FRONTEND_PORT:-5173}}
+      KEYCLOAK_INTERNAL_URL: ${DEV_KEYCLOAK_INTERNAL_URL:-http://host.docker.internal:8080/realms/vegyfresh}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+volumes:
+  frontend_node_modules:
+  frontend_app_node_modules:
+  api_client_node_modules:

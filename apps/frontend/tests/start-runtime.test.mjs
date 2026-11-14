@@ -63,6 +63,10 @@ test("built Start routes isolate sessions and forward only authorized API calls"
     try { await fetch(`${origin}/health`); ready = true; } catch { await new Promise((resolve) => setTimeout(resolve, 50)); }
   }
   assert.ok(ready, "Start server did not start");
+  const health = await fetch(`${origin}/health`);
+  assert.equal(health.status, 200);
+  assert.deepEqual(await health.json(), { status: "ok" });
+  assert.match(health.headers.get("cache-control"), /no-store/);
   for (const asset of await readdir(".output/public/assets")) {
     assert.doesNotMatch(await readFile(`.output/public/assets/${asset}`, "utf8"), /VEGYFRESH_SESSION_SECRET|KEYCLOAK_CLIENT_SECRET|access-Alice|refresh-Alice/);
   }
