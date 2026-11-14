@@ -39,7 +39,9 @@ test("Start SSR keeps concurrent sessions isolated and completes the OIDC callba
   });
   const identityPort = await listen(identity);
   issuer = `http://127.0.0.1:${identityPort}/realms/test`;
+  let apiUnavailable = false;
   const api = createServer((req, res) => {
+    if (apiUnavailable) { res.statusCode = 503; return res.end(); }
     const name = req.headers.authorization === "Bearer access-Alice" ? "Alice" : "Bob";
     res.setHeader("content-type", "application/json");
     res.end(JSON.stringify({ client: { id: name, name, email: null, portalEnabled: true }, privateToken: "do-not-serialize" }));
@@ -61,7 +63,7 @@ test("Start SSR keeps concurrent sessions isolated and completes the OIDC callba
     assert.doesNotMatch(content, /VEGYFRESH_SESSION_SECRET|KEYCLOAK_CLIENT_SECRET|portal-access-token|portal-refresh-token/);
   }
   async function login(name) {
-    const start = await fetch(`${origin}/session/login?returnTo=%2F`, { redirect: "manual" });
+    const start = await fetch(`${origin}/session/login?returnTo=%2Fportal%2Fdashboard`, { redirect: "manual" });
     assert.equal(start.status, 303);
     const authorize = new URL(start.headers.get("location"));
     authorizations.set(name, authorize.searchParams.get("nonce"));
@@ -70,7 +72,7 @@ test("Start SSR keeps concurrent sessions isolated and completes the OIDC callba
     assert.match(start.headers.getSetCookie().join(" "), /HttpOnly/i);
     const callback = await fetch(`${origin}/session/callback?code=${name}&state=${encodeURIComponent(authorize.searchParams.get("state"))}`, { headers: { cookie: transaction }, redirect: "manual" });
     assert.equal(callback.status, 303);
-    assert.equal(callback.headers.get("location"), "/");
+    assert.equal(callback.headers.get("location"), "/portal/dashboard");
     const session = cookies(callback).filter((value) => value.startsWith("vegyfresh_portal_") && !value.startsWith("vegyfresh_portal_oidc_transaction="));
     assert.ok(session.length);
     assert.match(callback.headers.getSetCookie().join(" "), /HttpOnly/i);
@@ -84,6 +86,29 @@ test("Start SSR keeps concurrent sessions isolated and completes the OIDC callba
   assert.match(htmlA, /Signed in as (?:<!-- -->)?Alice/); assert.doesNotMatch(htmlA, /Bob|access-Alice|refresh-Alice|do-not-serialize/);
   assert.match(htmlB, /Signed in as (?:<!-- -->)?Bob/); assert.doesNotMatch(htmlB, /Alice|access-Bob|refresh-Bob|do-not-serialize/);
   assert.match(htmlGuest, /Sign in to access/);
+  assert.match(htmlGuest, /session\/login\?returnTo=%2Fportal%2Fdashboard/);
+  const [dashA, dashB, guestDashboard] = await Promise.all([alice, bob, ""].map((cookie) => fetch(`${origin}/portal/dashboard`, { headers: { cookie }, redirect: "manual" })));
+  const [dashboardA, dashboardB] = await Promise.all([dashA.text(), dashB.text()]);
+  assert.equal(dashA.status, 200); assert.equal(dashB.status, 200);
+  assert.match(dashboardA, /Welcome, (?:<!-- -->)?Alice/); assert.doesNotMatch(dashboardA, /Bob|access-Alice|refresh-Alice|do-not-serialize/);
+  assert.match(dashboardB, /Welcome, (?:<!-- -->)?Bob/); assert.doesNotMatch(dashboardB, /Alice|access-Bob|refresh-Bob|do-not-serialize/);
+  assert.match(dashA.headers.get("cache-control"), /private, no-store/);
+  assert.ok([302, 303, 307].includes(guestDashboard.status));
+  assert.equal(guestDashboard.headers.get("location"), "/");
+  assert.doesNotMatch(await guestDashboard.text(), /Customer portal dashboard/);
+  const index = await fetch(`${origin}/portal`, { headers: { cookie: alice }, redirect: "manual" });
+  assert.ok([302, 303, 307].includes(index.status));
+  assert.equal(index.headers.get("location"), "/portal/dashboard");
+  apiUnavailable = true;
+  const unavailable = await fetch(`${origin}/portal/dashboard`, { headers: { cookie: alice }, redirect: "manual" });
+  const unavailableHtml = await unavailable.text();
+  assert.equal(unavailable.status, 200);
+  assert.match(unavailableHtml, /could not check your session/);
+  assert.match(unavailableHtml, /Retry/);
+  assert.doesNotMatch(unavailableHtml, /Customer portal dashboard|session\/login/);
+  apiUnavailable = false;
+  const recovered = await fetch(`${origin}/portal/dashboard`, { headers: { cookie: alice } });
+  assert.match(await recovered.text(), /Welcome, (?:<!-- -->)?Alice/);
   const crossOrigin = await fetch(`${origin}/session/logout`, { method: "POST", headers: { cookie: alice, origin: "https://attacker.example" } });
   assert.equal(crossOrigin.status, 403);
   const logout = await fetch(`${origin}/session/logout`, { method: "POST", headers: { cookie: alice, origin } });
