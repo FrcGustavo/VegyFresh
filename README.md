@@ -8,7 +8,7 @@ VegyFresh is a Turborepo-based monorepo with:
 
 ## Workspace structure
 
-- `apps/backend` — main API (`/api/v1`) with Swagger docs at `/api/docs`
+- `services/backend` — main API (`/api/v1`) with Swagger docs at `/api/docs`
 - `apps/frontend` — internal/admin application
 - `apps/portal` — customer portal application
 - `clients/api-client` — shared API client and generated contract
@@ -16,7 +16,7 @@ VegyFresh is a Turborepo-based monorepo with:
 
 ## Backend modules (current)
 
-Main modules in `apps/backend/src/app.module.ts`:
+Main modules in `services/backend/src/app.module.ts`:
 
 - Auth, Organizations, Users, Roles
 - Catalog (products, price lists, product prices)
@@ -61,7 +61,7 @@ pnpm install
 2. Configure backend environment:
 
 ```bash
-cp apps/backend/.env.example apps/backend/.env
+cp services/backend/.env.example services/backend/.env
 ```
 
 3. Configure each web application URL to the backend, including `/api/v1`. The admin frontend defaults to `http://localhost:3000/api/v1` and supports `VITE_API_URL` during local/Vite builds.

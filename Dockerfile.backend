@@ -6,8 +6,7 @@ RUN corepack enable && corepack prepare pnpm@10.11.0 --activate
 FROM base AS build
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
-COPY apps/backend/package.json apps/backend/package.json
-COPY apps/backend/scripts/install-source-bridge.cjs apps/backend/scripts/install-source-bridge.cjs
+COPY services/backend/package.json services/backend/package.json
 COPY apps/frontend/package.json apps/frontend/package.json
 COPY apps/portal/package.json apps/portal/package.json
 COPY clients/api-client/package.json clients/api-client/package.json
@@ -15,8 +14,7 @@ COPY packages/ui/package.json packages/ui/package.json
 
 RUN pnpm install --frozen-lockfile
 
-COPY apps/backend apps/backend
-COPY services/backend/src services/backend/src
+COPY services/backend services/backend
 
 RUN pnpm --filter backend build
 RUN pnpm --filter backend deploy --prod --legacy /app
@@ -28,8 +26,8 @@ ENV NODE_ENV=production
 ENV PORT=80
 
 COPY --from=build /app ./
-COPY --from=build /repo/apps/backend/dist ./dist
-COPY apps/backend/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+COPY --from=build /repo/services/backend/dist ./dist
+COPY services/backend/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
