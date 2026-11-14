@@ -13,7 +13,7 @@
     "dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
-    "lint": "cd ../.. && apps/backend/node_modules/.bin/eslint --config apps/backend/eslint.config.mjs \"apps/backend/{src,apps,libs,test}/**/*.ts\" \"services/backend/__tests__/**/*.ts\" \"services/backend/src/{auth,identity}/**/*.ts\" --fix",
+    "lint": "cd ../.. && apps/backend/node_modules/.bin/eslint --config apps/backend/eslint.config.mjs \"apps/backend/{src,apps,libs,test}/**/*.ts\" \"services/backend/__tests__/**/*.ts\" \"services/backend/src/{auth,catalog,clients,identity,suppliers}/**/*.ts\" --fix",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
