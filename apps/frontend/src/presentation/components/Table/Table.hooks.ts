@@ -1,4 +1,8 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import {
+  readColumnWidths,
+  writeColumnWidths,
+} from "@/infrastructure/preferences/columnWidthsStorage";
 
 interface ResizeState {
   [columnKey: string]: number;
@@ -8,28 +12,18 @@ export const useTableResizableColumns = (
   storageKey: string,
   columns: ReadonlyArray<{ key: string; defaultWidth: number }>,
 ) => {
-  const [columnWidths, setColumnWidths] = useState<ResizeState>(() => {
-    if (typeof window === "undefined") {
-      return columns.reduce((acc, col) => {
-        acc[col.key] = col.defaultWidth;
-        return acc;
-      }, {} as ResizeState);
-    }
+  const [columnWidths, setColumnWidths] = useState<ResizeState>(() =>
+    Object.fromEntries(columns.map((col) => [col.key, col.defaultWidth])),
+  );
 
-    try {
-      const stored = localStorage.getItem(storageKey);
-      if (stored) {
-        return JSON.parse(stored);
-      }
-    } catch {
-      // Continue with defaults
+  useEffect(() => {
+    const stored = readColumnWidths(storageKey);
+    if (stored) {
+      // Loading after hydration keeps the first client render equal to the server.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setColumnWidths(stored);
     }
-
-    return columns.reduce((acc, col) => {
-      acc[col.key] = col.defaultWidth;
-      return acc;
-    }, {} as ResizeState);
-  });
+  }, [storageKey]);
 
   const getColumnWidth = useCallback(
     (columnKey: string) => columnWidths[columnKey] || 160,
@@ -40,7 +34,7 @@ export const useTableResizableColumns = (
     (columnKey: string, width: number) => {
       setColumnWidths((prev) => {
         const updated = { ...prev, [columnKey]: width };
-        localStorage.setItem(storageKey, JSON.stringify(updated));
+        writeColumnWidths(storageKey, updated);
         return updated;
       });
     },
@@ -51,7 +45,7 @@ export const useTableResizableColumns = (
     (columnKey: string, defaultWidth: number) => {
       setColumnWidths((prev) => {
         const updated = { ...prev, [columnKey]: defaultWidth };
-        localStorage.setItem(storageKey, JSON.stringify(updated));
+        writeColumnWidths(storageKey, updated);
         return updated;
       });
     },

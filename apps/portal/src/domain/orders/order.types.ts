@@ -1,9 +1,9 @@
 export type PortalOrderItem = {
   id: string;
   product_id: string;
-  quantity: number;
-  unit_price: number;
-  subtotal: number;
+  quantity: number | string;
+  unit_price: number | string;
+  subtotal: number | string;
   product?: {
     id: string;
     folio: string;
@@ -20,6 +20,6 @@ export type PortalOrder = {
   description: string | null;
   delivery_date: string | null;
   created_at: string;
-  total_amount: number;
+  total_amount: number | string;
   items: PortalOrderItem[];
 };

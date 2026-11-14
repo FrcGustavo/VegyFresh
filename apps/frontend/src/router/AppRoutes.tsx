@@ -1,6 +1,6 @@
 import { lazy } from "react";
 import { Navigate, Route, Routes } from "react-router";
-import MainLayout from "../layout/MainLayout";
+import MainLayout from "@/presentation/layout/MainLayout";
 import { canAccessUsersResource } from "@/domain/auth/authorization";
 import {
   HomeRedirect,
@@ -25,13 +25,13 @@ const SuppliersList = lazy(
 );
 const UsersList = lazy(() => import("../modules/users/pages/UsersList"));
 const OrganizationPage = lazy(
-  () => import("../modules/organization/pages/OrganizationPage"),
+  () => import("../presentation/organization/pages/OrganizationPage"),
 );
 const InventoryPage = lazy(
-  () => import("../modules/inventory/pages/InventoryPage"),
+  () => import("../presentation/inventory/pages/InventoryPage"),
 );
 const SettingsPage = lazy(
-  () => import("../modules/settings/pages/SettingsPage"),
+  () => import("../presentation/settings/pages/SettingsPage"),
 );
 const LoginPage = lazy(() => import("../modules/auth/pages/LoginPage"));
 const SignupPage = lazy(() => import("../modules/auth/pages/SignupPage"));

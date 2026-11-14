@@ -16,48 +16,23 @@ Pass `--output <path>` to use a different output file.
 
 ## Auth + Tenant Behavior
 
-### Token model
+### Authentication and tenant context
 
-- Access and refresh tokens include:
-  - `sub` (user id)
-  - `org_id` (tenant organization id)
-  - `role` (user role name)
-  - `permissions` (role permissions)
-  - `session_id` / `sid` (session id)
-- Tenant scoping is resolved from these claims; requests are evaluated inside the authenticated `org_id`.
+Protected requests use Keycloak access tokens. The API validates the token and
+resolves its issuer and subject to a local user or portal client. Authorization,
+roles, permissions, and organization context come from the local records.
+Existing users and portal clients must be linked explicitly; an email match does
+not link an identity. A new admin identity can provision an organization-less
+owner when its profile is valid and the owner role is configured.
 
-### Auth endpoints
+- `GET /auth/me` returns the current user, organization, and role context.
+- `GET /portal/auth/me` returns the linked portal client profile.
 
-- `POST /auth/signup`
-  - Creates organization + owner user in one transaction.
-- `POST /auth/login`
-  - Accepts `email` and `password`.
-  - User organization and role are loaded directly from `users.organization_id` and `users.role_id`.
-- `POST /auth/refresh`
-  - Requires `refresh_token`.
-  - Session must be active, unrevoked, and tied to the same organization.
-- `GET /auth/me`
-  - Returns current user, organization, and role context.
-- `POST /auth/logout`
-  - Revokes current session.
-- `POST /auth/logout-all`
-  - Revokes all user sessions in current tenant.
-
-## Input Hardening
-
-- Auth DTOs use `class-validator` constraints.
-- Auth routes enforce `ValidationPipe` with:
-  - `whitelist: true`
-  - `forbidNonWhitelisted: true`
-  - `forbidUnknownValues: true`
-  - `transform: true`
+The API does not expose local signup, login, refresh, or logout endpoints.
 
 ## Secure Defaults
 
-- `BCRYPT_SALT_ROUNDS` defaults to `12` (minimum accepted: `10`).
-- `JWT_ACCESS_TTL` defaults to `15m` (must remain in safe bounds).
-- `JWT_REFRESH_TTL` defaults to `7d` (must remain in safe bounds).
-- `JWT_ACCESS_SECRET` and `JWT_REFRESH_SECRET` (or `JWT_SECRET` fallback) must be at least 32 characters.
+- `BCRYPT_SALT_ROUNDS` defaults to `12` (minimum accepted: `10`) for local user password administration.
 
 ## Local scripts
 

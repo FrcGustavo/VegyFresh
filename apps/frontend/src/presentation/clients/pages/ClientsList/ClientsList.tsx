@@ -1,9 +1,8 @@
 import { Box, CircularProgress, Typography } from "@mui/material";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useInfiniteQuery } from "@tanstack/react-query";
 import { People } from "@mui/icons-material";
-import { clientsQueryOptions } from "../../../../api";
-import { useDebouncedValue } from "../../../../hooks/useDebouncedValue";
+import { useClientsList } from "../../../../infrastructure/contacts/useContacts";
+import { useDebouncedValue } from "@/presentation/hooks/useDebouncedValue";
 import { Table } from "../../../../components/Table";
 import ClientFormModal from "../../components/ClientFormModal";
 import ResourcePageTitle from "../../../../components/ResourcePageTitle";
@@ -22,20 +21,17 @@ export default function ClientsList() {
   const { sortBy, sortOrder, handleSort } = useClientsSort();
   const debouncedQuery = useDebouncedValue(query, 400);
   const {
-    data,
+    items: list,
     isLoading,
     error,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useInfiniteQuery({
-    ...clientsQueryOptions.infiniteList({
-      limit: String(CLIENTS_PAGE_SIZE),
-      order_by: sortBy,
-      order: sortOrder,
-      search: debouncedQuery.trim() || undefined,
-    }),
-    placeholderData: (previousData) => previousData,
+  } = useClientsList({
+    limit: String(CLIENTS_PAGE_SIZE),
+    order_by: sortBy,
+    order: sortOrder,
+    search: debouncedQuery.trim() || undefined,
   });
 
   if (isLoading)
@@ -50,12 +46,6 @@ export default function ClientsList() {
         Error al cargar: {(error as Error).message}
       </Typography>
     );
-
-  const list: ClientListItem[] = (data?.pages ?? []).flatMap((page) =>
-    Array.isArray(page)
-      ? page
-      : ((page as { data?: ClientListItem[] })?.data ?? []),
-  );
 
   return (
     <ClientsTable

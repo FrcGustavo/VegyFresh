@@ -1,21 +1,12 @@
 import { useState, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
-import {
-  suppliersMutationOptions,
-  suppliersQueryOptions,
-  type Supplier,
-} from "../../../api";
-import { validateImageFile } from "../../../utils/imageValidation";
+import type { Supplier } from "../../../domain/contacts/contact";
+import type { SupplierFormData } from "../../../application/contacts/saveContact";
+import { useSupplierEditor } from "../../../infrastructure/contacts/useContacts";
+import { validateImageFile } from "@/presentation/utils/imageValidation";
 
 export type SaveAction = "save" | "save-and-close" | "save-and-new";
 type SupplierChangeEvent = { target: { name: string; value: string } };
-interface SupplierFormData {
-  name: string;
-  email: string;
-  phone_number: string;
-  logo_url: string;
-}
 const EMPTY_SUPPLIER_FORM: SupplierFormData = {
   name: "",
   email: "",
@@ -27,18 +18,13 @@ export function useSupplierForm(
   id?: string,
   onSuccess?: (action: SaveAction, supplier: Supplier) => void,
 ) {
-  const queryClient = useQueryClient();
+  const { detail: { data: existingSupplier, isLoading }, isSaving, save } = useSupplierEditor(id);
   const navigate = useNavigate();
   const [formData, setFormData] =
     useState<SupplierFormData>(EMPTY_SUPPLIER_FORM);
   const [logoFileError, setLogoFileError] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
   const [isDisabled, setIsDisabled] = useState(!!id);
-
-  const { data: existingSupplier, isLoading } = useQuery({
-    ...suppliersQueryOptions.detail(id ?? ""),
-    enabled: !!id,
-  });
 
   useEffect(() => {
     if (existingSupplier) {
@@ -88,29 +74,9 @@ export function useSupplierForm(
     reader.readAsDataURL(file);
   };
 
-  const createMutation = useMutation(
-    suppliersMutationOptions.create(queryClient),
-  );
-  const updateMutation = useMutation(
-    suppliersMutationOptions.update(queryClient),
-  );
-
   const handleSubmit = (action: SaveAction = "save") => {
-    if (!formData.name.trim()) {
-      setFormError("Completa el nombre del proveedor.");
-      return;
-    }
-
-    const input = {
-      name: formData.name.trim(),
-      email: formData.email.trim() || null,
-      phone_number: formData.phone_number.trim() || null,
-      logo_url: formData.logo_url.trim() || null,
-    };
-
     setFormError(null);
-    const options = {
-      onSuccess: (supplier: Supplier) => {
+    const onSaved = (supplier: Supplier) => {
         if (action === "save-and-new") {
           setFormData(EMPTY_SUPPLIER_FORM);
           setLogoFileError("");
@@ -123,14 +89,12 @@ export function useSupplierForm(
         } else {
           navigate("/suppliers");
         }
-      },
-      onError: (error: Error) => setFormError(error.message),
-    };
+      };
 
-    if (id) {
-      updateMutation.mutate({ id, input }, options);
-    } else {
-      createMutation.mutate(input, options);
+    try {
+      void save(formData).then(onSaved).catch((error: Error) => setFormError(error.message));
+    } catch (error) {
+      setFormError((error as Error).message);
     }
   };
 
@@ -139,7 +103,7 @@ export function useSupplierForm(
     logoFileError,
     formError,
     isLoading,
-    isSaving: createMutation.isPending || updateMutation.isPending,
+    isSaving,
     handleChange,
     handleLogoFileChange,
     handleSubmit,
