@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router";
+import { useAppNavigate } from "@/presentation/router/useAppNavigation";
 import {
   clientsQueryOptions,
   ordersMutationOptions,
@@ -95,7 +95,7 @@ export function useOrderForm(
   onSuccess?: (action: SaveAction, order: Order) => void,
 ) {
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
+  const navigate = useAppNavigate();
   const [formData, setFormData] = useState<OrderFormData>(EMPTY_FORM_DATA);
   const [items, setItems] = useState<OrderFormItem[]>([createEmptyItem()]);
   const [isDisabled, setIsDisabled] = useState(!!id);

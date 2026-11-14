@@ -5,6 +5,7 @@ import react from "@vitejs/plugin-react";
 import { nitro } from "nitro/vite";
 
 export default defineConfig({
+  define: { "import.meta.env.VITE_START_RUNTIME": JSON.stringify("true") },
   resolve: { alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) } },
   plugins: [
     tanstackStart({ router: { routesDirectory: "presentation/routes", generatedRouteTree: "presentation/routeTree.gen.ts" } }),

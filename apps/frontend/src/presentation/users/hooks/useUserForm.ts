@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router";
+import { useAppNavigate } from "@/presentation/router/useAppNavigation";
 import type { UserFormData } from "../../../application/catalog/saveCatalog";
 import { useUserEditor } from "../../../infrastructure/catalog/useCatalog";
 import { validateImageFile } from "@/presentation/utils/imageValidation";
@@ -26,7 +26,7 @@ export function useUserForm(
     createAdminRole,
     save,
   } = useUserEditor(id);
-  const navigate = useNavigate();
+  const navigate = useAppNavigate();
   const [formData, setFormData] = useState<UserFormData>(EMPTY_USER_FORM);
   const [avatarFileError, setAvatarFileError] = useState("");
   const [formError, setFormError] = useState<string | null>(null);

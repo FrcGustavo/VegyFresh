@@ -8,14 +8,14 @@ import {
   Typography,
 } from "@mui/material";
 import { Button } from "@mui/material";
-import { useNavigate } from "react-router";
+import { useAppNavigate } from "@/presentation/router/useAppNavigation";
 import {
   useThemePreferenceStore,
   type ThemePreference,
 } from "@/infrastructure/preferences/useThemePreferenceStore";
 
 export default function SettingsPage() {
-  const navigate = useNavigate();
+  const navigate = useAppNavigate();
   const themePreference = useThemePreferenceStore(
     (state) => state.themePreference,
   );

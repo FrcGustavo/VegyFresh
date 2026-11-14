@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router";
+import { useAppNavigate } from "@/presentation/router/useAppNavigation";
 import type {
   ProductFormData,
   ProductPriceRow,
@@ -46,7 +46,7 @@ export function useProductForm(
     isSaving,
     save,
   } = useProductEditor(id);
-  const navigate = useNavigate();
+  const navigate = useAppNavigate();
   const [formData, setFormData] = useState<ProductFormData>(EMPTY_PRODUCT_FORM);
   const [prices, setPrices] = useState<ProductPriceRow[]>([]);
   const [originalPrices, setOriginalPrices] = useState<

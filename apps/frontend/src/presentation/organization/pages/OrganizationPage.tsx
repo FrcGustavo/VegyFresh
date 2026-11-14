@@ -12,7 +12,7 @@ import {
   Paper,
   Typography,
 } from "@mui/material";
-import { useNavigate } from "react-router";
+import { useAppNavigate } from "@/presentation/router/useAppNavigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../../../auth/useAuth";
 import { authStorage } from "../../../auth/authStorage";
@@ -41,7 +41,7 @@ const ORGANIZATION_MENU: Array<{
 ];
 
 export default function OrganizationPage() {
-  const navigate = useNavigate();
+  const navigate = useAppNavigate();
   const queryClient = useQueryClient();
   const { organization, refreshSession } = useAuth();
   const organizationId = organization?.id ?? "";
@@ -105,13 +105,14 @@ export default function OrganizationPage() {
       createMutation.mutate(payload, {
         onSuccess: async () => {
           try {
-            const refreshToken = authStorage.getRefreshToken();
-            if (!refreshToken) {
-              throw new Error("No hay refresh token para actualizar la sesión");
+            if (import.meta.env.VITE_START_RUNTIME !== "true") {
+              const refreshToken = authStorage.getRefreshToken();
+              if (!refreshToken) {
+                throw new Error("No hay refresh token para actualizar la sesión");
+              }
+              const tokens = await authApi.refresh(refreshToken);
+              authStorage.setTokens(tokens.access_token, tokens.refresh_token);
             }
-
-            const tokens = await authApi.refresh(refreshToken);
-            authStorage.setTokens(tokens.access_token, tokens.refresh_token);
             await refreshSession();
             void navigate("/orders");
           } catch (refreshError) {

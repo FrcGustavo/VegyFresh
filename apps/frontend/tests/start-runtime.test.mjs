@@ -41,6 +41,8 @@ test("built Start routes isolate sessions and forward only authorized API calls"
   let apiCalls = 0;
   let requireRenewal = false;
   let unavailable = false;
+  let withoutOrganization = false;
+  let allowUsers = false;
   const api = createServer((req, res) => {
     apiCalls++;
     if (unavailable) { res.statusCode = 503; return res.end(); }
@@ -48,7 +50,7 @@ test("built Start routes isolate sessions and forward only authorized API calls"
     if (!/^Bearer (?:access|renewed)-(?:Alice|Bob)$/.test(authorization) || (requireRenewal && authorization === "Bearer access-Alice")) { res.statusCode = 401; return res.end(); }
     const name = authorization.endsWith("Alice") ? "Alice" : "Bob";
     res.setHeader("content-type", "application/json");
-    if (req.url.startsWith("/api/v1/auth/me")) return res.end(JSON.stringify({ user: { id: name, name, email: `${name}@example.test`, secret: "do-not-serialize" }, organization: { id: name, name: `Org ${name}` }, role: { id: "admin", name: "admin", permissions: ["users.read"] }, privateToken: "do-not-serialize" }));
+    if (req.url.startsWith("/api/v1/auth/me")) return res.end(JSON.stringify({ user: { id: name, name, email: `${name}@example.test`, secret: "do-not-serialize" }, organization: withoutOrganization ? null : { id: name, name: `Org ${name}` }, role: { id: "admin", name: "admin", permissions: allowUsers ? ["users:manage"] : ["users.read"] }, privateToken: "do-not-serialize" }));
     res.end(JSON.stringify({ owner: name, path: req.url }));
   });
   const apiPort = await listen(api);
@@ -88,13 +90,23 @@ test("built Start routes isolate sessions and forward only authorized API calls"
   assert.match(errorHtml, /No fue posible iniciar sesión/);
   assert.doesNotMatch(errorHtml, /<script>secret/);
   const [alice, bob] = await Promise.all([login("Alice"), login("Bob")]);
-  const [a, b, guest] = await Promise.all([alice, bob, ""].map((cookie) => fetch(origin, { headers: { cookie } })));
-  const [htmlA, htmlB, htmlGuest] = await Promise.all([a.text(), b.text(), guest.text()]);
+  const [a, b, guest] = await Promise.all([alice, bob, ""].map((cookie) => fetch(`${origin}/orders`, { headers: { cookie }, redirect: "manual" })));
+  const [htmlA, htmlB] = await Promise.all([a.text(), b.text()]);
   assert.match(a.headers.get("cache-control"), /private, no-store/);
   assert.match(a.headers.get("vary"), /cookie/i);
-  assert.match(htmlA, /Sesión iniciada:.*Alice/); assert.doesNotMatch(htmlA, /Bob|access-Alice|refresh-Alice|do-not-serialize/);
-  assert.match(htmlB, /Sesión iniciada:.*Bob/); assert.doesNotMatch(htmlB, /Alice|access-Bob|refresh-Bob|do-not-serialize/);
-  assert.match(htmlGuest, /Iniciar sesión/);
+  assert.match(htmlA, /Alice@example.test/); assert.doesNotMatch(htmlA, /Bob|access-Alice|refresh-Alice|do-not-serialize/);
+  assert.match(htmlB, /Bob@example.test/); assert.doesNotMatch(htmlB, /Alice|access-Bob|refresh-Bob|do-not-serialize/);
+  assert.equal(guest.status, 303);
+  assert.equal(guest.headers.get("location"), "/login?returnTo=%2Forders");
+  assert.equal((await fetch(origin, { headers: { cookie: alice }, redirect: "manual" })).headers.get("location"), "/orders");
+  assert.equal((await fetch(`${origin}/users`, { headers: { cookie: alice }, redirect: "manual" })).headers.get("location"), "/orders");
+  allowUsers = true;
+  assert.equal((await fetch(`${origin}/users`, { headers: { cookie: alice }, redirect: "manual" })).status, 200);
+  allowUsers = false;
+  withoutOrganization = true;
+  assert.equal((await fetch(`${origin}/orders`, { headers: { cookie: alice }, redirect: "manual" })).headers.get("location"), "/organization");
+  assert.equal((await fetch(`${origin}/organization`, { headers: { cookie: alice }, redirect: "manual" })).status, 200);
+  withoutOrganization = false;
   const session = await fetch(`${origin}/session`, { headers: { cookie: alice } });
   assert.equal((await session.json()).user.name, "Alice");
   const [usersA, usersB, usersGuest] = await Promise.all([alice, bob, ""].map((cookie) => fetch(`${origin}/api/v1/users`, { headers: { cookie, authorization: "Bearer forged" } })));
@@ -105,14 +117,16 @@ test("built Start routes isolate sessions and forward only authorized API calls"
   assert.equal((await fetch(`${origin}/api/v1/users`, { method: "POST", headers: { cookie: alice, origin: "https://attacker.example" } })).status, 403);
   assert.equal(apiCalls, before);
   requireRenewal = true;
-  const renewed = await fetch(origin, { headers: { cookie: alice } });
+  const renewed = await fetch(`${origin}/orders`, { headers: { cookie: alice } });
   assert.match(await renewed.text(), /Alice/);
   assert.equal(refreshCalls, 1);
   assert.ok(renewed.headers.getSetCookie().some((value) => value.startsWith("vegyfresh_admin_refresh_token=") && /HttpOnly/i.test(value)));
   requireRenewal = false; unavailable = true;
-  const failure = await fetch(origin, { headers: { cookie: bob } });
+  const failure = await fetch(`${origin}/orders`, { headers: { cookie: bob } });
   assert.equal(failure.status, 503);
-  assert.match(await failure.text(), /No se pudo verificar tu sesión/);
+  const failureHtml = await failure.text();
+  assert.match(failureHtml, /No se pudo verificar tu sesión/);
+  assert.match(failureHtml, /Reintentar/);
   unavailable = false;
   const crossOrigin = await fetch(`${origin}/session/logout`, { method: "POST", headers: { cookie: alice, origin: "https://attacker.example" } });
   assert.equal(crossOrigin.status, 403);
