@@ -1,79 +1,8 @@
-import {
-  Alert,
-  Chip,
-  Paper,
-  Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
-} from "@mui/material";
+import { Chip } from "@mui/material";
 import { Link } from "react-router";
-import { useOrders } from "../../../../infrastructure/orders/hooks/useOrders";
-import { PageHeader } from "../../../components/PageHeader";
-import { LoadingState } from "../../../components/LoadingState";
+import { ordersApi } from "../../../../infrastructure/orders/api/ordersApi";
+import { OrdersView } from "./OrdersView";
 
 export function OrdersPage() {
-  const query = useOrders();
-
-  if (query.isLoading) {
-    return <LoadingState />;
-  }
-
-  if (query.error instanceof Error) {
-    return <Alert severity="error">{query.error.message}</Alert>;
-  }
-
-  return (
-    <Stack spacing={2}>
-      <PageHeader
-        title="Orders"
-        subtitle="Your current and historical orders"
-      />
-      <Paper variant="outlined">
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell>Folio</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Delivery date</TableCell>
-              <TableCell align="right">Total</TableCell>
-              <TableCell />
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {query.data?.map((order) => (
-              <TableRow key={order.id}>
-                <TableCell>{order.folio}</TableCell>
-                <TableCell>
-                  <Chip label={order.status} size="small" />
-                </TableCell>
-                <TableCell>
-                  {order.delivery_date
-                    ? new Date(order.delivery_date).toLocaleDateString("es-MX")
-                    : "-"}
-                </TableCell>
-                <TableCell align="right">
-                  {Number(order.total_amount).toLocaleString("es-MX", {
-                    style: "currency",
-                    currency: "MXN",
-                  })}
-                </TableCell>
-                <TableCell align="right">
-                  <Chip
-                    component={Link}
-                    clickable
-                    to={`/portal/orders/${order.id}`}
-                    size="small"
-                    label="View"
-                  />
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </Paper>
-    </Stack>
-  );
+  return <OrdersView ordersApi={ordersApi} orderLink={(id) => <Chip component={Link} clickable to={`/portal/orders/${encodeURIComponent(id)}`} size="small" label="View" />} />;
 }

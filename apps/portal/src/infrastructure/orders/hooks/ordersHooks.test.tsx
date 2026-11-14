@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { renderHook, waitFor } from "@testing-library/react";
 import type { PropsWithChildren } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { ordersApi } from "../api/ordersApi";
 import { useOrderDetail } from "./useOrderDetail";
 import { useOrders } from "./useOrders";
 
@@ -20,7 +21,7 @@ describe("portal order hooks", () => {
     const wrapper = ({ children }: PropsWithChildren) =>
       <QueryClientProvider client={client}>{children}</QueryClientProvider>;
     const { unmount } = renderHook(
-      () => kind === "list" ? useOrders("APPROVED") : useOrderDetail("order-1"),
+      () => kind === "list" ? useOrders(ordersApi, "APPROVED") : useOrderDetail(ordersApi, "order-1"),
       { wrapper },
     );
     await waitFor(() => expect(signal).toBeDefined());
