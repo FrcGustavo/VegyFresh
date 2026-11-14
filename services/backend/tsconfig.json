@@ -21,7 +21,11 @@
     "src/auth/**/*.ts",
     "src/catalog/**/*.ts",
     "src/clients/**/*.ts",
+    "src/folios/**/*.ts",
     "src/identity/**/*.ts",
+    "src/inventory/**/*.ts",
+    "src/orders/**/*.ts",
+    "src/purchase/**/*.ts",
     "src/suppliers/**/*.ts"
   ]
 }
