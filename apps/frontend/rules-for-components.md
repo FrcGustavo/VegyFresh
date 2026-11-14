@@ -4,10 +4,10 @@ This document outlines the standard structure and conventions for creating reusa
 
 ## Directory Structure
 
-All reusable components should be created in `src/components/` with the following folder structure:
+All reusable components should be created in `src/presentation/components/` with the following folder structure:
 
 ```
-src/components/
+src/presentation/components/
 ├── YourComponent/
 │   ├── YourComponent.tsx       # Main component file
 │   ├── YourComponent.types.ts  # Type definitions and interfaces
@@ -134,14 +134,14 @@ export type { YourComponentProps, InternalState } from "./YourComponent.types";
 ## Usage Example
 
 ### Creating a New Component
-1. Create folder: `src/components/MyTable/`
+1. Create folder: `src/presentation/components/MyTable/`
 2. Create the five files listed above
 3. Implement the component following the patterns
 4. Export from `index.ts`
 
 ### Consuming a Component
 ```tsx
-import { MyTable, type MyTableProps } from "@/components/MyTable";
+import { MyTable, type MyTableProps } from "@/presentation/components/MyTable";
 
 export function MyPage() {
   return (
@@ -168,7 +168,7 @@ export function MyPage() {
 The `Table` component demonstrates this pattern:
 
 ```
-src/components/Table/
+src/presentation/components/Table/
 ├── Table.tsx          # Main table component
 ├── Table.types.ts     # TableProps, ColumnConfig, SortOrder
 ├── Table.styles.ts    # tableStyles object
@@ -185,7 +185,7 @@ src/components/Table/
 
 ### Usage
 ```tsx
-import { Table, type ColumnConfig } from "@/components/Table";
+import { Table, type ColumnConfig } from "@/presentation/components/Table";
 
 const columns: ColumnConfig[] = [
   { key: "name", label: "Name", minWidth: 100, defaultWidth: 150 },

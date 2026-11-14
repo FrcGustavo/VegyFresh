@@ -3,10 +3,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { LocalShipping } from "@mui/icons-material";
 import { useSuppliersList } from "../../../../infrastructure/contacts/useContacts";
 import { useDebouncedValue } from "@/presentation/hooks/useDebouncedValue";
-import { Table } from "../../../../components/Table";
+import { Table } from "@/presentation/components/Table";
 import SupplierFormModal from "../../components/SupplierFormModal";
-import ResourcePageTitle from "../../../../components/ResourcePageTitle";
-import ListPageToolbar from "../../../../components/ListPageToolbar";
+import ResourcePageTitle from "@/presentation/components/ResourcePageTitle";
+import ListPageToolbar from "@/presentation/components/ListPageToolbar";
 import {
   useSuppliersSort,
   useSuppliersTableState,

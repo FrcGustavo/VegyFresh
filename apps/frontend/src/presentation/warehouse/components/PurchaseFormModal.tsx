@@ -15,7 +15,7 @@ import {
   Typography,
 } from "@mui/material";
 import { Add as AddIcon, Delete as DeleteIcon } from "@mui/icons-material";
-import FloatingModal from "../../../components/FloatingModal";
+import FloatingModal from "@/presentation/components/FloatingModal";
 import {
   productsQueryOptions,
   purchasesMutationOptions,

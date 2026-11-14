@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Alert, Box, CircularProgress } from "@mui/material";
-import FloatingModal from "../../../../components/FloatingModal";
-import ModalTabPanel from "../../../../components/ModalTabPanel";
-import ModalTabsNavigation from "../../../../components/ModalTabsNavigation";
-import ModalToolbar from "../../../../components/ModalToolbar";
+import FloatingModal from "@/presentation/components/FloatingModal";
+import ModalTabPanel from "@/presentation/components/ModalTabPanel";
+import ModalTabsNavigation from "@/presentation/components/ModalTabsNavigation";
+import ModalToolbar from "@/presentation/components/ModalToolbar";
 import { useClientForm } from "../../hooks/useClientForm";
 import ClientForm from "../ClientForm";
 import { clientFormModalStyles } from "./ClientFormModal.styles";

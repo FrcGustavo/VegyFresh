@@ -3,9 +3,9 @@ import { useQuery } from "@tanstack/react-query";
 import { Box, CircularProgress, Typography } from "@mui/material";
 import { Warehouse as WarehouseIcon } from "@mui/icons-material";
 import { inventoryQueryOptions } from "../../../api";
-import ResourcePageTitle from "../../../components/ResourcePageTitle";
-import { Table } from "../../../components/Table";
-import type { ColumnConfig } from "../../../components/Table";
+import ResourcePageTitle from "@/presentation/components/ResourcePageTitle";
+import { Table } from "@/presentation/components/Table";
+import type { ColumnConfig } from "@/presentation/components/Table";
 
 type ProductInventoryItem = {
   id: string;

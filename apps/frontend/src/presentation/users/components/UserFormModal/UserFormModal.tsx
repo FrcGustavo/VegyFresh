@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Alert, Box, CircularProgress } from "@mui/material";
-import FloatingModal from "../../../../components/FloatingModal";
-import ModalToolbar from "../../../../components/ModalToolbar";
+import FloatingModal from "@/presentation/components/FloatingModal";
+import ModalToolbar from "@/presentation/components/ModalToolbar";
 import { useUserForm } from "../../hooks/useUserForm";
 import UserForm from "../UserForm";
 import { userFormModalStyles } from "./UserFormModal.styles";

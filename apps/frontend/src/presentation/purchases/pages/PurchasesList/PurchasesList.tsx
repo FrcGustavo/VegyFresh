@@ -3,10 +3,10 @@ import { useQuery } from "@tanstack/react-query";
 import { ReceiptLong } from "@mui/icons-material";
 import { Box, CircularProgress, Typography } from "@mui/material";
 import { purchasesQueryOptions } from "../../../../api";
-import ListPageToolbar from "../../../../components/ListPageToolbar";
-import ResourcePageTitle from "../../../../components/ResourcePageTitle";
-import { Table } from "../../../../components/Table";
-import type { ColumnConfig } from "../../../../components/Table";
+import ListPageToolbar from "@/presentation/components/ListPageToolbar";
+import ResourcePageTitle from "@/presentation/components/ResourcePageTitle";
+import { Table } from "@/presentation/components/Table";
+import type { ColumnConfig } from "@/presentation/components/Table";
 import PurchaseFormModal from "../../components/PurchaseFormModal";
 import { PURCHASE_COLUMNS } from "./PurchasesList.constants";
 import {
