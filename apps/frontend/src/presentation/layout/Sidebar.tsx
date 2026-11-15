@@ -102,14 +102,14 @@ export default function Sidebar() {
                   onClick={() => navigate({ to: item.path })}
                   sx={{
                     "&.Mui-selected": {
-                      backgroundColor: "primary.light",
+                      backgroundColor: "primary.main",
                       color: "primary.contrastText",
                       "& .MuiListItemIcon-root": {
                         color: "primary.contrastText",
                       },
                     },
                     "&.Mui-selected:hover": {
-                      backgroundColor: "primary.main",
+                      backgroundColor: "primary.dark",
                     },
                   }}
                 >

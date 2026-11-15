@@ -19,19 +19,19 @@
     "check:architecture": "node scripts/check-architecture.mjs"
   },
   "dependencies": {
-    "@vegyfresh/api-client": "link:../../clients/api-client",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@fontsource/roboto": "^5.2.10",
-    "@mui/icons-material": "^9.0.0",
-    "@mui/material": "^9.0.0",
+    "@mui/icons-material": "^9.5.0",
+    "@mui/material": "^9.5.0",
     "@tanstack/react-query": "^5.100.5",
+    "@tanstack/react-router": "^1.169.5",
+    "@tanstack/react-start": "^1.169.5",
+    "@vegyfresh/api-client": "link:../../clients/api-client",
     "openid-client": "^6.8.8",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
-    "zustand": "^5.0.13",
-    "@tanstack/react-router": "^1.169.5",
-    "@tanstack/react-start": "^1.169.5"
+    "zustand": "^5.0.13"
   },
   "devDependencies": {
     "@babel/core": "^7.29.0",
@@ -50,11 +50,11 @@
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.5.0",
     "jsdom": "^29.1.1",
+    "nitro": "3.0.261103-rc",
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.58.2",
     "vite": "^8.0.10",
-    "vitest": "^4.1.7",
-    "nitro": "3.0.261103-rc"
+    "vitest": "^4.1.7"
   },
   "packageManager": "pnpm@10.11.0"
 }

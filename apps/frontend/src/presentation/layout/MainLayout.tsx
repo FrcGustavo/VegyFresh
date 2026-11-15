@@ -15,6 +15,7 @@ export default function MainLayout({ children }: { children: ReactNode }) {
     <Box sx={{ display: "flex" }}>
       <AppBar
         position="fixed"
+        color="default"
         sx={{
           zIndex: (theme) => theme.zIndex.drawer + 1,
           borderBottom: "1px solid",
@@ -23,7 +24,7 @@ export default function MainLayout({ children }: { children: ReactNode }) {
         elevation={0}
       >
         <Toolbar sx={{ justifyContent: "space-between" }}>
-          <Box sx={{ fontWeight: 600, fontSize: "1.2rem", color: "text" }}>
+          <Box sx={{ fontWeight: 600, fontSize: "1.2rem", color: "text.primary" }}>
             VegyFresh
           </Box>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -63,7 +64,7 @@ export default function MainLayout({ children }: { children: ReactNode }) {
           p: 3,
           px: 0,
           pt: { xs: "calc(56px)", sm: "calc(64px)" },
-          bgcolor: "background.paper",
+          bgcolor: "background.default",
           minHeight: "100vh",
         }}
       >
