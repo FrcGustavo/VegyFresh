@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useWarehouseData } from "@/infrastructure/inventory/useInventory";
 import {
+  Alert,
   Box,
   CircularProgress,
   Tab,
@@ -15,7 +16,6 @@ import {
 import { Warehouse as WarehouseIcon } from "@mui/icons-material";
 import ListPageToolbar from "@/presentation/components/ListPageToolbar";
 import ResourcePageTitle from "@/presentation/components/ResourcePageTitle";
-import { ErrorState } from "@/presentation/ui";
 import PurchaseFormModal from "../components/PurchaseFormModal";
 
 type ProductInventoryItem = {
@@ -116,7 +116,9 @@ export default function WarehousePage() {
 
   if (error) {
     return (
-      <ErrorState message={`Error al cargar: ${(error as Error).message}`} />
+      <Alert severity="error" sx={{ my: 2 }}>
+        {`Error al cargar: ${(error as Error).message}`}
+      </Alert>
     );
   }
 

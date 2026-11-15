@@ -1,4 +1,4 @@
-import { Box, CircularProgress } from "@mui/material";
+import { Alert, Box, CircularProgress } from "@mui/material";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { People } from "@mui/icons-material";
 import { useClientsList } from "../../../../infrastructure/contacts/useContacts";
@@ -6,7 +6,6 @@ import { useDebouncedValue } from "@/presentation/hooks/useDebouncedValue";
 import { Table } from "@/presentation/components/Table";
 import ClientFormModal from "../../components/ClientFormModal";
 import ResourcePageTitle from "@/presentation/components/ResourcePageTitle";
-import { ErrorState } from "@/presentation/ui";
 import ListPageToolbar from "@/presentation/components/ListPageToolbar";
 import { useClientsSort, useClientsTableState } from "./ClientsList.hooks";
 import { CLIENTS_PAGE_SIZE, CLIENT_COLUMNS } from "./ClientsList.constants";
@@ -43,7 +42,9 @@ export default function ClientsList() {
     );
   if (error)
     return (
-      <ErrorState message={`Error al cargar: ${(error as Error).message}`} />
+      <Alert severity="error" sx={{ my: 2 }}>
+        {`Error al cargar: ${(error as Error).message}`}
+      </Alert>
     );
 
   return (

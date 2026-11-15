@@ -22,7 +22,7 @@ help:
 		'  make lint check-types test build check' \
 		'  make compose-config Validate the development Compose file'
 install:
-	$(COMPOSE) run --build --rm --no-deps frontend sh -c '(cd /repo/packages/ui && CI=true pnpm install --frozen-lockfile && pnpm run build) && (cd /repo/clients/api-client && CI=true pnpm install --frozen-lockfile) && (cd /repo/apps/frontend && CI=true pnpm install --frozen-lockfile)'
+	$(COMPOSE) run --build --rm --no-deps frontend sh -c '(cd /repo/clients/api-client && CI=true pnpm install --frozen-lockfile) && (cd /repo/apps/frontend && CI=true pnpm install --frozen-lockfile)'
 build:
 	$(PNPM) run build
 check-types:

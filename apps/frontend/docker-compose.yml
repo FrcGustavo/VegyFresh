@@ -8,15 +8,13 @@ services:
     command:
       - sh
       - -c
-      - (cd /repo/packages/ui && CI=true pnpm install --frozen-lockfile && pnpm run build) && (cd /repo/clients/api-client && CI=true pnpm install --frozen-lockfile) && (cd /repo/apps/frontend && CI=true pnpm install --frozen-lockfile && pnpm run dev)
+      - (cd /repo/clients/api-client && CI=true pnpm install --frozen-lockfile) && (cd /repo/apps/frontend && CI=true pnpm install --frozen-lockfile && pnpm run dev)
     ports:
       - "${FRONTEND_PORT:-5173}:5173"
     volumes:
       - ../..:/repo
       - frontend_app_node_modules:/repo/apps/frontend/node_modules
       - frontend_api_client_node_modules:/repo/clients/api-client/node_modules
-      - frontend_ui_node_modules:/repo/packages/ui/node_modules
-      - frontend_ui_dist:/repo/packages/ui/dist
     env_file:
       - path: .env
         required: false
@@ -32,5 +30,3 @@ services:
 volumes:
   frontend_app_node_modules:
   frontend_api_client_node_modules:
-  frontend_ui_node_modules:
-  frontend_ui_dist:

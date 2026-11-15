@@ -9,7 +9,7 @@ Read the repository and `apps/AGENTS.md` guidance first. Unit commands and envir
 - `src/infrastructure` implements transport, authentication, persistence and React Query adapters. It must not import presentation.
 - `src/presentation` owns native TanStack routes, screens, form interaction and composition. Consume server state through infrastructure adapters, not direct transport or React Query imports.
 
-Use existing public package exports and real consumers. The administrator consumes `@vegyfresh/ui`'s `ErrorState` for list-page query failures; keep app-specific loading behavior and theme styling in the frontend. Do not add dependencies, exports or generic hooks merely to reserve an architectural boundary.
+Use MUI components directly from `@mui/material` in presentation code. Keep app-specific loading behavior and theme styling in the frontend. Do not add wrappers that only re-export or lightly restyle a MUI component, and do not add generic hooks merely to reserve an architectural boundary.
 
 ## SSR and identity
 
