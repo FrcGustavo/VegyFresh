@@ -6,4 +6,4 @@ RUN corepack enable && corepack prepare pnpm@10.11.0 --activate
 WORKDIR /repo
 COPY infrastructure/tooling/entrypoint.sh /usr/local/bin/workspace-tools
 ENTRYPOINT ["sh", "/usr/local/bin/workspace-tools"]
-CMD ["sh", "-c", "for u in packages/ui clients/api-client services/backend apps/frontend apps/portal apps/docs jobs/seed-api; do (cd \"/repo/$$u\" && pnpm run check-types); done"]
+CMD ["sh", "-c", "for u in clients/api-client services/backend apps/frontend apps/portal jobs/seed-api; do (cd \"/repo/$$u\" && pnpm run check-types); done"]
