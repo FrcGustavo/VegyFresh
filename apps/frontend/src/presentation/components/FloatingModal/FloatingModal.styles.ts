@@ -23,7 +23,7 @@ export const floatingModalStyles = {
   header: (isDragging: boolean) => ({
     padding: "0.5rem 1rem",
     backgroundColor: "primary.main",
-    color: "white",
+    color: "primary.contrastText",
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
@@ -36,7 +36,7 @@ export const floatingModalStyles = {
     fontWeight: 600,
   },
   actionButton: {
-    color: "white",
+    color: "primary.contrastText",
   },
   content: {
     flex: 1,

@@ -101,6 +101,7 @@ export function OrganizationForm({
                 height: 112,
                 fontSize: 40,
                 bgcolor: "primary.main",
+                color: "primary.contrastText",
               }}
             >
               {avatarInitial}
