@@ -26,7 +26,6 @@
     "@mui/x-date-pickers": "^9.3.0",
     "@tanstack/react-query": "^5.100.10",
     "@vegyfresh/api-client": "link:../../clients/api-client",
-    "@vegyfresh/ui": "link:../../packages/ui",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "react-hook-form": "^7.76.1",

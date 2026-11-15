@@ -1,5 +1,7 @@
 import {
   Alert,
+  Box,
+  CircularProgress,
   Paper,
   Stack,
   Table,
@@ -7,18 +9,25 @@ import {
   TableCell,
   TableHead,
   TableRow,
+  Typography,
 } from "@mui/material";
 import type { PortalOrder } from "../../../../domain/orders/order.types";
 import type { OrdersPort } from "../../../../application/orders/orders";
 import { useOrderDetail } from "../../../../infrastructure/orders/hooks/useOrderDetail";
-import { PageHeader } from "../../../components/PageHeader";
-import { LoadingState } from "../../../components/LoadingState";
 
 export function OrderDetailView({ ordersApi, orderId, initialOrder }: { ordersApi: OrdersPort; orderId: string; initialOrder?: PortalOrder }) {
   const orderQuery = useOrderDetail(ordersApi, orderId, initialOrder);
 
   if (orderQuery.isLoading) {
-    return <LoadingState />;
+    return (
+      <Box
+        role="status"
+        aria-label="Loading order"
+        sx={{ minHeight: "60vh", display: "grid", placeItems: "center" }}
+      >
+        <CircularProgress aria-label="Loading order" />
+      </Box>
+    );
   }
 
   if (orderQuery.error instanceof Error) {
@@ -32,10 +41,12 @@ export function OrderDetailView({ ordersApi, orderId, initialOrder }: { ordersAp
 
   return (
     <Stack spacing={2}>
-      <PageHeader
-        title={`Order ${order.folio}`}
-        subtitle={`Status: ${order.status}`}
-      />
+      <Stack spacing={0.5}>
+        <Typography variant="h4">{`Order ${order.folio}`}</Typography>
+        <Typography variant="body2" color="text.secondary">
+          {`Status: ${order.status}`}
+        </Typography>
+      </Stack>
       <Paper variant="outlined">
         <Table size="small">
           <TableHead>

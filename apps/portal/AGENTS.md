@@ -2,7 +2,7 @@
 
 Read repository and `apps/AGENTS.md` guidance first. Follow `README.md` for Docker commands and server configuration.
 
-Keep domain rules and application ports independent of React, transport and storage. Infrastructure owns authentication, API calls and query integration; presentation owns native TanStack routes and interaction. Use the existing shared UI package through its public exports, building workspace dependencies before the portal.
+Keep domain rules and application ports independent of React, transport and storage. Infrastructure owns authentication, API calls and query integration; presentation owns native TanStack routes and interaction. Use MUI components directly from `@mui/material` in presentation code. Keep theme configuration in the portal and avoid wrappers that only re-export or lightly restyle a MUI component.
 
 The API authorizes client and organization access. Do not provision portal identities from browser input or link identities by email. Tokens belong only in the server BFF; browser requests use same-origin cookies and never add Authorization.
 
