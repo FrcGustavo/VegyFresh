@@ -13,11 +13,9 @@ jobs:
   changes:
     runs-on: ubuntu-latest
     outputs:
-      ui: ${{ steps.filter.outputs.ui }}
       api_client: ${{ steps.filter.outputs.api_client }}
       frontend: ${{ steps.filter.outputs.frontend }}
       portal: ${{ steps.filter.outputs.portal }}
-      docs: ${{ steps.filter.outputs.docs }}
       backend: ${{ steps.filter.outputs.backend }}
       seed_api: ${{ steps.filter.outputs.seed_api }}
       keycloak: ${{ steps.filter.outputs.keycloak }}
@@ -34,25 +32,16 @@ jobs:
               - 'Makefile'
               - 'compose.yml'
               - 'infrastructure/tooling/**'
-            ui:
-              - 'packages/ui/**'
-              - *shared
             api_client:
               - 'clients/api-client/**'
               - *shared
             frontend:
               - 'apps/frontend/**'
-              - 'packages/ui/**'
               - 'clients/api-client/**'
               - *shared
             portal:
               - 'apps/portal/**'
-              - 'packages/ui/**'
               - 'clients/api-client/**'
-              - *shared
-            docs:
-              - 'apps/docs/**'
-              - 'packages/ui/**'
               - *shared
             backend:
               - 'services/backend/**'
@@ -68,14 +57,6 @@ jobs:
               - 'services/backend/**'
               - 'clients/api-client/**'
               - *shared
-
-  ui:
-    needs: changes
-    if: needs.changes.outputs.ui == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: make -C packages/ui check
 
   api-client:
     needs: changes
@@ -116,14 +97,6 @@ jobs:
         run: make test-runtime-portal
       - run: docker build -f apps/portal/Dockerfile -t vegyfresh-check .
       - run: make test-images APP=portal IMAGE=vegyfresh-check
-
-  docs:
-    needs: changes
-    if: needs.changes.outputs.docs == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: make -C apps/docs check
 
   backend:
     needs: changes

@@ -4,8 +4,7 @@ The portal runs on TanStack Start and Nitro. Its server owns the Keycloak
 session and proxies the allowlisted portal API. Browser requests use same-origin
 HttpOnly cookies; the API determines client and organization access.
 
-Build the shared UI dependency and portal with `pnpm --dir packages/ui run
-build && pnpm --dir apps/portal run build`. Run `pnpm --dir apps/portal run start` to serve
+Build the portal with `pnpm --dir apps/portal run build`. Run `pnpm --dir apps/portal run start` to serve
 the built `.output` directory, or `pnpm --dir apps/portal run dev` for development.
 These commands run in Docker. To build the production image from the repository
 root, use `docker build -f apps/portal/Dockerfile -t vegyfresh-portal .`.

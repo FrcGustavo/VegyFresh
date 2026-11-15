@@ -2,13 +2,13 @@ ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 include $(ROOT)/infrastructure/tooling/commands.mk
 COMPOSE_PROJECT_NAME ?= vegyfresh
 COMPOSE ?= docker compose --project-name "$(COMPOSE_PROJECT_NAME)" -f "$(ROOT)/compose.yml"
-UNITS := packages/ui clients/api-client services/backend apps/frontend apps/portal apps/docs jobs/seed-api
-LINT_UNITS := packages/ui services/backend apps/frontend apps/portal apps/docs
-TEST_UNITS := packages/ui clients/api-client apps/frontend apps/portal jobs/seed-api
+UNITS := clients/api-client services/backend apps/frontend apps/portal jobs/seed-api
+LINT_UNITS := services/backend apps/frontend apps/portal
+TEST_UNITS := clients/api-client apps/frontend apps/portal jobs/seed-api
 .DEFAULT_GOAL := help
 .PHONY: help install build lint check-types test check contract
 help:
-	@printf '%s\n' 'Targets: install build lint check-types test check contract dev up down logs ps compose-config frontend portal docs backend keycloak-up keycloak-down seed test-runtime test-runtime-frontend test-runtime-portal test-e2e test-images'
+	@printf '%s\n' 'Targets: install build lint check-types test check contract dev up down logs ps compose-config frontend portal backend keycloak-up keycloak-down seed test-runtime test-runtime-frontend test-runtime-portal test-e2e test-images'
 install:
 	$(TOOLS) true
 build:
@@ -24,7 +24,7 @@ check:
 contract:
 	$(TOOLS_COMPOSE) run --build --rm --no-deps -w /repo/clients/api-client tools pnpm run check:contract
 
-.PHONY: dev up down logs ps compose-config frontend portal docs backend keycloak-up keycloak-down seed test-runtime test-runtime-frontend test-runtime-portal test-e2e test-images
+.PHONY: dev up down logs ps compose-config frontend portal backend keycloak-up keycloak-down seed test-runtime test-runtime-frontend test-runtime-portal test-e2e test-images
 dev:
 	$(COMPOSE) up --build
 up:
@@ -39,7 +39,7 @@ compose-config:
 	$(COMPOSE) config --quiet
 backend:
 	$(COMPOSE) up --build api
-frontend portal docs:
+frontend portal:
 	$(COMPOSE) up --build $@
 keycloak-up:
 	$(COMPOSE) up --detach keycloak

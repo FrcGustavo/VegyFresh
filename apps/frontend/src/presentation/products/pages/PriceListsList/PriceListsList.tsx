@@ -1,12 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { usePriceLists } from "@/infrastructure/catalog/usePriceLists";
 import { LocalOffer } from "@mui/icons-material";
-import { Box, CircularProgress } from "@mui/material";
+import { Alert, Box, CircularProgress } from "@mui/material";
 import { useDebouncedValue } from "@/presentation/hooks/useDebouncedValue";
 import { Table } from "@/presentation/components/Table";
 import PriceListFormModal from "../../components/PriceListFormModal";
 import ResourcePageTitle from "@/presentation/components/ResourcePageTitle";
-import { ErrorState } from "@/presentation/ui";
 import ListPageToolbar from "@/presentation/components/ListPageToolbar";
 import {
   usePriceListsTableState,
@@ -50,7 +49,9 @@ export default function PriceListsList() {
     );
   if (error)
     return (
-      <ErrorState message={`Error al cargar: ${(error as Error).message}`} />
+      <Alert severity="error" sx={{ my: 2 }}>
+        {`Error al cargar: ${(error as Error).message}`}
+      </Alert>
     );
 
   return (

@@ -31,8 +31,7 @@
     "react-dom": "^19.2.5",
     "zustand": "^5.0.13",
     "@tanstack/react-router": "^1.169.5",
-    "@tanstack/react-start": "^1.169.5",
-    "@vegyfresh/ui": "link:../../packages/ui"
+    "@tanstack/react-start": "^1.169.5"
   },
   "devDependencies": {
     "@babel/core": "^7.29.0",

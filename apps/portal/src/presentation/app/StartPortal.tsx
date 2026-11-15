@@ -1,13 +1,19 @@
 import { Button, CssBaseline, ThemeProvider } from "@mui/material";
+import { createTheme } from "@mui/material/styles";
 import { Link, Outlet, useRouter } from "@tanstack/react-router";
-import { createVegyTheme } from "@vegyfresh/ui";
 import { useState } from "react";
 import type { PortalSessionSnapshot } from "../../domain/auth/auth.types";
 import { PortalSessionProvider } from "../../infrastructure/auth/hooks/PortalSessionProvider";
 import { usePortalSession } from "../../infrastructure/auth/hooks/usePortalSession";
 import { PortalShell } from "../layouts/PortalShell";
 
-const theme = createVegyTheme();
+const theme = createTheme({
+  palette: {
+    primary: { main: "#2e7d32" },
+    secondary: { main: "#ef6c00" },
+  },
+  shape: { borderRadius: 8 },
+});
 
 export function StartPortal({ session }: { session: PortalSessionSnapshot }) {
   const router = useRouter();

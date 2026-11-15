@@ -1,9 +1,8 @@
 import { useMemo } from "react";
 import { useInventoryStock } from "@/infrastructure/inventory/useInventory";
-import { Box, CircularProgress } from "@mui/material";
+import { Alert, Box, CircularProgress } from "@mui/material";
 import { Warehouse as WarehouseIcon } from "@mui/icons-material";
 import ResourcePageTitle from "@/presentation/components/ResourcePageTitle";
-import { ErrorState } from "@/presentation/ui";
 import { Table } from "@/presentation/components/Table";
 import type { ColumnConfig } from "@/presentation/components/Table";
 
@@ -70,9 +69,9 @@ export default function InventoryPage() {
 
   if (inventoryQuery.error) {
     return (
-      <ErrorState
-        message={`Error al cargar: ${(inventoryQuery.error as Error).message}`}
-      />
+      <Alert severity="error" sx={{ my: 2 }}>
+        {`Error al cargar: ${(inventoryQuery.error as Error).message}`}
+      </Alert>
     );
   }
 

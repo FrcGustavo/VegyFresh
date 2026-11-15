@@ -2,11 +2,10 @@ import { ORDERS_INITIAL_FILTER } from "@/application/query/listDefaults";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useOrdersList } from "@/infrastructure/orders/useOrdersList";
 import { ShoppingCart } from "@mui/icons-material";
-import { Box, CircularProgress } from "@mui/material";
+import { Alert, Box, CircularProgress } from "@mui/material";
 import { Table } from "@/presentation/components/Table";
 import OrderFormModal from "../../components/OrderFormModal";
 import ResourcePageTitle from "@/presentation/components/ResourcePageTitle";
-import { ErrorState } from "@/presentation/ui";
 import ListPageToolbar from "@/presentation/components/ListPageToolbar";
 import {
   useOrdersTableState,
@@ -55,7 +54,9 @@ export default function OrdersList() {
     );
   if (error)
     return (
-      <ErrorState message={`Error al cargar: ${(error as Error).message}`} />
+      <Alert severity="error" sx={{ my: 2 }}>
+        {`Error al cargar: ${(error as Error).message}`}
+      </Alert>
     );
 
   return (

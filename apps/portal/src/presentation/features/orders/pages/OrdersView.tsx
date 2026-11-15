@@ -1,6 +1,8 @@
 import {
   Alert,
+  Box,
   Chip,
+  CircularProgress,
   Paper,
   Stack,
   Table,
@@ -8,19 +10,26 @@ import {
   TableCell,
   TableHead,
   TableRow,
+  Typography,
 } from "@mui/material";
 import type { ReactNode } from "react";
 import type { PortalOrder } from "../../../../domain/orders/order.types";
 import type { OrdersPort } from "../../../../application/orders/orders";
 import { useOrders } from "../../../../infrastructure/orders/hooks/useOrders";
-import { PageHeader } from "../../../components/PageHeader";
-import { LoadingState } from "../../../components/LoadingState";
 
 export function OrdersView({ ordersApi, orderLink, initialOrders }: { ordersApi: OrdersPort; orderLink: (id: string) => ReactNode; initialOrders?: PortalOrder[] }) {
   const query = useOrders(ordersApi, undefined, initialOrders);
 
   if (query.isLoading) {
-    return <LoadingState />;
+    return (
+      <Box
+        role="status"
+        aria-label="Loading orders"
+        sx={{ minHeight: "60vh", display: "grid", placeItems: "center" }}
+      >
+        <CircularProgress aria-label="Loading orders" />
+      </Box>
+    );
   }
 
   if (query.error instanceof Error) {
@@ -29,10 +38,12 @@ export function OrdersView({ ordersApi, orderLink, initialOrders }: { ordersApi:
 
   return (
     <Stack spacing={2}>
-      <PageHeader
-        title="Orders"
-        subtitle="Your current and historical orders"
-      />
+      <Stack spacing={0.5}>
+        <Typography variant="h4">Orders</Typography>
+        <Typography variant="body2" color="text.secondary">
+          Your current and historical orders
+        </Typography>
+      </Stack>
       <Paper variant="outlined">
         <Table size="small">
           <TableHead>

@@ -1,4 +1,4 @@
-import { Box, CircularProgress } from "@mui/material";
+import { Alert, Box, CircularProgress } from "@mui/material";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { LocalShipping } from "@mui/icons-material";
 import { useSuppliersList } from "../../../../infrastructure/contacts/useContacts";
@@ -6,7 +6,6 @@ import { useDebouncedValue } from "@/presentation/hooks/useDebouncedValue";
 import { Table } from "@/presentation/components/Table";
 import SupplierFormModal from "../../components/SupplierFormModal";
 import ResourcePageTitle from "@/presentation/components/ResourcePageTitle";
-import { ErrorState } from "@/presentation/ui";
 import ListPageToolbar from "@/presentation/components/ListPageToolbar";
 import {
   useSuppliersSort,
@@ -49,7 +48,9 @@ export default function SuppliersList() {
     );
   if (error)
     return (
-      <ErrorState message={`Error al cargar: ${(error as Error).message}`} />
+      <Alert severity="error" sx={{ my: 2 }}>
+        {`Error al cargar: ${(error as Error).message}`}
+      </Alert>
     );
 
   return (

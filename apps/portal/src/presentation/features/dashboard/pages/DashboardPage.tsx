@@ -1,16 +1,19 @@
-import { Card, CardContent, Grid, Typography } from "@mui/material";
+import { Card, CardContent, Grid, Stack, Typography } from "@mui/material";
 import { usePortalSession } from "../../../../infrastructure/auth/hooks/usePortalSession";
-import { PageHeader } from "../../../components/PageHeader";
 
 export function DashboardPage() {
   const session = usePortalSession();
 
   return (
     <>
-      <PageHeader
-        title={`Welcome, ${session.client?.name ?? "Client"}`}
-        subtitle="Customer portal dashboard"
-      />
+      <Stack spacing={0.5} sx={{ mb: 2 }}>
+        <Typography variant="h4">
+          {`Welcome, ${session.client?.name ?? "Client"}`}
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Customer portal dashboard
+        </Typography>
+      </Stack>
       <Grid container spacing={2}>
         {[
           "Active orders",
