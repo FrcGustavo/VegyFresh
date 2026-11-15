@@ -1,0 +1,29 @@
+services:
+  docs:
+    build:
+      context: ../..
+      dockerfile: apps/docs/Dockerfile
+      target: development
+    working_dir: /repo
+    command:
+      - sh
+      - -c
+      - (cd /repo/packages/ui && CI=true pnpm install --frozen-lockfile && pnpm run build) && (cd /repo/apps/docs && CI=true pnpm install --frozen-lockfile && pnpm run dev --host 0.0.0.0)
+    ports:
+      - "${DOCS_PORT:-5175}:5175"
+    volumes:
+      - ../..:/repo
+      - docs_app_node_modules:/repo/apps/docs/node_modules
+      - docs_ui_node_modules:/repo/packages/ui/node_modules
+      - docs_ui_dist:/repo/packages/ui/dist
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      HOST: 0.0.0.0
+      PORT: "5175"
+
+volumes:
+  docs_app_node_modules:
+  docs_ui_node_modules:
+  docs_ui_dist:
