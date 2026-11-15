@@ -1,7 +1,7 @@
 .DEFAULT_GOAL := help
 ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST)))/../..)
 include $(ROOT)/infrastructure/tooling/commands.mk
-PNPM := $(TOOLS) pnpm --filter portal
+PNPM := $(TOOLS_COMPOSE) run --build --rm --no-deps -w /repo/apps/portal tools pnpm
 COMPOSE_PROJECT_NAME ?= vegyfresh-portal
 COMPOSE ?= docker compose --project-name "$(COMPOSE_PROJECT_NAME)" --project-directory "$(ROOT)/apps/portal" -f "$(ROOT)/apps/portal/docker-compose.yml"
 PORTAL_PORT ?= 5174
@@ -22,7 +22,7 @@ help:
 		'  make lint check-types test build check' \
 		'  make compose-config Validate the development Compose file'
 install:
-	$(COMPOSE) run --build --rm --no-deps portal sh -c 'CI=true pnpm install --filter portal... --frozen-lockfile && pnpm --filter @vegyfresh/ui build'
+	$(COMPOSE) run --build --rm --no-deps portal sh -c '(cd /repo/packages/ui && CI=true pnpm install --frozen-lockfile && pnpm run build) && (cd /repo/clients/api-client && CI=true pnpm install --frozen-lockfile) && (cd /repo/apps/portal && CI=true pnpm install --frozen-lockfile)'
 build:
 	$(PNPM) run build
 check-types:

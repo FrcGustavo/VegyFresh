@@ -8,7 +8,6 @@ services:
       - "host.docker.internal:host-gateway"
     volumes:
       - ../..:/repo
-      - root_dependencies:/repo/node_modules
       - frontend_dependencies:/repo/apps/frontend/node_modules
       - portal_dependencies:/repo/apps/portal/node_modules
       - docs_dependencies:/repo/apps/docs/node_modules
@@ -25,7 +24,6 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     entrypoint: ["node", "infrastructure/tooling/smoke-images.mjs"]
 volumes:
-  root_dependencies:
   frontend_dependencies:
   portal_dependencies:
   docs_dependencies:

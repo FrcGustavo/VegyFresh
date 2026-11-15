@@ -37,22 +37,22 @@ docker run --rm --network "$network" -v "$root:/source:ro" \
   node:20-bookworm-slim sh -eu -c '
     mkdir /work
     tar -C /source --exclude=.git --exclude=node_modules --exclude=.env --exclude=".env.*" -cf - . | tar -C /work -xf -
-    cd /work
+    cd /work/services/backend
     corepack enable
     corepack prepare pnpm@10.11.0 --activate
     pnpm install --frozen-lockfile
-    pnpm --filter backend exec npm rebuild bcrypt
-    pnpm --filter backend exec jest --config ./test/jest-e2e.json --runInBand --runTestsByPath test/integration/external-identity.e2e-spec.ts test/integration/identity-resolution.e2e-spec.ts
-    IDENTITY_PROVISIONING_TEST=true pnpm --filter backend exec jest --config ./test/jest-e2e.json --runInBand --runTestsByPath test/identity-provisioning.e2e-spec.ts
-    IDENTITY_HTTP_TEST=true pnpm --filter backend exec jest --config ./test/jest-e2e.json --runInBand --runTestsByPath test/identity.e2e-spec.ts
+    pnpm exec npm rebuild bcrypt
+    pnpm exec jest --config ./test/jest-e2e.json --runInBand --runTestsByPath test/integration/external-identity.e2e-spec.ts test/integration/identity-resolution.e2e-spec.ts
+    IDENTITY_PROVISIONING_TEST=true pnpm exec jest --config ./test/jest-e2e.json --runInBand --runTestsByPath test/identity-provisioning.e2e-spec.ts
+    IDENTITY_HTTP_TEST=true pnpm exec jest --config ./test/jest-e2e.json --runInBand --runTestsByPath test/identity.e2e-spec.ts
     if [ "$CHECK_BACKEND" = 1 ]; then
       status=0
-      pnpm --filter backend lint || status=1
-      pnpm --filter backend exec tsc --noEmit --incremental false -p tsconfig.json || status=1
-      pnpm --filter backend exec tsc --noEmit --incremental false || status=1
-      pnpm --filter backend exec tsc --noEmit --incremental false -p tsconfig.build.json || status=1
-      pnpm --filter backend exec jest --runInBand || status=1
-      pnpm --filter backend build || status=1
+      pnpm run lint || status=1
+      pnpm exec tsc --noEmit --incremental false -p tsconfig.json || status=1
+      pnpm exec tsc --noEmit --incremental false || status=1
+      pnpm exec tsc --noEmit --incremental false -p tsconfig.build.json || status=1
+      pnpm exec jest --runInBand || status=1
+      pnpm run build || status=1
       exit "$status"
     fi
   '

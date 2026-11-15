@@ -9,8 +9,8 @@ Authorized data hydrates an identity-scoped query cache; failed preloads retry i
 the browser. API resources and browser transport live in `src/infrastructure/api`;
 session adapters live in `src/infrastructure/auth`.
 
-Run `pnpm --filter frontend dev` for development, `pnpm --filter frontend build`
-to build, and `pnpm --filter frontend start` to serve the resulting `.output`
+Run `pnpm --dir apps/frontend run dev` for development, `pnpm --dir apps/frontend run build`
+to build, and `pnpm --dir apps/frontend run start` to serve the resulting `.output`
 directory. These commands run with Node 24 in Docker. Build the production
 image from the repository root with:
 
@@ -39,8 +39,8 @@ client. Login and registration redirect to Keycloak. The server encrypts tokens
 in HttpOnly cookies and projects only the public profile to the page. `API_SCHEMA_URL` (or `VITE_API_URL_JSON`) supplies the
 OpenAPI document URL when regenerating API types.
 
-Run `pnpm --filter frontend lint`, `check-types`, `test`, and `build` for unit
-validation. `pnpm --filter frontend test:start` exercises the built server
+Run `pnpm --dir apps/frontend run lint`, `check-types`, `test`, and `build` for unit
+validation. `pnpm --dir apps/frontend run test:start` exercises the built server
 against disposable identity and API fixtures; it does not replace a check with
 real Keycloak, the API, database and browser.
 
@@ -60,9 +60,9 @@ The `/health` endpoint returns an uncached status response.
 
 ### Frontend layer checks
 
-`pnpm --filter frontend lint` verifies that domain and application code stays
+`pnpm --dir apps/frontend run lint` verifies that domain and application code stays
 independent of browser APIs and infrastructure, and that presentation uses
-infrastructure adapters for server state. Run `pnpm --filter frontend
+infrastructure adapters for server state. Run `pnpm --dir apps/frontend run
 check:architecture` to run that check separately. Order, price-list and
 purchase draft rules are tested without a browser; their query and mutation
 adapters keep cache behavior in the infrastructure layer.

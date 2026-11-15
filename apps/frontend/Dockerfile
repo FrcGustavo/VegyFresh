@@ -2,35 +2,21 @@ FROM node:24-bookworm-slim AS development
 WORKDIR /repo
 ENV NODE_ENV=development
 RUN corepack enable && corepack prepare pnpm@10.11.0 --activate
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY apps/frontend/package.json apps/frontend/package.json
-COPY apps/portal/package.json apps/portal/package.json
-COPY apps/docs/package.json apps/docs/package.json
-COPY services/backend/package.json services/backend/package.json
-COPY clients/api-client/package.json clients/api-client/package.json
-COPY jobs/seed-api/package.json jobs/seed-api/package.json
-COPY packages/ui/package.json packages/ui/package.json
-RUN pnpm install --filter frontend... --frozen-lockfile
+COPY packages/ui/package.json packages/ui/pnpm-lock.yaml packages/ui/
+COPY clients/api-client/package.json clients/api-client/pnpm-lock.yaml clients/api-client/
+COPY apps/frontend/package.json apps/frontend/pnpm-lock.yaml apps/frontend/
+RUN (cd packages/ui && pnpm install --frozen-lockfile) \
+  && (cd clients/api-client && pnpm install --frozen-lockfile) \
+  && (cd apps/frontend && pnpm install --frozen-lockfile)
 EXPOSE 5173
-CMD ["pnpm", "--filter", "frontend", "dev"]
+CMD ["sh", "-c", "cd /repo/apps/frontend && pnpm run dev"]
 
-FROM node:24-bookworm-slim AS build
-WORKDIR /repo
-RUN corepack enable && corepack prepare pnpm@10.11.0 --activate
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY apps/frontend/package.json apps/frontend/package.json
-COPY apps/portal/package.json apps/portal/package.json
-COPY apps/docs/package.json apps/docs/package.json
-COPY services/backend/package.json services/backend/package.json
-COPY clients/api-client/package.json clients/api-client/package.json
-COPY jobs/seed-api/package.json jobs/seed-api/package.json
-COPY packages/ui/package.json packages/ui/package.json
-RUN pnpm install --filter frontend... --frozen-lockfile
-COPY apps/frontend apps/frontend
-COPY clients/api-client clients/api-client
+FROM development AS build
 COPY packages/ui packages/ui
-RUN pnpm --filter @vegyfresh/ui build
-RUN pnpm --filter frontend build
+COPY clients/api-client clients/api-client
+COPY apps/frontend apps/frontend
+RUN (cd packages/ui && pnpm run build) \
+  && (cd apps/frontend && pnpm run build)
 
 FROM node:24-bookworm-slim AS runtime
 WORKDIR /app

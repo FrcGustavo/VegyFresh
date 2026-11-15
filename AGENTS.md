@@ -14,7 +14,7 @@ The repository groups independently understandable units by responsibility. Rule
 
 Units own their source, tests, dependencies, configuration, Dockerfiles and commands. Do not add empty speculative units. Shared code requires real consumers. Dependencies flow through public exports; packages must not import applications.
 
-Keep pnpm workspace package names stable when moving units. Makefiles expose commands; pnpm owns dependencies and orders workspace tasks inside Docker. Regenerate pnpm-lock.yaml with pnpm after manifest changes. Never edit lockfiles manually.
+Keep package names stable when moving units. Makefiles expose commands; each unit owns its `package.json` and `pnpm-lock.yaml`, and pnpm manages dependencies inside Docker. Regenerate the unit `pnpm-lock.yaml` with pnpm after manifest changes. Never edit lockfiles manually.
 
 Inspect working-tree changes before editing and preserve unrelated work. Do not commit, push or deploy unless explicitly requested. Never read or publish local secrets as part of documentation. Keep authorization and organization/client isolation authoritative in the API.
 

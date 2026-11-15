@@ -8,16 +8,15 @@ services:
     command:
       - sh
       - -c
-      - CI=true pnpm install --filter frontend... --frozen-lockfile && pnpm --filter @vegyfresh/ui build && pnpm --filter frontend dev
+      - (cd /repo/packages/ui && CI=true pnpm install --frozen-lockfile && pnpm run build) && (cd /repo/clients/api-client && CI=true pnpm install --frozen-lockfile) && (cd /repo/apps/frontend && CI=true pnpm install --frozen-lockfile && pnpm run dev)
     ports:
       - "${FRONTEND_PORT:-5173}:5173"
     volumes:
       - ../..:/repo
-      - frontend_node_modules:/repo/node_modules
       - frontend_app_node_modules:/repo/apps/frontend/node_modules
-      - api_client_node_modules:/repo/clients/api-client/node_modules
-      - ui_node_modules:/repo/packages/ui/node_modules
-      - ui_dist:/repo/packages/ui/dist
+      - frontend_api_client_node_modules:/repo/clients/api-client/node_modules
+      - frontend_ui_node_modules:/repo/packages/ui/node_modules
+      - frontend_ui_dist:/repo/packages/ui/dist
     env_file:
       - path: .env
         required: false
@@ -31,8 +30,7 @@ services:
       - "host.docker.internal:host-gateway"
 
 volumes:
-  frontend_node_modules:
   frontend_app_node_modules:
-  api_client_node_modules:
-  ui_node_modules:
-  ui_dist:
+  frontend_api_client_node_modules:
+  frontend_ui_node_modules:
+  frontend_ui_dist:

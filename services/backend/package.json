@@ -106,5 +106,6 @@
     "modulePaths": [
       "<rootDir>/node_modules"
     ]
-  }
+  },
+  "packageManager": "pnpm@10.11.0"
 }

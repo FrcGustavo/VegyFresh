@@ -6,8 +6,12 @@ dark themes. From the repository root, run:
 ```sh
 make -C apps/docs check
 make -C apps/docs dev
+make -C apps/docs down
+make -C apps/docs docker-build
 ```
 
-The development catalogue listens on `http://localhost:5175`. The shared Docker
-tooling entrypoint installs the frozen workspace dependencies and builds the UI
-package first, so its public `dist` exports are available to this application.
+The development catalogue listens on `http://localhost:5175` (override with
+`DOCS_PORT`). `make -C apps/docs dev` starts the app-owned Docker Compose
+service, which installs frozen workspace dependencies and builds `@vegyfresh/ui`
+before starting Vite. When running `make dev` or `make up` from the repository
+root, this service runs as part of the unified `vegyfresh` Compose project.

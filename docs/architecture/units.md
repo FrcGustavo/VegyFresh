@@ -1,8 +1,8 @@
 # Repository units
 
 VegyFresh groups independently maintained code by responsibility. Each unit
-owns its dependencies, tests and commands; pnpm workspaces retain the package
-names consumed across units.
+owns its dependencies (`package.json` and `pnpm-lock.yaml`), tests and commands,
+consuming shared packages through explicit relative links and public exports.
 
 | Unit | Role |
 | --- | --- |

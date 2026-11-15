@@ -8,10 +8,10 @@ NestJS API for VegyFresh with Keycloak authentication and tenant-scoped access c
 - Includes auth, tenant context, and endpoint tags.
 - Bearer token auth is required for protected endpoints.
 
-Export the current API contract with `pnpm --filter backend export:openapi`.
+Export the current API contract with `pnpm --dir services/backend run export:openapi`.
 This writes `clients/api-client/openapi.json` using local entity metadata and
 isolated dummy configuration; it does not connect to a database. Run
-`pnpm --filter backend export:openapi --check` to detect a stale snapshot.
+`pnpm --dir services/backend run export:openapi --check` to detect a stale snapshot.
 Pass `--output <path>` to use a different output file.
 
 ## Auth + Tenant Behavior

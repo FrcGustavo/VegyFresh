@@ -13,7 +13,7 @@ await mkdir(dirname(outputPath), { recursive: true });
 const content = `${COMMENT_HEADER}${astToString(ast)}`;
 if (process.argv.includes("--check")) {
   if (await readFile(outputPath, "utf8") !== content) {
-    throw new Error("Generated types differ from OpenAPI. Run pnpm --filter @vegyfresh/api-client generate:api-types.");
+    throw new Error("Generated types differ from OpenAPI. Run pnpm --dir clients/api-client run generate:api-types.");
   }
 } else {
   await writeFile(outputPath, content, "utf8");

@@ -1,7 +1,7 @@
 .DEFAULT_GOAL := help
 ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST)))/../..)
 include $(ROOT)/infrastructure/tooling/commands.mk
-PNPM := $(TOOLS) pnpm --filter @vegyfresh/seed-api
+PNPM := $(TOOLS_COMPOSE) run --build --rm --no-deps -w /repo/jobs/seed-api tools pnpm
 
 .PHONY: help install build lint check-types test check run
 help:
@@ -13,4 +13,4 @@ build check-types test:
 lint: check-types
 check: lint test build
 run:
-	$(TOOLS_COMPOSE) run --build --rm --no-deps -e SEED_API_BASE_URL -e SEED_API_BEARER_TOKEN -e SEED_ADMIN_PASSWORD -e SEED_OPERATOR_PASSWORD -e SEED_CONCURRENCY -e SEED_TRANSACTIONAL_CONCURRENCY tools pnpm --filter @vegyfresh/seed-api run seed
+	$(TOOLS_COMPOSE) run --build --rm --no-deps -w /repo/jobs/seed-api -e SEED_API_BASE_URL -e SEED_API_BEARER_TOKEN -e SEED_ADMIN_PASSWORD -e SEED_OPERATOR_PASSWORD -e SEED_CONCURRENCY -e SEED_TRANSACTIONAL_CONCURRENCY tools pnpm run seed
