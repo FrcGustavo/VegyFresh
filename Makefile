@@ -8,7 +8,7 @@ TEST_UNITS := packages/ui clients/api-client apps/frontend apps/portal jobs/seed
 .DEFAULT_GOAL := help
 .PHONY: help install build lint check-types test check contract
 help:
-	@printf '%s\n' 'Targets: install build lint check-types test check contract dev up down logs ps compose-config frontend portal docs backend keycloak-up keycloak-down seed test-runtime test-e2e test-images'
+	@printf '%s\n' 'Targets: install build lint check-types test check contract dev up down logs ps compose-config frontend portal docs backend keycloak-up keycloak-down seed test-runtime test-runtime-frontend test-runtime-portal test-e2e test-images'
 install:
 	$(TOOLS) true
 build:
@@ -24,7 +24,7 @@ check:
 contract:
 	$(TOOLS_COMPOSE) run --build --rm --no-deps -w /repo/clients/api-client tools pnpm run check:contract
 
-.PHONY: dev up down logs ps compose-config frontend portal docs backend keycloak-up keycloak-down seed test-runtime test-e2e test-images
+.PHONY: dev up down logs ps compose-config frontend portal docs backend keycloak-up keycloak-down seed test-runtime test-runtime-frontend test-runtime-portal test-e2e test-images
 dev:
 	$(COMPOSE) up --build
 up:
@@ -50,6 +50,10 @@ seed:
 	$(MAKE) -C jobs/seed-api run
 test-runtime:
 	$(TOOLS) sh -c 'node --test infrastructure/tooling/smoke-config.test.mjs && (cd /repo/apps/frontend && pnpm run test:start) && (cd /repo/apps/portal && pnpm run test:start)'
+test-runtime-frontend:
+	$(TOOLS) sh -c 'node --test infrastructure/tooling/smoke-config.test.mjs && (cd /repo/apps/frontend && pnpm run test:start)'
+test-runtime-portal:
+	$(TOOLS) sh -c 'node --test infrastructure/tooling/smoke-config.test.mjs && (cd /repo/apps/portal && pnpm run test:start)'
 test-e2e:
 	$(MAKE) -C services/backend test-e2e
 # APP is explicitly selected; image names do not determine the application.
