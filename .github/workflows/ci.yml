@@ -5,37 +5,151 @@ on:
     branches: [main]
 permissions:
   contents: read
+  pull-requests: read
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 jobs:
-  checks:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      ui: ${{ steps.filter.outputs.ui }}
+      api_client: ${{ steps.filter.outputs.api_client }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+      portal: ${{ steps.filter.outputs.portal }}
+      docs: ${{ steps.filter.outputs.docs }}
+      backend: ${{ steps.filter.outputs.backend }}
+      seed_api: ${{ steps.filter.outputs.seed_api }}
+      keycloak: ${{ steps.filter.outputs.keycloak }}
+      contract: ${{ steps.filter.outputs.contract }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          filters: |
+            shared: &shared
+              - 'Makefile'
+              - 'compose.yml'
+              - 'infrastructure/tooling/**'
+            ui:
+              - 'packages/ui/**'
+              - *shared
+            api_client:
+              - 'clients/api-client/**'
+              - *shared
+            frontend:
+              - 'apps/frontend/**'
+              - 'packages/ui/**'
+              - 'clients/api-client/**'
+              - *shared
+            portal:
+              - 'apps/portal/**'
+              - 'packages/ui/**'
+              - 'clients/api-client/**'
+              - *shared
+            docs:
+              - 'apps/docs/**'
+              - 'packages/ui/**'
+              - *shared
+            backend:
+              - 'services/backend/**'
+              - *shared
+            seed_api:
+              - 'jobs/seed-api/**'
+              - 'clients/api-client/**'
+              - *shared
+            keycloak:
+              - 'infrastructure/keycloak/**'
+              - *shared
+            contract:
+              - 'services/backend/**'
+              - 'clients/api-client/**'
+              - *shared
+
+  ui:
+    needs: changes
+    if: needs.changes.outputs.ui == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: make check
+      - run: make -C packages/ui check
+
+  api-client:
+    needs: changes
+    if: needs.changes.outputs.api_client == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: make -C clients/api-client check
+
+  contract:
+    needs: changes
+    if: needs.changes.outputs.contract == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
       - run: make contract
+
+  frontend:
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: make -C apps/frontend check
       - name: Verify built web server routes
-        run: make test-runtime
+        run: make test-runtime-frontend
+      - run: docker build -f apps/frontend/Dockerfile -t vegyfresh-check .
+      - run: make test-images APP=admin IMAGE=vegyfresh-check
+
+  portal:
+    needs: changes
+    if: needs.changes.outputs.portal == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: make -C apps/portal check
+      - name: Verify built web server routes
+        run: make test-runtime-portal
+      - run: docker build -f apps/portal/Dockerfile -t vegyfresh-check .
+      - run: make test-images APP=portal IMAGE=vegyfresh-check
+
+  docs:
+    needs: changes
+    if: needs.changes.outputs.docs == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: make -C apps/docs check
+
+  backend:
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: make -C services/backend check
       - name: Verify identity and tenant integration
         run: make test-e2e
-      - name: Validate local identity configuration
-        run: make -C infrastructure/keycloak check
-  images:
+      - run: docker build -f services/backend/Dockerfile -t vegyfresh-check .
+      - run: docker run --rm --entrypoint node vegyfresh-check -e "require('node:assert/strict').ok(require('node:fs').existsSync('dist/main.js')); require('./dist/app.module.js'); require('jwks-rsa').passportJwtSecret({ jwksUri:'http://localhost:8080/unused' });"
+
+  seed-api:
+    needs: changes
+    if: needs.changes.outputs.seed_api == 'true'
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        include:
-          - unit: apps/frontend
-            app: admin
-          - unit: apps/portal
-            app: portal
-          - unit: services/backend
-            app: backend
     steps:
       - uses: actions/checkout@v4
-      - run: docker build -f ${{ matrix.unit }}/Dockerfile -t vegyfresh-check .
-      - if: matrix.app != 'backend'
-        run: make test-images APP=${{ matrix.app }} IMAGE=vegyfresh-check
-      - if: matrix.app == 'backend'
-        run: docker run --rm --entrypoint node vegyfresh-check -e "require('node:assert/strict').ok(require('node:fs').existsSync('dist/main.js')); require('./dist/app.module.js'); require('jwks-rsa').passportJwtSecret({ jwksUri:'http://localhost:8080/unused' });"
+      - run: make -C jobs/seed-api check
+
+  keycloak:
+    needs: changes
+    if: needs.changes.outputs.keycloak == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate local identity configuration
+        run: make -C infrastructure/keycloak check
