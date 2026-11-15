@@ -1,25 +1,30 @@
 .DEFAULT_GOAL := help
 ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST)))/../..)
 include $(ROOT)/infrastructure/tooling/commands.mk
+COMPOSE_PROJECT_NAME ?= vegyfresh-keycloak
+COMPOSE ?= docker compose --project-name "$(COMPOSE_PROJECT_NAME)" --project-directory "$(ROOT)/infrastructure/keycloak" -f "$(ROOT)/infrastructure/keycloak/compose.yml"
 
-.PHONY: help config install up down logs test check
+.PHONY: help config compose-config install dev up down logs test check
 help:
-	@printf '%s\n' 'Targets: config install up down logs test check'
+	@printf '%s\n' 'Targets: config compose-config install dev up down logs test check'
 
-config:
-	docker compose -f compose.yml config --quiet
+config compose-config:
+	$(COMPOSE) config --quiet
 
 install:
-	docker compose -f compose.yml pull
+	$(COMPOSE) pull
+
+dev:
+	$(COMPOSE) up keycloak
 
 up:
-	docker compose -f compose.yml up -d
+	$(COMPOSE) up -d keycloak
 
 down:
-	docker compose -f compose.yml down
+	$(COMPOSE) down --remove-orphans
 
 logs:
-	docker compose -f compose.yml logs -f keycloak
+	$(COMPOSE) logs -f keycloak
 
 test:
 	$(TOOLS) node --test infrastructure/keycloak/realm.test.mjs

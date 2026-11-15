@@ -1,12 +1,14 @@
 ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 include $(ROOT)/infrastructure/tooling/commands.mk
+COMPOSE_PROJECT_NAME ?= vegyfresh
+COMPOSE ?= docker compose --project-name "$(COMPOSE_PROJECT_NAME)" -f "$(ROOT)/compose.yml"
 UNITS := packages/ui clients/api-client services/backend apps/frontend apps/portal apps/docs jobs/seed-api
 LINT_UNITS := packages/ui services/backend apps/frontend apps/portal apps/docs
 TEST_UNITS := packages/ui clients/api-client apps/frontend apps/portal jobs/seed-api
 .DEFAULT_GOAL := help
 .PHONY: help install build lint check-types test check contract
 help:
-	@printf '%s\n' 'Targets: install build lint check-types test check contract dev down frontend portal backend keycloak-up keycloak-down seed test-runtime test-e2e test-images'
+	@printf '%s\n' 'Targets: install build lint check-types test check contract dev up down logs ps compose-config frontend portal docs backend keycloak-up keycloak-down seed test-runtime test-e2e test-images'
 install:
 	$(TOOLS) true
 build:
@@ -22,20 +24,28 @@ check:
 contract:
 	$(TOOLS_COMPOSE) run --build --rm --no-deps -w /repo/clients/api-client tools pnpm run check:contract
 
-.PHONY: dev down frontend portal backend keycloak-up keycloak-down seed test-runtime test-e2e test-images
+.PHONY: dev up down logs ps compose-config frontend portal docs backend keycloak-up keycloak-down seed test-runtime test-e2e test-images
 dev:
-	$(MAKE) -C services/backend up
-	$(MAKE) -j2 frontend portal
+	$(COMPOSE) up --build
+up:
+	$(COMPOSE) up --detach --build
 down:
-	$(MAKE) -C apps/frontend down
-	$(MAKE) -C apps/portal down
-	$(MAKE) -C services/backend down
-backend frontend portal:
-	$(MAKE) -C $(if $(filter backend,$@),services,apps)/$@ dev
+	$(COMPOSE) down --remove-orphans
+logs:
+	$(COMPOSE) logs --follow
+ps:
+	$(COMPOSE) ps
+compose-config:
+	$(COMPOSE) config --quiet
+backend:
+	$(COMPOSE) up --build api
+frontend portal docs:
+	$(COMPOSE) up --build $@
 keycloak-up:
-	$(MAKE) -C infrastructure/keycloak up
+	$(COMPOSE) up --detach keycloak
 keycloak-down:
-	$(MAKE) -C infrastructure/keycloak down
+	$(COMPOSE) stop keycloak
+	$(COMPOSE) rm --force keycloak
 seed:
 	$(MAKE) -C jobs/seed-api run
 test-runtime:

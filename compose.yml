@@ -1,0 +1,8 @@
+name: vegyfresh
+
+include:
+  - infrastructure/keycloak/compose.yml
+  - services/backend/compose.yml
+  - apps/frontend/docker-compose.yml
+  - apps/portal/docker-compose.yml
+  - apps/docs/docker-compose.yml
