@@ -2,10 +2,11 @@
 
 ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST)))/../..)
 include $(ROOT)/infrastructure/tooling/commands.mk
-PNPM := $(TOOLS) pnpm --filter backend
+PNPM := $(TOOLS_COMPOSE) run --build --rm --no-deps -w /repo/services/backend tools pnpm
 ENV_FILE ?= $(ROOT)/services/backend/.env
 COMPOSE_PROJECT_NAME ?= vegyfresh-backend
-COMPOSE ?= docker compose --project-name "$(COMPOSE_PROJECT_NAME)" --env-file "$(ENV_FILE)" -f "$(ROOT)/services/backend/compose.yml"
+COMPOSE_ENV_FLAG = $(if $(wildcard $(ENV_FILE)),--env-file "$(ENV_FILE)",)
+COMPOSE ?= docker compose --project-name "$(COMPOSE_PROJECT_NAME)" --project-directory "$(ROOT)/services/backend" $(COMPOSE_ENV_FLAG) -f "$(ROOT)/services/backend/compose.yml"
 E2E_RUN_ID := $(shell date +%s)-$(shell printf '%s' $$$$)
 E2E_PROJECT_NAME ?= vegyfresh-backend-e2e-$(E2E_RUN_ID)
 E2E_COMPOSE ?= docker compose --project-name "$(E2E_PROJECT_NAME)" -f "$(ROOT)/services/backend/compose.e2e.yml"

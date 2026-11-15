@@ -6,7 +6,7 @@ The [unit inventory](units.md) describes the current workspace. The Nest API liv
 
 The web applications use native TanStack routes. Their initial authorized data is loaded on the server: nine administrator resource views and the portal order list and detail. Browser queries hydrate from that identity-scoped state and retry failed preloads through the same-origin BFF. Keycloak replaces local password authentication; the API still resolves identities, permissions and organization/client scope.
 
-Domain and application code are separated from presentation and infrastructure. Transport, persistence and React Query integration belong to infrastructure. Each unit owns its Makefile and dependencies; shared Docker tooling runs pnpm workspace tasks. No application should need a legacy `apps/backend` compatibility path, SPA entrypoint or Turbo pipeline.
+Domain and application code are separated from presentation and infrastructure. Transport, persistence and React Query integration belong to infrastructure. Each unit owns its Makefile, `package.json` and `pnpm-lock.yaml`; shared Docker tooling runs pnpm unit tasks. No application should need a legacy `apps/backend` compatibility path, SPA entrypoint or Turbo pipeline.
 
 ## Reconcile historical snapshots
 

@@ -1,16 +1,16 @@
 # Workspace tooling
 
-The root Makefile runs checks in a Node 24 container with pnpm 10.11. Docker and Docker Compose are required; host Node is not needed for these commands. `make install` prepares dependencies, and `make lint`, `make check-types`, `make test`, `make build`, `make check`, and `make contract` run the corresponding workspace tasks. pnpm runs package tasks in dependency order; the entrypoint first builds the shared UI used by consumers.
+The root Makefile runs checks in a Node 24 container with pnpm 10.11. Docker and Docker Compose are required; host Node is not needed for these commands. `make install` prepares dependencies for each unit, and `make lint`, `make check-types`, `make test`, `make build`, `make check`, and `make contract` run the corresponding tasks across all units. The entrypoint installs each unit's frozen lockfile and builds `@vegyfresh/ui` first for its consumers.
 
-The Compose project stores dependency directories in named volumes. Run one tooling command at a time to avoid concurrent writes. Unit development and database commands remain in their respective documentation and Makefiles.
+The Compose project stores unit dependency directories in named volumes. Run one tooling command at a time to avoid concurrent writes. Unit development and database commands remain in their respective documentation and Makefiles.
 
-To change a dependency, run pnpm from this service, for example:
+To change a dependency in a unit, run pnpm from this service targeting the unit directory, for example:
 
 ```sh
-docker compose --project-name vegyfresh-tools -f infrastructure/tooling/compose.yml run --build --rm tools pnpm --filter frontend add <package>
+docker compose --project-name vegyfresh-tools -f infrastructure/tooling/compose.yml run --build --rm tools pnpm --dir apps/frontend add <package>
 ```
 
-Commit the manifest and pnpm-generated lockfile together.
+Commit the unit manifest and its pnpm-generated `pnpm-lock.yaml` together.
 
 Unit Makefiles use the same container and volumes. For example, run
 `make -C clients/api-client check contract`, `make -C jobs/seed-api check`,

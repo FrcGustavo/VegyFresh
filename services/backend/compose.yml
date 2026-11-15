@@ -27,9 +27,10 @@ services:
       context: ../..
       dockerfile: services/backend/Dockerfile
       target: build
-    working_dir: /repo
+    working_dir: /repo/services/backend
     env_file:
-      - ${ENV_FILE:-.env}
+      - path: ${ENV_FILE:-.env}
+        required: false
     environment:
       NODE_ENV: development
       POSTGRES_HOST: db
@@ -37,7 +38,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-vegyfresh}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-vegyfresh-local-only}
       POSTGRES_DB: ${POSTGRES_DB:-vegyfresh}
-    command: ["pnpm", "--filter", "backend", "run", "migrations:run"]
+    command: ["pnpm", "run", "migrations:run"]
     depends_on:
       db:
         condition: service_healthy
@@ -49,9 +50,10 @@ services:
       context: ../..
       dockerfile: services/backend/Dockerfile
       target: build
-    working_dir: /repo
+    working_dir: /repo/services/backend
     env_file:
-      - ${ENV_FILE:-.env}
+      - path: ${ENV_FILE:-.env}
+        required: false
     environment:
       NODE_ENV: development
       HOST: 0.0.0.0
@@ -70,7 +72,7 @@ services:
       KEYCLOAK_PORTAL_SCOPE: ${KEYCLOAK_PORTAL_SCOPE:-vegyfresh-portal}
       KEYCLOAK_JWKS_URI: ${KEYCLOAK_JWKS_URI:-http://host.docker.internal:8080/realms/vegyfresh/protocol/openid-connect/certs}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:5174}
-    command: ["pnpm", "--filter", "backend", "run", "dev"]
+    command: ["pnpm", "run", "dev"]
     ports:
       - "127.0.0.1:${API_PORT:-3000}:3000"
     extra_hosts:

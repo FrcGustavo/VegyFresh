@@ -25,8 +25,8 @@
     "@mui/material": "^9.0.1",
     "@mui/x-date-pickers": "^9.3.0",
     "@tanstack/react-query": "^5.100.10",
-    "@vegyfresh/api-client": "workspace:*",
-    "@vegyfresh/ui": "workspace:*",
+    "@vegyfresh/api-client": "link:../../clients/api-client",
+    "@vegyfresh/ui": "link:../../packages/ui",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "react-hook-form": "^7.76.1",
@@ -55,5 +55,6 @@
     "vite": "^8.0.12",
     "vitest": "^4.1.7",
     "nitro": "3.0.261103-rc"
-  }
+  },
+  "packageManager": "pnpm@10.11.0"
 }

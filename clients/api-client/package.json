@@ -11,7 +11,7 @@
     "build": "tsc --noEmit",
     "check-types": "tsc --noEmit",
     "generate:api-types": "node ./scripts/generate-api-types.mjs",
-    "check:contract": "pnpm --filter backend export:openapi --check && node scripts/generate-api-types.mjs --check",
+    "check:contract": "cd ../../services/backend && pnpm run export:openapi --check && cd ../../clients/api-client && node scripts/generate-api-types.mjs --check",
     "test": "node --import tsx --test src/__tests__/*.test.ts"
   },
   "devDependencies": {
@@ -19,5 +19,6 @@
     "openapi-typescript": "7.13.0",
     "tsx": "4.20.6",
     "typescript": "5.9.2"
-  }
+  },
+  "packageManager": "pnpm@10.11.0"
 }
