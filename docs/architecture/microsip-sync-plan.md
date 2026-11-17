@@ -8,15 +8,30 @@ La unidad [services/microsip-sync](../../services/microsip-sync/README.md) consu
 
 Conserva historial y transiciones en SQLite, guarda la intención antes de enviar, concilia interrupciones y deja los resultados inciertos para revisión manual. Incluye bloqueo por empresa, reintentos limitados, comandos de historial/resolución y un simulador que conserva los folios después de reiniciar. No se modificaron aplicaciones ni contratos de API de VegyFresh.
 
-El motor operativo usa C#/.NET 10 con un simulador. TypeScript se conserva
-como referencia. La validación portable usa HTTP y SQLite temporales, un
-simulador persistente e interrupciones de procesos. Un fixture comprueba
-la continuidad del historial entre TypeScript y .NET.
+El motor operativo ahora usa C#/.NET 10 y adaptadores internos `simulator` y
+`microsip`. TypeScript se conserva como referencia. El puente Windows x86
+serializa llamadas a la DLL en procesos independientes, conserva la referencia
+completa en la descripción y solicita políticas Microsip con precio/descuento
+`-1` por renglón. Las correspondencias numéricas requieren verificación local.
+
+El [diagnóstico x86](../../services/microsip-sync/diagnostic/README.md) sigue
+independiente. La publicación autocontenida se verifica por compilación e
+inspección PE, sin ejecutar Windows ni certificar la DLL. No se instala Windows
+en la Mac y no se han ejecutado pedidos productivos.
+
+La verificación portable usa HTTP y SQLite temporales, un simulador persistente,
+interrupciones de procesos y una interfaz nativa falsa. Se comprueba continuidad
+de archivos SQLite con TypeScript. Los resultados y límites están en
+[VERIFICATION.md](../../services/microsip-sync/VERIFICATION.md).
 
 ## Validación real pendiente
 
-El piloto requiere Windows, licencia y una empresa de prueba para verificar
-la integración, los catálogos, la aplicación de precios y la recuperación.
+Se requiere Windows, licencia y empresa de prueba para comprobar conexión,
+catálogos, unidades de venta, almacén/sucursal, precios y descuentos. La búsqueda
+por referencia no está acreditada: `lookup` devuelve `unknown`. El subconjunto
+usado obtiene el ID interno, pero no un folio verificado; incluso una aplicación
+exitosa queda en revisión hasta comprobar el folio y ejecutar `resolve`.
+Nunca se reenvía automáticamente una escritura real de resultado incierto.
 
 ## Alcance acordado
 

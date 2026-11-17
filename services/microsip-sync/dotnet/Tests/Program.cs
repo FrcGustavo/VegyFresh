@@ -132,7 +132,7 @@ await Test("history lock, read-only inspection and identity", () =>
     {
         h.BindAdapter(c); Throws(() => new History(c));
         using var reader = new History(c, true); reader.BindAdapter(c, true); Assert(reader.List().Length == 1);
-        Throws(() => h.BindAdapter(c with { Adapter = new("other") }));
+        Throws(() => h.BindAdapter(c with { Adapter = new("microsip", "host", "config") }));
     }
     using var reopened = new History(c); Assert(reopened.Get("__adapter_identity__") != null);
     Throws(() => new History(c with { Company = "different" }));
@@ -184,6 +184,32 @@ await Test("API envelope and exact UTC cutoff", async () =>
     var old = Change(Order(c, "00000000-0000-4000-8000-000000000009"), c.Since, "2026-11-16T11:59:59Z");
     using var http = new HttpClient(new Handler(_ => "{\"data\":[" + old.GetRawText() + "," + o.GetRawText() + "],\"total\":2}"));
     int count = 0; await foreach (var _ in new Source(c, http, () => Task.FromResult("test")).List()) count++; Assert(count == 1);
+});
+await Test("native arguments, price policies, apply and cleanup", () =>
+{
+    var c = C(); var p = Engine.Map(Order(c), c); var n = NativeConfig(p); var fake = new FakeNative();
+    var result = new NativeOrder(fake).Execute(new("create", p), n, "db", "u", "p");
+    Assert(!result.Ok && result.Stage == "applied-folio-unverified" && result.DocumentId == 42);
+    Assert(string.Join(",", fake.Calls) == "errors,sales-errors,newdb,newtrn,connect,setdb,header,line,apply,id,disconnect,free");
+    Assert(fake.HeaderDescription == p.ExternalId && fake.ParameterList == -1 && fake.Price == -1 && fake.Discount == -1 && fake.CustomerId == 101 && fake.ArticleId == 202 && fake.WarehouseId == 303);
+    return Task.CompletedTask;
+});
+foreach (var stage in new[] { "connect", "setdb", "header", "line", "apply", "id", "disconnect", "abort" })
+    await Test("native rejection cleans up " + stage, () =>
+    {
+        var c = C(); var p = Engine.Map(Order(c), c); var f = new FakeNative { Fail = stage };
+        Throws(() => new NativeOrder(f).Execute(new("create", p), NativeConfig(p), "db", "u", "p"));
+        Assert(f.Calls.Last() == "free" && f.Calls.Contains("disconnect"));
+        if (stage is "header" or "line" or "apply" or "abort") Assert(f.Calls.Contains("abort"));
+        return Task.CompletedTask;
+    });
+await Test("native validation never writes, exact mappings required", () =>
+{
+    var c = C(); var p = Engine.Map(Order(c), c); var f = new FakeNative(); var n = NativeConfig(p);
+    Assert(new NativeOrder(f).Execute(new("validate", p), n, "db", "u", "p").Ok && !f.Calls.Contains("header"));
+    Throws(() => n.Validate(p with { CustomerKey = "missing" }));
+    Throws(() => n.Validate(p with { Lines = [p.Lines[0] with { ProductKey = p.Lines[0].ProductKey.Trim() }] }));
+    Throws(() => n.Validate(p with { Lines = [p.Lines[0] with { Unit = "unknown" }] })); return Task.CompletedTask;
 });
 foreach (var stage in new[] { "before", "after" })
     await Test("process crash " + stage + " durable simulator commit", async () =>
@@ -255,6 +281,8 @@ Console.WriteLine($"{passed} passed; {failed} failed");
 Directory.Delete(temp, true);
 return failed == 0 ? 0 : 1;
 
+NativeConfig NativeConfig(DestinationOrder p) => new("unused", p.Company, p.Branch, p.Warehouse, 303,
+    new() { [p.CustomerKey] = new(101) }, new() { [p.Lines[0].ProductKey] = new(202, p.Lines[0].Unit) }, true);
 sealed class FakeSource(JsonElement[] orders) : ISource
 {
     public JsonElement[] Orders = orders; public JsonElement? Fresh; public bool Fail; public int Reads;
@@ -276,6 +304,22 @@ sealed class Handler(Func<HttpRequestMessage, string> body, HttpStatusCode statu
 {
     protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) => Task.FromResult(new HttpResponseMessage(status) { Content = new StringContent(body(request), Encoding.UTF8, "application/json") });
 }
+sealed class FakeNative : INativeApi
+{
+    public List<string> Calls = []; public string? Fail; public string? HeaderDescription; public int ParameterList, CustomerId, ArticleId, WarehouseId; public double Price, Discount;
+    int Call(string s) { Calls.Add(s); return Fail == s || (Fail == "abort" && s == "line") ? 1 : 0; }
+    public void SetErrorHandling(int a, int b) => Call("errors"); public void SalesErrorHandling(int a, int b) => Call("sales-errors");
+    public int NewDB() { Call("newdb"); return 0; }
+    public int NewTrn(int db, int type) { if (type != 1) throw new Exception(); Call("newtrn"); return 0; }
+    public int Connect(int db, string path, string user, string pass) => Call("connect"); public int SetSalesDatabase(int db) => Call("setdb");
+    public int NewOrder(string date, string folio, int customerId, int addressId, int warehouseId, string deliveryDate, string discountType, double discount, string purchaseOrder, string description, int sellerId, int replacedTaxId, int replacementTaxId, int currencyId, int parameterList)
+    { HeaderDescription = description; ParameterList = parameterList; CustomerId = customerId; WarehouseId = warehouseId; return Call("header"); }
+    public int Line(int articleId, double quantity, double price, double discount, string notes) { ArticleId = articleId; Price = price; Discount = discount; return Call("line"); }
+    public int Apply() => Call("apply"); public int DocumentId(ref int id) { id = 42; return Call("id"); }
+    public void Abort() { Call("abort"); if (Fail == "abort") throw new Exception(); }
+    public int Disconnect(int db) => Call("disconnect"); public void Free() => Call("free");
+}
+
 sealed class CrashAdapter(IAdapter inner, string stage) : IAdapter
 {
     public Task Validate(DestinationOrder o) => inner.Validate(o);

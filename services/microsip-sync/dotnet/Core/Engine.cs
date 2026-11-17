@@ -65,7 +65,7 @@ public sealed class Engine(Config config, ISource source, IHistory history, IAda
             try { await adapter.Validate(payload).WaitAsync(TimeSpan.FromSeconds(30), cancellationToken); }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { break; }
             catch (MappingException e) { summary.Count(Failure(entry with { Payload = payload }, now, e.Message)); continue; }
-            catch { summary.Count(Failure(entry with { Payload = payload }, now, "Microsip simulator validation failed")); continue; }
+            catch { summary.Count(Failure(entry with { Payload = payload }, now, "Microsip validation or explicit native mapping failed")); continue; }
             if (cancellationToken.IsCancellationRequested) break;
             entry = entry with { Status = "submitting", Attempts = entry.Attempts + 1, UpdatedAt = now.ToString("O"), NextAttemptAt = null, Payload = payload, Error = null };
             history.Save(entry); // Durable intent precedes all external writes.
