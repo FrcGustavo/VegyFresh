@@ -25,3 +25,6 @@ To smoke-test a built web image, run `make test-images APP=admin IMAGE=<tag>`
 or set `APP=portal`. The image driver has access to the Docker socket to start
 an isolated application container and a disposable API fixture. It selects
 application routes from `APP`, not from the image tag.
+
+The Microsip reference uses its own dependency volume and an exclusive company
+lock directory. Run `make -C services/microsip-sync check` for its unit checks.

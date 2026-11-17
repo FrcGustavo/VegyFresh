@@ -7,6 +7,7 @@ VegyFresh is a monorepo for an administrator application, customer portal and te
 | `apps/frontend` | Administrator web application |
 | `apps/portal` | Customer portal |
 | `services/backend` | NestJS API and PostgreSQL integration |
+| `services/microsip-sync` | [Local order synchronizer reference](services/microsip-sync/README.md) |
 | `clients/api-client` | Shared API client and generated contract |
 | `jobs/seed-api` | Finite API seed |
 | `infrastructure/keycloak` | Local identity provider and realm |

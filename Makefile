@@ -2,9 +2,9 @@ ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 include $(ROOT)/infrastructure/tooling/commands.mk
 COMPOSE_PROJECT_NAME ?= vegyfresh
 COMPOSE ?= docker compose --project-name "$(COMPOSE_PROJECT_NAME)" -f "$(ROOT)/compose.yml"
-UNITS := clients/api-client services/backend apps/frontend apps/portal jobs/seed-api
-LINT_UNITS := services/backend apps/frontend apps/portal
-TEST_UNITS := clients/api-client apps/frontend apps/portal jobs/seed-api
+UNITS := clients/api-client services/backend services/microsip-sync apps/frontend apps/portal jobs/seed-api
+LINT_UNITS := services/backend services/microsip-sync apps/frontend apps/portal
+TEST_UNITS := services/microsip-sync clients/api-client apps/frontend apps/portal jobs/seed-api
 .DEFAULT_GOAL := help
 .PHONY: help install build lint check-types test check contract
 help:

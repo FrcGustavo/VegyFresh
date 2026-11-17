@@ -1,0 +1,7 @@
+bin/
+obj/
+artifacts/
+data/
+*.local.json
+api-token.local
+*.sqlite*

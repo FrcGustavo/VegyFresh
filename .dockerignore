@@ -13,3 +13,7 @@
 **/.output
 **/.nitro
 **/.tanstack
+services/microsip-sync/data
+services/microsip-sync/*.local.json
+services/microsip-sync/api-token.local
+services/microsip-sync/**/*.sqlite*

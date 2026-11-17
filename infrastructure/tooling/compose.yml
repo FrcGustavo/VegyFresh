@@ -4,6 +4,8 @@ services:
       context: ../..
       dockerfile: infrastructure/tooling/Dockerfile
     working_dir: /repo
+    environment:
+      MICROSIP_SYNC_LOCK_DIR: /microsip-locks
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
@@ -13,6 +15,8 @@ services:
       - backend_dependencies:/repo/services/backend/node_modules
       - api_client_dependencies:/repo/clients/api-client/node_modules
       - seed_api_dependencies:/repo/jobs/seed-api/node_modules
+      - microsip_sync_dependencies:/repo/services/microsip-sync/node_modules
+      - microsip_sync_locks:/microsip-locks
   image-tests:
     extends: tools
     environment:
@@ -27,3 +31,6 @@ volumes:
   backend_dependencies:
   api_client_dependencies:
   seed_api_dependencies:
+  microsip_sync_dependencies:
+  microsip_sync_locks:
+    name: vegyfresh-microsip-locks
