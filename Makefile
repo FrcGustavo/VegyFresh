@@ -2,9 +2,9 @@ ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 include $(ROOT)/infrastructure/tooling/commands.mk
 COMPOSE_PROJECT_NAME ?= vegyfresh
 COMPOSE ?= docker compose --project-name "$(COMPOSE_PROJECT_NAME)" -f "$(ROOT)/compose.yml"
-UNITS := clients/api-client services/backend services/microsip-sync apps/frontend apps/portal jobs/seed-api
-LINT_UNITS := services/backend services/microsip-sync apps/frontend apps/portal
-TEST_UNITS := services/microsip-sync clients/api-client apps/frontend apps/portal jobs/seed-api
+UNITS := clients/api-client services/backend apps/frontend apps/portal jobs/seed-api
+LINT_UNITS := services/backend apps/frontend apps/portal
+TEST_UNITS := clients/api-client apps/frontend apps/portal jobs/seed-api
 .DEFAULT_GOAL := help
 .PHONY: help install build lint check-types test check contract
 help:
@@ -13,14 +13,19 @@ install:
 	$(TOOLS) true
 build:
 	$(TOOLS) sh -c 'set -eu; for u in $(UNITS); do (cd "/repo/$$u" && pnpm run build); done'
+	$(MAKE) -C "$(ROOT)/services/microsip-sync" build
 lint:
 	$(TOOLS) sh -c 'set -eu; for u in $(LINT_UNITS); do (cd "/repo/$$u" && pnpm run lint); done; (cd /repo/clients/api-client && pnpm run check-types); (cd /repo/jobs/seed-api && pnpm run check-types)'
+	$(MAKE) -C "$(ROOT)/services/microsip-sync" lint
 check-types:
 	$(TOOLS) sh -c 'set -eu; for u in $(UNITS); do (cd "/repo/$$u" && pnpm run check-types); done'
+	$(MAKE) -C "$(ROOT)/services/microsip-sync" check-types
 test:
 	$(TOOLS) sh -c 'set -eu; (cd /repo/services/backend && pnpm run test --runInBand); for u in $(TEST_UNITS); do (cd "/repo/$$u" && pnpm run test); done'
+	$(MAKE) -C "$(ROOT)/services/microsip-sync" test
 check:
 	$(TOOLS) sh -c 'set -eu; for u in $(LINT_UNITS); do (cd "/repo/$$u" && pnpm run lint); done; for u in $(UNITS); do (cd "/repo/$$u" && pnpm run check-types); done; (cd /repo/services/backend && pnpm run test --runInBand); for u in $(TEST_UNITS); do (cd "/repo/$$u" && pnpm run test); done; for u in $(UNITS); do (cd "/repo/$$u" && pnpm run build); done'
+	$(MAKE) -C "$(ROOT)/services/microsip-sync" check
 contract:
 	$(TOOLS_COMPOSE) run --build --rm --no-deps -w /repo/clients/api-client tools pnpm run check:contract
 

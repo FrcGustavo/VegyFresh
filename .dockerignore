@@ -17,3 +17,8 @@ services/microsip-sync/data
 services/microsip-sync/*.local.json
 services/microsip-sync/api-token.local
 services/microsip-sync/**/*.sqlite*
+
+# .NET output remains local; builds restore and compile from source.
+**/bin
+**/obj
+services/microsip-sync/artifacts

@@ -9,7 +9,7 @@ consuming shared packages through explicit relative links and public exports.
 | `apps/frontend` | Administrator application and server entrypoint |
 | `apps/portal` | Customer portal and separate server session |
 | `services/backend` | Nest API, persistence and migrations |
-| `services/microsip-sync` | TypeScript order synchronization reference with SQLite history and a simulator |
+| `services/microsip-sync` | Portable .NET 10 WhatsApp order synchronization, SQLite recovery and simulator |
 | `clients/api-client` | Shared client and generated OpenAPI contract |
 | `jobs/seed-api` | Finite API seed job |
 | `infrastructure/keycloak` | Local development realm and identity provider |
