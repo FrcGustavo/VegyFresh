@@ -34,8 +34,11 @@ The realm defines two public OpenID Connect clients:
 | `vegyfresh-admin` | `http://localhost:5173` | `vegyfresh-api` |
 | `vegyfresh-portal` | `http://localhost:5174` | `vegyfresh-api`, `vegyfresh-portal` |
 
-Both use Authorization Code flow with PKCE S256 and disable implicit flow and
-direct password grants. The `basic`, `profile`, and `email` scopes are enabled
+Both use Authorization Code flow with PKCE S256 and disable implicit flow. The
+admin client enables Direct Access Grants only in this local
+development realm so `jobs/seed-api` can authenticate without a browser; the
+portal client keeps Direct Access Grants disabled. Do not copy this local
+setting into production. The `basic`, `profile`, and `email` scopes are enabled
 by default; `basic` includes the subject in access tokens. The optional
 `vegyfresh-api` scope adds that audience to access tokens, while
 `vegyfresh-portal` is a scope marker. The export enables registration and

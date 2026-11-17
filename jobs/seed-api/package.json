@@ -6,7 +6,7 @@
     "@vegyfresh/api-client": "link:../../clients/api-client"
   },
   "scripts": {
-    "seed": "tsx src/main.ts",
+    "seed": "node --env-file-if-exists=.env --import tsx src/main.ts",
     "build": "tsc --noEmit",
     "check-types": "tsc --noEmit",
     "test": "node --import tsx --test src/tests/*.test.ts"

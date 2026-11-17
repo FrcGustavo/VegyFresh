@@ -13,4 +13,4 @@ build check-types test:
 lint: check-types
 check: lint test build
 run:
-	$(TOOLS_COMPOSE) run --build --rm --no-deps -w /repo/jobs/seed-api -e SEED_API_BASE_URL -e SEED_API_BEARER_TOKEN -e SEED_ADMIN_PASSWORD -e SEED_OPERATOR_PASSWORD -e SEED_CONCURRENCY -e SEED_TRANSACTIONAL_CONCURRENCY tools pnpm run seed
+	$(TOOLS_COMPOSE) run --build --rm --no-deps -w /repo/jobs/seed-api -e SEED_API_BASE_URL -e SEED_API_BEARER_TOKEN -e SEED_KEYCLOAK_TOKEN_URL -e SEED_KEYCLOAK_CLIENT_ID -e SEED_KEYCLOAK_USERNAME -e SEED_KEYCLOAK_PASSWORD -e SEED_ADMIN_PASSWORD -e SEED_OPERATOR_PASSWORD -e SEED_CONCURRENCY -e SEED_TRANSACTIONAL_CONCURRENCY tools pnpm run seed

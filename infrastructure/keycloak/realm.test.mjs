@@ -8,15 +8,15 @@ test("realm defines public authorization code clients with PKCE", () => {
   assert.equal(realm.realm, "vegyfresh");
   assert.equal(realm.enabled, true);
   assert.equal(realm.users?.length ?? 0, 0);
-  for (const [id, origin, scopes] of [
-    ["vegyfresh-admin", "http://localhost:5173", ["vegyfresh-api"]],
-    ["vegyfresh-portal", "http://localhost:5174", ["vegyfresh-api", "vegyfresh-portal"]],
+  for (const [id, origin, scopes, directAccessGrants] of [
+    ["vegyfresh-admin", "http://localhost:5173", ["vegyfresh-api"], true],
+    ["vegyfresh-portal", "http://localhost:5174", ["vegyfresh-api", "vegyfresh-portal"], false],
   ]) {
     const client = realm.clients.find((item) => item.clientId === id);
     assert.ok(client, `${id} must exist`);
     assert.equal(client.publicClient, true);
     assert.equal(client.standardFlowEnabled, true);
-    assert.equal(client.directAccessGrantsEnabled, false);
+    assert.equal(client.directAccessGrantsEnabled, directAccessGrants);
     assert.equal(client.implicitFlowEnabled, false);
     assert.equal(client.serviceAccountsEnabled, false);
     assert.equal(client.attributes["pkce.code.challenge.method"], "S256");
