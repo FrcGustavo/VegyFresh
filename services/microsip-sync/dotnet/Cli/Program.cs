@@ -32,7 +32,7 @@ try
         }
         history.Save(e); Console.WriteLine(Json.Encode(new { e.OrderId, e.Status })); return 0;
     }
-    using IAdapter adapter = new Simulator(config.DataDir);
+    using IAdapter adapter = config.Driver.Mode == "simulator" ? new Simulator(config.DataDir) : new NativeProcess(config.Driver);
     using var http = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false }) { Timeout = TimeSpan.FromSeconds(15) };
     var engine = new Engine(config, new Source(config, http), history, adapter);
     do

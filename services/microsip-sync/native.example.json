@@ -1,0 +1,10 @@
+{
+  "dllPath": "C:\\Microsip\\ApiMicrosip.dll",
+  "company": "EMPRESA_PRUEBA",
+  "branch": "SUCURSAL_PRUEBA",
+  "warehouse": "ALMACEN_PRUEBA",
+  "warehouseId": 123,
+  "catalogMappingsVerified": false,
+  "customers": { "CLIENTE_PRUEBA": { "customerId": 456, "addressId": 0 } },
+  "products": { "FOLIO_EXACTO": { "articleId": 789, "unit": "KG" } }
+}

@@ -40,5 +40,5 @@ an isolated application container and a disposable API fixture. It selects
 application routes from `APP`, not from the image tag.
 
 The root Docker context excludes `services/microsip-sync/*.local.json`, covering
-`sync.local.json`. Example configurations remain
+both `sync.local.json` and `native.local.json`. Example configurations remain
 included. This exclusion does not affect the tooling container’s repository bind mount.

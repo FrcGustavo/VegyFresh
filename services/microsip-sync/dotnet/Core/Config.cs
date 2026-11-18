@@ -3,14 +3,14 @@ using System.Text.RegularExpressions;
 
 namespace Microsip.Sync;
 
-public sealed record AdapterConfig(string Mode = "simulator");
+public sealed record AdapterConfig(string Mode = "simulator", string? HostPath = null, string? NativeConfigPath = null);
 public sealed record Config(string ApiBaseUrl, string OrganizationId, string Company, string Branch, string Warehouse,
     string Since, int PageSize, int PollIntervalMs, int RetryDelayMs, int MaxAttempts, string DataDir,
     Dictionary<string, string> Clients, Dictionary<string, string> Units, AdapterConfig? Adapter = null, string[]? Statuses = null)
 {
     public AdapterConfig Driver => Adapter ?? new();
     public string[] EligibleStatuses => Statuses ?? ["APPROVED"];
-    public string AdapterIdentity => Driver.Mode;
+    public string AdapterIdentity => Driver.Mode == "simulator" ? "simulator" : $"microsip:{Driver.NativeConfigPath}";
     public static Config Load(string path)
     {
         var c = Json.Decode<Config>(File.ReadAllText(path));
@@ -29,7 +29,16 @@ public sealed record Config(string ApiBaseUrl, string OrganizationId, string Com
             throw new InvalidDataException("Invalid Microsip sync config");
         var directory = Path.GetDirectoryName(Path.GetFullPath(path))!;
         string Resolve(string s) => Path.GetFullPath(s, directory);
-        if (c.Driver.Mode != "simulator") throw new InvalidDataException("adapter.mode must be simulator");
+        if (c.Driver.Mode == "simulator")
+        {
+            if (c.Driver.HostPath != null || c.Driver.NativeConfigPath != null) throw new InvalidDataException("Unsupported simulator fields");
+        }
+        else if (c.Driver.Mode == "microsip")
+        {
+            if (!Nonempty(c.Driver.HostPath) || !Nonempty(c.Driver.NativeConfigPath)) throw new InvalidDataException("Microsip hostPath and nativeConfigPath required");
+            c = c with { Adapter = c.Driver with { HostPath = Resolve(c.Driver.HostPath!), NativeConfigPath = Resolve(c.Driver.NativeConfigPath!) } };
+        }
+        else throw new InvalidDataException("adapter.mode must be simulator or microsip");
         return c with { ApiBaseUrl = url.ToString().TrimEnd('/'), DataDir = Resolve(c.DataDir) };
     }
 }

@@ -24,7 +24,7 @@ make contract
 
 Individual targets include `make lint`, `make check-types`, `make test` and `make build`. See [workspace tooling](infrastructure/tooling/README.md) for dependency updates and volume usage. Each unit also documents its own development and deployment commands.
 
-The [Microsip synchronizer](services/microsip-sync/README.md) runs separately next to Microsip. Its .NET 10 engine supports local verification with a persistent simulator.
+The [Microsip synchronizer](services/microsip-sync/README.md) runs separately next to Microsip. Its .NET 10 engine supports local verification with a persistent simulator; a separate Windows x86 DLL bridge is prepared, with real license, catalog and recovery validation pending an authorized pilot.
 
 ## Authentication and runtime
 

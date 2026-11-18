@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType><PlatformTarget>x86</PlatformTarget><RuntimeIdentifier>win-x86</RuntimeIdentifier><SelfContained>true</SelfContained>
+    <AssemblyName>Microsip.NativeHost</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup><ProjectReference Include="../Core/Microsip.Sync.Core.csproj" /></ItemGroup>
+</Project>
