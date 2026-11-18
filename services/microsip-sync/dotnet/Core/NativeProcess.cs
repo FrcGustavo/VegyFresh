@@ -25,10 +25,7 @@ public sealed class NativeProcess(AdapterConfig config) : IAdapter
                 await process.StandardInput.WriteLineAsync(Json.Encode(new NativeRequest(operation, order)).AsMemory(), deadline.Token);
                 process.StandardInput.Close();
                 await Task.WhenAll(process.WaitForExitAsync(deadline.Token), stderr, output);
-                if (process.ExitCode != 0) throw new InvalidOperationException("Native worker failed");
-                var response = Json.Decode<NativeResponse>(await output);
-                if (!response.Ok) throw new InvalidOperationException("Native operation failed or outcome unknown");
-                return response;
+                return ReadResponse(await output, process.ExitCode);
             }
             finally
             {
@@ -42,10 +39,65 @@ public sealed class NativeProcess(AdapterConfig config) : IAdapter
         }
         finally { serial.Release(); }
     }
+
+    internal static NativeResponse ReadResponse(string output, int exitCode)
+    {
+        NativeResponse response;
+        try { response = Json.Decode<NativeResponse>(output); }
+        catch (Exception error) when (error is System.Text.Json.JsonException or InvalidDataException)
+        {
+            throw new NativeOperationException(new(NativeOperation.WorkerResponse));
+        }
+
+        if (!response.Ok)
+        {
+            var applied = response.Stage == "applied-folio-unverified";
+            var failure = response.Failure is { } reported && Enum.IsDefined(reported.Operation)
+                ? reported
+                : applied ? null : new NativeFailure(NativeOperation.WorkerResponse);
+            throw new NativeOperationException(failure, applied ? response.DocumentId : null, applied);
+        }
+        if (exitCode != 0) throw new NativeOperationException(new(NativeOperation.WorkerResponse));
+        return response;
+    }
+
     public async Task Validate(DestinationOrder order) { Simulator.Check(order); Json.Decode<NativeConfig>(File.ReadAllText(config.NativeConfigPath!)).Validate(order); await Request("validate", order); }
     public async Task<Receipt> Create(DestinationOrder order) => (await Request("create", order)).Receipt ?? throw new InvalidOperationException("No verified folio returned; review required");
     public Task<Lookup> Lookup(string externalId, string company) => Task.FromResult(new Lookup("unknown"));
     public void Dispose() { disposed = true; if (active is { HasExited: false }) active.Kill(true); }
 }
 public sealed record NativeRequest(string Operation, DestinationOrder? Order);
-public sealed record NativeResponse(bool Ok, Receipt? Receipt = null, string? Stage = null, int? DocumentId = null);
+public sealed record NativeResponse(bool Ok, Receipt? Receipt = null, string? Stage = null, int? DocumentId = null,
+    NativeFailure? Failure = null);
+
+public enum NativeOperation
+{
+    WorkerConfiguration = 1, LoadLibraryExW, WorkerRequest, WorkerResponse,
+    SetErrorHandling, veSetErrorHandling, NewDB, NewTrn, DBConnect, SetDBVentas,
+    NuevoPedido, RenglonPedido, AplicaPedido, GetDoctoVeId, AbortaDoctoVentas, DBDisconnect, LiberarRecursos
+}
+
+public sealed record NativeFailure(NativeOperation Operation, int? Code = null);
+
+public sealed class NativeOperationException(NativeFailure? failure, int? documentId = null, bool applied = false)
+    : Exception
+{
+    public NativeResponse Response { get; } = new(false,
+        Stage: applied ? "applied-folio-unverified" : "failed-or-unknown",
+        DocumentId: applied && documentId > 0 ? documentId : null,
+        Failure: failure);
+
+    public override string Message
+    {
+        get
+        {
+            var message = Response.Stage == "applied-folio-unverified"
+                ? "Microsip applied the order. Folio unverified"
+                : "Microsip native operation failed";
+            if (Response.Failure is { } detail)
+                message += $" at {detail.Operation}" + (detail.Code is int code ? $" (return code {code})" : "");
+            if (Response.DocumentId is int id) message += $". Internal document ID {id}";
+            return message;
+        }
+    }
+}
