@@ -1,0 +1,20 @@
+{
+  "name": "@vegyfresh/microsip-sync",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=24" },
+  "scripts": {
+    "start": "node --env-file-if-exists=.env --import tsx src/main.ts",
+    "build": "tsc --noEmit",
+    "lint": "tsc --noEmit",
+    "check-types": "tsc --noEmit",
+    "test": "node --import tsx --test src/tests/*.test.ts"
+  },
+  "dependencies": { "@vegyfresh/api-client": "link:../../clients/api-client" },
+  "devDependencies": {
+    "@types/node": "24.12.4",
+    "tsx": "4.20.6",
+    "typescript": "5.9.2"
+  },
+  "packageManager": "pnpm@10.11.0"
+}

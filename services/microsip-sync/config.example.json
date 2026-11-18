@@ -1,0 +1,17 @@
+{
+  "apiBaseUrl": "http://localhost:3000/api/v1",
+  "organizationId": "00000000-0000-4000-8000-000000000001",
+  "company": "EMPRESA_PRUEBA",
+  "branch": "SUCURSAL_PRUEBA",
+  "warehouse": "ALMACEN_PRUEBA",
+  "since": "2026-11-16T00:00:00.000Z",
+  "statuses": ["APPROVED"],
+  "pageSize": 100,
+  "pollIntervalMs": 30000,
+  "retryDelayMs": 60000,
+  "maxAttempts": 5,
+  "dataDir": "./data/simulator",
+  "adapter": { "mode": "simulator" },
+  "clients": { "00000000-0000-4000-8000-000000000002": "CLIENTE_PRUEBA" },
+  "units": { "kg": "KG", "pz": "PZA" }
+}
