@@ -7,7 +7,7 @@ VegyFresh is a monorepo for an administrator application, customer portal and te
 | `apps/frontend` | Administrator web application |
 | `apps/portal` | Customer portal |
 | `services/backend` | NestJS API and PostgreSQL integration |
-| `services/microsip-sync` | [Local order synchronizer reference](services/microsip-sync/README.md) |
+| `services/microsip-sync` | Local order synchronizer with durable history and Microsip simulator |
 | `clients/api-client` | Shared API client and generated contract |
 | `jobs/seed-api` | Finite API seed |
 | `infrastructure/keycloak` | Local identity provider and realm |
@@ -23,6 +23,8 @@ make contract
 ```
 
 Individual targets include `make lint`, `make check-types`, `make test` and `make build`. See [workspace tooling](infrastructure/tooling/README.md) for dependency updates and volume usage. Each unit also documents its own development and deployment commands.
+
+The [Microsip synchronizer](services/microsip-sync/README.md) runs separately next to Microsip. Its .NET 10 engine supports local verification with a persistent simulator.
 
 ## Authentication and runtime
 

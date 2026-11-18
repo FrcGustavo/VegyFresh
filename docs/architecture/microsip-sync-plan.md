@@ -1,14 +1,88 @@
 # Plan de sincronización con Microsip
 
-La [referencia TypeScript](../../services/microsip-sync/README.md) lee los
-pedidos de WhatsApp mediante la API, desde una fecha UTC explícita. Conserva
-el historial en SQLite y permite probar la recuperación con un simulador.
+Estado: sincronizador local implementado con simulador persistente. La conexión real a Microsip y el piloto siguen pendientes de los requisitos del cliente. El único desarrollo de este plan es el sincronizador.
 
-VegyFresh sigue siendo la autoridad para acceso a la organización y lectura
-de pedidos. El sincronizador mantiene localmente las correspondencias de
-cliente y unidad, y usa el folio exacto del producto como clave externa. Los
-precios se determinarán en Microsip. El resultado queda en el historial local.
+## Implementación disponible
 
-Para el piloto se requiere una instalación de Windows con licencia y acceso
-autorizado a una empresa de prueba. Queda por comprobar la validación de
-catálogos, la aplicación de precios y la conciliación tras una interrupción.
+La unidad [services/microsip-sync](../../services/microsip-sync/README.md) consulta la API existente, pagina los pedidos, vuelve a revisar aprobaciones y valida relaciones, folios, cantidades y unidades. Por defecto selecciona pedidos de WhatsApp aprobados desde una fecha UTC obligatoria.
+
+Conserva historial y transiciones en SQLite, guarda la intención antes de enviar, concilia interrupciones y deja los resultados inciertos para revisión manual. Incluye bloqueo por empresa, reintentos limitados, comandos de historial/resolución y un simulador que conserva los folios después de reiniciar. No se modificaron aplicaciones ni contratos de API de VegyFresh.
+
+El motor operativo usa C#/.NET 10 con un simulador. TypeScript se conserva
+como referencia. La validación portable usa HTTP y SQLite temporales, un
+simulador persistente e interrupciones de procesos. Un fixture comprueba
+la continuidad del historial entre TypeScript y .NET.
+
+## Validación real pendiente
+
+El piloto requiere Windows, licencia y una empresa de prueba para verificar
+la integración, los catálogos, la aplicación de precios y la recuperación.
+
+## Alcance acordado
+
+- El cliente pide por WhatsApp. Puede escribir `tomate 5` o `5 tomate`.
+- VegyFresh identifica los productos y guarda las cantidades.
+- El catálogo se captura a mano en VegyFresh, con base en Microsip.
+- El folio del producto debe coincidir con su clave en Microsip. El UUID es interno.
+- El sincronizador se instala junto a Microsip. Consulta VegyFresh por pedidos pendientes.
+- Registra los pedidos en Microsip y guarda el resultado en su propio historial local.
+- Microsip determina los precios según la lista del cliente.
+- El sincronizador usa productos y cantidades. Los importes existentes en VegyFresh no determinan el precio en Microsip.
+- El objetivo del flujo es capturar el pedido sin cotizar al cliente por WhatsApp.
+- Se usa la captura actual de WhatsApp, el catálogo y la API existentes.
+- No se modifica VegyFresh. Tampoco se agregan pantallas, campos, estados o rutas de API.
+- El portal, la facturación y la sincronización de inventario quedan fuera del alcance.
+
+## Punto de partida
+
+El código de WhatsApp ya interpreta mensajes y crea pedidos pendientes de revisión.
+La API actual permite consultar pedidos con su cliente, productos y cantidades.
+Los productos y clientes ya tienen folio y UUID.
+El sincronizador utiliza esos datos tal como se entregan hoy.
+Esta revisión fue del código; no se probó el flujo con WhatsApp o Microsip reales.
+
+## Pasos de trabajo
+
+1. **Configurar el acceso.** Usar la autenticación actual de VegyFresh con acceso a la organización correspondiente.
+   Configurar la empresa y el almacén de Microsip en el sincronizador.
+2. **Consultar pedidos.** Leer periódicamente todas las páginas necesarias de la API actual.
+   Seleccionar los pedidos de WhatsApp que cumplan la regla acordada y aún no estén registrados.
+   Volver a consultar pedidos anteriores para detectar aprobaciones posteriores.
+3. **Relacionar los datos.** Usar el folio del producto como clave en Microsip.
+   Comprobar unidades y cantidades. Resolver la relación del cliente en la configuración local.
+   Detener el registro si falta una coincidencia.
+4. **Registrar en Microsip.** Usar su mecanismo de integración soportado.
+   Dejar que Microsip determine precios, descuentos e impuestos.
+5. **Guardar el resultado localmente.** Conservar el identificador del pedido de VegyFresh,
+   el folio de Microsip, la fecha y cualquier error. Consultar ese historial antes de registrar otro pedido.
+6. **Resolver interrupciones.** Retomar el trabajo después de un corte de internet o reinicio.
+   Si no se sabe si Microsip guardó el pedido, comprobarlo antes de repetirlo.
+   Si no puede comprobarse, dejarlo para revisión manual.
+   Ejecutar una sola instancia por empresa para evitar registros simultáneos.
+7. **Probar y hacer un piloto.** Usar una instalación de prueba y después un cliente.
+   Confirmar productos, cantidades, unidades, precios y folios antes de ampliar el uso.
+
+## Qué necesitamos del cliente
+
+- Versión exacta de Microsip y módulos contratados.
+- Acceso al mecanismo de integración y sus condiciones de uso.
+- Acceso autorizado a VegyFresh mediante su autenticación actual.
+- Una computadora disponible para ejecutar el sincronizador.
+- Un cliente y algunos productos de ejemplo con sus claves y unidades.
+- Una copia autorizada para pruebas, cuando esté disponible.
+
+## Puntos por confirmar
+
+- Si solo se sincronizarán pedidos aprobados. Es la propuesta inicial.
+- Desde qué fecha se tomarán pedidos para evitar importar el historial completo.
+- Cómo identificar al cliente en Microsip. No asumir que ambos folios ya coinciden.
+- En qué empresa, sucursal y almacén se registrarán los pedidos.
+- Si la integración permite registrar el pedido y aplicar la lista del cliente sin enviar precios.
+- Cómo localizar en Microsip un pedido ya registrado tras una interrupción.
+- Cómo consultar el historial local y quién atenderá los errores.
+- Cómo tratar cambios o cancelaciones después de sincronizar. Para el piloto, se propone resolverlos en Microsip.
+
+El control local evita repetir el mismo identificador de pedido de VegyFresh.
+Dos pedidos distintos creados por mensajes repetidos requieren revisión; el sincronizador no cambia la captura de WhatsApp.
+Los resultados se consultarán en el sincronizador. No se devolverán a VegyFresh en este alcance.
+La conexión real y la aplicación de precios quedan pendientes de probar con Microsip.

@@ -1,0 +1,19 @@
+services:
+  sync:
+    build:
+      context: ../..
+      dockerfile: services/microsip-sync/Dockerfile
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 2m
+    environment:
+      MICROSIP_SYNC_TOKEN_FILE: /run/secrets/api-token
+      MICROSIP_SYNC_LOCK_DIR: /microsip-locks
+    volumes:
+      - ./sync.local.json:/config/sync.json:ro
+      - ./data:/data
+      - ./api-token.local:/run/secrets/api-token:ro
+      - microsip_locks:/microsip-locks
+volumes:
+  microsip_locks:
+    name: vegyfresh-microsip-locks
