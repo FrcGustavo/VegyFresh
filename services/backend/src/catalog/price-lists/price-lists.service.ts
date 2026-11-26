@@ -5,6 +5,7 @@ import { UpdatePriceListDto } from './dto/update-price-list.dto';
 import { PriceList } from './entities/price-list.entity';
 import { ILike, Repository } from 'typeorm';
 import { FoliosService } from '../../folios/folios.service';
+import { rejectMicrosipIdentityFields } from '../microsip-import/microsip-identity.guard';
 
 type PriceListOrderField = 'id' | 'folio' | 'name' | 'createdAt' | 'updatedAt';
 
@@ -25,6 +26,7 @@ export class PriceListsService {
   ) {}
 
   async create(createPriceListDto: CreatePriceListDto, organizationId: string) {
+    rejectMicrosipIdentityFields(createPriceListDto);
     const priceListFolio = await this.foliosService.generateFolio(
       'price_lists',
       organizationId,
@@ -79,6 +81,7 @@ export class PriceListsService {
     updatePriceListDto: UpdatePriceListDto,
     organizationId: string,
   ) {
+    rejectMicrosipIdentityFields(updatePriceListDto);
     const priceList = await this.findOne(id, organizationId);
     this.priceListsRepository.merge(priceList, updatePriceListDto);
     return this.priceListsRepository.save(priceList);

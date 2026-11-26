@@ -14,6 +14,11 @@ import { Organization } from '../../organizations/entities/organization.entity';
 
 @Entity('clients')
 @Unique('UQ_clients_org_folio', ['organization_id', 'folio'])
+@Unique('UQ_clients_microsip', [
+  'organization_id',
+  'microsip_company',
+  'microsip_external_id',
+])
 export class Client {
   @PrimaryColumn({ type: 'uuid' })
   @Generated('uuid')
@@ -63,6 +68,12 @@ export class Client {
 
   @Column({ type: 'uuid', nullable: true })
   price_list_id: string | null;
+
+  @Column({ type: 'varchar', length: 100, nullable: true, select: false })
+  microsip_company!: string | null;
+
+  @Column({ type: 'varchar', length: 100, nullable: true, select: false })
+  microsip_external_id!: string | null;
 
   @Column({ type: 'uuid' })
   organization_id: string;

@@ -10,6 +10,7 @@ import { Client } from './entities/client.entity';
 import { Brackets, Repository } from 'typeorm';
 import { PriceList } from '../catalog/price-lists/entities/price-list.entity';
 import { FoliosService } from '../folios/folios.service';
+import { rejectMicrosipIdentityFields } from '../catalog/microsip-import/microsip-identity.guard';
 
 type ClientOrderField =
   | 'id'
@@ -38,6 +39,7 @@ export class ClientsService {
   ) {}
 
   async create(createClientDto: CreateClientDto, organizationId: string) {
+    rejectMicrosipIdentityFields(createClientDto);
     const priceList = await this.getPriceList(
       organizationId,
       createClientDto.price_list_id,
@@ -115,6 +117,7 @@ export class ClientsService {
     updateClientDto: UpdateClientDto,
     organizationId: string,
   ) {
+    rejectMicrosipIdentityFields(updateClientDto);
     const client = await this.findOne(id, organizationId);
     const priceList =
       updateClientDto.price_list_id === undefined

@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { SwaggerModule } from '@nestjs/swagger';
 import { json } from 'express';
 import type { IncomingMessage, ServerResponse } from 'http';
+import { parseMicrosipImport } from './catalog/microsip-import/microsip-import.middleware';
 import { AppModule } from './app.module';
 import { createOpenApiDocument } from './openapi';
 
@@ -9,6 +10,7 @@ type RawBodyRequest = IncomingMessage & { rawBody?: string };
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.use(parseMicrosipImport);
   app.use(
     json({
       verify: (req: RawBodyRequest, _res: ServerResponse, buffer: Buffer) => {
