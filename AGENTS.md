@@ -19,3 +19,5 @@ Keep package names stable when moving units. Makefiles expose commands; each uni
 Inspect working-tree changes before editing and preserve unrelated work. Do not commit, push or deploy unless explicitly requested. Never read or publish local secrets as part of documentation. Keep authorization and organization/client isolation authoritative in the API.
 
 Run the affected units' lint, type checks, meaningful tests and builds. Run integration checks when contracts or runtime boundaries change. Report checks that could not run. Comments explain non-obvious reasons, not code narration.
+
+For requests to prepare an issue, implementation branch, commits, and pull request, follow [the `create-pr` skill](agents/create-pr/SKILL.md). This workflow requires the user's authorization for external changes.

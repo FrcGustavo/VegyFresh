@@ -1,8 +1,11 @@
 # Local Keycloak development realm
 
-This unit defines a local-only Keycloak 26.8.1 service and the `vegyfresh`
-realm used by the applications and API. It does not provision application
-accounts or link existing profiles.
+This realm documents the previous development stack. The default setup uses
+[OIDC and Auth0](../../docs/architecture/authentication.md).
+
+This unit retains a local Keycloak 26.8.1 service and the original `vegyfresh`
+realm definition. Application accounts and identity links live in VegyFresh's
+database.
 
 Run commands from the repository root:
 
@@ -35,10 +38,8 @@ The realm defines two public OpenID Connect clients:
 | `vegyfresh-portal` | `http://localhost:5174` | `vegyfresh-api`, `vegyfresh-portal` |
 
 Both use Authorization Code flow with PKCE S256 and disable implicit flow. The
-admin client enables Direct Access Grants only in this local
-development realm so `jobs/seed-api` can authenticate without a browser; the
-portal client keeps Direct Access Grants disabled. Do not copy this local
-setting into production. The `basic`, `profile`, and `email` scopes are enabled
+original admin client also enabled Direct Access Grants for the former seed
+workflow. The `basic`, `profile`, and `email` scopes are enabled
 by default; `basic` includes the subject in access tokens. The optional
 `vegyfresh-api` scope adds that audience to access tokens, while
 `vegyfresh-portal` is a scope marker. The export enables registration and
