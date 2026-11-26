@@ -1,6 +1,6 @@
 # Sincronizador Microsip (.NET 10)
 
-Servicio local sin interfaz gráfica. El motor portable consulta la API existente
+Servicio local de pedidos y aplicación de catálogos con interfaz gráfica separada. El motor portable consulta la API existente
 de VegyFresh mediante HTTP, conserva SQLite e incluye un simulador persistente.
 El proceso independiente `Microsip.NativeHost.exe` carga la DLL únicamente en
 Windows x86. No requiere Node.js para operar. No instala Windows, máquinas
@@ -9,7 +9,8 @@ virtuales, servicios de sistema ni modifica una instalación Microsip.
 El simulador es el modo predeterminado. **No se ha certificado Microsip real**:
 faltan Windows, licencia y empresa de prueba autorizada. Los fuentes TypeScript
 se conservan como referencia en `src/`; `make reference-check` ejecuta sus pruebas.
-No se modificó la API ni se escriben estados o pedidos en VegyFresh.
+El flujo de pedidos no escribe estados ni pedidos en VegyFresh. La importación
+de catálogos utiliza un endpoint autorizado de la API.
 
 ## Ejecución
 
@@ -37,10 +38,63 @@ dotnet run --project dotnet/Cli/Microsip.Sync.csproj -- once --config sync.local
 ```
 
 La publicación autocontenida queda en `artifacts/win-x86/`: `sync/`, `native/` y
-`diagnostic/`. Copiar cada directorio completo a Windows; no necesita .NET ni
+`diagnostic/`, más `Microsip.Sync.Desktop-win-x86.zip`. Copiar cada directorio completo a Windows; no necesita .NET ni
 Node.js instalados. Ejecutar `sync/Microsip.Sync.exe once --config RUTA_JSON`.
 El diagnóstico sigue siendo independiente: [diagnostic/README.md](diagnostic/README.md).
 La compilación cruzada no demuestra carga ni compatibilidad de la DLL.
+
+## Importación de catálogos en Windows
+
+Ejecutar `make -C services/microsip-sync publish-desktop-windows` y descomprimir
+`artifacts/win-x86/Microsip.Sync.Desktop-win-x86.zip` en un directorio propio de
+Windows x86. Abrir `Microsip.Sync.Desktop.exe`. La aplicación es autocontenida;
+el ZIP no es un instalador. Los ejemplos incluidos son ficticios y no se deben
+enviar a producción sin adaptar IDs y permisos.
+
+Introducir la URL de la API terminada en `/api/v1`, el UUID de la organización,
+una clave **estable** para la empresa Microsip y la ruta de un archivo local
+privado con el token Bearer de VegyFresh. Guardar la configuración y seleccionar
+un archivo JSON normalizado como [catalog-snapshot.example.json](catalog-snapshot.example.json).
+La aplicación guarda solo la **ruta** del token bajo el perfil local de Windows;
+nunca almacena su contenido en la configuración ni en el ZIP. La API valida la
+autorización y el aislamiento de organización. El token debe contar con los
+permisos de importación de catálogos para la organización indicada.
+En concreto, requiere `catalog:manage`. Antes de usar la ventana, desplegar la
+versión de backend con el endpoint de importación y ejecutar su migración de
+identidades Microsip. La publicación cruzada produce un ejecutable Windows x86,
+pero la operación con Microsip real y el flujo completo deben verificarse en
+una máquina Windows x86 autorizada.
+
+Al pulsar **Sincronizar**, la ventana solicita una vista previa y muestra para
+productos, listas, precios y clientes las cantidades creadas, actualizadas y
+sin cambios. La aplicación solicita confirmación explícita antes de aplicar.
+La fecha y hora de la última aplicación exitosa se conservan entre arranques y
+frente a errores. No se pueden iniciar dos importaciones a la vez. Si un envío
+queda pendiente por una respuesta ambigua, volver a seleccionar **exactamente el
+mismo archivo** y pulsar Sincronizar: se reintenta con la misma clave de
+idempotencia. El estado local guarda solo hash del archivo y UUID de esa clave,
+no una copia del catálogo. Mantener el archivo disponible hasta terminar.
+
+El JSON de entrada tiene exactamente cuatro arreglos: `products`, `priceLists`,
+`prices` y `clients`. Cada producto incluye `externalId`, `name`, `unit` (`kg` o
+`pz`) y `supplierId` (UUID); `vegyfreshId` (UUID) es opcional. Cada lista incluye
+`externalId`, `name` y opcionalmente `vegyfreshId`. Cada precio incluye
+`productExternalId`, `priceListExternalId` y `price` como cadena decimal con
+máximo dos decimales. Cada cliente incluye `externalId`, `name`, `phoneNumber`,
+`priceListExternalId`, y opcionalmente `email` y `vegyfreshId`. Las referencias
+de precio y cliente deben corresponder a entradas del mismo archivo. No incluir
+`organizationId` ni `company`: la aplicación los añade desde la configuración.
+El archivo no puede superar 2 MiB y cada arreglo admite como máximo 2,500
+entradas. Una vinculación explícita mediante `vegyfreshId` debe corresponder a
+la entidad esperada; revisar también el nombre de la lista, el proveedor y la
+unidad cuando la API rechace la importación.
+
+La extracción de datos crudos de Microsip, el mapeo de sus campos a este esquema
+y la lectura directa desde una instalación real siguen **sin verificar**. Este
+flujo consume un archivo ya normalizado; el operador debe preparar y revisar
+las equivalencias de artículos, proveedores, unidades, listas y clientes. La
+importación escribe únicamente los catálogos autorizados en VegyFresh; no
+escribe existencias, pedidos ni estados de pedido.
 
 `compose.yml` permite ejecutar continuamente el simulador Linux. Configurar
 `dataDir` en `/data/simulator`, preparar `sync.local.json` y `api-token.local`, y

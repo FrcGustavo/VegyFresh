@@ -47,6 +47,68 @@ JsonElement Order(Config c, string? id = null, string status = "APPROVED", strin
     });
 }
 JsonElement Change(JsonElement order, string from, string to) => JsonDocument.Parse(order.GetRawText().Replace(from, to)).RootElement.Clone();
+await Test("catalog preview, durable apply and scoped status", async () =>
+{
+    var folder = Path.Combine(temp, Guid.NewGuid().ToString()); Directory.CreateDirectory(folder);
+    var organization = Guid.NewGuid().ToString("D");
+    var configPath = Path.Combine(folder, "catalog.json");
+    File.WriteAllText(configPath, JsonSerializer.Serialize(new { apiBaseUrl = "http://127.0.0.1:43210/api/v1", organizationId = organization, company = "test", dataDir = "state" }));
+    var snapshotPath = Path.Combine(folder, "snapshot.json");
+    File.WriteAllText(snapshotPath, "{\"products\":[],\"priceLists\":[],\"prices\":[],\"clients\":[]}");
+    var config = CatalogImportConfig.Load(configPath);
+    Assert(config.OrganizationId == organization && config.DataDir == Path.Combine(folder, "state"));
+    Environment.SetEnvironmentVariable("MICROSIP_SYNC_API_TOKEN", "catalog-test-token");
+    var calls = new List<(string Mode, string? Key)>();
+    var handler = new Handler(request =>
+    {
+        var mode = request.RequestUri!.Segments.Last();
+        var key = request.Headers.TryGetValues("Idempotency-Key", out var values) ? values.Single() : null;
+        calls.Add((mode, key));
+        Assert(request.Headers.Authorization!.Parameter == "catalog-test-token");
+        var body = JsonDocument.Parse(request.Content!.ReadAsStringAsync().GetAwaiter().GetResult()).RootElement;
+        Assert(body.GetProperty("organizationId").GetString() == organization && body.GetProperty("company").GetString() == "test");
+        return JsonSerializer.Serialize(new
+        {
+            mode,
+            appliedAt = mode == "apply" ? "2026-11-24T00:00:00Z" : null,
+            products = new { created = 0, updated = 0, unchanged = 0 },
+            priceLists = new { created = 0, updated = 0, unchanged = 0 },
+            prices = new { created = 0, updated = 0, unchanged = 0 },
+            clients = new { created = 0, updated = 0, unchanged = 0 }
+        });
+    });
+    try
+    {
+        using var client = new CatalogImportClient(config, handler);
+        var prepared = await client.Preview(snapshotPath);
+        Assert(prepared.Summary.Mode == "preview" && !client.HasPendingApply());
+        var applied = await client.Apply(prepared);
+        Assert(applied.AppliedAt.HasValue && !client.HasPendingApply() && client.LastSuccess() == applied);
+        Assert(calls.Count == 2 && calls[0].Key == null && Guid.TryParseExact(calls[1].Key, "D", out _));
+    }
+    finally { Environment.SetEnvironmentVariable("MICROSIP_SYNC_API_TOKEN", null); }
+});
+await Test("catalog definite conflict clears pending intent", async () =>
+{
+    var folder = Path.Combine(temp, Guid.NewGuid().ToString()); Directory.CreateDirectory(folder);
+    var configPath = Path.Combine(folder, "catalog.json");
+    File.WriteAllText(configPath, JsonSerializer.Serialize(new { apiBaseUrl = "http://127.0.0.1:43210/api/v1", organizationId = Guid.NewGuid().ToString("D"), company = "test", dataDir = "state" }));
+    var config = CatalogImportConfig.Load(configPath);
+    var snapshotPath = Path.Combine(folder, "snapshot.json");
+    File.WriteAllText(snapshotPath, "{\"products\":[],\"priceLists\":[],\"prices\":[],\"clients\":[]}");
+    Environment.SetEnvironmentVariable("MICROSIP_SYNC_API_TOKEN", "catalog-test-token");
+    try
+    {
+        var preview = "{\"mode\":\"preview\",\"appliedAt\":null,\"products\":{\"created\":0,\"updated\":0,\"unchanged\":0},\"priceLists\":{\"created\":0,\"updated\":0,\"unchanged\":0},\"prices\":{\"created\":0,\"updated\":0,\"unchanged\":0},\"clients\":{\"created\":0,\"updated\":0,\"unchanged\":0}}";
+        using var client = new CatalogImportClient(config, new CatalogHandler(request => request.RequestUri!.Segments.Last() == "preview"
+            ? new(HttpStatusCode.OK) { Content = new StringContent(preview, Encoding.UTF8, "application/json") }
+            : new(HttpStatusCode.Conflict) { Content = new StringContent("{\"code\":\"MICROSIP_IMPORT_CONFLICT\"}", Encoding.UTF8, "application/json") }));
+        var prepared = await client.Preview(snapshotPath);
+        await Reject(() => client.Apply(prepared));
+        Assert(!client.HasPendingApply() && client.LastSuccess() == null);
+    }
+    finally { Environment.SetEnvironmentVariable("MICROSIP_SYNC_API_TOKEN", null); }
+});
 async Task WithCycle(Func<Config, History, Simulator, JsonElement, Task> test)
 {
     var c = C(); using var h = new History(c); h.BindAdapter(c); using var s = new Simulator(c.DataDir);
@@ -357,6 +419,10 @@ sealed class FaultAdapter(IAdapter inner, string fault = "", Action? before = nu
 sealed class Handler(Func<HttpRequestMessage, string> body, HttpStatusCode status = HttpStatusCode.OK) : HttpMessageHandler
 {
     protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) => Task.FromResult(new HttpResponseMessage(status) { Content = new StringContent(body(request), Encoding.UTF8, "application/json") });
+}
+sealed class CatalogHandler(Func<HttpRequestMessage, HttpResponseMessage> response) : HttpMessageHandler
+{
+    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) => Task.FromResult(response(request));
 }
 sealed class FakeNative : INativeApi
 {
