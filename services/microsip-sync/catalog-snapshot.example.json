@@ -1,0 +1,29 @@
+{
+  "products": [
+    {
+      "externalId": "ARTICULO_PRUEBA_001",
+      "name": "Artículo de prueba",
+      "unit": "kg",
+      "supplierId": "00000000-0000-4000-8000-000000000002"
+    }
+  ],
+  "priceLists": [
+    { "externalId": "LISTA_PRUEBA_001", "name": "Lista de prueba" }
+  ],
+  "prices": [
+    {
+      "productExternalId": "ARTICULO_PRUEBA_001",
+      "priceListExternalId": "LISTA_PRUEBA_001",
+      "price": "12.50"
+    }
+  ],
+  "clients": [
+    {
+      "externalId": "CLIENTE_PRUEBA_001",
+      "name": "Cliente de prueba",
+      "phoneNumber": "+520000000000",
+      "email": "cliente@example.invalid",
+      "priceListExternalId": "LISTA_PRUEBA_001"
+    }
+  ]
+}

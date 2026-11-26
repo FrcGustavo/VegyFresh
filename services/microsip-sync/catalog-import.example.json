@@ -1,0 +1,7 @@
+{
+  "apiBaseUrl": "https://vegyfresh.example.invalid/api/v1",
+  "organizationId": "00000000-0000-4000-8000-000000000001",
+  "company": "EMPRESA_PRUEBA",
+  "tokenFile": "C:\\ruta\\privada\\vegyfresh-token.txt",
+  "dataDir": "catalog-import-data"
+}
