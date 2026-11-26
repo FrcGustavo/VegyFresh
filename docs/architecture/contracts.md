@@ -10,9 +10,9 @@ operations](../../services/backend/README.md).
 The administrator and portal own separate TanStack Start server routes and
 session cookies. Their server-side proxies apply application-specific route
 allowlists and forward authorized requests to the API. The API verifies identity
-and resolves local permissions and organization scope. An existing profile is
-never linked merely by matching email. [Keycloak setup](../../infrastructure/keycloak/README.md)
-describes the local realm and identity mapping prerequisites.
+and resolves local permissions and organization or customer scope. Identity
+links use the exact issuer and subject. The [OIDC setup guide](authentication.md)
+describes how to provision administrator accounts and link portal customers.
 
 `make test-runtime` runs the built servers with disposable identity and API
 fixtures, checking session isolation and proxy behavior. It does not provision

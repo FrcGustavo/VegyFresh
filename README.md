@@ -10,7 +10,6 @@ VegyFresh is a monorepo for an administrator application, customer portal and te
 | `services/microsip-sync` | Local order synchronizer with durable history and Microsip simulator |
 | `clients/api-client` | Shared API client and generated contract |
 | `jobs/seed-api` | Finite API seed |
-| `infrastructure/keycloak` | Local identity provider and realm |
 
 ## Checks
 
@@ -28,13 +27,13 @@ The [Microsip synchronizer](services/microsip-sync/README.md) runs separately ne
 
 ## Authentication and runtime
 
-Keycloak provides identity. The two web applications run TanStack Start servers with separate same-origin API proxies and encrypted server-managed session cookies. The API remains authoritative for organization access and permissions. See [identity setup](infrastructure/keycloak/README.md), [administrator runtime](apps/frontend/README.md), [portal runtime](apps/portal/README.md), and [API setup](services/backend/README.md). Existing accounts require explicit identity links; do not assume email alone links an account.
+The two web applications use OpenID Connect for sign-in and OAuth 2.0 access tokens for the API. Auth0 provides identity for the development stack. The TanStack Start servers use separate same-origin API proxies and protected session cookies. The API resolves permissions and organization or customer access from VegyFresh data. See [OIDC and Auth0 setup](docs/architecture/authentication.md), [administrator runtime](apps/frontend/README.md), [portal runtime](apps/portal/README.md), and [API setup](services/backend/README.md).
 
 Build the application images from the repository root using `apps/frontend/Dockerfile`, `apps/portal/Dockerfile`, or `services/backend/Dockerfile`. Runtime configuration belongs in the deployment environment, not in the image. The API exposes Swagger at `/api/docs` and OpenAPI JSON at `/api/docs-json`. See [seed configuration](jobs/seed-api/README.md) before targeting an API with the seed job.
 
 ## Unit commands and validation
 
-From the repository root, `make dev` (or `make up`) starts the unified `vegyfresh` Docker Compose stack (`keycloak`, `db`, `migrate`, `api`, `frontend`, and `portal`), and `make down` stops it. Each unit also owns its own `Makefile` (and `Dockerfile`/`compose` when required) for standalone commands; for example, `make -C clients/api-client check`
+Configure the root `.env` using the [Auth0 setup guide](docs/architecture/authentication.md). From the repository root, `make dev` or `make up` starts `db`, `migrate`, `api`, `frontend`, and `portal`. `make down` stops the stack. Each unit also owns its own `Makefile` and any Docker definitions it needs for standalone commands. For example, `make -C clients/api-client check`
 checks the shared client and `make -C jobs/seed-api check` validates the seed
 without running it. The applications use MUI directly for their components and
 own their theme configuration.

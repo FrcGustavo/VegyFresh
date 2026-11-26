@@ -12,7 +12,6 @@ consuming shared packages through explicit relative links and public exports.
 | `services/microsip-sync` | Portable .NET 10 WhatsApp order synchronization, SQLite recovery, simulator and separate Windows x86 Microsip bridge |
 | `clients/api-client` | Shared client and generated OpenAPI contract |
 | `jobs/seed-api` | Finite API seed job |
-| `infrastructure/keycloak` | Local development realm and identity provider |
 
 Applications use domain, application, infrastructure and presentation areas.
 The applications use MUI directly for presentation and theme configuration.
