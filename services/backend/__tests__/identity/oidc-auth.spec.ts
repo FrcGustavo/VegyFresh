@@ -5,11 +5,11 @@ import { createServer, Server } from 'node:http';
 import { AddressInfo } from 'node:net';
 import { Strategy } from 'passport-jwt';
 import {
-  createKeycloakPassportOptions,
-  KeycloakAuthSettings,
-  resolveKeycloakSettings,
-  validateKeycloakClientClaims,
-} from 'src/identity/keycloak-auth.config';
+  createOidcPassportOptions,
+  OidcAuthSettings,
+  resolveOidcSettings,
+  validateOidcClientClaims,
+} from 'src/identity/oidc-auth.config';
 
 const { privateKey, publicKey } = generateKeyPairSync('rsa', {
   modulusLength: 2048,
@@ -17,7 +17,7 @@ const { privateKey, publicKey } = generateKeyPairSync('rsa', {
 const otherKey = generateKeyPairSync('rsa', { modulusLength: 2048 }).privateKey;
 const jwt = new JwtService();
 let server: Server;
-let settings: KeycloakAuthSettings;
+let settings: OidcAuthSettings;
 
 beforeAll(async () => {
   const jwk = publicKey.export({ format: 'jwk' });
@@ -36,8 +36,7 @@ beforeAll(async () => {
     audience: 'vegyfresh-api',
     adminClientId: 'vegyfresh-admin',
     portalClientId: 'vegyfresh-portal',
-    adminScope: 'vegyfresh-api',
-    portalScope: 'vegyfresh-portal',
+    provisioningSecret: 'test-provisioning-secret-more-than-32-bytes',
     jwksUri: `http://127.0.0.1:${port}/certs`,
   };
 });
@@ -48,15 +47,19 @@ afterAll(async () => {
   );
 });
 
-function token(claims: Record<string, unknown> = {}, key = privateKey): string {
+function token(
+  claims: Record<string, unknown> = {},
+  key = privateKey,
+  type = 'at+jwt',
+): string {
   const payload: Record<string, unknown> = {
     sub: 'subject',
     iss: settings.issuer,
     aud: settings.audience,
     exp: Math.floor(Date.now() / 1000) + 300,
-    azp: settings.adminClientId,
+    client_id: settings.adminClientId,
+    jti: 'test-jti',
     scope: 'openid vegyfresh-api',
-    typ: 'Bearer',
     ...claims,
   };
   if (payload.exp === undefined) delete payload.exp;
@@ -64,17 +67,18 @@ function token(claims: Record<string, unknown> = {}, key = privateKey): string {
     privateKey: key.export({ type: 'pkcs8', format: 'pem' }),
     algorithm: 'RS256',
     keyid: 'test-key',
+    header: { typ: type, alg: 'RS256' },
   });
 }
 
 function authenticate(raw: string, kind: 'admin' | 'portal'): Promise<boolean> {
   const strategy = new Strategy(
-    createKeycloakPassportOptions(settings),
+    createOidcPassportOptions(settings),
     (payload: unknown, done) => {
       try {
         if (!payload || typeof payload !== 'object' || Array.isArray(payload))
           return done(null, false);
-        validateKeycloakClientClaims(
+        validateOidcClientClaims(
           payload as Record<string, unknown>,
           settings,
           kind,
@@ -96,13 +100,13 @@ function authenticate(raw: string, kind: 'admin' | 'portal'): Promise<boolean> {
   });
 }
 
-describe('Keycloak JWT and JWKS validation', () => {
+describe('OIDC JWT and JWKS validation', () => {
   it('accepts signed admin and portal access tokens for their own clients', async () => {
     expect(await authenticate(token(), 'admin')).toBe(true);
     expect(
       await authenticate(
         token({
-          azp: settings.portalClientId,
+          client_id: settings.portalClientId,
           scope: 'openid vegyfresh-api vegyfresh-portal',
         }),
         'portal',
@@ -130,26 +134,32 @@ describe('Keycloak JWT and JWKS validation', () => {
       expect(await authenticate(invalid, 'admin')).toBe(false);
   });
 
-  it('rejects invalid subject, token type, client, and scope', async () => {
+  it('rejects invalid subjects, client IDs and non-user access tokens', async () => {
     for (const claims of [
       { sub: '' },
       { sub: 'x'.repeat(256) },
-      { typ: 'ID' },
-      { azp: settings.portalClientId },
-      { scope: 'openid' },
+      { client_id: 'other-client' },
+      { client_id: settings.portalClientId },
+      { sub: 'vegyfresh-admin@clients' },
     ])
       expect(await authenticate(token(claims), 'admin')).toBe(false);
   });
 
-  it('rejects cross-client tokens and requires the portal scope', async () => {
-    expect(await authenticate(token(), 'portal')).toBe(false);
+  it('requires the RFC 9068 access token header type', async () => {
+    expect(await authenticate(token({}, privateKey, 'JWT'), 'admin')).toBe(
+      false,
+    );
     expect(
-      await authenticate(token({ azp: settings.portalClientId }), 'portal'),
-    ).toBe(false);
+      await authenticate(token({}, privateKey, 'application/at+jwt'), 'admin'),
+    ).toBe(true);
+  });
+
+  it('rejects cross-client tokens', async () => {
+    expect(await authenticate(token(), 'portal')).toBe(false);
     expect(
       await authenticate(
         token({
-          azp: settings.portalClientId,
+          client_id: settings.portalClientId,
           scope: 'vegyfresh-api vegyfresh-portal',
         }),
         'admin',
@@ -158,33 +168,32 @@ describe('Keycloak JWT and JWKS validation', () => {
   });
 });
 
-describe('Keycloak settings', () => {
-  it('derives the standard JWKS endpoint and client defaults', () => {
-    const config = {
-      get: (key: string) =>
-        key === 'KEYCLOAK_ISSUER'
-          ? 'https://identity.example/realm/'
-          : undefined,
+describe('OIDC settings', () => {
+  it('requires explicit endpoints and distinct clients', () => {
+    const values: Record<string, string> = {
+      OIDC_ISSUER: settings.issuer,
+      OIDC_JWKS_URI: settings.jwksUri,
+      OIDC_API_AUDIENCE: settings.audience,
+      OIDC_ADMIN_CLIENT_ID: settings.adminClientId,
+      OIDC_PORTAL_CLIENT_ID: settings.portalClientId,
+      OIDC_PROVISIONING_SECRET: settings.provisioningSecret,
     };
-    expect(resolveKeycloakSettings(config as never)).toMatchObject({
-      jwksUri: 'https://identity.example/realm/protocol/openid-connect/certs',
-      audience: 'vegyfresh-api',
-      adminClientId: 'vegyfresh-admin',
-      portalClientId: 'vegyfresh-portal',
-    });
-  });
-
-  it('rejects missing or unsafe endpoint configuration', () => {
-    for (const issuer of [
-      undefined,
-      'relative',
-      'https://user:pass@example.com/realm',
-      'https://example.com/realm?x=1',
-    ]) {
-      const config = {
-        get: (key: string) => (key === 'KEYCLOAK_ISSUER' ? issuer : undefined),
-      };
-      expect(() => resolveKeycloakSettings(config as never)).toThrow();
-    }
+    expect(
+      resolveOidcSettings({ get: (key: string) => values[key] } as never),
+    ).toEqual(settings);
+    expect(() =>
+      resolveOidcSettings({
+        get: (key: string) =>
+          key === 'OIDC_PORTAL_CLIENT_ID'
+            ? values.OIDC_ADMIN_CLIENT_ID
+            : values[key],
+      } as never),
+    ).toThrow();
+    expect(() =>
+      resolveOidcSettings({
+        get: (key: string) =>
+          key === 'OIDC_ISSUER' ? 'http://example.com/' : values[key],
+      } as never),
+    ).toThrow();
   });
 });

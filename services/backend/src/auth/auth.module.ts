@@ -5,7 +5,10 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { User } from '../users/entities/user.entity';
 import { AuthSession } from './entities/auth-session.entity';
-import { KeycloakAccessStrategy } from '../identity/strategies/keycloak.strategy';
+import {
+  OidcAccessStrategy,
+  OidcProvisioningStrategy,
+} from '../identity/strategies/oidc.strategy';
 import { AccessTokenGuard } from './guards/access-token.guard';
 import { RolesGuard } from './guards/roles.guard';
 import { IdentityModule } from '../identity/identity.module';
@@ -15,7 +18,8 @@ import { IdentityModule } from '../identity/identity.module';
   controllers: [AuthController],
   providers: [
     AuthService,
-    KeycloakAccessStrategy,
+    OidcAccessStrategy,
+    OidcProvisioningStrategy,
     {
       provide: APP_GUARD,
       useClass: AccessTokenGuard,

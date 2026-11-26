@@ -5,9 +5,10 @@ import { createServer, Server } from 'node:http';
 import { AddressInfo } from 'node:net';
 import { IdentityService } from 'src/identity/identity.service';
 import {
-  KeycloakAccessStrategy,
-  KeycloakPortalStrategy,
-} from 'src/identity/strategies/keycloak.strategy';
+  OidcAccessStrategy,
+  OidcPortalStrategy,
+  OidcProvisioningStrategy,
+} from 'src/identity/strategies/oidc.strategy';
 
 const issuer = 'https://identity.example/realms/vegyfresh';
 const { privateKey, publicKey } = generateKeyPairSync('rsa', {
@@ -24,8 +25,9 @@ const identity = new IdentityService(
   clients as never,
 );
 let server: Server;
-let admin: KeycloakAccessStrategy;
-let portal: KeycloakPortalStrategy;
+let admin: OidcAccessStrategy;
+let portal: OidcPortalStrategy;
+let provisioning: OidcProvisioningStrategy;
 
 beforeAll(async () => {
   server = createServer((_req, res) => {
@@ -48,12 +50,17 @@ beforeAll(async () => {
   const config = {
     get: (key: string) =>
       ({
-        KEYCLOAK_ISSUER: issuer,
-        KEYCLOAK_JWKS_URI: `http://127.0.0.1:${port}/certs`,
+        OIDC_ISSUER: issuer,
+        OIDC_JWKS_URI: `http://127.0.0.1:${port}/certs`,
+        OIDC_API_AUDIENCE: 'vegyfresh-api',
+        OIDC_ADMIN_CLIENT_ID: 'vegyfresh-admin',
+        OIDC_PORTAL_CLIENT_ID: 'vegyfresh-portal',
+        OIDC_PROVISIONING_SECRET: 'test-provisioning-secret-at-least-32-bytes',
       })[key],
   };
-  admin = new KeycloakAccessStrategy(config as never, identity);
-  portal = new KeycloakPortalStrategy(config as never, identity);
+  admin = new OidcAccessStrategy(config as never, identity);
+  portal = new OidcPortalStrategy(config as never, identity);
+  provisioning = new OidcProvisioningStrategy(config as never);
 });
 
 afterAll(async () => {
@@ -70,9 +77,9 @@ function token(claims: Record<string, unknown> = {}) {
       sub: 'external-subject',
       iss: issuer,
       aud: 'vegyfresh-api',
-      azp: 'vegyfresh-admin',
+      client_id: 'vegyfresh-admin',
+      jti: 'test-jti',
       scope: 'openid vegyfresh-api',
-      typ: 'Bearer',
       exp: Math.floor(Date.now() / 1000) + 300,
       email: 'token@example.test',
       realm_access: { roles: ['owner'] },
@@ -82,12 +89,13 @@ function token(claims: Record<string, unknown> = {}) {
       privateKey: privateKey.export({ type: 'pkcs8', format: 'pem' }),
       algorithm: 'RS256',
       keyid: 'test',
+      header: { typ: 'at+jwt', alg: 'RS256' },
     },
   );
 }
 
 function authenticate(
-  strategy: KeycloakAccessStrategy | KeycloakPortalStrategy,
+  strategy: OidcAccessStrategy | OidcPortalStrategy | OidcProvisioningStrategy,
   raw: string,
 ): Promise<unknown> {
   return new Promise((resolve, reject) => {
@@ -101,7 +109,7 @@ function authenticate(
   });
 }
 
-describe('Keycloak strategy adapters', () => {
+describe('OIDC strategy adapters', () => {
   it('resolves a verified admin token to database permissions and organization', async () => {
     identities.findOne.mockResolvedValue({ user_id: 'user-1' });
     users.findOne.mockResolvedValue({
@@ -138,7 +146,7 @@ describe('Keycloak strategy adapters', () => {
       authenticate(
         portal,
         token({
-          azp: 'vegyfresh-portal',
+          client_id: 'vegyfresh-portal',
           scope: 'vegyfresh-api vegyfresh-portal',
         }),
       ),
@@ -163,7 +171,7 @@ describe('Keycloak strategy adapters', () => {
       authenticate(
         admin,
         token({
-          azp: 'vegyfresh-portal',
+          client_id: 'vegyfresh-portal',
           scope: 'vegyfresh-api vegyfresh-portal',
         }),
       ),
@@ -171,9 +179,9 @@ describe('Keycloak strategy adapters', () => {
     expect(identities.findOne).not.toHaveBeenCalled();
   });
 
-  it('passes verified admin claims to onboarding only after validation', async () => {
+  it('resolves only linked admin identities after validation', async () => {
     const resolve = jest
-      .spyOn(identity, 'resolveAdminUser')
+      .spyOn(identity, 'resolveLinkedAdminUser')
       .mockResolvedValueOnce({
         sub: 'new-user',
         email: 'token@example.test',
@@ -184,11 +192,11 @@ describe('Keycloak strategy adapters', () => {
     await expect(authenticate(admin, token())).resolves.toMatchObject({
       sub: 'new-user',
     });
-    expect(resolve).toHaveBeenCalledWith(
-      issuer,
-      'external-subject',
-      expect.objectContaining({ email: 'token@example.test' }),
-    );
+    expect(resolve).toHaveBeenCalledWith(issuer, 'external-subject');
     resolve.mockRestore();
+    await expect(authenticate(provisioning, token())).resolves.toEqual({
+      issuer,
+      subject: 'external-subject',
+    });
   });
 });
