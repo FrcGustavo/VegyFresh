@@ -17,8 +17,10 @@ function keycloakProxy(fetchImpl: typeof fetch = vi.fn<typeof fetch>()) {
       VEGYFRESH_API_URL: "https://api.example.test",
       VEGYFRESH_PUBLIC_ORIGIN: portalOrigin,
       VEGYFRESH_SESSION_SECRET: "portal-session-secret-material-1234567890",
-      KEYCLOAK_ISSUER: "https://identity.example.test/realms/vegyfresh",
-      KEYCLOAK_CLIENT_ID: "vegyfresh-portal",
+      OIDC_ISSUER: "https://identity.example.test/realms/vegyfresh",
+      OIDC_CLIENT_ID: "vegyfresh-portal",
+      OIDC_CLIENT_SECRET: "test-secret",
+      OIDC_API_AUDIENCE: "vegyfresh-api",
       NODE_ENV: "production",
     },
     fetchImpl,
@@ -58,14 +60,8 @@ describe("portal server proxy", () => {
     expect(fetchImpl).not.toHaveBeenCalled();
   });
 
-  it("rejects the legacy local-provider setting", () => {
-    expect(() => createPortalProxy({
-      env: {
-        AUTH_PROVIDER: "local",
-        VEGYFRESH_PUBLIC_ORIGIN: portalOrigin,
-        NODE_ENV: "production",
-      },
-    })).toThrow("AUTH_PROVIDER must be keycloak; local authentication is not supported.");
+  it("requires confidential OIDC configuration", () => {
+    expect(() => createPortalProxy({ env: { VEGYFRESH_PUBLIC_ORIGIN: portalOrigin, NODE_ENV: "production" } })).toThrow("OIDC_ISSUER");
   });
 
   it("does not accept an admin cookie as a portal session", async () => {
@@ -77,7 +73,7 @@ describe("portal server proxy", () => {
       }),
     );
     expect(await response.json()).toEqual({
-      provider: "keycloak",
+      provider: "oidc",
       authenticated: false,
     });
     expect(fetchImpl).not.toHaveBeenCalled();
@@ -100,7 +96,7 @@ describe("portal server proxy", () => {
         },
       }),
     ).toEqual({
-      provider: "keycloak",
+      provider: "oidc",
       authenticated: true,
       client: {
         id: "client-1",
@@ -132,7 +128,7 @@ describe("portal server proxy", () => {
     expect(response.headers.get("vary")).toContain("Cookie");
     expect(cookies.some((cookie) => cookie.startsWith("vegyfresh_portal_access_token=;"))).toBe(true);
     expect(await response.json()).toEqual({
-      provider: "keycloak",
+      provider: "oidc",
       authenticated: false,
     });
   });
@@ -149,8 +145,10 @@ describe("portal server proxy", () => {
     expect(response.headers.getSetCookie()).toHaveLength(2);
     expect(response.headers.get("vary")).toContain("Cookie");
 
-    vi.stubEnv("KEYCLOAK_ISSUER", "http://localhost:8080/realms/vegyfresh");
-    vi.stubEnv("KEYCLOAK_CLIENT_ID", "vegyfresh-portal");
+    vi.stubEnv("OIDC_ISSUER", "http://localhost:8080/realms/vegyfresh");
+    vi.stubEnv("OIDC_CLIENT_ID", "vegyfresh-portal");
+    vi.stubEnv("OIDC_CLIENT_SECRET", "test-secret");
+    vi.stubEnv("OIDC_API_AUDIENCE", "vegyfresh-api");
     vi.stubEnv("VEGYFRESH_SESSION_SECRET", "portal-session-secret-material-1234567890");
     vi.stubEnv("VEGYFRESH_PUBLIC_ORIGIN", "http://localhost:5174");
     vi.stubEnv("VEGYFRESH_API_URL", "http://localhost:3000");

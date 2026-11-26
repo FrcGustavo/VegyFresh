@@ -80,18 +80,13 @@ export function createPortalProxy({
   env?: ServerEnvironment;
   fetchImpl?: typeof fetch;
 } = {}): PortalProxy {
-  if (env.AUTH_PROVIDER && env.AUTH_PROVIDER !== "keycloak") {
-    throw new Error("AUTH_PROVIDER must be keycloak; local authentication is not supported.");
-  }
-
   const publicOrigin = getPublicOrigin(env);
   const apiBaseUrl = env.VEGYFRESH_API_URL || "http://localhost:3000";
   const openapiPaths = portalRoutes();
 
-  const issuer = env.KEYCLOAK_ISSUER;
+  const issuer = env.OIDC_ISSUER;
   const sessionSecret = env.VEGYFRESH_SESSION_SECRET;
-  if (!issuer) throw new Error("KEYCLOAK_ISSUER is required.");
-  if (!sessionSecret) throw new Error("VEGYFRESH_SESSION_SECRET is required.");
+  if (!issuer || !env.OIDC_CLIENT_ID?.trim() || !env.OIDC_CLIENT_SECRET || !env.OIDC_API_AUDIENCE?.trim() || !sessionSecret) throw new Error("OIDC_ISSUER, OIDC_CLIENT_ID, OIDC_CLIENT_SECRET, OIDC_API_AUDIENCE, and VEGYFRESH_SESSION_SECRET are required.");
 
   const bff = createBffProxy({
     apiBaseUrl,
@@ -99,13 +94,16 @@ export function createPortalProxy({
     fetchImpl,
     publicOrigin,
     issuer,
-    internalIssuerUrl: env.KEYCLOAK_INTERNAL_URL,
-    clientId: env.KEYCLOAK_CLIENT_ID || "vegyfresh-portal",
-    clientSecret: env.KEYCLOAK_CLIENT_SECRET || undefined,
+    internalIssuerUrl: env.OIDC_INTERNAL_URL,
+    clientId: env.OIDC_CLIENT_ID!,
+    clientSecret: env.OIDC_CLIENT_SECRET || undefined,
+    apiAudience: env.OIDC_API_AUDIENCE?.trim(),
+    apiResourceParameter: env.OIDC_API_RESOURCE_PARAMETER?.trim() || undefined,
+    signupHint: env.OIDC_SIGNUP_HINT === "" ? "" : env.OIDC_SIGNUP_HINT?.trim() || "signup",
     sessionSecret,
     application: "portal",
     profilePath: "/api/v1/portal/auth/me",
-    scopes: "openid profile email vegyfresh-api vegyfresh-portal",
+    scopes: "openid profile email offline_access",
   });
   return {
     publicOrigin,
@@ -120,14 +118,16 @@ let cachedProxy: PortalProxy | undefined;
 
 export function getPortalProxy(env: ServerEnvironment = process.env) {
   const key = [
-    env.AUTH_PROVIDER,
     env.VEGYFRESH_API_URL,
     env.VEGYFRESH_PUBLIC_ORIGIN,
     env.VEGYFRESH_SESSION_SECRET,
-    env.KEYCLOAK_ISSUER,
-    env.KEYCLOAK_INTERNAL_URL,
-    env.KEYCLOAK_CLIENT_ID,
-    env.KEYCLOAK_CLIENT_SECRET,
+    env.OIDC_ISSUER,
+    env.OIDC_INTERNAL_URL,
+    env.OIDC_CLIENT_ID,
+    env.OIDC_CLIENT_SECRET,
+    env.OIDC_API_AUDIENCE,
+    env.OIDC_API_RESOURCE_PARAMETER,
+    env.OIDC_SIGNUP_HINT,
     env.PORT,
     env.NODE_ENV,
   ];
@@ -148,7 +148,7 @@ export function publicSessionProjection(
   const authenticated =
     session.authenticated === true && !client ? null : session.authenticated;
   return {
-    provider: "keycloak",
+    provider: "oidc",
     authenticated,
     ...(client ? { client } : {}),
   };

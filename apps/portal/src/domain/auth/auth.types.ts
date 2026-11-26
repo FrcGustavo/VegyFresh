@@ -6,7 +6,7 @@ export type PortalClientProfile = {
 };
 
 export type PortalSessionSnapshot = {
-  provider: "keycloak";
+  provider: "oidc";
   authenticated: boolean | null;
   client?: PortalClientProfile;
 };

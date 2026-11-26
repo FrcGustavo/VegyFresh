@@ -55,24 +55,16 @@ export function getPublicOrigin() {
 
 export function createApiProxy(): ApiProxy {
   const env = getServerEnvironment();
-  const configuredProvider = env.AUTH_PROVIDER?.trim();
-  if (configuredProvider && configuredProvider !== "keycloak") {
-    throw new Error("AUTH_PROVIDER only supports keycloak.");
-  }
-
   const apiBaseUrl = env.VEGYFRESH_API_URL?.trim() ||
     "http://localhost:3000";
   const publicOrigin = getPublicOrigin();
 
-  const issuer = env.KEYCLOAK_ISSUER?.trim();
-  const clientId = env.KEYCLOAK_CLIENT_ID?.trim() ||
-    "vegyfresh-admin";
-  const clientSecret = env.KEYCLOAK_CLIENT_SECRET || undefined;
+  const issuer = env.OIDC_ISSUER?.trim();
+  const clientId = env.OIDC_CLIENT_ID?.trim();
+  const clientSecret = env.OIDC_CLIENT_SECRET || undefined;
   const sessionSecret = env.VEGYFRESH_SESSION_SECRET;
-  if (!issuer || !sessionSecret) {
-    throw new Error(
-      "KEYCLOAK_ISSUER and VEGYFRESH_SESSION_SECRET are required for Keycloak.",
-    );
+  if (!issuer || !clientId || !clientSecret || !env.OIDC_API_AUDIENCE?.trim() || !sessionSecret || !env.OIDC_PROVISIONING_SECRET || new TextEncoder().encode(env.OIDC_PROVISIONING_SECRET).length < 32) {
+    throw new Error("OIDC_ISSUER, OIDC_CLIENT_ID, OIDC_CLIENT_SECRET, OIDC_API_AUDIENCE, OIDC_PROVISIONING_SECRET (at least 32 bytes), and VEGYFRESH_SESSION_SECRET are required.");
   }
 
   const options = {
@@ -82,11 +74,15 @@ export function createApiProxy(): ApiProxy {
     issuer,
     clientId,
     clientSecret,
+    apiAudience: env.OIDC_API_AUDIENCE?.trim(),
+    apiResourceParameter: env.OIDC_API_RESOURCE_PARAMETER?.trim() || undefined,
+    provisioningSecret: env.OIDC_PROVISIONING_SECRET,
+    signupHint: env.OIDC_SIGNUP_HINT === "" ? "" : env.OIDC_SIGNUP_HINT?.trim() || "signup",
     sessionSecret,
-    internalIssuerUrl: env.KEYCLOAK_INTERNAL_URL?.trim() || undefined,
+    internalIssuerUrl: env.OIDC_INTERNAL_URL?.trim() || undefined,
     application: "admin" as const,
     profilePath: "/api/v1/auth/me",
-    scopes: "openid profile email vegyfresh-api",
+    scopes: "openid profile email offline_access",
   };
   const fingerprint = createConfigFingerprint([
     apiBaseUrl,
@@ -95,6 +91,10 @@ export function createApiProxy(): ApiProxy {
     clientId,
     clientSecret,
     sessionSecret,
+    options.apiAudience,
+    options.apiResourceParameter,
+    options.provisioningSecret,
+    options.signupHint,
     options.internalIssuerUrl,
   ]);
   return getCachedBffProxy(fingerprint, options);

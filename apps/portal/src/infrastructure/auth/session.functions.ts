@@ -10,6 +10,6 @@ export const getPublicSession = createServerFn({ method: "GET" }).handler(async 
     for (const cookie of cookies) appendResponseHeader("Set-Cookie", cookie);
     return session;
   } catch {
-    return { provider: "keycloak" as const, authenticated: null };
+    return { provider: "oidc" as const, authenticated: null };
   }
 });

@@ -1,6 +1,6 @@
 # Customer portal
 
-The portal runs on TanStack Start and Nitro. Its server owns the Keycloak
+The portal runs on TanStack Start and Nitro. Its server owns the OIDC provider
 session and proxies the allowlisted portal API. Browser requests use same-origin
 HttpOnly cookies; the API determines client and organization access.
 
@@ -14,14 +14,16 @@ Configure the runtime with:
 - `VEGYFRESH_PUBLIC_ORIGIN`: the canonical external portal origin, with no path;
   HTTPS is required in production except on loopback.
 - `VEGYFRESH_API_URL`: server-accessible API origin.
-- `KEYCLOAK_ISSUER`: public realm issuer URL, matching the issuer in tokens.
-- `KEYCLOAK_INTERNAL_URL`: optional server-accessible issuer URL when different.
-- `KEYCLOAK_CLIENT_ID`: defaults to `vegyfresh-portal`.
-- `KEYCLOAK_CLIENT_SECRET`: optional confidential-client secret.
+- `OIDC_ISSUER`: public realm issuer URL, matching the issuer in tokens.
+- `OIDC_INTERNAL_URL`: optional server-accessible issuer URL when different.
+- `OIDC_CLIENT_ID`: confidential portal application client ID.
+- `OIDC_CLIENT_SECRET`: required confidential-client secret.
+- `OIDC_API_AUDIENCE`: API audience requested from the provider at authorization.
+- `OIDC_SIGNUP_HINT`: optional signup screen hint (`signup` by default; set empty to omit).
 - `VEGYFRESH_SESSION_SECRET`: server-only secret for session transactions.
 - `PORT` and `HOST`: listen address, defaulting to 5174 and the runtime default.
 
-Register the external `/session/callback` URL with the Keycloak portal client.
+Register the external `/session/callback` URL with the OIDC provider portal client.
 Provision portal identities in the API; the portal does not create clients or
 manage their passwords. Legacy login and password setup URLs redirect to the
 sign-in page. The dashboard metrics are placeholders. Order list and detail
@@ -40,9 +42,9 @@ with the real identity provider, API, database, and browser.
 Copy `.env.example` to `.env` in this directory and configure the session secret
 and identity provider. `make dev` starts the app-owned Docker Compose stack,
 `make down` stops it, and `make check` runs checks. The Compose service reads
-Keycloak credentials and the session secret from `.env`. It defaults to the API
-at `host.docker.internal:3000` and Keycloak at `host.docker.internal:8080`;
-set `DEV_API_URL` and `DEV_KEYCLOAK_INTERNAL_URL` in the shell to override
+OIDC provider credentials and the session secret from `.env`. It defaults to the API
+at `host.docker.internal:3000` and OIDC provider at `host.docker.internal:8080`;
+set `DEV_API_URL` and `DEV_OIDC_INTERNAL_URL` in the shell to override
 those container-facing URLs. Set `PORTAL_PORT` for the host port and
 `DEV_PUBLIC_ORIGIN` for the browser-facing origin if needed. `make docker-build`
 builds the production image, and `make start` runs it with the same `.env`.

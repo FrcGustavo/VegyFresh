@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import type { PublicProfile } from "../server/apiProxy.mjs";
 
-export type PublicSession = { provider: "keycloak"; authenticated: boolean | null } & PublicProfile;
+export type PublicSession = { provider: "oidc"; authenticated: boolean | null } & PublicProfile;
 
 export const readServerSession = createServerFn({ method: "GET" }).handler(
   async (): Promise<PublicSession> => {
@@ -15,10 +15,10 @@ export const readServerSession = createServerFn({ method: "GET" }).handler(
       const session = await createApiProxy().getSession({ cookieHeader: getRequestHeader("cookie"), origin: getPublicOrigin() });
       if (session.cookies.length) setResponseHeader("Set-Cookie", session.cookies);
       if (session.authenticated === null) setResponseStatus(503);
-      return { provider: "keycloak", authenticated: session.authenticated, ...session.profile };
+      return { provider: "oidc", authenticated: session.authenticated, ...session.profile };
     } catch {
       setResponseStatus(503);
-      return { provider: "keycloak", authenticated: null };
+      return { provider: "oidc", authenticated: null };
     }
   },
 );

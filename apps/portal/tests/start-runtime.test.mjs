@@ -70,7 +70,7 @@ test("Start SSR keeps concurrent sessions isolated and completes the OIDC callba
   const apiPort = await listen(api);
   const reserved = createServer(); const port = await listen(reserved); await close(reserved);
   const origin = `http://127.0.0.1:${port}`;
-  const app = spawn(process.execPath, [".output/server/index.mjs"], { env: { ...process.env, PORT: String(port), HOST: "127.0.0.1", VEGYFRESH_PUBLIC_ORIGIN: origin, VEGYFRESH_API_URL: `http://127.0.0.1:${apiPort}`, KEYCLOAK_ISSUER: issuer, VEGYFRESH_SESSION_SECRET: "test-only-session-secret-with-32-bytes" }, stdio: "ignore" });
+  const app = spawn(process.execPath, [".output/server/index.mjs"], { env: { ...process.env, PORT: String(port), HOST: "127.0.0.1", VEGYFRESH_PUBLIC_ORIGIN: origin, VEGYFRESH_API_URL: `http://127.0.0.1:${apiPort}`, OIDC_ISSUER: issuer, OIDC_CLIENT_ID: "vegyfresh-portal", OIDC_CLIENT_SECRET: "test-secret", OIDC_API_AUDIENCE: "vegyfresh-api", VEGYFRESH_SESSION_SECRET: "test-only-session-secret-with-32-bytes" }, stdio: "ignore" });
   t.after(async () => { app.kill(); await Promise.all([close(identity), close(api)]); });
   let ready = false;
   for (let i = 0; i < 100 && !ready; i++) {
@@ -84,7 +84,7 @@ test("Start SSR keeps concurrent sessions isolated and completes the OIDC callba
   assert.ok(assets.length, "Start client assets are missing");
   for (const asset of assets) {
     const content = await readFile(`.output/public/assets/${asset}`, "utf8");
-    assert.doesNotMatch(content, /VEGYFRESH_SESSION_SECRET|KEYCLOAK_CLIENT_SECRET|portal-access-token|portal-refresh-token/);
+    assert.doesNotMatch(content, /VEGYFRESH_SESSION_SECRET|OIDC_CLIENT_SECRET|portal-access-token|portal-refresh-token/);
   }
   async function login(name) {
     const start = await fetch(`${origin}/session/login?returnTo=%2Fportal%2Fdashboard`, { redirect: "manual" });
@@ -158,7 +158,7 @@ test("Start SSR keeps concurrent sessions isolated and completes the OIDC callba
   assert.ok([302, 303, 307].includes(index.status));
   assert.equal(index.headers.get("location"), "/portal/dashboard");
   const session = await fetch(`${origin}/session`, { headers: { cookie: alice } });
-  assert.deepEqual(await session.json(), { provider: "keycloak", authenticated: true, client: { id: "Alice", name: "Alice", email: null, portalEnabled: true } });
+  assert.deepEqual(await session.json(), { provider: "oidc", authenticated: true, client: { id: "Alice", name: "Alice", email: null, portalEnabled: true } });
   assert.match(session.headers.get("cache-control"), /private, no-store/);
   const [ordersA, ordersB, guestOrders] = await Promise.all([alice, bob, ""].map((cookie) => fetch(`${origin}/api/v1/portal/orders?page=1`, { headers: { cookie, authorization: "Bearer forged" } })));
   assert.deepEqual(await ordersA.json(), { owner: "Alice", path: "/api/v1/portal/orders?page=1" });

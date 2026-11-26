@@ -11,7 +11,7 @@ vi.mock("../../infrastructure/auth/session.functions", () => ({ getPublicSession
 describe("Start guest page", () => {
   it("hydrates the public server snapshot without rereading the session", async () => {
     const { getPublicSession } = await import("../../infrastructure/auth/session.functions");
-    const session = { provider: "keycloak" as const, authenticated: true, client: { id: "a", name: "Alice", email: null, portalEnabled: true } };
+    const session = { provider: "oidc" as const, authenticated: true, client: { id: "a", name: "Alice", email: null, portalEnabled: true } };
     const view = () => <QueryClientProvider client={createQueryClient()}><StartSignIn initialSession={session} /></QueryClientProvider>;
     const html = renderToString(view());
     const container = document.createElement("div");
@@ -29,7 +29,7 @@ describe("Start guest page", () => {
   });
 
   it("renders an actionable unavailable state instead of a guest login", () => {
-    const html = renderToString(<QueryClientProvider client={createQueryClient()}><StartSignIn initialSession={{ provider: "keycloak", authenticated: null }} /></QueryClientProvider>);
+    const html = renderToString(<QueryClientProvider client={createQueryClient()}><StartSignIn initialSession={{ provider: "oidc", authenticated: null }} /></QueryClientProvider>);
     expect(html).toContain("Retry");
     expect(html).not.toContain("/session/login");
   });

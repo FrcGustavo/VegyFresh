@@ -213,6 +213,7 @@ function makeProxy(
     issuer: provider.issuer,
     clientId: "vegyfresh-portal",
     clientSecret: "server-only-client-secret",
+    apiAudience: "vegyfresh-api",
     sessionSecret,
     ...overrides,
   });
@@ -357,9 +358,10 @@ test("login uses state, nonce, S256 PKCE, canonical callback URL, and sealed hos
     login.authorization.searchParams.get("redirect_uri"),
     `${origin}/session/callback`,
   );
+  assert.equal(login.authorization.searchParams.get("audience"), "vegyfresh-api");
   assert.equal(
     login.authorization.searchParams.get("scope"),
-    "openid profile email vegyfresh-api vegyfresh-portal",
+    "openid profile email offline_access",
   );
   assert.equal(
     login.authorization.searchParams.get("code_challenge_method"),
@@ -405,15 +407,29 @@ test("login discovers through the internal URL while preserving the public issue
   );
 });
 
-test("registration redirects to Keycloak registration while keeping the configured callback", async (t) => {
+test("login can select the API with an OAuth resource indicator", async (t) => {
+  const provider = await createIdentityProvider();
+  t.after(() => provider.close());
+  const apiAudience = "https://api.vegyfresh.test";
+  const api = makeProxy(provider, undefined, {
+    apiAudience,
+    apiResourceParameter: "resource",
+  });
+  const { authorization } = await startLogin(api, provider);
+  assert.equal(authorization.searchParams.get("resource"), apiAudience);
+  assert.equal(authorization.searchParams.has("audience"), false);
+});
+
+test("registration requests the signup screen while keeping the configured callback", async (t) => {
   const provider = await createIdentityProvider();
   t.after(() => provider.close());
   const api = makeProxy(provider);
   const registration = await startLogin(api, provider, "/session/register");
   assert.equal(
     registration.authorization.pathname,
-    "/realms/test/protocol/openid-connect/registrations",
+    "/realms/test/protocol/openid-connect/auth",
   );
+  assert.equal(registration.authorization.searchParams.get("screen_hint"), "signup");
   assert.equal(
     registration.authorization.searchParams.get("redirect_uri"),
     `${origin}/session/callback`,
@@ -1164,7 +1180,7 @@ test("portal rejects admin cookies and profile responses and projects only clien
   const expected = { client: { id: "client-1", name: "Client", email: null, portalEnabled: true } };
   assert.deepEqual((await api.getSession({ cookieHeader: header, origin })).profile, expected);
   const response = await api.handle(makeRequest("/session", { headers: { cookie: header } }));
-  assert.deepEqual(await response.json(), { provider: "keycloak", authenticated: true, ...expected });
+  assert.deepEqual(await response.json(), { provider: "oidc", authenticated: true, ...expected });
   assert.equal(response.headers.get("cache-control"), "private, no-store");
   const iv = Buffer.alloc(12, 7);
   const cipher = createCipheriv("aes-256-gcm", createHash("sha256").update(sessionSecret).digest(), iv);

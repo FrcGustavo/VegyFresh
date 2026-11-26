@@ -34,8 +34,13 @@ const env = {
   NODE_ENV: "production",
   VEGYFRESH_PUBLIC_ORIGIN: publicOrigin,
   VEGYFRESH_API_URL: `http://${apiHost}:${mock.address().port}`,
-  KEYCLOAK_ISSUER: "http://127.0.0.1:9/realms/unused",
-  KEYCLOAK_CLIENT_ID: `vegyfresh-${app}`,
+  OIDC_ISSUER: "http://127.0.0.1:9/unused",
+  OIDC_CLIENT_ID: `vegyfresh-${app}`,
+  OIDC_CLIENT_SECRET: "smoke-only-client-secret",
+  OIDC_API_AUDIENCE: "https://api.vegyfresh.test",
+  ...(app === "admin" && {
+    OIDC_PROVISIONING_SECRET: "smoke-only-provisioning-secret-long-enough",
+  }),
   VEGYFRESH_SESSION_SECRET: "smoke-only-secret-at-least-32-bytes",
 };
 const request = (origin, path, options = {}) =>
@@ -89,7 +94,7 @@ try {
     /private, no-store/i,
   );
   assert.deepEqual(await session.json(), {
-    provider: "keycloak",
+    provider: "oidc",
     authenticated: false,
   });
   const admin = app === "admin";
