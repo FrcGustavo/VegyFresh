@@ -17,6 +17,11 @@ import { Organization } from '../../../organizations/entities/organization.entit
 @Entity('price_lists')
 @Unique('UQ_price_lists_org_folio', ['organization_id', 'folio'])
 @Unique('UQ_price_lists_org_name', ['organization_id', 'name'])
+@Unique('UQ_price_lists_microsip', [
+  'organization_id',
+  'microsip_company',
+  'microsip_external_id',
+])
 export class PriceList {
   @PrimaryColumn({ type: 'uuid' })
   @Generated('uuid')
@@ -27,6 +32,12 @@ export class PriceList {
 
   @Column({ type: 'varchar', length: 40 })
   folio!: string;
+
+  @Column({ type: 'varchar', length: 100, nullable: true, select: false })
+  microsip_company!: string | null;
+
+  @Column({ type: 'varchar', length: 100, nullable: true, select: false })
+  microsip_external_id!: string | null;
 
   @Column({ type: 'uuid' })
   organization_id!: string;

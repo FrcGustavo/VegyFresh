@@ -65,6 +65,7 @@ public sealed class Engine(Config config, ISource source, IHistory history, IAda
             try { await adapter.Validate(payload).WaitAsync(TimeSpan.FromSeconds(30), cancellationToken); }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { break; }
             catch (MappingException e) { summary.Count(Failure(entry with { Payload = payload }, now, e.Message)); continue; }
+            catch (NativeOperationException e) { summary.Count(Failure(entry with { Payload = payload }, now, e.Message)); continue; }
             catch { summary.Count(Failure(entry with { Payload = payload }, now, "Microsip validation or explicit native mapping failed")); continue; }
             if (cancellationToken.IsCancellationRequested) break;
             entry = entry with { Status = "submitting", Attempts = entry.Attempts + 1, UpdatedAt = now.ToString("O"), NextAttemptAt = null, Payload = payload, Error = null };
@@ -77,6 +78,7 @@ public sealed class Engine(Config config, ISource source, IHistory history, IAda
             }
             catch (TimeoutException) { SaveReview(entry, now, "Write timed out; outcome unknown"); summary.Review++; }
             catch (OperationCanceledException) { SaveReview(entry, now, "Write interrupted; outcome unknown"); summary.Review++; }
+            catch (NativeOperationException e) { summary.Count(await Reconcile(entry, now, e.Message)); }
             catch { summary.Count(await Reconcile(entry, now)); }
         }
         return summary;
@@ -98,7 +100,7 @@ public sealed class Engine(Config config, ISource source, IHistory history, IAda
         history.Save(e with { Status = "retry", UpdatedAt = now.ToString("O"), NextAttemptAt = now.AddMilliseconds(delay).ToString("O") }); return "retry";
     }
     void SaveReview(Entry e, DateTimeOffset now, string error) => history.Save(e with { Status = "review", UpdatedAt = now.ToString("O"), NextAttemptAt = null, Receipt = null, Error = error });
-    async Task<string> Reconcile(Entry e, DateTimeOffset now)
+    async Task<string> Reconcile(Entry e, DateTimeOffset now, string? diagnostic = null)
     {
         Lookup result;
         try { result = await adapter.Lookup(e.ExternalId, config.Company).WaitAsync(TimeSpan.FromSeconds(30)); }
@@ -106,7 +108,10 @@ public sealed class Engine(Config config, ISource source, IHistory history, IAda
         if (result.Status == "found" && result.Receipt?.Valid == true)
         { history.Save(e with { Status = "synced", UpdatedAt = now.ToString("O"), Receipt = result.Receipt, Error = null, NextAttemptAt = null }); return "synced"; }
         if (result.Status == "absent") return SaveRetry(e with { Error = "Destination confirmed durable absence" }, now);
-        SaveReview(e, now, "Microsip write outcome unknown; manual review required"); return "review";
+        SaveReview(e, now, diagnostic == null
+            ? "Microsip write outcome unknown; manual review required"
+            : diagnostic + ". Manual review required");
+        return "review";
     }
 }
 public sealed class MappingException(string message) : Exception(message);

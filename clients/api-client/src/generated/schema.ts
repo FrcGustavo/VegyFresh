@@ -301,6 +301,40 @@ export interface paths {
         patch: operations["ProductPricesController_update"];
         trace?: never;
     };
+    "/api/v1/catalog/microsip-import/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Preview a Microsip catalog import */
+        post: operations["MicrosipImportController_preview"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalog/microsip-import/apply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Apply a Microsip catalog import */
+        post: operations["MicrosipImportController_apply"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/organizations": {
         parameters: {
             query?: never;
@@ -781,6 +815,62 @@ export interface components {
             price_list_id?: string;
             /** @example 150.75 */
             price?: number;
+        };
+        MicrosipImportCountsDto: {
+            created: number;
+            updated: number;
+            unchanged: number;
+        };
+        MicrosipCatalogImportResultDto: {
+            /** @enum {string} */
+            mode: "preview" | "apply";
+            /** Format: date-time */
+            appliedAt: string | null;
+            products: components["schemas"]["MicrosipImportCountsDto"];
+            priceLists: components["schemas"]["MicrosipImportCountsDto"];
+            prices: components["schemas"]["MicrosipImportCountsDto"];
+            clients: components["schemas"]["MicrosipImportCountsDto"];
+        };
+        MicrosipProductDto: {
+            externalId: string;
+            /** Format: uuid */
+            vegyfreshId?: string;
+            name: string;
+            /** @enum {string} */
+            unit: "kg" | "pz";
+            /** Format: uuid */
+            supplierId: string;
+        };
+        MicrosipPriceListDto: {
+            externalId: string;
+            /** Format: uuid */
+            vegyfreshId?: string;
+            name: string;
+        };
+        MicrosipPriceDto: {
+            productExternalId: string;
+            priceListExternalId: string;
+            /** @example 139.90 */
+            price: string;
+        };
+        MicrosipClientDto: {
+            externalId: string;
+            /** Format: uuid */
+            vegyfreshId?: string;
+            name: string;
+            phoneNumber: string;
+            /** Format: email */
+            email?: string | null;
+            priceListExternalId: string;
+        };
+        MicrosipCatalogImportDto: {
+            /** Format: uuid */
+            organizationId: string;
+            company: string;
+            products: components["schemas"]["MicrosipProductDto"][];
+            priceLists: components["schemas"]["MicrosipPriceListDto"][];
+            prices: components["schemas"]["MicrosipPriceDto"][];
+            clients: components["schemas"]["MicrosipClientDto"][];
         };
         CreateOrganizationDto: {
             /** @example Vegy Fresh Monterrey */
@@ -2686,6 +2776,110 @@ export interface operations {
             };
             /** @description Product price not found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MicrosipImportController_preview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MicrosipCatalogImportDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MicrosipImportController_apply: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MicrosipCatalogImportDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            413: {
                 headers: {
                     [name: string]: unknown;
                 };

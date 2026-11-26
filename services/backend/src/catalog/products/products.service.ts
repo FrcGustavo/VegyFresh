@@ -6,6 +6,7 @@ import { Product, ProductUnit } from './entities/product.entity';
 import { ILike, Repository } from 'typeorm';
 import { Supplier } from '../../suppliers/entities/supplier.entity';
 import { FoliosService } from '../../folios/folios.service';
+import { rejectMicrosipIdentityFields } from '../microsip-import/microsip-identity.guard';
 
 type ProductOrderField =
   | 'id'
@@ -35,6 +36,7 @@ export class ProductsService {
   ) {}
 
   async create(createProductDto: CreateProductDto, organizationId: string) {
+    rejectMicrosipIdentityFields(createProductDto);
     const supplier = await this.findSupplierOrFail(
       createProductDto.supplier_id,
       organizationId,
@@ -105,6 +107,7 @@ export class ProductsService {
     updateProductDto: UpdateProductDto,
     organizationId: string,
   ) {
+    rejectMicrosipIdentityFields(updateProductDto);
     const product = await this.findOne(id, organizationId);
     const supplier =
       updateProductDto.supplier_id !== undefined

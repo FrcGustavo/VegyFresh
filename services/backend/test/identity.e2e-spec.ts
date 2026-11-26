@@ -1,13 +1,14 @@
 import { INestApplication } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Test } from '@nestjs/testing';
-import { generateKeyPairSync } from 'node:crypto';
+import { generateKeyPairSync, randomUUID } from 'node:crypto';
 import { createServer } from 'node:http';
 import type { Server } from 'node:http';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { DataSource } from 'typeorm';
 import { AppModule } from '../src/app.module';
+import { parseMicrosipImport } from '../src/catalog/microsip-import/microsip-import.middleware';
 import { Client } from '../src/clients/entities/client.entity';
 import { ExternalIdentity } from '../src/identity/entities/external-identity.entity';
 import { Organization } from '../src/organizations/entities/organization.entity';
@@ -121,6 +122,7 @@ describeIntegration('Keycloak identity and tenant e2e', () => {
       imports: [AppModule],
     }).compile();
     app = moduleFixture.createNestApplication({ logger: false });
+    app.use(parseMicrosipImport);
     app.setGlobalPrefix('api/v1');
     await app.init();
 
@@ -291,6 +293,84 @@ describeIntegration('Keycloak identity and tenant e2e', () => {
       organization: { id: orgB.id },
       role: { id: role.id, name: role.name },
     });
+  });
+
+  it('authorizes Microsip preview from the persisted role and enforces organization scope', async () => {
+    const path = '/api/v1/catalog/microsip-import/preview';
+    const token = createAccessToken(
+      subjectA,
+      adminClientId,
+      'openid vegyfresh-api',
+    );
+    const payload = {
+      organizationId: orgA.id,
+      company: 'http-pilot',
+      products: [],
+      priceLists: [],
+      prices: [],
+      clients: [],
+    };
+    await request(app.getHttpServer()).post(path).send(payload).expect(401);
+    await request(app.getHttpServer())
+      .post(path)
+      .set('Authorization', `Bearer ${token}`)
+      .send(payload)
+      .expect(403);
+
+    const roleRepository = dataSource.getRepository(Role);
+    const previousPermissions = role.permissions;
+    try {
+      role.permissions = [
+        ...previousPermissions,
+        { resource: 'catalog', action: 'manage' },
+      ];
+      await roleRepository.save(role);
+      await request(app.getHttpServer())
+        .post(path)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ ...payload, organizationId: orgB.id })
+        .expect(403);
+      const preview = await request(app.getHttpServer())
+        .post(path)
+        .set('Authorization', `Bearer ${token}`)
+        .send(payload)
+        .expect(200);
+      expect(preview.body).toMatchObject({
+        mode: 'preview',
+        appliedAt: null,
+        products: { created: 0, updated: 0, unchanged: 0 },
+      });
+      await request(app.getHttpServer())
+        .post('/api/v1/catalog/microsip-import/apply')
+        .set('Authorization', `Bearer ${token}`)
+        .send(payload)
+        .expect(400);
+      const key = randomUUID();
+      const apply = await request(app.getHttpServer())
+        .post('/api/v1/catalog/microsip-import/apply')
+        .set('Authorization', `Bearer ${token}`)
+        .set('Idempotency-Key', key)
+        .send(payload)
+        .expect(200);
+      expect(apply.body).toMatchObject({
+        mode: 'apply',
+        priceLists: { created: 0 },
+      });
+      const replay = await request(app.getHttpServer())
+        .post('/api/v1/catalog/microsip-import/apply')
+        .set('Authorization', `Bearer ${token}`)
+        .set('Idempotency-Key', key)
+        .send(payload)
+        .expect(200);
+      expect(replay.body).toEqual(apply.body);
+      await dataSource.query(
+        'DELETE FROM microsip_catalog_import_receipts WHERE organization_id = $1 AND idempotency_key = $2',
+        [orgA.id, key],
+      );
+    } finally {
+      role.permissions = previousPermissions;
+      await roleRepository.save(role);
+    }
   });
 
   it('onboards a new admin as an org-less owner and reuses the same mapping', async () => {

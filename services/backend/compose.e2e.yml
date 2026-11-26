@@ -46,7 +46,7 @@ services:
       [
         "sh",
         "-c",
-        "pnpm exec jest --config ./test/jest-e2e.json --runInBand --runTestsByPath test/integration/external-identity.e2e-spec.ts test/integration/identity-resolution.e2e-spec.ts && pnpm exec jest --config ./test/jest-e2e.json --runInBand --runTestsByPath test/identity-provisioning.e2e-spec.ts && pnpm exec jest --config ./test/jest-e2e.json --runInBand --runTestsByPath test/identity.e2e-spec.ts",
+        "pnpm exec jest --config ./test/jest-e2e.json --runInBand --runTestsByPath test/integration/external-identity.e2e-spec.ts test/integration/identity-resolution.e2e-spec.ts && pnpm exec jest --config ./test/jest-e2e.json --runInBand --runTestsByPath test/identity-provisioning.e2e-spec.ts test/integration/microsip-import.e2e-spec.ts && pnpm exec jest --config ./test/jest-e2e.json --runInBand --runTestsByPath test/identity.e2e-spec.ts",
       ]
     depends_on:
       db:

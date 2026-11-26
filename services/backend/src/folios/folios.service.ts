@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { DataSource } from 'typeorm';
+import { DataSource, EntityManager } from 'typeorm';
 import { Organization } from '../organizations/entities/organization.entity';
 
 export type FolioResource =
@@ -59,14 +59,8 @@ export class FoliosService {
     organization: Organization,
   ) {
     switch (resource) {
-      case 'products':
-        return this.getCount('Product', organization);
-      case 'price_lists':
-        return this.getCount('PriceList', organization);
       case 'orders':
         return this.getCount('Order', organization);
-      case 'clients':
-        return this.getCount('Client', organization);
       case 'suppliers':
         return this.getCount('Supplier', organization);
       case 'inventory_entries':
@@ -94,6 +88,33 @@ export class FoliosService {
     const folio = `${prefix}${zeros}${folioNumber}`;
 
     return folio;
+  }
+
+  async prepareCatalogFolioAllocator(
+    resource: 'products' | 'price_lists' | 'clients',
+    organization: Organization,
+    manager: EntityManager = this.dataSource.manager,
+  ) {
+    const entity = {
+      products: 'Product',
+      price_lists: 'PriceList',
+      clients: 'Client',
+    }[resource];
+    const prefix = this.resolvePrefix(resource, organization);
+    const records = (await manager.getRepository(entity).find({
+      where: { organization_id: organization.id },
+      select: ['folio'],
+    })) as { folio: string }[];
+    const used = new Set(records.map(({ folio }) => folio));
+    let sequence = records.length + 1;
+
+    return () => {
+      let folio: string;
+      do {
+        folio = this.buildFolio(prefix, String(sequence++));
+      } while (used.has(folio));
+      return folio;
+    };
   }
 
   async generateFolio(resource: FolioResource, organizationId?: string) {
@@ -126,6 +147,17 @@ export class FoliosService {
     }
 
     const prefix = this.resolvePrefix(resource, organization);
+    if (
+      resource === 'products' ||
+      resource === 'price_lists' ||
+      resource === 'clients'
+    ) {
+      const allocate = await this.prepareCatalogFolioAllocator(
+        resource,
+        organization,
+      );
+      return allocate();
+    }
     const count = await this.countExistingFolios(resource, organization);
     const nextFolioNumber = String(count + 1);
 

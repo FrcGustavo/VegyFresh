@@ -24,6 +24,11 @@ export enum ProductUnit {
 
 @Entity('products')
 @Unique('UQ_products_org_folio', ['organization_id', 'folio'])
+@Unique('UQ_products_microsip', [
+  'organization_id',
+  'microsip_company',
+  'microsip_external_id',
+])
 export class Product {
   @PrimaryColumn({ type: 'uuid' })
   @Generated('uuid')
@@ -46,6 +51,12 @@ export class Product {
   })
   @JoinColumn({ name: 'supplier_id' })
   supplier!: Supplier;
+
+  @Column({ type: 'varchar', length: 100, nullable: true, select: false })
+  microsip_company!: string | null;
+
+  @Column({ type: 'varchar', length: 100, nullable: true, select: false })
+  microsip_external_id!: string | null;
 
   @Column({ type: 'uuid' })
   organization_id!: string;

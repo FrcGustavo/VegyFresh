@@ -39,41 +39,88 @@ public interface INativeApi
 }
 public sealed class NativeOrder(INativeApi api)
 {
-    static void Success(int code) { if (code != 0) throw new InvalidOperationException("Native operation rejected"); }
     public NativeResponse Execute(NativeRequest request, NativeConfig config, string databasePath, string user, string password)
     {
         if (request.Operation is not ("validate" or "create") || request.Order == null) throw new InvalidDataException("Invalid native request");
-        var order = request.Order; config.Validate(order);
-        int database = -1; bool initialized = false, writing = false;
+        var order = request.Order;
+        config.Validate(order);
+        var database = -1;
+        var initialized = false;
+        var writing = false;
+        var applied = false;
+        int? documentId = null;
+        NativeFailure? failure = null;
+        var operation = NativeOperation.SetErrorHandling;
+
+        void Check(int code, bool rejected)
+        {
+            if (!rejected) return;
+            failure ??= new(operation, code);
+            throw new NativeOperationException(failure, documentId, applied);
+        }
+
+        void CheckStatus(int code) => Check(code, code != 0);
+
+        void Cleanup(NativeOperation cleanupOperation, Action action)
+        {
+            operation = cleanupOperation;
+            try { action(); }
+            catch { failure ??= new(operation); }
+        }
+
         try
         {
-            api.SetErrorHandling(0, 0); initialized = true; api.SalesErrorHandling(0, 0);
-            database = api.NewDB(); if (database < 0) throw new InvalidOperationException("Native database unavailable");
-            if (api.NewTrn(database, 1) < 0) throw new InvalidOperationException("Native transaction unavailable");
-            Success(api.Connect(database, databasePath, user, password));
-            Success(api.SetSalesDatabase(database));
-            if (request.Operation == "validate") return new(true, Stage: "validated-local-mappings-and-connection");
-            var customer = config.Customers[order.CustomerKey];
-            writing = true; // Even header failure can leave native state needing an abort.
-            Success(api.NewOrder(DateTime.Today.ToString("d/M/yyyy", CultureInfo.InvariantCulture), "", customer.CustomerId,
-                customer.AddressId, config.WarehouseId, "", "P", 0, "", order.ExternalId, 0, 0, 0, 0, -1));
-            foreach (var line in order.Lines)
-                Success(api.Line(config.Products[line.ProductKey].ArticleId, (double)line.Quantity, -1, -1, ""));
-            Success(api.Apply()); writing = false;
-            var id = 0; Success(api.DocumentId(ref id));
-            if (id <= 0) throw new InvalidOperationException("Missing native document ID");
-            // The documented subset provides a document ID, not its assigned folio.
-            // Do not fabricate a receipt from that ID. An operator must verify the folio.
-            return new(false, Stage: "applied-folio-unverified", DocumentId: id);
+            api.SetErrorHandling(0, 0);
+            initialized = true;
+            operation = NativeOperation.veSetErrorHandling;
+            api.SalesErrorHandling(0, 0);
+            operation = NativeOperation.NewDB;
+            database = api.NewDB();
+            Check(database, database < 0);
+            operation = NativeOperation.NewTrn;
+            var transaction = api.NewTrn(database, 1);
+            Check(transaction, transaction < 0);
+            operation = NativeOperation.DBConnect;
+            CheckStatus(api.Connect(database, databasePath, user, password));
+            operation = NativeOperation.SetDBVentas;
+            CheckStatus(api.SetSalesDatabase(database));
+            if (request.Operation == "create")
+            {
+                var customer = config.Customers[order.CustomerKey];
+                writing = true; // Even header failure can leave native state needing an abort.
+                operation = NativeOperation.NuevoPedido;
+                CheckStatus(api.NewOrder(DateTime.Today.ToString("d/M/yyyy", CultureInfo.InvariantCulture), "", customer.CustomerId,
+                    customer.AddressId, config.WarehouseId, "", "P", 0, "", order.ExternalId, 0, 0, 0, 0, -1));
+                operation = NativeOperation.RenglonPedido;
+                foreach (var line in order.Lines)
+                    CheckStatus(api.Line(config.Products[line.ProductKey].ArticleId, (double)line.Quantity, -1, -1, ""));
+                operation = NativeOperation.AplicaPedido;
+                CheckStatus(api.Apply());
+                writing = false;
+                applied = true;
+                operation = NativeOperation.GetDoctoVeId;
+                var id = 0;
+                CheckStatus(api.DocumentId(ref id));
+                if (id <= 0) throw new InvalidDataException("Missing native document ID");
+                documentId = id;
+            }
+        }
+        catch
+        {
+            failure ??= new(operation);
         }
         finally
         {
-            try { if (writing) api.Abort(); }
-            finally
-            {
-                try { if (database >= 0) Success(api.Disconnect(database)); }
-                finally { if (initialized) api.Free(); }
-            }
+            // Keep the original failure even if disconnect or resource release also fails.
+            if (writing) Cleanup(NativeOperation.AbortaDoctoVentas, api.Abort);
+            if (database >= 0) Cleanup(NativeOperation.DBDisconnect, () => CheckStatus(api.Disconnect(database)));
+            if (initialized) Cleanup(NativeOperation.LiberarRecursos, api.Free);
         }
+
+        if (failure != null) throw new NativeOperationException(failure, documentId, applied);
+        // The document ID is useful for review while the assigned folio remains unverified.
+        return applied
+            ? new(false, Stage: "applied-folio-unverified", DocumentId: documentId)
+            : new(true, Stage: "validated-local-mappings-and-connection");
     }
 }

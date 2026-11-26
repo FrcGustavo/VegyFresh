@@ -194,15 +194,69 @@ await Test("native arguments, price policies, apply and cleanup", () =>
     Assert(fake.HeaderDescription == p.ExternalId && fake.ParameterList == -1 && fake.Price == -1 && fake.Discount == -1 && fake.CustomerId == 101 && fake.ArticleId == 202 && fake.WarehouseId == 303);
     return Task.CompletedTask;
 });
-foreach (var stage in new[] { "connect", "setdb", "header", "line", "apply", "id", "disconnect", "abort" })
-    await Test("native rejection cleans up " + stage, () =>
+foreach (var (stage, operation) in new[]
+{
+    ("connect", NativeOperation.DBConnect), ("setdb", NativeOperation.SetDBVentas),
+    ("header", NativeOperation.NuevoPedido), ("line", NativeOperation.RenglonPedido),
+    ("apply", NativeOperation.AplicaPedido), ("id", NativeOperation.GetDoctoVeId),
+    ("disconnect", NativeOperation.DBDisconnect), ("abort", NativeOperation.RenglonPedido)
+})
+    await Test("native rejection preserves diagnostics and cleans up " + stage, () =>
     {
         var c = C(); var p = Engine.Map(Order(c), c); var f = new FakeNative { Fail = stage };
-        Throws(() => new NativeOrder(f).Execute(new("create", p), NativeConfig(p), "db", "u", "p"));
+        try
+        {
+            new NativeOrder(f).Execute(new("create", p), NativeConfig(p), "db", "u", "p");
+            throw new Exception("Expected native rejection");
+        }
+        catch (NativeOperationException error)
+        {
+            Assert(error.Response.Failure == new NativeFailure(operation, 1));
+            Assert(error.Response.DocumentId == (stage == "disconnect" ? 42 : (int?)null));
+            Assert(error.Response.Stage == (stage is "id" or "disconnect" ? "applied-folio-unverified" : "failed-or-unknown"));
+        }
         Assert(f.Calls.Last() == "free" && f.Calls.Contains("disconnect"));
         if (stage is "header" or "line" or "apply" or "abort") Assert(f.Calls.Contains("abort"));
         return Task.CompletedTask;
     });
+await Test("native worker response reaches history without accepting an unverified folio", () => WithCycle(async (c, h, _, o) =>
+{
+    var id = o.Text("id");
+    var rejected = new NativeResponse(false, Failure: new(NativeOperation.DBConnect, 27));
+    var applied = new NativeResponse(false, Stage: "applied-folio-unverified", DocumentId: 42);
+    using var adapter = new NativeResponseAdapter(rejected, applied);
+    var engine = new Engine(c, new FakeSource([o]), h, adapter);
+    var now = DateTimeOffset.UtcNow;
+    Assert((await engine.Cycle(clock: now)).Retry == 1);
+    Assert(h.Get(id)?.Error?.Contains("DBConnect (return code 27)") == true);
+    adapter.Validation = new(true);
+    Assert((await engine.Cycle(clock: now.AddSeconds(1))).Review == 1);
+    var entry = h.Get(id);
+    Assert(entry?.Status == "review" && entry.Receipt == null && entry.Error?.Contains("Internal document ID 42") == true);
+    Assert((await engine.Cycle(clock: now.AddDays(1))).Skipped == 1 && adapter.Creates == 1);
+}));
+await Test("native worker response rejects untrusted diagnostics and nonzero success", () =>
+{
+    foreach (var (output, code) in new[]
+    {
+        ("{\"ok\":false,\"stage\":\"private text\",\"documentId\":42,\"failure\":{\"operation\":999,\"code\":25}}", 1),
+        ("{\"ok\":true}", 1),
+        ("null", 1)
+    })
+    {
+        try
+        {
+            NativeProcess.ReadResponse(output, code);
+            throw new Exception("Expected worker response rejection");
+        }
+        catch (NativeOperationException error)
+        {
+            Assert(error.Response.Failure == new NativeFailure(NativeOperation.WorkerResponse));
+            Assert(error.Response.DocumentId == null && !error.Message.Contains("private text"));
+        }
+    }
+    return Task.CompletedTask;
+});
 await Test("native validation never writes, exact mappings required", () =>
 {
     var c = C(); var p = Engine.Map(Order(c), c); var f = new FakeNative(); var n = NativeConfig(p);
@@ -318,6 +372,27 @@ sealed class FakeNative : INativeApi
     public int Apply() => Call("apply"); public int DocumentId(ref int id) { id = 42; return Call("id"); }
     public void Abort() { Call("abort"); if (Fail == "abort") throw new Exception(); }
     public int Disconnect(int db) => Call("disconnect"); public void Free() => Call("free");
+}
+
+sealed class NativeResponseAdapter(NativeResponse validation, NativeResponse creation) : IAdapter
+{
+    public NativeResponse Validation { get; set; } = validation;
+    public int Creates { get; private set; }
+
+    public Task Validate(DestinationOrder order)
+    {
+        NativeProcess.ReadResponse(Json.Encode(Validation), Validation.Ok ? 0 : 1);
+        return Task.CompletedTask;
+    }
+
+    public Task<Receipt> Create(DestinationOrder order)
+    {
+        Creates++;
+        return Task.FromResult(NativeProcess.ReadResponse(Json.Encode(creation), 0).Receipt!);
+    }
+
+    public Task<Lookup> Lookup(string id, string company) => Task.FromResult(new Lookup("unknown"));
+    public void Dispose() { }
 }
 
 sealed class CrashAdapter(IAdapter inner, string stage) : IAdapter

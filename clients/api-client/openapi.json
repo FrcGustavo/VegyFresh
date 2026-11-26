@@ -2230,6 +2230,106 @@
         ]
       }
     },
+    "/api/v1/catalog/microsip-import/preview": {
+      "post": {
+        "operationId": "MicrosipImportController_preview",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MicrosipCatalogImportDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "description": ""
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          },
+          "409": {
+            "description": ""
+          },
+          "413": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Preview a Microsip catalog import",
+        "tags": [
+          "microsip-import"
+        ]
+      }
+    },
+    "/api/v1/catalog/microsip-import/apply": {
+      "post": {
+        "operationId": "MicrosipImportController_apply",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MicrosipCatalogImportDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "description": ""
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          },
+          "409": {
+            "description": ""
+          },
+          "413": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Apply a Microsip catalog import",
+        "tags": [
+          "microsip-import"
+        ]
+      }
+    },
     "/api/v1/organizations": {
       "post": {
         "operationId": "OrganizationsController_create",
@@ -3643,6 +3743,240 @@
             "example": 150.75
           }
         }
+      },
+      "MicrosipImportCountsDto": {
+        "type": "object",
+        "properties": {
+          "created": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "updated": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "unchanged": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "created",
+          "updated",
+          "unchanged"
+        ]
+      },
+      "MicrosipCatalogImportResultDto": {
+        "type": "object",
+        "properties": {
+          "mode": {
+            "type": "string",
+            "enum": [
+              "preview",
+              "apply"
+            ]
+          },
+          "appliedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "products": {
+            "$ref": "#/components/schemas/MicrosipImportCountsDto"
+          },
+          "priceLists": {
+            "$ref": "#/components/schemas/MicrosipImportCountsDto"
+          },
+          "prices": {
+            "$ref": "#/components/schemas/MicrosipImportCountsDto"
+          },
+          "clients": {
+            "$ref": "#/components/schemas/MicrosipImportCountsDto"
+          }
+        },
+        "required": [
+          "mode",
+          "appliedAt",
+          "products",
+          "priceLists",
+          "prices",
+          "clients"
+        ]
+      },
+      "MicrosipProductDto": {
+        "type": "object",
+        "properties": {
+          "externalId": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1
+          },
+          "vegyfreshId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "unit": {
+            "type": "string",
+            "enum": [
+              "kg",
+              "pz"
+            ]
+          },
+          "supplierId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "externalId",
+          "name",
+          "unit",
+          "supplierId"
+        ]
+      },
+      "MicrosipPriceListDto": {
+        "type": "object",
+        "properties": {
+          "externalId": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1
+          },
+          "vegyfreshId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          }
+        },
+        "required": [
+          "externalId",
+          "name"
+        ]
+      },
+      "MicrosipPriceDto": {
+        "type": "object",
+        "properties": {
+          "productExternalId": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1
+          },
+          "priceListExternalId": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1
+          },
+          "price": {
+            "type": "string",
+            "pattern": "^(?:0|[1-9][0-9]{0,7})(?:\\.[0-9]{1,2})?$",
+            "example": "139.90"
+          }
+        },
+        "required": [
+          "productExternalId",
+          "priceListExternalId",
+          "price"
+        ]
+      },
+      "MicrosipClientDto": {
+        "type": "object",
+        "properties": {
+          "externalId": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1
+          },
+          "vegyfreshId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "phoneNumber": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 30
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 255,
+            "nullable": true
+          },
+          "priceListExternalId": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1
+          }
+        },
+        "required": [
+          "externalId",
+          "name",
+          "phoneNumber",
+          "priceListExternalId"
+        ]
+      },
+      "MicrosipCatalogImportDto": {
+        "type": "object",
+        "properties": {
+          "organizationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "company": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1
+          },
+          "products": {
+            "maxItems": 2500,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MicrosipProductDto"
+            }
+          },
+          "priceLists": {
+            "maxItems": 2500,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MicrosipPriceListDto"
+            }
+          },
+          "prices": {
+            "maxItems": 2500,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MicrosipPriceDto"
+            }
+          },
+          "clients": {
+            "maxItems": 2500,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MicrosipClientDto"
+            }
+          }
+        },
+        "required": [
+          "organizationId",
+          "company",
+          "products",
+          "priceLists",
+          "prices",
+          "clients"
+        ]
       },
       "CreateOrganizationDto": {
         "type": "object",
