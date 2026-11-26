@@ -2492,7 +2492,10 @@
             "description": "Authenticated user context"
           },
           "401": {
-            "description": "Unauthorized - missing or invalid Keycloak access token"
+            "description": "Missing or invalid OIDC user access token"
+          },
+          "404": {
+            "description": "Valid token without a linked admin identity"
           }
         },
         "security": [
@@ -2919,7 +2922,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized - missing or invalid Keycloak access token"
+            "description": "Missing or invalid OIDC portal user access token"
           }
         },
         "security": [

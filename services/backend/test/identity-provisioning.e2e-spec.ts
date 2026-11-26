@@ -59,7 +59,11 @@ describeIntegration('identity provisioning with PostgreSQL', () => {
 
   it('serializes repeated subject provisioning and leaves the user passwordless', async () => {
     const subject = `${prefix}-same`;
-    const claims = { email: `${prefix}-same@example.test`, name: 'New Owner' };
+    const claims = {
+      email: `${prefix}-same@example.test`,
+      name: 'New Owner',
+      emailVerified: true,
+    };
     const [first, second] = await Promise.all([
       service.resolveAdminUser(issuer, subject, claims),
       service.resolveAdminUser(issuer, subject, claims),
@@ -77,10 +81,15 @@ describeIntegration('identity provisioning with PostgreSQL', () => {
   it('never links another subject by matching email, including concurrent requests', async () => {
     const email = `${prefix}-shared@example.test`;
     const results = await Promise.allSettled([
-      service.resolveAdminUser(issuer, `${prefix}-one`, { email, name: 'One' }),
+      service.resolveAdminUser(issuer, `${prefix}-one`, {
+        email,
+        name: 'One',
+        emailVerified: true,
+      }),
       service.resolveAdminUser(issuer, `${prefix}-two`, {
         email: email.toUpperCase(),
         name: 'Two',
+        emailVerified: true,
       }),
     ]);
     expect(results.filter((r) => r.status === 'fulfilled')).toHaveLength(1);
@@ -112,6 +121,7 @@ describeIntegration('identity provisioning with PostgreSQL', () => {
         service.resolveAdminUser(issuer, `${prefix}-rollback`, {
           email,
           name: 'Rollback',
+          emailVerified: true,
         }),
       ).rejects.toThrow();
       expect(await db.getRepository(User).findOneBy({ email })).toBeNull();

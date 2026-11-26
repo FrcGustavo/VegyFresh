@@ -63,14 +63,12 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-vegyfresh}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-vegyfresh-local-only}
       POSTGRES_DB: ${POSTGRES_DB:-vegyfresh}
-      AUTH_PROVIDER: ${AUTH_PROVIDER:-keycloak}
-      KEYCLOAK_ISSUER: ${KEYCLOAK_ISSUER:-http://localhost:8080/realms/vegyfresh}
-      KEYCLOAK_AUDIENCE: ${KEYCLOAK_AUDIENCE:-vegyfresh-api}
-      KEYCLOAK_ADMIN_CLIENT_ID: ${KEYCLOAK_ADMIN_CLIENT_ID:-vegyfresh-admin}
-      KEYCLOAK_PORTAL_CLIENT_ID: ${KEYCLOAK_PORTAL_CLIENT_ID:-vegyfresh-portal}
-      KEYCLOAK_ADMIN_SCOPE: ${KEYCLOAK_ADMIN_SCOPE:-vegyfresh-api}
-      KEYCLOAK_PORTAL_SCOPE: ${KEYCLOAK_PORTAL_SCOPE:-vegyfresh-portal}
-      KEYCLOAK_JWKS_URI: ${KEYCLOAK_JWKS_URI:-http://host.docker.internal:8080/realms/vegyfresh/protocol/openid-connect/certs}
+      OIDC_ISSUER: ${OIDC_ISSUER:-}
+      OIDC_JWKS_URI: ${OIDC_JWKS_URI:-}
+      OIDC_API_AUDIENCE: ${OIDC_API_AUDIENCE:-}
+      OIDC_ADMIN_CLIENT_ID: ${OIDC_ADMIN_CLIENT_ID:-}
+      OIDC_PORTAL_CLIENT_ID: ${OIDC_PORTAL_CLIENT_ID:-}
+      OIDC_PROVISIONING_SECRET: ${OIDC_PROVISIONING_SECRET:-}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:5174}
     command: ["pnpm", "run", "dev"]
     ports:

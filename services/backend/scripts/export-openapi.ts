@@ -44,7 +44,12 @@ async function exportOpenApi() {
   try {
     process.chdir(emptyCwd);
     process.env = {
-      KEYCLOAK_ISSUER: 'https://keycloak.invalid/realms/openapi',
+      OIDC_ISSUER: 'https://oidc.invalid/openapi',
+      OIDC_JWKS_URI: 'https://oidc.invalid/openapi/jwks',
+      OIDC_API_AUDIENCE: 'https://api.invalid',
+      OIDC_ADMIN_CLIENT_ID: 'openapi-admin',
+      OIDC_PORTAL_CLIENT_ID: 'openapi-portal',
+      OIDC_PROVISIONING_SECRET: 'openapi-only-secret-at-least-32-bytes',
       POSTGRES_HOST: 'localhost',
       POSTGRES_PORT: '5432',
       POSTGRES_USER: 'openapi',

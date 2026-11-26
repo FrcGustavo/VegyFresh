@@ -35,13 +35,12 @@ services:
       POSTGRES_USER: identity_test
       POSTGRES_PASSWORD: identity_test
       POSTGRES_DB: identity_test
-      AUTH_PROVIDER: keycloak
-      KEYCLOAK_ISSUER: http://identity.e2e.test/realms/vegyfresh
-      KEYCLOAK_AUDIENCE: vegyfresh-api
-      KEYCLOAK_ADMIN_CLIENT_ID: vegyfresh-admin
-      KEYCLOAK_PORTAL_CLIENT_ID: vegyfresh-portal
-      KEYCLOAK_ADMIN_SCOPE: vegyfresh-api
-      KEYCLOAK_PORTAL_SCOPE: vegyfresh-portal
+      OIDC_ISSUER: http://localhost/realms/vegyfresh
+      OIDC_JWKS_URI: http://localhost/certs
+      OIDC_API_AUDIENCE: vegyfresh-api
+      OIDC_ADMIN_CLIENT_ID: vegyfresh-admin
+      OIDC_PORTAL_CLIENT_ID: vegyfresh-portal
+      OIDC_PROVISIONING_SECRET: e2e-only-oidc-provisioning-secret-32-bytes
     command:
       [
         "sh",

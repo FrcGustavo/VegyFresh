@@ -3009,8 +3009,15 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Unauthorized - missing or invalid Keycloak access token */
+            /** @description Missing or invalid OIDC user access token */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Valid token without a linked admin identity */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -3378,7 +3385,7 @@ export interface operations {
                     "application/json": unknown;
                 };
             };
-            /** @description Unauthorized - missing or invalid Keycloak access token */
+            /** @description Missing or invalid OIDC portal user access token */
             401: {
                 headers: {
                     [name: string]: unknown;

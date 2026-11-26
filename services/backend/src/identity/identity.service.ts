@@ -2,6 +2,7 @@ import {
   ForbiddenException,
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -16,8 +17,9 @@ import {
   ExternalIdentityType,
 } from './entities/external-identity.entity';
 
-export type KeycloakAdminProfileClaims = {
+export type OidcAdminProfileClaims = {
   email?: unknown;
+  emailVerified?: unknown;
   name?: unknown;
   preferred_username?: unknown;
 };
@@ -28,6 +30,12 @@ type AdminProfile = {
 };
 
 const ORGLESS_OWNER_FOLIO = 'U0001';
+
+export class ExternalIdentityNotLinkedException extends NotFoundException {
+  constructor() {
+    super('External identity is not linked');
+  }
+}
 
 @Injectable()
 export class IdentityService {
@@ -46,10 +54,16 @@ export class IdentityService {
     return this.resolveLinkedUser(identity, this.users, false);
   }
 
+  async resolveLinkedAdminUser(issuer: string, subject: string) {
+    const identity = await this.findIdentityOrNull(issuer, subject, 'user');
+    if (!identity) throw new ExternalIdentityNotLinkedException();
+    return this.resolveLinkedUser(identity);
+  }
+
   async resolveAdminUser(
     issuer: string,
     subject: string,
-    profileClaims: KeycloakAdminProfileClaims,
+    profileClaims: OidcAdminProfileClaims,
   ) {
     const linkedIdentity = await this.findIdentityOrNull(
       issuer,
@@ -211,10 +225,8 @@ export class IdentityService {
     };
   }
 
-  private resolveAdminProfile(
-    claims: KeycloakAdminProfileClaims,
-  ): AdminProfile {
-    if (typeof claims.email !== 'string') {
+  private resolveAdminProfile(claims: OidcAdminProfileClaims): AdminProfile {
+    if (claims.emailVerified !== true || typeof claims.email !== 'string') {
       throw this.profileIncomplete();
     }
 

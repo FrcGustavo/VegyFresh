@@ -36,7 +36,7 @@ export class PortalAuthController {
   })
   @ApiResponse({
     status: 401,
-    description: 'Unauthorized - missing or invalid Keycloak access token',
+    description: 'Missing or invalid OIDC portal user access token',
   })
   @ApiOperation({ summary: 'Get authenticated portal client profile' })
   me(@CurrentPortalClient() user: AuthenticatedPortalClient) {

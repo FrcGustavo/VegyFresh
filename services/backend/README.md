@@ -1,6 +1,6 @@
 # VegyFresh Backend
 
-NestJS API for VegyFresh with Keycloak authentication and tenant-scoped access control.
+NestJS API for VegyFresh with OIDC authentication and tenant-scoped access control.
 
 ## API Docs (Swagger)
 
@@ -18,12 +18,15 @@ Pass `--output <path>` to use a different output file.
 
 ### Authentication and tenant context
 
-Protected requests use Keycloak access tokens. The API validates the token and
+Protected requests use RFC 9068 RS256 user access tokens with an `at+jwt` or `application/at+jwt` header. The API checks the exact configured issuer, JWKS, audience, and the client ID for the admin or portal application. The API validates the token and
 resolves its issuer and subject to a local user or portal client. Authorization,
 roles, permissions, and organization context come from the local records.
 Existing users and portal clients must be linked explicitly; an email match does
-not link an identity. A new admin identity can provision an organization-less
-owner when its profile is valid and the owner role is configured.
+not link an identity. The BFF can create a new organization-less admin owner
+after its OIDC callback using `POST /auth/provision-admin` with the user access
+token, `x-provisioning-secret`, and a body containing `issuer`, `subject`,
+`email`, `emailVerified: true`, and optional `name`. The issuer and subject must
+match the token. A verified profile cannot claim an existing local email.
 
 - `GET /auth/me` returns the current user, organization, and role context.
 - `GET /portal/auth/me` returns the linked portal client profile.
@@ -40,7 +43,7 @@ roles and organization access remain local to the API.
 
 After reviewing the target record and applying the identity migration, an
 operator may create a mapping with placeholders replaced by the verified
-Keycloak subject and the intended local UUID:
+OIDC subject and the intended local UUID:
 
 ```sql
 INSERT INTO external_identities (issuer, subject, identity_type, user_id)
@@ -62,9 +65,10 @@ record before applying any migration or mapping.
 
 Copy `.env.example` to `.env` and configure the local environment. From the
 repository root, `make -C services/backend dev` starts PostgreSQL, runs pending
-migrations, and serves the API on `127.0.0.1:3000`. Keycloak must be started
-separately; its browser-facing issuer remains `http://localhost:8080`, while
-containers fetch its JWKS through `host.docker.internal`. Run
+migrations, and serves the API on `127.0.0.1:3000`. Configure `OIDC_ISSUER`, `OIDC_JWKS_URI`,
+`OIDC_API_AUDIENCE`, `OIDC_ADMIN_CLIENT_ID`, `OIDC_PORTAL_CLIENT_ID`, and
+`OIDC_PROVISIONING_SECRET` (at least 32 bytes). The issuer and JWKS URI must be
+HTTPS except for loopback development. Run
 `make -C services/backend down` to stop the stack without deleting its database
 volume. `make -C services/backend compose-config ENV_FILE="$PWD/services/backend/.env.example"`
 validates the Compose configuration without starting containers.

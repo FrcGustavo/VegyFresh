@@ -195,6 +195,7 @@ describe('IdentityService', () => {
         email: '  New.Owner@Example.COM ',
         name: ' New Owner ',
         preferred_username: 'new-owner',
+        emailVerified: true,
       },
     );
 
@@ -266,7 +267,11 @@ describe('IdentityService', () => {
       service.resolveAdminUser(
         'https://id.example/realms/vegyfresh',
         'kc-unlinked-admin',
-        { email: ' EXISTING@example.com ', name: 'Someone Else' },
+        {
+          email: ' EXISTING@example.com ',
+          name: 'Someone Else',
+          emailVerified: true,
+        },
       ),
     ).rejects.toMatchObject({
       response: {
@@ -317,7 +322,7 @@ describe('IdentityService', () => {
       service.resolveAdminUser(
         'https://id.example/realms/vegyfresh',
         'kc-new-admin',
-        { email: 'new@example.com', name: 'New Owner' },
+        { email: 'new@example.com', name: 'New Owner', emailVerified: true },
       ),
     ).rejects.toBeInstanceOf(InternalServerErrorException);
 
@@ -370,7 +375,7 @@ describe('IdentityService', () => {
       service.resolveAdminUser(
         'https://id.example/realms/vegyfresh',
         'kc-other-admin',
-        { email: 'same@example.com', name: 'Other User' },
+        { email: 'same@example.com', name: 'Other User', emailVerified: true },
       ),
     ).rejects.toMatchObject({
       response: { code: 'USER_NOT_LINKED' },

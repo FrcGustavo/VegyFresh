@@ -1,7 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Test } from '@nestjs/testing';
-import { generateKeyPairSync } from 'node:crypto';
+import { generateKeyPairSync, randomUUID } from 'node:crypto';
 import { createServer } from 'node:http';
 import type { Server } from 'node:http';
 import request from 'supertest';
@@ -15,11 +15,12 @@ import { Organization } from '../src/organizations/entities/organization.entity'
 import { Role } from '../src/roles/entities/role.entity';
 import { User } from '../src/users/entities/user.entity';
 
-const issuer = 'http://identity.e2e.test/realms/vegyfresh';
+const issuer = 'https://identity.e2e.test/';
 const audience = 'vegyfresh-api';
 const adminClientId = 'vegyfresh-admin';
 const portalClientId = 'vegyfresh-portal';
 const keyId = 'vegyfresh-identity-e2e-key';
+const provisioningSecret = 'e2e-only-oidc-provisioning-secret-32-bytes';
 
 type AuthProfileResponse = {
   user: { id: string; email: string; name: string };
@@ -49,15 +50,16 @@ const jwtService = new JwtService();
 
 function createAccessToken(
   subject: string,
-  authorizedParty: string,
+  clientId: string,
   scope: string,
   additionalClaims: Record<string, unknown> = {},
+  tokenAudience: string | string[] = audience,
 ) {
   return jwtService.sign(
     {
       sub: subject,
-      typ: 'Bearer',
-      azp: authorizedParty,
+      client_id: clientId,
+      jti: randomUUID(),
       scope,
       ...additionalClaims,
     },
@@ -65,9 +67,9 @@ function createAccessToken(
       privateKey: privateKeyPem,
       algorithm: 'RS256',
       issuer,
-      audience,
+      audience: tokenAudience,
       expiresIn: '5m',
-      keyid: keyId,
+      header: { alg: 'RS256', kid: keyId, typ: 'at+jwt' },
     },
   );
 }
@@ -75,7 +77,7 @@ function createAccessToken(
 const describeIntegration =
   process.env.IDENTITY_HTTP_TEST === 'true' ? describe : describe.skip;
 
-describeIntegration('Keycloak identity and tenant e2e', () => {
+describeIntegration('OIDC identity and tenant e2e', () => {
   let app: INestApplication<App>;
   let dataSource: DataSource;
   let jwksServer: Server;
@@ -110,13 +112,12 @@ describeIntegration('Keycloak identity and tenant e2e', () => {
     }
     issuerUrl = `http://127.0.0.1:${serverAddress.port}/jwks`;
 
-    process.env.KEYCLOAK_ISSUER = issuer;
-    process.env.KEYCLOAK_JWKS_URI = issuerUrl;
-    process.env.KEYCLOAK_AUDIENCE = audience;
-    process.env.KEYCLOAK_ADMIN_CLIENT_ID = adminClientId;
-    process.env.KEYCLOAK_PORTAL_CLIENT_ID = portalClientId;
-    process.env.KEYCLOAK_ADMIN_SCOPE = 'vegyfresh-api';
-    process.env.KEYCLOAK_PORTAL_SCOPE = 'vegyfresh-portal';
+    process.env.OIDC_ISSUER = issuer;
+    process.env.OIDC_JWKS_URI = issuerUrl;
+    process.env.OIDC_API_AUDIENCE = audience;
+    process.env.OIDC_ADMIN_CLIENT_ID = adminClientId;
+    process.env.OIDC_PORTAL_CLIENT_ID = portalClientId;
+    process.env.OIDC_PROVISIONING_SECRET = provisioningSecret;
 
     const moduleFixture = await Test.createTestingModule({
       imports: [AppModule],
@@ -252,6 +253,20 @@ describeIntegration('Keycloak identity and tenant e2e', () => {
     }
   });
 
+  function provisionAdmin(
+    token: string,
+    subject: string,
+    email: string,
+    profile: { name?: string; emailVerified?: boolean } = {},
+    secret = provisioningSecret,
+  ) {
+    return request(app.getHttpServer())
+      .post('/api/v1/auth/provision-admin')
+      .set('Authorization', `Bearer ${token}`)
+      .set('x-provisioning-secret', secret)
+      .send({ issuer, subject, email, emailVerified: true, ...profile });
+  }
+
   it('loads each admin profile and organization from the explicit local mapping', async () => {
     const tokenA = createAccessToken(
       subjectA,
@@ -264,11 +279,10 @@ describeIntegration('Keycloak identity and tenant e2e', () => {
         email: userB.email,
       },
     );
-    const tokenB = createAccessToken(
-      subjectB,
-      adminClientId,
-      'openid vegyfresh-api',
-    );
+    const tokenB = createAccessToken(subjectB, adminClientId, 'openid', {}, [
+      audience,
+      `${issuer}userinfo`,
+    ]);
 
     const profileA = await request(app.getHttpServer())
       .get('/api/v1/auth/me')
@@ -389,31 +403,32 @@ describeIntegration('Keycloak identity and tenant e2e', () => {
       },
     );
 
+    await request(app.getHttpServer())
+      .get('/api/v1/auth/me')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(404);
+    const profile = { name: 'New VegyFresh Owner' };
     const [first, concurrent] = await Promise.all([
-      request(app.getHttpServer())
-        .get('/api/v1/auth/me')
-        .set('Authorization', `Bearer ${token}`),
-      request(app.getHttpServer())
-        .get('/api/v1/auth/me')
-        .set('Authorization', `Bearer ${token}`),
+      provisionAdmin(token, subject, email, profile).expect(201),
+      provisionAdmin(token, subject, email, profile).expect(201),
     ]);
-    expect(first.status).toBe(200);
-    expect(concurrent.status).toBe(200);
-    const firstBody = first.body as AuthProfileResponse;
-    const concurrentBody = concurrent.body as AuthProfileResponse;
-    expect(firstBody.user.id).toBe(concurrentBody.user.id);
-    expect(first.body).toMatchObject({
+    const userId = (first.body as { sub: string }).sub;
+    expect(concurrent.body).toMatchObject({ sub: userId });
+    userIds.push(userId);
+
+    const lookup = await request(app.getHttpServer())
+      .get('/api/v1/auth/me')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+    expect(lookup.body).toMatchObject({
       user: {
+        id: userId,
         email: email.toLowerCase(),
         name: 'New VegyFresh Owner',
       },
       organization: null,
       role: { name: 'owner' },
     });
-    expect(firstBody.role.name).not.toBe('attacker-admin');
-
-    const userId = firstBody.user.id;
-    userIds.push(userId);
     const identityRepository = dataSource.getRepository(ExternalIdentity);
     const linkedIdentity = await identityRepository.findOneBy({
       issuer,
@@ -463,7 +478,7 @@ describeIntegration('Keycloak identity and tenant e2e', () => {
     });
   });
 
-  it('rejects an existing unlinked email instead of attaching the Keycloak subject', async () => {
+  it('rejects provisioning when the verified email belongs to an unlinked local user', async () => {
     const suffix = Date.now().toString(36);
     const existingEmail = `existing-unlinked-${suffix}@example.test`;
     const userRepository = dataSource.getRepository(User);
@@ -488,10 +503,9 @@ describeIntegration('Keycloak identity and tenant e2e', () => {
       'openid vegyfresh-api',
       { email: existingEmail.toUpperCase(), name: 'Unlinked Login' },
     );
-    const response = await request(app.getHttpServer())
-      .get('/api/v1/auth/me')
-      .set('Authorization', `Bearer ${token}`)
-      .expect(403);
+    const response = await provisionAdmin(token, subject, existingEmail, {
+      name: 'Unlinked Login',
+    }).expect(403);
 
     expect(response.body).toMatchObject({ code: 'USER_NOT_LINKED' });
     expect(
@@ -521,23 +535,30 @@ describeIntegration('Keycloak identity and tenant e2e', () => {
     );
 
     const responses = await Promise.all(
-      tokens.map((token) =>
-        request(app.getHttpServer())
-          .get('/api/v1/auth/me')
-          .set('Authorization', `Bearer ${token}`),
+      tokens.map((token, index) =>
+        provisionAdmin(
+          token,
+          subjects[index],
+          index === 0 ? email : email.toUpperCase(),
+          {
+            name: `Concurrent Owner ${index + 1}`,
+          },
+        ),
       ),
     );
-    expect(responses.map(({ status }) => status).sort()).toEqual([200, 403]);
+    expect(responses.map(({ status }) => status).sort()).toEqual([201, 403]);
 
-    const winner = responses.find(({ status }) => status === 200);
+    const winner = responses.find(({ status }) => status === 201);
     const rejected = responses.find(({ status }) => status === 403);
     expect((rejected?.body as { code: string }).code).toBe('USER_NOT_LINKED');
 
-    const profile = winner?.body as AuthProfileResponse | undefined;
-    expect(profile?.user.email).toBe(email.toLowerCase());
-    expect(profile?.organization).toBeNull();
+    const profile = winner?.body as
+      | { sub: string; email: string; org_id: string }
+      | undefined;
+    expect(profile?.email).toBe(email.toLowerCase());
+    expect(profile?.org_id).toBe('');
     if (!profile) throw new Error('The winning admin profile was not returned');
-    userIds.push(profile.user.id);
+    userIds.push(profile.sub);
 
     const identityRepository = dataSource.getRepository(ExternalIdentity);
     const linkedIdentities = await Promise.all(
@@ -584,10 +605,9 @@ describeIntegration('Keycloak identity and tenant e2e', () => {
         FOR EACH ROW EXECUTE FUNCTION test_reject_identity_insert()
       `);
 
-      await request(app.getHttpServer())
-        .get('/api/v1/auth/me')
-        .set('Authorization', `Bearer ${token}`)
-        .expect(500);
+      await provisionAdmin(token, subject, email, {
+        name: 'Rollback User',
+      }).expect(500);
     } finally {
       await dataSource.query(
         'DROP TRIGGER IF EXISTS test_reject_identity_insert ON external_identities',
@@ -609,20 +629,34 @@ describeIntegration('Keycloak identity and tenant e2e', () => {
     ).toBeNull();
   });
 
-  it('does not provision an admin before the token has the API scope', async () => {
-    const subject = `identity-e2e-missing-scope-${Date.now().toString(36)}`;
-    const email = `missing-scope-${Date.now().toString(36)}@example.test`;
-    const token = createAccessToken(
+  it('requires the API audience, server credential and verified profile for provisioning', async () => {
+    const subject = `identity-e2e-provisioning-${Date.now().toString(36)}`;
+    const email = `${subject}@example.test`;
+    const profile = { name: 'New Admin' };
+    const wrongAudience = createAccessToken(
       subject,
       adminClientId,
-      'openid profile email',
-      { email, name: 'Missing Scope' },
+      'openid',
+      {},
+      'other-api',
     );
-
-    await request(app.getHttpServer())
-      .get('/api/v1/auth/me')
-      .set('Authorization', `Bearer ${token}`)
-      .expect(401);
+    const token = createAccessToken(subject, adminClientId, 'openid');
+    await provisionAdmin(wrongAudience, subject, email, profile).expect(401);
+    await provisionAdmin(
+      token,
+      subject,
+      email,
+      profile,
+      'fixture-invalid-secret',
+    ).expect(401);
+    await provisionAdmin(token, 'different-subject', email, profile).expect(
+      401,
+    );
+    const unverified = await provisionAdmin(token, subject, email, {
+      ...profile,
+      emailVerified: false,
+    }).expect(403);
+    expect(unverified.body).toMatchObject({ code: 'USER_PROFILE_INCOMPLETE' });
     expect(
       await dataSource.getRepository(ExternalIdentity).findOneBy({
         issuer,
@@ -717,8 +751,9 @@ describeIntegration('Keycloak identity and tenant e2e', () => {
   });
 
   it('does not link an existing local user by email alone', async () => {
+    const subject = `unmapped-${Date.now().toString(36)}`;
     const token = createAccessToken(
-      `unmapped-${Date.now().toString(36)}`,
+      subject,
       adminClientId,
       'openid vegyfresh-api',
       { email: userA.email },
@@ -727,8 +762,10 @@ describeIntegration('Keycloak identity and tenant e2e', () => {
     const response = await request(app.getHttpServer())
       .get('/api/v1/auth/me')
       .set('Authorization', `Bearer ${token}`)
-      .expect(403);
-    expect((response.body as { code: string }).code).toBe('USER_NOT_LINKED');
+      .expect(404);
+    expect(response.body).toMatchObject({
+      message: 'External identity is not linked',
+    });
   });
 
   it('isolates portal identities from admin identities', async () => {
@@ -742,9 +779,18 @@ describeIntegration('Keycloak identity and tenant e2e', () => {
       .get('/api/v1/portal/auth/me')
       .set('Authorization', `Bearer ${adminToken}`)
       .expect(401);
+    const portalToken = createAccessToken(
+      portalSubject,
+      portalClientId,
+      'openid',
+    );
+    await request(app.getHttpServer())
+      .get('/api/v1/auth/me')
+      .set('Authorization', `Bearer ${portalToken}`)
+      .expect(401);
   });
 
-  it('loads portal profiles only with the portal client and portal scope', async () => {
+  it('loads portal profiles from the linked client and ignores token role claims', async () => {
     const token = createAccessToken(
       portalSubject,
       portalClientId,
@@ -764,15 +810,5 @@ describeIntegration('Keycloak identity and tenant e2e', () => {
         portalEnabled: true,
       },
     });
-
-    const missingScopeToken = createAccessToken(
-      portalSubject,
-      portalClientId,
-      'openid vegyfresh-api',
-    );
-    await request(app.getHttpServer())
-      .get('/api/v1/portal/auth/me')
-      .set('Authorization', `Bearer ${missingScopeToken}`)
-      .expect(401);
   });
 });

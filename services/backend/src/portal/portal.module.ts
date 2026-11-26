@@ -7,7 +7,7 @@ import { PortalAuthController } from './portal-auth.controller';
 import { PortalOrdersController } from './portal-orders.controller';
 import { PortalAuthService } from './portal-auth.service';
 import { PortalOrdersService } from './portal-orders.service';
-import { KeycloakPortalStrategy } from '../identity/strategies/keycloak.strategy';
+import { OidcPortalStrategy } from '../identity/strategies/oidc.strategy';
 import { IdentityModule } from '../identity/identity.module';
 
 @Module({
@@ -16,7 +16,7 @@ import { IdentityModule } from '../identity/identity.module';
     IdentityModule,
   ],
   controllers: [PortalAuthController, PortalOrdersController],
-  providers: [PortalAuthService, PortalOrdersService, KeycloakPortalStrategy],
+  providers: [PortalAuthService, PortalOrdersService, OidcPortalStrategy],
   exports: [PortalAuthService, PortalOrdersService],
 })
 export class PortalModule {}

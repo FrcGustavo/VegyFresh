@@ -1,16 +1,22 @@
 import { AuthController } from 'src/auth/auth.controller';
 import { AuthService } from 'src/auth/auth.service';
+import { ConfigService } from '@nestjs/config';
+import { IdentityService } from 'src/identity/identity.service';
 
 describe('AuthController', () => {
   const authServiceMock = { me: jest.fn() };
   let controller: AuthController;
 
   beforeEach(() => {
-    controller = new AuthController(authServiceMock as unknown as AuthService);
+    controller = new AuthController(
+      authServiceMock as unknown as AuthService,
+      {} as IdentityService,
+      new ConfigService(),
+    );
     jest.clearAllMocks();
   });
 
-  it('delegates the current Keycloak identity profile lookup', async () => {
+  it('delegates the current identity profile lookup', async () => {
     const user = {
       sub: 'user-1',
       email: 'owner@example.com',
