@@ -12,7 +12,7 @@ function View() {
 
 describe("PortalSessionProvider", () => {
   it("hydrates the public request snapshot without a mismatch", async () => {
-    const snapshot = { provider: "keycloak" as const, authenticated: true, client: { id: "1", name: "Alice", email: null, portalEnabled: true } };
+    const snapshot = { provider: "oidc" as const, authenticated: true, client: { id: "1", name: "Alice", email: null, portalEnabled: true } };
     const tree = <PortalSessionProvider initialSession={snapshot}><View /></PortalSessionProvider>;
     const container = document.createElement("div");
     container.innerHTML = renderToString(tree);

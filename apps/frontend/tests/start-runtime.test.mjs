@@ -57,7 +57,7 @@ test("built Start routes isolate sessions and forward only authorized API calls"
   const apiPort = await listen(api);
   const reserved = createServer(); const port = await listen(reserved); await close(reserved);
   const origin = `http://127.0.0.1:${port}`;
-  const app = spawn(process.execPath, [".output/server/index.mjs"], { env: { ...process.env, PORT: String(port), HOST: "127.0.0.1", VEGYFRESH_PUBLIC_ORIGIN: origin, VEGYFRESH_API_URL: `http://127.0.0.1:${apiPort}`, KEYCLOAK_ISSUER: issuer, VEGYFRESH_SESSION_SECRET: "test-only-session-secret-with-32-bytes" }, stdio: "ignore" });
+  const app = spawn(process.execPath, [".output/server/index.mjs"], { env: { ...process.env, PORT: String(port), HOST: "127.0.0.1", VEGYFRESH_PUBLIC_ORIGIN: origin, VEGYFRESH_API_URL: `http://127.0.0.1:${apiPort}`, OIDC_ISSUER: issuer, OIDC_CLIENT_ID: "vegyfresh-admin", OIDC_CLIENT_SECRET: "test-secret", OIDC_API_AUDIENCE: "vegyfresh-api", OIDC_PROVISIONING_SECRET: "test-provisioning-secret-at-least-32-bytes", VEGYFRESH_SESSION_SECRET: "test-only-session-secret-with-32-bytes" }, stdio: "ignore" });
   t.after(async () => { app.kill(); await Promise.all([close(identity), close(api)]); });
   let ready = false;
   for (let i = 0; i < 100 && !ready; i++) {
@@ -69,7 +69,7 @@ test("built Start routes isolate sessions and forward only authorized API calls"
   assert.deepEqual(await health.json(), { status: "ok" });
   assert.match(health.headers.get("cache-control"), /no-store/);
   for (const asset of await readdir(".output/public/assets")) {
-    assert.doesNotMatch(await readFile(`.output/public/assets/${asset}`, "utf8"), /VEGYFRESH_SESSION_SECRET|KEYCLOAK_CLIENT_SECRET|access-Alice|refresh-Alice/);
+    assert.doesNotMatch(await readFile(`.output/public/assets/${asset}`, "utf8"), /VEGYFRESH_SESSION_SECRET|OIDC_CLIENT_SECRET|access-Alice|refresh-Alice/);
   }
   async function login(name) {
     const start = await fetch(`${origin}/session/login?returnTo=%2F`, { redirect: "manual" });

@@ -8,7 +8,7 @@ export function AuthErrorPage() {
     account_conflict:
       "Esta cuenta ya está asociada a otro usuario de VegyFresh. Contacta al administrador para revisar el acceso.",
     profile_incomplete:
-      "Tu perfil de Keycloak necesita incluir un correo válido. Actualiza tus datos e inténtalo de nuevo.",
+      "Tu cuenta de identidad necesita un correo verificado. Actualiza tus datos e inténtalo de nuevo.",
     temporarily_unavailable:
       "El servicio no está disponible por el momento. Vuelve a intentarlo más tarde.",
   };

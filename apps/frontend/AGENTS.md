@@ -21,6 +21,6 @@ Render deterministic dates and default preferences on the server and first clien
 
 ## Validation
 
-Use the unit Makefile for Docker commands: `make -C apps/frontend lint check-types test build`. Lint includes architecture checks. After server or route changes, build and run `make test-runtime` from the repository root. These tests use disposable OIDC/API fixtures; report separately whether real Keycloak, PostgreSQL, API and browser validation ran.
+Use the unit Makefile for Docker commands: `make -C apps/frontend lint check-types test build`. Lint includes architecture checks. After server or route changes, build and run `make test-runtime` from the repository root. These tests use disposable OIDC/API fixtures; report separately whether real OIDC provider, PostgreSQL, API and browser validation ran.
 
 Regenerate the unit `pnpm-lock.yaml` with pnpm after dependency changes. Do not weaken TypeScript or architecture rules to accommodate an unused abstraction.

@@ -170,7 +170,7 @@ function normalizedOrigin(value, label, allowHttpLoopback = false) {
 
 function issuerUrl(value) {
   if (typeof value !== "string" || !value.trim())
-    throw new Error("KEYCLOAK_ISSUER is required.");
+    throw new Error("OIDC_ISSUER is required.");
   const url = new URL(value);
   if (
     !["http:", "https:"].includes(url.protocol) ||
@@ -179,15 +179,15 @@ function issuerUrl(value) {
     url.search ||
     url.hash
   ) {
-    throw new Error("KEYCLOAK_ISSUER must be an exact HTTP(S) issuer URL.");
+    throw new Error("OIDC_ISSUER must be an exact HTTP(S) issuer URL.");
   }
   if (url.protocol === "http:" && !isLoopback(url.hostname)) {
     throw new Error(
-      "KEYCLOAK_ISSUER must use HTTPS outside loopback development.",
+      "OIDC_ISSUER must use HTTPS outside loopback development.",
     );
   }
   if (url.href !== value)
-    throw new Error("KEYCLOAK_ISSUER must be an exact issuer URL.");
+    throw new Error("OIDC_ISSUER must be an exact issuer URL.");
   return url;
 }
 
@@ -376,11 +376,15 @@ export function createBffProxy({
   issuer,
   clientId,
   clientSecret,
+  apiAudience,
+  apiResourceParameter = "audience",
+  signupHint = "signup",
+  provisioningSecret,
   sessionSecret,
   internalIssuerUrl,
   application = "admin",
   profilePath = "/api/v1/auth/me",
-  scopes = "openid profile email vegyfresh-api",
+  scopes = "openid profile email offline_access",
 }) {
   if (!["admin", "portal"].includes(application))
     throw new Error("Invalid BFF application.");
@@ -412,7 +416,9 @@ export function createBffProxy({
   const issuerBase = issuerUrl(issuer);
   const redirectUri = `${configuredOrigin}${OIDC_CALLBACK_PATH}`;
   const cipher = sessionCipher(sessionSecret, application);
-  if (!clientId?.trim()) throw new Error("KEYCLOAK_CLIENT_ID is required.");
+  if (!clientId?.trim()) throw new Error("OIDC_CLIENT_ID is required.");
+  if (!["audience", "resource"].includes(apiResourceParameter))
+    throw new Error("OIDC_API_RESOURCE_PARAMETER must be audience or resource.");
   const internalBase = internalIssuerUrl
     ? new URL(internalIssuerUrl)
     : undefined;
@@ -425,7 +431,7 @@ export function createBffProxy({
       internalBase.hash)
   ) {
     throw new Error(
-      "KEYCLOAK_INTERNAL_URL must be an HTTP(S) issuer base without credentials.",
+      "OIDC_INTERNAL_URL must be an HTTP(S) issuer base without credentials.",
     );
   }
   if (
@@ -434,7 +440,7 @@ export function createBffProxy({
       issuerBase.pathname.replace(/\/$/, "")
   ) {
     throw new Error(
-      "KEYCLOAK_INTERNAL_URL must use the same realm path as KEYCLOAK_ISSUER.",
+      "OIDC_INTERNAL_URL must use the same realm path as OIDC_ISSUER.",
     );
   }
   if (internalBase && !internalBase.pathname.endsWith("/"))
@@ -576,6 +582,7 @@ export function createBffProxy({
     accessToken,
     origin,
     headers,
+    provisioning = false,
   }) {
     const target = new URL(pathname + search, base);
     const forwardedHeaders = new Headers();
@@ -591,6 +598,7 @@ export function createBffProxy({
       if (value) forwardedHeaders.set(name, value);
     }
     forwardedHeaders.set("origin", origin);
+    if (provisioning && provisioningSecret) forwardedHeaders.set("x-provisioning-secret", provisioningSecret);
     if (accessToken)
       forwardedHeaders.set("authorization", `Bearer ${accessToken}`);
     return fetchImpl(target, {
@@ -798,21 +806,13 @@ export function createBffProxy({
       const authorization = oidc.buildAuthorizationUrl(config, {
         redirect_uri: redirectUri,
         scope: scopes,
+        ...(apiAudience ? { [apiResourceParameter]: apiAudience } : {}),
         state: transaction.state,
         nonce: transaction.nonce,
         code_challenge: challenge,
         code_challenge_method: "S256",
       });
-      if (registering) {
-        const metadata = config.serverMetadata();
-        const trustedAuthEndpoint = new URL(metadata.authorization_endpoint);
-        if (!trustedAuthEndpoint.pathname.endsWith("/auth"))
-          throw new Error("Keycloak authorization endpoint is invalid.");
-        authorization.pathname = trustedAuthEndpoint.pathname.replace(
-          /\/auth$/,
-          "/registrations",
-        );
-      }
+      if (registering && signupHint) authorization.searchParams.set("screen_hint", signupHint);
       const transactionCookie = sealCookie(
         `${cookiePrefix}_oidc_transaction`,
         JSON.stringify(transaction),
@@ -912,6 +912,31 @@ export function createBffProxy({
         return redirectResponse("/error?error=temporarily_unavailable", [
           clearTransaction,
         ]);
+      }
+      if (userResponse.status === 404 && provisioningSecret) {
+        const claims = tokens.claims();
+        if (!claims || claims.iss !== issuerBase.href || typeof claims.sub !== "string" || !claims.sub) {
+          return redirectResponse("/error?error=authentication_failed", [clearTransaction]);
+        }
+        try {
+          userResponse = await callBackend({
+            pathname: "/api/v1/auth/provision-admin",
+            method: "POST",
+            body: JSON.stringify({
+              issuer: claims.iss,
+              subject: claims.sub,
+              email: typeof claims.email === "string" ? claims.email : undefined,
+              emailVerified: claims.email_verified === true,
+              name: typeof claims.name === "string" ? claims.name : undefined,
+            }),
+            accessToken: tokens.access_token,
+            origin: configuredOrigin,
+            headers: new Headers({ "content-type": "application/json" }),
+            provisioning: true,
+          });
+        } catch {
+          return redirectResponse("/error?error=temporarily_unavailable", [clearTransaction]);
+        }
       }
       if (userResponse.status === 403) {
         const code = await jsonCode(userResponse);
@@ -1098,7 +1123,7 @@ export function createBffProxy({
         headers.append("Set-Cookie", cookie);
       return Response.json(
         {
-          provider: "keycloak",
+          provider: "oidc",
           authenticated: session.authenticated,
           ...session.profile,
         },

@@ -10,7 +10,7 @@ function Profile() {
 }
 
 const session = (name: string): PublicSession => ({
-  provider: "keycloak", authenticated: true,
+  provider: "oidc", authenticated: true,
   user: { id: name, name, email: `${name}@example.test` },
   organization: { id: name, name: `Org ${name}` },
   role: { id: "admin", name: "admin", permissions: [] },

@@ -6,8 +6,11 @@ import {
 } from "./apiProxyRuntime.server";
 
 beforeEach(() => {
-  vi.stubEnv("AUTH_PROVIDER", "keycloak");
-  vi.stubEnv("KEYCLOAK_ISSUER", "https://identity.example.test/realms/vegyfresh");
+  vi.stubEnv("OIDC_ISSUER", "https://identity.example.test/realms/vegyfresh");
+  vi.stubEnv("OIDC_CLIENT_ID", "vegyfresh-admin");
+  vi.stubEnv("OIDC_CLIENT_SECRET", "test-secret");
+  vi.stubEnv("OIDC_API_AUDIENCE", "vegyfresh-api");
+  vi.stubEnv("OIDC_PROVISIONING_SECRET", "test-provisioning-secret-at-least-32-bytes");
   vi.stubEnv("VEGYFRESH_SESSION_SECRET", "a-session-secret-with-at-least-32-bytes");
   vi.stubEnv("VEGYFRESH_PUBLIC_ORIGIN", "https://admin.example.test");
 });
@@ -17,10 +20,10 @@ afterEach(() => {
 });
 
 describe("admin BFF runtime configuration", () => {
-  it("accepts Keycloak and rejects the legacy provider", () => {
+  it("requires confidential OIDC and provisioning configuration", () => {
     expect(() => createApiProxy()).not.toThrow();
-    vi.stubEnv("AUTH_PROVIDER", "local");
-    expect(() => createApiProxy()).toThrow("AUTH_PROVIDER only supports keycloak.");
+    vi.stubEnv("OIDC_PROVISIONING_SECRET", "short");
+    expect(() => createApiProxy()).toThrow("OIDC_PROVISIONING_SECRET");
   });
 
   it.each([
@@ -47,7 +50,7 @@ describe("admin BFF runtime configuration", () => {
     expect(response.status).toBe(200);
     expect(response.headers.get("cache-control")).toBe("private, no-store");
     expect(response.headers.get("vary")).toBe("Cookie");
-    expect(await response.json()).toEqual({ provider: "keycloak", authenticated: false });
+    expect(await response.json()).toEqual({ provider: "oidc", authenticated: false });
   });
 
   it("fails closed without exposing configuration errors", async () => {

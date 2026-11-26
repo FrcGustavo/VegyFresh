@@ -26,6 +26,10 @@ export type BffProxyOptions = {
   issuer: string;
   clientId: string;
   clientSecret?: string;
+  apiAudience?: string;
+  apiResourceParameter?: string;
+  signupHint?: string;
+  provisioningSecret?: string;
   sessionSecret: string;
   internalIssuerUrl?: string;
   application?: "admin" | "portal";

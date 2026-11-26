@@ -6,6 +6,9 @@ export type PortalBffProxyOptions = {
   issuer: string;
   clientId: string;
   clientSecret?: string;
+  apiAudience?: string;
+  apiResourceParameter?: string;
+  signupHint?: string;
   sessionSecret: string;
   internalIssuerUrl?: string;
   application: "portal";

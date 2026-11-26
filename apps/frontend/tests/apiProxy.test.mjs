@@ -124,6 +124,9 @@ async function createIdentityProvider(publicIssuer) {
           {
             iss: issuer,
             sub: "keycloak-user-1",
+            email: "admin@example.test",
+            email_verified: true,
+            name: "Test Admin",
             aud: "vegyfresh-admin",
             iat: now,
             exp: now + 300,
@@ -213,6 +216,7 @@ function makeProxy(
     issuer: provider.issuer,
     clientId: "vegyfresh-admin",
     clientSecret: "server-only-client-secret",
+    apiAudience: "vegyfresh-api",
     sessionSecret,
     ...overrides,
   });
@@ -357,9 +361,10 @@ test("login uses state, nonce, S256 PKCE, canonical callback URL, and sealed hos
     login.authorization.searchParams.get("redirect_uri"),
     `${origin}/session/callback`,
   );
+  assert.equal(login.authorization.searchParams.get("audience"), "vegyfresh-api");
   assert.equal(
     login.authorization.searchParams.get("scope"),
-    "openid profile email vegyfresh-api",
+    "openid profile email offline_access",
   );
   assert.equal(
     login.authorization.searchParams.get("code_challenge_method"),
@@ -405,15 +410,16 @@ test("login discovers through the internal URL while preserving the public issue
   );
 });
 
-test("registration redirects to Keycloak registration while keeping the configured callback", async (t) => {
+test("registration requests the signup screen while keeping the configured callback", async (t) => {
   const provider = await createIdentityProvider();
   t.after(() => provider.close());
   const api = makeProxy(provider);
   const registration = await startLogin(api, provider, "/session/register");
   assert.equal(
     registration.authorization.pathname,
-    "/realms/test/protocol/openid-connect/registrations",
+    "/realms/test/protocol/openid-connect/auth",
   );
+  assert.equal(registration.authorization.searchParams.get("screen_hint"), "signup");
   assert.equal(
     registration.authorization.searchParams.get("redirect_uri"),
     `${origin}/session/callback`,
@@ -472,6 +478,31 @@ test("callback verifies the real ID token, calls VeGYFresh before setting sealed
   });
   assert.equal(session.authenticated, true);
   assert.deepEqual(session.cookies, []);
+});
+
+test("admin callback provisions from verified ID token only after an unlinked profile response", async (t) => {
+  const provider = await createIdentityProvider();
+  t.after(() => provider.close());
+  const requests = backend((url, options) => {
+    if (new URL(url).pathname === "/api/v1/auth/me") return Response.json({ code: "USER_NOT_FOUND" }, { status: 404 });
+    assert.equal(new URL(url).pathname, "/api/v1/auth/provision-admin");
+    assert.equal(options.method, "POST");
+    assert.equal(options.headers.get("x-provisioning-secret"), "test-provisioning-secret-at-least-32-bytes");
+    assert.deepEqual(JSON.parse(options.body), {
+      issuer: provider.issuer,
+      subject: "keycloak-user-1",
+      email: "admin@example.test",
+      emailVerified: true,
+      name: "Test Admin",
+    });
+    return Response.json({ user: { id: "local-user-1" } });
+  });
+  const api = makeProxy(provider, requests.fetchImpl, { provisioningSecret: "test-provisioning-secret-at-least-32-bytes" });
+  const login = await startLogin(api, provider);
+  const { callback } = await finishLogin(api, provider, login);
+  assert.equal(callback.headers.get("location"), "/");
+  assert.equal(requests.calls.length, 2);
+  assert.equal(requests.calls[0].options.headers.get("x-provisioning-secret"), null);
 });
 
 test("callback rejects ID tokens with a mismatched nonce or forged signature before contacting VeGYFresh", async (t) => {
@@ -1163,7 +1194,7 @@ test("admin and portal sessions are isolated even when configured with the same 
   const portal = makeProxy(provider, portalBackend.fetchImpl, {
     application: "portal",
     profilePath: "/api/v1/portal/auth/me",
-    scopes: "openid profile email vegyfresh-api vegyfresh-portal",
+    scopes: "openid profile email offline_access",
   });
   assert.deepEqual(
     await portal.getSession({ cookieHeader: cookieHeader(cookies), origin }),
@@ -1173,7 +1204,7 @@ test("admin and portal sessions are isolated even when configured with the same 
   const login = await startLogin(portal, provider);
   assert.equal(
     login.authorization.searchParams.get("scope"),
-    "openid profile email vegyfresh-api vegyfresh-portal",
+    "openid profile email offline_access",
   );
   assert.ok(
     login.cookies.some((cookie) =>
@@ -1201,7 +1232,7 @@ test("session endpoint returns a local profile without exposing any session toke
     makeRequest("/session", { headers: { cookie: cookieHeader(cookies) } }),
   );
   assert.deepEqual(await response.json(), {
-    provider: "keycloak",
+    provider: "oidc",
     authenticated: true,
     user: { id: "local-user" },
     organization: null,

@@ -13,7 +13,7 @@ vi.mock("@tanstack/react-router", () => ({
   useRouter: () => ({ invalidate, options: { context: { queryClient: { clear: vi.fn() } } } }),
 }));
 
-const snapshot = { provider: "keycloak" as const, authenticated: true, client: { id: "a", name: "Alice", email: null, portalEnabled: true } };
+const snapshot = { provider: "oidc" as const, authenticated: true, client: { id: "a", name: "Alice", email: null, portalEnabled: true } };
 
 describe("Start protected dashboard", () => {
   it("hydrates the request snapshot without a mismatch", async () => {
@@ -41,7 +41,7 @@ describe("Start protected dashboard", () => {
   });
 
   it("retries an unavailable session without displaying the protected page", () => {
-    render(<StartPortal session={{ provider: "keycloak", authenticated: null }} />);
+    render(<StartPortal session={{ provider: "oidc", authenticated: null }} />);
     expect(screen.queryByText(/Welcome,/)).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Retry" }));
     expect(invalidate).toHaveBeenCalled();
