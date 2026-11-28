@@ -103,40 +103,17 @@ try {
   assert.equal(privateResponse.status, admin ? 303 : 307);
   assert.equal(
     privateResponse.headers.get("location"),
-    admin ? "/login?returnTo=%2Forders" : "/",
+    admin ? "/session/login?returnTo=%2Forders" : "/",
   );
   await privateResponse.body?.cancel();
 
-  if (admin) {
-    for (const [path, location] of [
-      ["/login?returnTo=%2Forders", "/session/login?returnTo=%2Forders"],
-      ["/signup", "/session/register"],
-      ["/login?returnTo=https%3A%2F%2Fevil.invalid", "/session/login"],
-    ]) {
-      const response = await request(origin, path);
-      assert.equal(
-        response.status,
-        303,
-        `${app}: ${path} redirects to the server session flow`,
-      );
-      assert.equal(response.headers.get("location"), location);
-      await response.body?.cancel();
-    }
-  } else {
-    for (const path of ["/login", "/signup", "/register", "/setup-password"]) {
-      const response = await request(origin, path);
-      assert.equal(
-        response.status,
-        303,
-        `${app}: ${path} redirects to the portal sign-in page`,
-      );
-      assert.equal(response.headers.get("location"), "/");
-      assert.match(
-        response.headers.get("cache-control") ?? "",
-        /private, no-store/i,
-      );
-      await response.body?.cancel();
-    }
+  const retiredRoutes = admin
+    ? ["/login", "/signup"]
+    : ["/login", "/signup", "/register", "/setup-password"];
+  for (const path of retiredRoutes) {
+    const response = await request(origin, path);
+    assert.equal(response.status, 404, `${app}: ${path} has been removed`);
+    await response.body?.cancel();
   }
 
   const page = await request(

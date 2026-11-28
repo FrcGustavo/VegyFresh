@@ -18,7 +18,6 @@ const OPENAPI_METHODS = new Set([
 const SAFE_METHODS = new Set(["GET", "HEAD"]);
 const OIDC_CALLBACK_PATH = "/session/callback";
 const OIDC_LOGOUT_REDIRECT_PATH = "/session/logout/redirect";
-const LEGACY_REFRESH_COOKIE = "refresh_token";
 const COOKIE_VALUE_LIMIT = 3800;
 const COOKIE_HEADER_LIMIT = 16384;
 const OIDC_TRANSACTION_TTL_MS = 10 * 60 * 1000;
@@ -413,7 +412,7 @@ export function createBffProxy({
       issuerBase.pathname.replace(/\/$/, "")
   ) {
     throw new Error(
-      "OIDC_INTERNAL_URL must use the same realm path as OIDC_ISSUER.",
+      "OIDC_INTERNAL_URL must use the same issuer path as OIDC_ISSUER.",
     );
   }
   if (internalBase && !internalBase.pathname.endsWith("/"))
@@ -475,9 +474,9 @@ export function createBffProxy({
     return cipher.open(name, readCookie(cookies, name));
   }
 
-  function clearSessionCookies(origin, includeLegacy = false) {
-    const names = includeLegacy
-      ? [...AUTH_COOKIE_NAMES, LOGOUT_HINT_COOKIE, LEGACY_REFRESH_COOKIE]
+  function clearSessionCookies(origin, includeLogoutHint = false) {
+    const names = includeLogoutHint
+      ? [...AUTH_COOKIE_NAMES, LOGOUT_HINT_COOKIE]
       : AUTH_COOKIE_NAMES;
     return names.map((name) => expiredCookie(name, origin));
   }
@@ -783,18 +782,13 @@ export function createBffProxy({
       );
       if (!transactionCookie)
         throw new Error("OIDC transaction state is invalid.");
-      return redirectResponse(authorization.href, [
-        transactionCookie,
-        expiredCookie(LEGACY_REFRESH_COOKIE, configuredOrigin),
-      ]);
+      return redirectResponse(authorization.href, [transactionCookie]);
     } catch (error) {
       const failure =
         error instanceof CookieSizeError
           ? "authentication_failed"
           : "temporarily_unavailable";
-      return redirectResponse(`/error?error=${failure}`, [
-        expiredCookie(LEGACY_REFRESH_COOKIE, configuredOrigin),
-      ]);
+      return redirectResponse(`/error?error=${failure}`);
     }
   }
 
@@ -904,7 +898,6 @@ export function createBffProxy({
 
       const cookies = [
         clearTransaction,
-        expiredCookie(LEGACY_REFRESH_COOKIE, configuredOrigin),
       ];
       try {
         cookies.push(...sessionCookieHeaders(tokens, configuredOrigin));
@@ -936,7 +929,7 @@ export function createBffProxy({
       request.headers.get("cookie"),
       `${cookiePrefix}_id_token`,
     );
-    let redirectTo = "/login";
+    let redirectTo = "/";
     if (idToken) {
       try {
         const hint = sealCookie(
@@ -950,7 +943,7 @@ export function createBffProxy({
           redirectTo = OIDC_LOGOUT_REDIRECT_PATH;
         }
       } catch {
-        redirectTo = "/login";
+        redirectTo = "/";
       }
     }
     const headers = new Headers({
@@ -966,12 +959,12 @@ export function createBffProxy({
     const clearHint = expiredCookie(LOGOUT_HINT_COOKIE, configuredOrigin);
     const hint = readToken(request.headers.get("cookie"), LOGOUT_HINT_COOKIE);
     if (requestUrl.origin !== configuredOrigin || !hint)
-      return redirectResponse("/login", [clearHint]);
+      return redirectResponse("/", [clearHint]);
     try {
       const config = await getOidcConfig();
       const metadata = config.serverMetadata();
       if (!metadata.end_session_endpoint)
-        return redirectResponse("/login", [clearHint]);
+        return redirectResponse("/", [clearHint]);
       const endSession = oidc.buildEndSessionUrl(config, {
         id_token_hint: hint,
         post_logout_redirect_uri: `${configuredOrigin}/`,
@@ -981,11 +974,11 @@ export function createBffProxy({
         endSession.origin !== trustedEndpoint.origin ||
         endSession.pathname !== trustedEndpoint.pathname
       ) {
-        return redirectResponse("/login", [clearHint]);
+        return redirectResponse("/", [clearHint]);
       }
       return redirectResponse(endSession.href, [clearHint]);
     } catch {
-      return redirectResponse("/login", [clearHint]);
+      return redirectResponse("/", [clearHint]);
     }
   }
 

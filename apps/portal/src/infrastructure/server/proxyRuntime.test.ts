@@ -11,7 +11,7 @@ const portalOrigin = "https://portal.example.test";
 
 afterEach(() => vi.unstubAllEnvs());
 
-function keycloakProxy(fetchImpl: typeof fetch = vi.fn<typeof fetch>()) {
+function oidcProxy(fetchImpl: typeof fetch = vi.fn<typeof fetch>()) {
   return createPortalProxy({
     env: {
       VEGYFRESH_API_URL: "https://api.example.test",
@@ -30,7 +30,7 @@ function keycloakProxy(fetchImpl: typeof fetch = vi.fn<typeof fetch>()) {
 describe("portal server proxy", () => {
   it("keeps API access scoped to portal identity", async () => {
     const forwarded: string[] = [];
-    const proxy = keycloakProxy(async (input) => {
+    const proxy = oidcProxy(async (input) => {
       forwarded.push(new URL(String(input)).pathname);
       return Response.json({ orders: [] });
     });
@@ -48,7 +48,7 @@ describe("portal server proxy", () => {
 
   it("rejects cross-origin logout requests", async () => {
     const fetchImpl = vi.fn<typeof fetch>();
-    const proxy = keycloakProxy(fetchImpl);
+    const proxy = oidcProxy(fetchImpl);
     const response = await proxy.handle(
       new Request(`${portalOrigin}/session/logout`, {
         method: "POST",
@@ -66,7 +66,7 @@ describe("portal server proxy", () => {
 
   it("does not accept an admin cookie as a portal session", async () => {
     const fetchImpl = vi.fn<typeof fetch>();
-    const proxy = keycloakProxy(fetchImpl);
+    const proxy = oidcProxy(fetchImpl);
     const response = await proxy.handle(
       new Request(`${portalOrigin}/session`, {
         headers: { cookie: "vegyfresh_admin_access_token=admin-token" },
@@ -115,7 +115,7 @@ describe("portal server proxy", () => {
   });
 
   it("clears malformed portal cookies and preserves private session headers", async () => {
-    const proxy = keycloakProxy();
+    const proxy = oidcProxy();
     const response = privateResponse(
       await proxy.handle(
         new Request(`${portalOrigin}/session`, {
