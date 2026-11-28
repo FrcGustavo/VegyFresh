@@ -53,6 +53,7 @@ async function createIdentityProvider(publicIssuer) {
     discoveryStatus: 200,
     tokenDelayMs: 0,
     idTokenNonceOverride: undefined,
+    emailVerified: true,
     forgedIdToken: false,
     refreshTokens: new Map(),
   };
@@ -125,7 +126,7 @@ async function createIdentityProvider(publicIssuer) {
             iss: issuer,
             sub: "keycloak-user-1",
             email: "admin@example.test",
-            email_verified: true,
+            email_verified: state.emailVerified,
             name: "Test Admin",
             aud: "vegyfresh-admin",
             iat: now,
@@ -503,6 +504,23 @@ test("admin callback provisions from verified ID token only after an unlinked pr
   assert.equal(callback.headers.get("location"), "/");
   assert.equal(requests.calls.length, 2);
   assert.equal(requests.calls[0].options.headers.get("x-provisioning-secret"), null);
+});
+
+test("an unlinked admin with an unverified email is sent to the verification screen", async (t) => {
+  const provider = await createIdentityProvider();
+  t.after(() => provider.close());
+  provider.state.emailVerified = false;
+  const requests = backend(() => new Response(null, { status: 404 }));
+  const api = makeProxy(provider, requests.fetchImpl, {
+    provisioningSecret: "test-provisioning-secret-at-least-32-bytes",
+  });
+  const login = await startLogin(api, provider);
+  const { callback } = await finishLogin(api, provider, login);
+
+  assert.equal(callback.status, 303);
+  assert.equal(callback.headers.get("location"), "/error?error=email_verification_required");
+  assert.deepEqual(requests.calls.map(({ url }) => url.pathname), ["/api/v1/auth/me"]);
+  assert.deepEqual(cookiePairs(callback), ["vegyfresh_admin_oidc_transaction="]);
 });
 
 test("callback rejects ID tokens with a mismatched nonce or forged signature before contacting VeGYFresh", async (t) => {

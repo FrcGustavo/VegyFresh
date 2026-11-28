@@ -94,6 +94,12 @@ test("built Start routes isolate sessions and forward only authorized API calls"
   const errorHtml = await error.text();
   assert.match(errorHtml, /No fue posible iniciar sesión/);
   assert.doesNotMatch(errorHtml, /<script>secret/);
+  const verification = await fetch(`${origin}/error?error=email_verification_required`);
+  assert.equal(verification.status, 200);
+  const verificationHtml = await verification.text();
+  assert.match(verificationHtml, /<h1[^>]*>Verifica tu correo<\/h1>/);
+  assert.match(verificationHtml, /correo no deseado/);
+  assert.match(verificationHtml, /href="\/session\/login"[^>]*>Ya verifiqué mi correo/);
   const [alice, bob] = await Promise.all([login("Alice"), login("Bob")]);
   const [a, b, guest] = await Promise.all([alice, bob, ""].map((cookie) => fetch(`${origin}/orders`, { headers: { cookie }, redirect: "manual" })));
   const [htmlA, htmlB] = await Promise.all([a.text(), b.text()]);

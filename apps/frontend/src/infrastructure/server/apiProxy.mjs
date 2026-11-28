@@ -918,6 +918,9 @@ export function createBffProxy({
         if (!claims || claims.iss !== issuerBase.href || typeof claims.sub !== "string" || !claims.sub) {
           return redirectResponse("/error?error=authentication_failed", [clearTransaction]);
         }
+        if (claims.email_verified !== true) {
+          return redirectResponse("/error?error=email_verification_required", [clearTransaction]);
+        }
         try {
           userResponse = await callBackend({
             pathname: "/api/v1/auth/provision-admin",
@@ -926,7 +929,7 @@ export function createBffProxy({
               issuer: claims.iss,
               subject: claims.sub,
               email: typeof claims.email === "string" ? claims.email : undefined,
-              emailVerified: claims.email_verified === true,
+              emailVerified: true,
               name: typeof claims.name === "string" ? claims.name : undefined,
             }),
             accessToken: tokens.access_token,
