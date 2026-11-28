@@ -1,12 +1,24 @@
 # OpenID Connect and OAuth 2.0
 
-VegyFresh uses OpenID Connect for sign-in and OAuth 2.0 access tokens for API
-requests. The admin and portal servers discover the issuer's endpoints and use
-Authorization Code with PKCE S256, state and nonce. The API accepts signed RSA
+Auth0 is VegyFresh's identity provider. The admin and portal servers use
+[OpenID Connect](https://openid.net/specs/openid-connect-core-1_0.html) for
+sign-in and OAuth 2.0 access tokens for API requests. They discover the issuer's
+endpoints and use Authorization Code with PKCE S256, state and nonce. The API accepts signed RSA
 SHA-256 access tokens following [RFC 9068](https://www.rfc-editor.org/rfc/rfc9068),
 for its configured audience and the client ID allowed on each route. VegyFresh
 stores application identities and permissions in PostgreSQL. The ID token
 identifies the user to the web server. The access token authorizes the API call.
+
+Both apps start authentication at `/session/login`. The `/session/register`
+entry point starts the same authorization flow and asks Auth0 to show its
+hosted sign-up screen. Auth0 handles account creation, credentials and password
+recovery. VegyFresh creates and manages business profiles, with access tied
+to an external identity's issuer and subject.
+
+Sign-out clears the web session and uses
+[OIDC RP-Initiated Logout](https://openid.net/specs/openid-connect-rpinitiated-1_0-final.html)
+when discovery publishes `end_session_endpoint`. The server sends the
+`id_token_hint` and the registered `post_logout_redirect_uri` to that endpoint.
 
 ## Configure Auth0 for development
 
@@ -67,13 +79,32 @@ allows portal access for that customer and is independent of their email address
 
 A compatible provider supplies OIDC discovery, confidential Authorization Code
 with PKCE, standard profile claims and RFC 9068 access tokens for the API. The
-web authorization request defaults to the Auth0 `audience` and
-`screen_hint=signup` parameters. Set `OIDC_API_RESOURCE_PARAMETER=resource`
+integration uses the Auth0 extensions `audience` and
+[`screen_hint=signup`](https://support.auth0.com/center/s/article/How-to-Redirect-Users-directly-to-the-Hosted-Signup-Page).
+Set `OIDC_API_RESOURCE_PARAMETER=resource`
 for a provider that takes a [resource indicator](https://www.rfc-editor.org/rfc/rfc8707).
 Set `OIDC_SIGNUP_HINT=` for a provider that uses the same entry point for sign-in
 and sign-up. Application identities are keyed by issuer and subject, with
 separate bindings for administrator and customer accounts. New test providers
 can use fresh account bindings.
+
+## Upgrade from local credentials
+
+Merge the OIDC API and web-session changes before the local-credential removal.
+Deploy the new API, admin app and portal app as one coordinated cutover. Stop
+old API instances before running the pending backend migrations, then start
+the new API and web apps. The backend Compose deployment runs migrations before
+starting its API container. Do not leave an old API instance serving against
+the migrated database: it still expects the removed password columns and
+session tables. Update the seed job and API client for the new password-free
+user contract before using them against the new API.
+
+Take a database backup before the cutover. The
+`RemoveLocalAuthentication1793210003000` migration permanently deletes local
+password hashes and retired session tables. It leaves user and customer
+profiles, organization membership and external identity links in place, so
+previously linked provider accounts retain their mappings. Restoring deleted
+credential data requires that pre-upgrade backup.
 
 ## Development verification
 

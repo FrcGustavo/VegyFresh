@@ -695,28 +695,6 @@ describeIntegration('OIDC identity and tenant e2e', () => {
     ).toBeNull();
   });
 
-  it('persists a user profile without a local password hash', async () => {
-    const userRepository = dataSource.getRepository(User);
-    const user = await userRepository.save(
-      userRepository.create({
-        name: 'Passwordless User',
-        folio: `U-E2E-PW-${Date.now().toString(36)}`,
-        email: `identity-e2e-passwordless-${Date.now().toString(36)}@example.test`,
-        role_id: role.id,
-        role,
-        organization_id: orgA.id,
-        organization: orgA,
-        avatar_url: null,
-      }),
-    );
-    userIds.push(user.id);
-
-    const rows = await dataSource.query<
-      Array<{ password_hash: string | null }>
-    >('SELECT "password_hash" FROM "users" WHERE "id" = $1', [user.id]);
-    expect(rows[0]?.password_hash).toBeNull();
-  });
-
   it('does not expose local signup, login, or refresh endpoints', async () => {
     await request(app.getHttpServer())
       .post('/api/v1/auth/signup')
