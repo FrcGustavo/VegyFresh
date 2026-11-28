@@ -49,7 +49,7 @@ export function StartAuthProvider({
     snapshot.session === session ? snapshot.state : toAuthState(session);
 
   useEffect(() => {
-    const expired = () => window.location.assign("/login");
+    const expired = () => window.location.assign("/session/login");
     window.addEventListener("auth:logout", expired);
     return () => window.removeEventListener("auth:logout", expired);
   }, []);

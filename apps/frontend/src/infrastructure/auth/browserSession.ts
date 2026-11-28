@@ -18,5 +18,5 @@ export async function endBrowserSession(): Promise<string> {
   });
   if (!response.ok) throw new Error("No se pudo cerrar la sesión");
   const { redirectTo } = (await response.json()) as { redirectTo?: string };
-  return redirectTo || "/login";
+  return redirectTo || "/session/login";
 }

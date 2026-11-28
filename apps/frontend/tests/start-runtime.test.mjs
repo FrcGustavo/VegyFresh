@@ -85,10 +85,9 @@ test("built Start routes isolate sessions and forward only authorized API calls"
     assert.match(callback.headers.getSetCookie().join(" "), /HttpOnly/i);
     return cookies(callback).filter((value) => value.startsWith("vegyfresh_admin_") && !value.startsWith("vegyfresh_admin_oidc_transaction=")).join("; ");
   }
-  for (const [path, expected] of [["/login?returnTo=%2Forders", "/session/login?returnTo=%2Forders"], ["/signup", "/session/register"], ["/login?returnTo=https%3A%2F%2Fevil.example", "/session/login"]]) {
+  for (const path of ["/login", "/signup"]) {
     const response = await fetch(`${origin}${path}`, { redirect: "manual" });
-    assert.equal(response.status, 303);
-    assert.equal(response.headers.get("location"), expected);
+    assert.equal(response.status, 404);
   }
   const error = await fetch(`${origin}/error?error=%3Cscript%3Esecret%3C%2Fscript%3E`);
   const errorHtml = await error.text();
@@ -113,7 +112,7 @@ test("built Start routes isolate sessions and forward only authorized API calls"
     assert.ok(!htmlA.includes(value) && !htmlB.includes(value), "session cookie must not enter SSR HTML");
   }
   assert.equal(guest.status, 303);
-  assert.equal(guest.headers.get("location"), "/login?returnTo=%2Forders");
+  assert.equal(guest.headers.get("location"), "/session/login?returnTo=%2Forders");
   assert.equal((await fetch(origin, { headers: { cookie: alice }, redirect: "manual" })).headers.get("location"), "/orders");
   assert.equal((await fetch(`${origin}/users`, { headers: { cookie: alice }, redirect: "manual" })).headers.get("location"), "/orders");
   allowUsers = true;

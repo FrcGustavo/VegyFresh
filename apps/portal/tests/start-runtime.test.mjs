@@ -104,9 +104,7 @@ test("Start SSR keeps concurrent sessions isolated and completes the OIDC callba
   }
   for (const path of ["/login", "/signup", "/register", "/setup-password"]) {
     const response = await fetch(`${origin}${path}`, { redirect: "manual" });
-    assert.equal(response.status, 303);
-    assert.equal(response.headers.get("location"), "/");
-    assert.match(response.headers.get("cache-control"), /private, no-store/);
+    assert.equal(response.status, 404);
   }
   const errorResponse = await fetch(`${origin}/error?error=%3Cscript%3Esecret%3C%2Fscript%3E`);
   const errorHtml = await errorResponse.text();

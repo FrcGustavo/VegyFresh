@@ -60,7 +60,7 @@ async function createIdentityProvider(publicIssuer) {
   const server = createServer(async (request, response) => {
     const requestUrl = new URL(request.url, `http://${request.headers.host}`);
     if (
-      requestUrl.pathname === "/realms/test/.well-known/openid-configuration"
+      requestUrl.pathname === "/oidc/test/.well-known/openid-configuration"
     ) {
       state.discoveryCalls += 1;
       if (state.discoveryStatus !== 200) {
@@ -74,10 +74,10 @@ async function createIdentityProvider(publicIssuer) {
       response.writeHead(200, { "content-type": "application/json" }).end(
         JSON.stringify({
           issuer,
-          authorization_endpoint: `${issuer}/protocol/openid-connect/auth`,
-          token_endpoint: `${issuer}/protocol/openid-connect/token`,
-          jwks_uri: `${issuer}/protocol/openid-connect/certs`,
-          end_session_endpoint: `${issuer}/protocol/openid-connect/logout`,
+          authorization_endpoint: `${issuer}/auth`,
+          token_endpoint: `${issuer}/token`,
+          jwks_uri: `${issuer}/certs`,
+          end_session_endpoint: `${issuer}/logout`,
           response_types_supported: ["code"],
           grant_types_supported: ["authorization_code", "refresh_token"],
           token_endpoint_auth_methods_supported: ["client_secret_post", "none"],
@@ -87,14 +87,14 @@ async function createIdentityProvider(publicIssuer) {
       );
       return;
     }
-    if (requestUrl.pathname === "/realms/test/protocol/openid-connect/certs") {
+    if (requestUrl.pathname === "/oidc/test/certs") {
       response
         .writeHead(200, { "content-type": "application/json" })
         .end(JSON.stringify({ keys: [jwk] }));
       return;
     }
     if (
-      requestUrl.pathname === "/realms/test/protocol/openid-connect/token" &&
+      requestUrl.pathname === "/oidc/test/token" &&
       request.method === "POST"
     ) {
       let body = "";
@@ -123,7 +123,7 @@ async function createIdentityProvider(publicIssuer) {
           state.forgedIdToken ? forgedPrivateKey : privateKey,
           {
             iss: issuer,
-            sub: "keycloak-user-1",
+            sub: "oidc-user-1",
             aud: "vegyfresh-portal",
             iat: now,
             exp: now + 300,
@@ -188,7 +188,7 @@ async function createIdentityProvider(publicIssuer) {
     server.once("error", reject);
     server.listen(0, "127.0.0.1", resolve);
   });
-  const internalIssuerUrl = `http://127.0.0.1:${server.address().port}/realms/test`;
+  const internalIssuerUrl = `http://127.0.0.1:${server.address().port}/oidc/test`;
   issuer = publicIssuer ?? internalIssuerUrl;
   return {
     issuer,
@@ -239,7 +239,7 @@ test("API proxy rejects noncanonical request origins and oversized bodies before
     apiBaseUrl: "http://backend.internal",
     openapiPaths: paths,
     publicOrigin: origin,
-    issuer: "http://127.0.0.1:9/realms/test",
+    issuer: "http://127.0.0.1:9/oidc/test",
     clientId: "vegyfresh-portal",
     sessionSecret,
     fetchImpl: async () => {
@@ -348,7 +348,7 @@ test("login uses state, nonce, S256 PKCE, canonical callback URL, and sealed hos
   assert.equal(login.authorization.origin, new URL(provider.issuer).origin);
   assert.equal(
     login.authorization.pathname,
-    "/realms/test/protocol/openid-connect/auth",
+    "/oidc/test/auth",
   );
   assert.equal(
     login.authorization.searchParams.get("client_id"),
@@ -387,12 +387,11 @@ test("login uses state, nonce, S256 PKCE, canonical callback URL, and sealed hos
           /Max-Age=600/i.test(cookie),
       ),
   );
-  assert.ok(login.cookies.some((cookie) => cookie === "refresh_token="));
 });
 
 test("login discovers through the internal URL while preserving the public issuer", async (t) => {
   const provider = await createIdentityProvider(
-    "http://localhost:1/realms/test",
+    "http://localhost:1/oidc/test",
   );
   t.after(() => provider.close());
   const api = makeProxy(provider, undefined, {
@@ -403,7 +402,7 @@ test("login discovers through the internal URL while preserving the public issue
   assert.equal(login.authorization.origin, "http://localhost:1");
   assert.equal(
     login.authorization.pathname,
-    "/realms/test/protocol/openid-connect/auth",
+    "/oidc/test/auth",
   );
 });
 
@@ -427,7 +426,7 @@ test("registration requests the signup screen while keeping the configured callb
   const registration = await startLogin(api, provider, "/session/register");
   assert.equal(
     registration.authorization.pathname,
-    "/realms/test/protocol/openid-connect/auth",
+    "/oidc/test/auth",
   );
   assert.equal(registration.authorization.searchParams.get("screen_hint"), "signup");
   assert.equal(
@@ -460,7 +459,6 @@ test("callback verifies the real ID token, calls VeGYFresh before setting sealed
     new Set(cookies.map((pair) => pair.slice(0, pair.indexOf("=")))),
     new Set([
       "vegyfresh_portal_oidc_transaction",
-      "refresh_token",
       "vegyfresh_portal_access_token",
       "vegyfresh_portal_refresh_token",
       "vegyfresh_portal_id_token",
@@ -704,7 +702,7 @@ test("rejects cross-origin logout and unknown API paths before contacting VeGYFr
   assert.equal(calls, 0);
 });
 
-test("logout builds a trusted Keycloak end-session URL and clears every session cookie", async (t) => {
+test("logout builds a trusted OIDC end-session URL and clears every session cookie", async (t) => {
   const provider = await createIdentityProvider();
   t.after(() => provider.close());
   const api = makeProxy(provider);
@@ -748,21 +746,13 @@ test("logout builds a trusted Keycloak end-session URL and clears every session 
   assert.equal(endSession.origin, new URL(provider.issuer).origin);
   assert.equal(
     endSession.pathname,
-    "/realms/test/protocol/openid-connect/logout",
+    "/oidc/test/logout",
   );
   assert.equal(
     endSession.searchParams.get("post_logout_redirect_uri"),
     `${origin}/`,
   );
   assert.ok(endSession.searchParams.get("id_token_hint"));
-  assert.ok(
-    response.headers
-      .getSetCookie()
-      .some(
-        (cookie) =>
-          cookie.startsWith("refresh_token=;") && /Max-Age=0/i.test(cookie),
-      ),
-  );
   assert.ok(
     [
       "vegyfresh_portal_access_token",
@@ -780,7 +770,7 @@ test("logout builds a trusted Keycloak end-session URL and clears every session 
   );
 });
 
-test("logout falls back locally and clears cookies when Keycloak discovery is unavailable", async (t) => {
+test("logout falls back locally and clears cookies when OIDC discovery is unavailable", async (t) => {
   const provider = await createIdentityProvider();
   t.after(() => provider.close());
   const api = makeProxy(provider);
@@ -806,7 +796,7 @@ test("logout falls back locally and clears cookies when Keycloak discovery is un
       headers: { cookie: hint.split(";", 1)[0] },
     }),
   );
-  assert.equal(redirect.headers.get("location"), "/login");
+  assert.equal(redirect.headers.get("location"), "/");
   assert.ok(
     redirect.headers
       .getSetCookie()
@@ -894,7 +884,7 @@ test("preserves multipart uploads and never follows backend redirects", async (t
   assert.equal(redirect.headers.get("location"), null);
 });
 
-test("API 401 refresh uses Keycloak once, retries, and persists only sealed rotated tokens", async (t) => {
+test("API 401 refresh uses the OIDC provider once, retries, and persists only sealed rotated tokens", async (t) => {
   const provider = await createIdentityProvider();
   t.after(() => provider.close());
   const apiBackend = backend((url, options) =>
@@ -1124,7 +1114,7 @@ test("rejects unsafe HTTP issuer and oversized or misconfigured session settings
     apiBaseUrl: "http://backend.internal",
     openapiPaths: paths,
     publicOrigin: origin,
-    issuer: "http://keycloak.internal/realms/test",
+    issuer: "http://oidc.internal/oidc/test",
     clientId: "vegyfresh-portal",
     clientSecret: "secret",
     sessionSecret,
@@ -1134,7 +1124,7 @@ test("rejects unsafe HTTP issuer and oversized or misconfigured session settings
     () =>
       createBffProxy({
         ...base,
-        issuer: "http://127.0.0.1:8080/realms/test",
+        issuer: "http://127.0.0.1:8080/oidc/test",
         publicOrigin: "http://vegyfresh.example",
       }),
     /HTTPS outside loopback/,
@@ -1143,7 +1133,7 @@ test("rejects unsafe HTTP issuer and oversized or misconfigured session settings
     () =>
       createBffProxy({
         ...base,
-        issuer: "http://127.0.0.1:8080/realms/test",
+        issuer: "http://127.0.0.1:8080/oidc/test",
         sessionSecret: "short",
       }),
     /32 bytes/,

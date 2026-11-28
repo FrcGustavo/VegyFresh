@@ -40,7 +40,6 @@ export function AuthErrorPage() {
       <Button variant="contained" href="/session/login">
         {needsEmailVerification ? "Ya verifiqué mi correo" : "Volver a intentar"}
       </Button>
-      <Button href="/login">Volver al inicio de sesión</Button>
     </Stack>
   );
 }

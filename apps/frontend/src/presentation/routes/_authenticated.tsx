@@ -9,7 +9,7 @@ export const Route = createFileRoute("/_authenticated")({
   beforeLoad: async ({ location }) => {
     const session = await readServerSession();
     if (session.authenticated === false) {
-      throw redirect({ href: `/login?returnTo=${encodeURIComponent(location.href)}`, reloadDocument: true, statusCode: 303 });
+      throw redirect({ href: `/session/login?returnTo=${encodeURIComponent(location.href)}`, reloadDocument: true, statusCode: 303 });
     }
     if (session.authenticated === true) {
       const role = session.role?.id && session.role.name

@@ -18,7 +18,6 @@ jobs:
       portal: ${{ steps.filter.outputs.portal }}
       backend: ${{ steps.filter.outputs.backend }}
       seed_api: ${{ steps.filter.outputs.seed_api }}
-      keycloak: ${{ steps.filter.outputs.keycloak }}
       contract: ${{ steps.filter.outputs.contract }}
     steps:
       - uses: actions/checkout@v4
@@ -49,9 +48,6 @@ jobs:
             seed_api:
               - 'jobs/seed-api/**'
               - 'clients/api-client/**'
-              - *shared
-            keycloak:
-              - 'infrastructure/keycloak/**'
               - *shared
             contract:
               - 'services/backend/**'
@@ -117,12 +113,3 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: make -C jobs/seed-api check
-
-  keycloak:
-    needs: changes
-    if: needs.changes.outputs.keycloak == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Validate local identity configuration
-        run: make -C infrastructure/keycloak check

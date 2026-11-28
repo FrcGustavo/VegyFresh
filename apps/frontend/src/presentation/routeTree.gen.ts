@@ -12,9 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as ErrorRouteImport } from './routes/error'
 import { Route as HealthRouteImport } from './routes/health'
-import { Route as LoginRouteImport } from './routes/login'
 import { Route as SessionRouteImport } from './routes/session'
-import { Route as SignupRouteImport } from './routes/signup'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated.index'
 import { Route as AuthenticatedClientsRouteImport } from './routes/_authenticated.clients'
 import { Route as AuthenticatedInventoryRouteImport } from './routes/_authenticated.inventory'
@@ -43,19 +41,9 @@ const HealthRoute = HealthRouteImport.update({
   path: '/health',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const SessionRoute = SessionRouteImport.update({
   id: '/session',
   path: '/session',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SignupRoute = SignupRouteImport.update({
-  id: '/signup',
-  path: '/signup',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
@@ -129,9 +117,7 @@ export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/error': typeof ErrorRoute
   '/health': typeof HealthRoute
-  '/login': typeof LoginRoute
   '/session': typeof SessionRouteWithChildren
-  '/signup': typeof SignupRoute
   '/clients': typeof AuthenticatedClientsRoute
   '/inventory': typeof AuthenticatedInventoryRoute
   '/orders': typeof AuthenticatedOrdersRoute
@@ -148,9 +134,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/error': typeof ErrorRoute
   '/health': typeof HealthRoute
-  '/login': typeof LoginRoute
   '/session': typeof SessionRouteWithChildren
-  '/signup': typeof SignupRoute
   '/clients': typeof AuthenticatedClientsRoute
   '/inventory': typeof AuthenticatedInventoryRoute
   '/orders': typeof AuthenticatedOrdersRoute
@@ -170,9 +154,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/error': typeof ErrorRoute
   '/health': typeof HealthRoute
-  '/login': typeof LoginRoute
   '/session': typeof SessionRouteWithChildren
-  '/signup': typeof SignupRoute
   '/_authenticated/clients': typeof AuthenticatedClientsRoute
   '/_authenticated/inventory': typeof AuthenticatedInventoryRoute
   '/_authenticated/orders': typeof AuthenticatedOrdersRoute
@@ -193,9 +175,7 @@ export interface FileRouteTypes {
     | '/'
     | '/error'
     | '/health'
-    | '/login'
     | '/session'
-    | '/signup'
     | '/clients'
     | '/inventory'
     | '/orders'
@@ -212,9 +192,7 @@ export interface FileRouteTypes {
   to:
     | '/error'
     | '/health'
-    | '/login'
     | '/session'
-    | '/signup'
     | '/clients'
     | '/inventory'
     | '/orders'
@@ -233,9 +211,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/error'
     | '/health'
-    | '/login'
     | '/session'
-    | '/signup'
     | '/_authenticated/clients'
     | '/_authenticated/inventory'
     | '/_authenticated/orders'
@@ -255,9 +231,7 @@ export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   ErrorRoute: typeof ErrorRoute
   HealthRoute: typeof HealthRoute
-  LoginRoute: typeof LoginRoute
   SessionRoute: typeof SessionRouteWithChildren
-  SignupRoute: typeof SignupRoute
   ApiSplatRoute: typeof ApiSplatRoute
 }
 
@@ -284,25 +258,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HealthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/session': {
       id: '/session'
       path: '/session'
       fullPath: '/session'
       preLoaderRoute: typeof SessionRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/signup': {
-      id: '/signup'
-      path: '/signup'
-      fullPath: '/signup'
-      preLoaderRoute: typeof SignupRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/': {
@@ -446,9 +406,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   ErrorRoute: ErrorRoute,
   HealthRoute: HealthRoute,
-  LoginRoute: LoginRoute,
   SessionRoute: SessionRouteWithChildren,
-  SignupRoute: SignupRoute,
   ApiSplatRoute: ApiSplatRoute,
 }
 export const routeTree = rootRouteImport
