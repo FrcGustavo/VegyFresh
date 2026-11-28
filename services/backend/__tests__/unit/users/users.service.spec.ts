@@ -1,17 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ConfigService } from '@nestjs/config';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { BadRequestException, ForbiddenException } from '@nestjs/common';
-import * as bcrypt from 'bcrypt';
 import { UsersService } from 'src/users/users.service';
 import { User } from 'src/users/entities/user.entity';
 import { Role } from 'src/roles/entities/role.entity';
 import { FoliosService } from 'src/folios/folios.service';
 import type { CreateUserDto } from 'src/users/dto/create-user.dto';
-
-jest.mock('bcrypt', () => ({
-  hash: jest.fn(),
-}));
 
 describe('UsersService', () => {
   let service: UsersService;
@@ -59,8 +53,6 @@ describe('UsersService', () => {
     rolesRepository = {
       findOneBy: jest.fn(),
     };
-    (bcrypt.hash as jest.Mock).mockResolvedValue('hashed-password');
-
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UsersService,
@@ -70,7 +62,6 @@ describe('UsersService', () => {
           provide: FoliosService,
           useValue: { generateFolio: jest.fn().mockResolvedValue('U0001') },
         },
-        { provide: ConfigService, useValue: { get: jest.fn() } },
       ],
     }).compile();
 
@@ -86,7 +77,6 @@ describe('UsersService', () => {
   ): CreateUserDto => ({
     name: 'John Doe',
     email: 'john@example.com',
-    password: 'very-secure-password',
     role_id: 'role-1',
     ...overrides,
   });

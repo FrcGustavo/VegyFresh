@@ -26,7 +26,6 @@ export interface UserSeed {
   name: string;
   email: string;
   roleName: "admin" | "operativo";
-  password: string;
 }
 
 export interface ClientSeed {

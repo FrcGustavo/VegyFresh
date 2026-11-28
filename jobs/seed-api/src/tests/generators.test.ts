@@ -13,7 +13,7 @@ test("los generadores de catálogo son deterministas y únicos", () => {
   const suppliers = createSupplierSeeds();
   const products = createProductSeeds();
   const clients = createClientSeeds();
-  const users = createUserSeeds("admin-password", "operator-password");
+  const users = createUserSeeds();
 
   assert.equal(suppliers.length, TARGETS.suppliers);
   assert.equal(products.length, TARGETS.products);

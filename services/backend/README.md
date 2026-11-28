@@ -59,7 +59,6 @@ record before applying any migration or mapping.
 
 ## Secure Defaults
 
-- `BCRYPT_SALT_ROUNDS` defaults to `12` (minimum accepted: `10`) for local user password administration.
 
 ## Local Docker commands
 

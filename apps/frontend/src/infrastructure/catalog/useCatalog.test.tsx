@@ -40,7 +40,6 @@ it("retains pagination signals and user cache invalidation", async () => {
     await editor.result.current.save({
       name: "Ana",
       email: "a@b.com",
-      password: "password-1234",
       role_id: "r1",
       avatar_url: "",
     });

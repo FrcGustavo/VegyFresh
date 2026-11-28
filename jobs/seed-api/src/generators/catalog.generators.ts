@@ -92,10 +92,7 @@ export function createClientSeeds(): ClientSeed[] {
   });
 }
 
-export function createUserSeeds(
-  adminPassword: string,
-  operatorPassword: string,
-): UserSeed[] {
+export function createUserSeeds(): UserSeed[] {
   return Array.from({ length: TARGETS.users }, (_, index) => {
     const number = index + 1;
     return {
@@ -109,7 +106,6 @@ export function createUserSeeds(
           ? "seed.admin@vegyfresh.local"
           : `seed.operativo.${pad(index)}@vegyfresh.local`,
       roleName: index === 0 ? "admin" : "operativo",
-      password: index === 0 ? adminPassword : operatorPassword,
     };
   });
 }

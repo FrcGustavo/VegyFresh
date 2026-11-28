@@ -1,7 +1,6 @@
 export interface UserFormData {
   name: string;
   email: string;
-  password: string;
   role_id: string;
   avatar_url: string;
 }
@@ -47,29 +46,19 @@ export function saveUser<Result>(
   form: UserFormData,
   id: string | undefined,
   port: {
-    create: (input: UserInput & { password: string }) => Promise<Result>;
-    update: (
-      id: string,
-      input: UserInput & { password?: string },
-    ) => Promise<Result>;
+    create: (input: UserInput) => Promise<Result>;
+    update: (id: string, input: UserInput) => Promise<Result>;
   },
 ) {
   if (!form.name.trim() || !form.email.trim() || !form.role_id)
     throw new Error("Completa el nombre, email y rol del usuario.");
-  if (!id && form.password.length < 12)
-    throw new Error("La contraseña debe tener al menos 12 caracteres.");
   const input = {
     name: form.name.trim(),
     email: form.email.trim(),
     role_id: form.role_id,
     avatar_url: form.avatar_url.trim() || null,
   };
-  return id
-    ? port.update(id, {
-        ...input,
-        ...(form.password ? { password: form.password } : {}),
-      })
-    : port.create({ ...input, password: form.password });
+  return id ? port.update(id, input) : port.create(input);
 }
 
 export function saveProduct<Result>(

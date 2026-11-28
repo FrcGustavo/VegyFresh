@@ -26,8 +26,6 @@ dirección accesible desde el contenedor de herramientas. Para ejecutar
 
 Variables opcionales:
 
-- `SEED_ADMIN_PASSWORD`: contraseña del administrador generado.
-- `SEED_OPERATOR_PASSWORD`: contraseña de los cuatro operativos.
 - `SEED_CONCURRENCY`: concurrencia para recursos de catálogo; por defecto `10`.
 - `SEED_TRANSACTIONAL_CONCURRENCY`: concurrencia para compras y pedidos; por defecto `3`.
 

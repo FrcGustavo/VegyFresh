@@ -6,7 +6,6 @@ export default function UserForm({
   formData,
   avatarFileError,
   roles,
-  isEditing,
   isCreatingRole,
   handleChange,
   handleAvatarFileChange,
@@ -79,22 +78,6 @@ export default function UserForm({
               required
               disabled={isDisabled}
             />
-            {!isEditing && (
-              <TextField
-                fullWidth
-                label="Contraseña"
-                name="password"
-                type="password"
-                margin="normal"
-                value={formData.password || ""}
-                onChange={handleChange}
-                required
-                disabled={isDisabled}
-                slotProps={{ htmlInput: { minLength: 12 } }}
-                helperText="Debe tener al menos 12 caracteres"
-              />
-            )}
-
             <TextField
               select
               fullWidth

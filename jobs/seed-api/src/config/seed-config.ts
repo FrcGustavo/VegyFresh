@@ -1,8 +1,6 @@
 export interface SeedConfig {
   baseUrl: string;
   token: string;
-  adminPassword: string;
-  operatorPassword: string;
   concurrency: number;
   transactionalConcurrency: number;
 }
@@ -26,9 +24,6 @@ export function loadSeedConfig(env = process.env): SeedConfig {
       env.SEED_API_BASE_URL ?? "http://localhost:3000/api/v1",
     ),
     token,
-    adminPassword: env.SEED_ADMIN_PASSWORD ?? "seed_admin_password_change_me",
-    operatorPassword:
-      env.SEED_OPERATOR_PASSWORD ?? "seed_operator_password_change_me",
     concurrency: positiveInteger(env.SEED_CONCURRENCY, 10),
     transactionalConcurrency: positiveInteger(
       env.SEED_TRANSACTIONAL_CONCURRENCY,
