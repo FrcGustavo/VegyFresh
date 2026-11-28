@@ -11,7 +11,6 @@ import {
 } from 'typeorm';
 import { Order } from '../../orders/entities/order.entity';
 import { Role } from '../../roles/entities/role.entity';
-import { AuthSession } from '../../auth/entities/auth-session.entity';
 import { Organization } from '../../organizations/entities/organization.entity';
 import { Purchase } from '../../purchase/entities/purchase.entity';
 import { InventoryMovement } from '../../inventory/entities/inventory-movement.entity';
@@ -31,9 +30,6 @@ export class User {
 
   @Column({ type: 'varchar', length: 255, unique: true })
   email!: string;
-
-  @Column({ type: 'text', nullable: true })
-  password_hash!: string | null;
 
   @Column({ type: 'uuid' })
   role_id!: string;
@@ -57,9 +53,6 @@ export class User {
 
   @OneToMany(() => Order, (order) => order.user)
   orders!: Order[];
-
-  @OneToMany(() => AuthSession, (authSession) => authSession.user)
-  authSessions!: AuthSession[];
 
   @OneToMany(() => Purchase, (purchase) => purchase.user)
   purchases!: Purchase[];

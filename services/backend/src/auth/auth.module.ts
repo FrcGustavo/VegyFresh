@@ -4,7 +4,6 @@ import { APP_GUARD } from '@nestjs/core';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { User } from '../users/entities/user.entity';
-import { AuthSession } from './entities/auth-session.entity';
 import {
   OidcAccessStrategy,
   OidcProvisioningStrategy,
@@ -14,7 +13,7 @@ import { RolesGuard } from './guards/roles.guard';
 import { IdentityModule } from '../identity/identity.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User, AuthSession]), IdentityModule],
+  imports: [TypeOrmModule.forFeature([User]), IdentityModule],
   controllers: [AuthController],
   providers: [
     AuthService,

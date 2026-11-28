@@ -5,14 +5,13 @@ const { test } = require('node:test');
 
 const packageRoot = path.resolve(__dirname, '..');
 const expectedEntities = [
-  'AuthSession',
   'Client',
   'ExternalIdentity',
   'InventoryMovement',
+  'MicrosipImportReceipt',
   'Order',
   'OrderItem',
   'Organization',
-  'PortalAuthSession',
   'PriceList',
   'Product',
   'ProductPrice',
@@ -28,6 +27,8 @@ const expectedMigrations = [
   'RemoveProductSku1781930269000',
   'AddExternalIdentities1793210000000',
   'AllowNullUserPasswordHash1793210001000',
+  'AddMicrosipCatalogIdentities1793210002000',
+  'RemoveLocalAuthentication1793210003000',
 ].sort();
 
 const probe = `
@@ -46,7 +47,8 @@ for (const mode of ['source', 'compiled']) {
     for (const cwd of [packageRoot, path.resolve(packageRoot, '../..')]) {
       execFileSync(process.execPath, [
         ...(mode === 'source' ? ['-r', require.resolve('ts-node/register')] : []),
-        '-e', probe,
+        // TypeORM's app-root-path dependency expects a script path in argv[1].
+        '-e', probe, '--', __filename,
       ], {
         cwd,
         stdio: 'pipe',

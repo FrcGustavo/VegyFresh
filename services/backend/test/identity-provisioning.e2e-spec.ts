@@ -57,7 +57,21 @@ describeIntegration('identity provisioning with PostgreSQL', () => {
     }
   });
 
-  it('serializes repeated subject provisioning and leaves the user passwordless', async () => {
+  it('removes local password and session storage from the database', async () => {
+    const queryRunner = db.createQueryRunner();
+    try {
+      expect(await queryRunner.hasColumn('users', 'password_hash')).toBe(false);
+      expect(await queryRunner.hasColumn('clients', 'password_hash')).toBe(
+        false,
+      );
+      expect(await queryRunner.hasTable('auth_sessions')).toBe(false);
+      expect(await queryRunner.hasTable('portal_auth_sessions')).toBe(false);
+    } finally {
+      await queryRunner.release();
+    }
+  });
+
+  it('serializes repeated subject provisioning and creates an owner profile', async () => {
     const subject = `${prefix}-same`;
     const claims = {
       email: `${prefix}-same@example.test`,
@@ -72,7 +86,7 @@ describeIntegration('identity provisioning with PostgreSQL', () => {
     expect(first).toMatchObject({ org_id: '', role: 'owner' });
     expect(
       await db.getRepository(User).findOneByOrFail({ id: first.sub }),
-    ).toMatchObject({ password_hash: null });
+    ).toMatchObject({ email: claims.email });
     expect(
       await db.getRepository(ExternalIdentity).countBy({ issuer, subject }),
     ).toBe(1);
