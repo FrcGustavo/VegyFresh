@@ -6,7 +6,6 @@ const user = {
   email: " ana@example.com ",
   role_id: "r1",
   avatar_url: "  ",
-  password: "password-1234",
 };
 const product = {
   name: " Apple ",
@@ -18,7 +17,7 @@ const product = {
 };
 
 describe("catalog saves", () => {
-  it("normalizes users and only sends a password on update when provided", async () => {
+  it("normalizes user profiles for creation and updates", async () => {
     const port = {
       create: vi.fn().mockResolvedValue({ id: "new" }),
       update: vi.fn().mockResolvedValue({ id: "u1" }),
@@ -29,9 +28,8 @@ describe("catalog saves", () => {
       email: "ana@example.com",
       role_id: "r1",
       avatar_url: null,
-      password: "password-1234",
     });
-    await saveUser({ ...user, password: "" }, "u1", port);
+    await saveUser(user, "u1", port);
     expect(port.update).toHaveBeenCalledWith("u1", {
       name: "Ana",
       email: "ana@example.com",
@@ -39,8 +37,8 @@ describe("catalog saves", () => {
       avatar_url: null,
     });
     expect(() =>
-      saveUser({ ...user, password: "short" }, undefined, port),
-    ).toThrow("12 caracteres");
+      saveUser({ ...user, role_id: "" }, undefined, port),
+    ).toThrow("Completa el nombre, email y rol del usuario.");
   });
   it("normalizes product prices and rejects duplicate or invalid rows before saving", async () => {
     const port = { save: vi.fn().mockResolvedValue({ id: "p1" }) };

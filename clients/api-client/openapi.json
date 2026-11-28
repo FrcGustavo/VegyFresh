@@ -3349,10 +3349,6 @@
             "type": "string",
             "example": "john@example.com"
           },
-          "password": {
-            "type": "string",
-            "example": "super-secure-password"
-          },
           "role_id": {
             "type": "string",
             "example": "550e8400-e29b-41d4-a716-446655440000"
@@ -3366,7 +3362,6 @@
         "required": [
           "name",
           "email",
-          "password",
           "role_id"
         ]
       },
@@ -3380,10 +3375,6 @@
           "email": {
             "type": "string",
             "example": "john@example.com"
-          },
-          "password": {
-            "type": "string",
-            "example": "super-secure-password"
           },
           "role_id": {
             "type": "string",

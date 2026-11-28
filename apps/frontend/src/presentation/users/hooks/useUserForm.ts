@@ -9,7 +9,6 @@ type UserChangeEvent = { target: { name: string; value: string } };
 const EMPTY_USER_FORM: UserFormData = {
   name: "",
   email: "",
-  password: "",
   role_id: "",
   avatar_url: "",
 };
@@ -38,7 +37,6 @@ export function useUserForm(
         setFormData({
           name: existingUser.name,
           email: existingUser.email,
-          password: "",
           role_id: existingUser.role_id || "",
           avatar_url: existingUser.avatar_url || "",
         });
@@ -106,7 +104,6 @@ export function useUserForm(
     avatarFileError,
     formError,
     roles,
-    isEditing: !!id,
     isLoading,
     isSaving,
     isCreatingRole,

@@ -52,26 +52,6 @@ describe("useUserForm", () => {
     mocks.createUser.mockResolvedValue({ id: "user-1" });
   });
 
-  it("exige contraseña segura al crear", () => {
-    const { result } = renderHook(() => useUserForm(), { wrapper: Wrapper });
-    act(() => {
-      result.current.handleChange({ target: { name: "name", value: "Ana" } });
-      result.current.handleChange({
-        target: { name: "email", value: "ana@example.com" },
-      });
-      result.current.handleChange({
-        target: { name: "role_id", value: "role-1" },
-      });
-      result.current.handleChange({
-        target: { name: "password", value: "corta" },
-      });
-    });
-    act(() => result.current.handleSubmit("save"));
-    expect(result.current.formError).toBe(
-      "La contraseña debe tener al menos 12 caracteres.",
-    );
-  });
-
   it("crea el usuario y devuelve su ID al modal", async () => {
     const onSuccess = vi.fn();
     const { result } = renderHook(() => useUserForm(undefined, onSuccess), {
@@ -85,19 +65,17 @@ describe("useUserForm", () => {
       result.current.handleChange({
         target: { name: "role_id", value: "role-1" },
       });
-      result.current.handleChange({
-        target: { name: "password", value: "password-1234" },
-      });
     });
     act(() => result.current.handleSubmit("save"));
 
     await waitFor(() => {
       expect(mocks.createUser).toHaveBeenCalledWith(
-        expect.objectContaining({
+        {
+          name: "Ana",
+          avatar_url: null,
           email: "ana@example.com",
-          password: "password-1234",
           role_id: "role-1",
-        }),
+        },
         expect.any(Object),
       );
       expect(onSuccess).toHaveBeenCalledWith("save", { id: "user-1" });

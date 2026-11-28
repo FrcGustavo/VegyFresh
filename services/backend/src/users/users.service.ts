@@ -10,9 +10,6 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
 import { Role } from '../roles/entities/role.entity';
-import * as bcrypt from 'bcrypt';
-import { ConfigService } from '@nestjs/config';
-import { resolveBcryptSaltRounds } from '../auth/auth-security.config';
 import { FoliosService } from '../folios/folios.service';
 
 type UserOrderField = 'id' | 'folio' | 'name' | 'email' | 'created_at';
@@ -27,31 +24,19 @@ type FindAllUsersFilters = {
 
 @Injectable()
 export class UsersService {
-  private readonly bcryptSaltRounds: number;
-
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
     @InjectRepository(Role)
     private readonly rolesRepository: Repository<Role>,
     private readonly foliosService: FoliosService,
-    private readonly configService: ConfigService,
-  ) {
-    this.bcryptSaltRounds = resolveBcryptSaltRounds(this.configService);
-  }
+  ) {}
 
   async create(
     createUserDto: CreateUserDto,
     organizationId: string,
     creatorRole: string,
   ) {
-    if (
-      typeof createUserDto.password !== 'string' ||
-      createUserDto.password.trim().length === 0
-    ) {
-      throw new BadRequestException('password is required');
-    }
-
     const role = await this.findRoleOrFail(createUserDto.role_id);
     if (
       role.name.trim().toLowerCase() === 'admin' &&
@@ -68,14 +53,9 @@ export class UsersService {
         'users',
         organizationId,
       );
-      const passwordHash = await bcrypt.hash(
-        createUserDto.password,
-        this.bcryptSaltRounds,
-      );
       const user = usersRepository.create({
         name: createUserDto.name,
         email: createUserDto.email,
-        password_hash: passwordHash,
         folio: userFolio,
         avatar_url: createUserDto.avatar_url ?? null,
         organization_id: organizationId,
@@ -132,13 +112,9 @@ export class UsersService {
       updateUserDto.role_id !== undefined
         ? await this.findRoleOrFail(updateUserDto.role_id)
         : user.role;
-    const { password, ...userData } = updateUserDto;
 
     this.usersRepository.merge(user, {
-      ...userData,
-      ...(password
-        ? { password_hash: await bcrypt.hash(password, this.bcryptSaltRounds) }
-        : undefined),
+      ...updateUserDto,
       role,
     });
 

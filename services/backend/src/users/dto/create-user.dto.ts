@@ -18,16 +18,10 @@ export class CreateUserDto {
   @MaxLength(120)
   name!: string;
 
-  /** Unique email used to sign in. */
+  /** Unique contact email for the user profile. */
   @ApiProperty({ example: 'john@example.com' })
   @IsEmail()
   email!: string;
-
-  /** Initial password for the user account. */
-  @ApiProperty({ example: 'super-secure-password' })
-  @IsString()
-  @MinLength(12)
-  password!: string;
 
   /** Role assigned to the user in the current organization. */
   @ApiProperty({ example: '550e8400-e29b-41d4-a716-446655440000' })

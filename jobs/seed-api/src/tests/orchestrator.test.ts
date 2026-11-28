@@ -279,8 +279,6 @@ test("el flujo completo es idempotente y respeta las relaciones", async () => {
   const config: SeedConfig = {
     baseUrl: "http://test",
     token: "token",
-    adminPassword: "admin-password",
-    operatorPassword: "operator-password",
     concurrency: 20,
     transactionalConcurrency: 5,
   };

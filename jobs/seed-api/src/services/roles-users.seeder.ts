@@ -28,10 +28,7 @@ export class RolesUsersSeeder {
     const userByEmail = new Map(
       existingUsers.map((user) => [user.email, user]),
     );
-    const seeds = createUserSeeds(
-      this.config.adminPassword,
-      this.config.operatorPassword,
-    );
+    const seeds = createUserSeeds();
     const users = await mapConcurrent(
       seeds,
       this.config.concurrency,
@@ -43,7 +40,6 @@ export class RolesUsersSeeder {
           return this.repository.api.users.create({
             name: seed.name,
             email: seed.email,
-            password: seed.password,
             role_id: role.id,
           });
         }
